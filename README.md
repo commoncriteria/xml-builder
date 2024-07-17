@@ -1,5 +1,5 @@
 # Live Version
-The live version of the catalog can be found here: https://commoncriteria.github.io/XML-Builder/
+The live version of the catalog can be found here: https://commoncriteria.github.io/xml-builder/
 # Tool Overview: 
 The Protection Profile (PP) XML Builder is a form-filling application that allows a user to either import, edit, and export PP XML files, or to generate a PP XML file from an empty template. No knowledge of XML is needed to edit or generate a PP XML file.
 # Feature Outline and Guide:
