@@ -1,0 +1,540 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" targetNamespace="https://niap-ccevs.org/cc/v1" xmlns:v1="https://niap-ccevs.org/cc/v1" xmlns:sec="https://niap-ccevs.org/cc/v1/section">
+  <xs:include schemaLocation="StrictCommons.xsd"/>
+  <xs:import namespace="https://niap-ccevs.org/cc/v1/section" schemaLocation="sec.xsd"/>
+  <!-- ################################# -->
+  <!-- START -->
+  <!-- ################################# -->
+  <xs:element name="PP">
+    <xs:annotation>
+      <xs:documentation>Root element for Protection Profile XML document</xs:documentation>
+    </xs:annotation>
+    <xs:complexType>
+      <xs:sequence>
+        <xs:group ref="v1:cPP-flag"/>
+        <xs:group ref="v1:project-notes"/>
+        <xs:element ref="v1:PPReference"/>
+        <xs:group ref="v1:RevisionHistory"/>
+        <xs:group ref="v1:Foreword"/>
+        <xs:group ref="v1:subaactivity-decl"/>
+        <xs:group ref="v1:packages"/>
+        <xs:group ref="v1:modules"/>
+        <xs:group ref="v1:PreferencesEtc"/>
+        <xs:group ref="v1:Introduction"/>
+        <xs:group ref="v1:CClaimsChapter"/>
+        <xs:group ref="v1:Chapters"/>
+        <xs:group ref="v1:SecProbDesChapter"/>
+        <xs:group ref="v1:SecObjChapter"/>
+        <xs:group ref="v1:SecurityRequirementsChapter"/>
+        <xs:group ref="v1:Chapters"/>
+        <xs:group ref="v1:appendices-pat"/>
+        <xs:group ref="v1:implements-pat"/>
+        <xs:element ref="v1:bibliography"/>
+        <xs:element minOccurs="0" ref="v1:extra-css"/>
+      </xs:sequence>
+      <xs:attributeGroup ref="v1:pp-attributes-pat"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="extra-css" type="xs:string"/>
+  <xs:element name="custom-basic-content-pat" abstract="true"/>
+  <xs:element name="if-opt-app" substitutionGroup="v1:custom-basic-content-pat">
+    <xs:annotation>
+      <xs:documentation>
+	    Content that only appears if the optional appendices exist.
+          </xs:documentation>
+    </xs:annotation>
+    <xs:complexType mixed="true">
+      <xs:group ref="v1:basic-content-pat"/>
+    </xs:complexType>
+  </xs:element>
+  <!--
+    
+    <define name="xref-content">
+      <choice>
+        <ref name="to-attr"/>
+        <attribute name="ref">
+         <choice>
+            <value>ref-strict-optional</value>
+            <value>sel-based-reqs</value>
+            <value>obj-reqs</value>
+            <value>impl-reqs</value>
+          </choice>
+        </attribute>
+      </choice>
+    </define>
+  -->
+  <xs:group name="PreferencesEtc">
+    <xs:annotation>
+      <xs:documentation>A place for declarations and preferences</xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element minOccurs="0" ref="v1:pp-preferences"/>
+    </xs:sequence>
+  </xs:group>
+  <xs:group name="modules">
+    <xs:annotation>
+      <xs:documentation> Defines modules that can be used with the Protection Profile.</xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element minOccurs="0" ref="v1:modules"/>
+    </xs:sequence>
+  </xs:group>
+  <xs:element name="modules">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="v1:module"/>
+      </xs:sequence>
+      <xs:attribute name="required"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="module" type="v1:external-document-pat"/>
+  <xs:group name="SecurityRequirementsChapter">
+    <xs:choice>
+      <xs:element name="section">
+        <xs:complexType mixed="true">
+          <xs:sequence>
+            <xs:element minOccurs="0" ref="v1:description"/>
+            <xs:group ref="v1:sec-req-content"/>
+          </xs:sequence>
+          <xs:attribute name="title" use="required">
+            <xs:simpleType>
+              <xs:restriction base="xs:token">
+                <xs:enumeration value="Security Requirements"/>
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:attribute>
+          <xs:attribute name="id" use="required"/>
+          <xs:attributeGroup ref="v1:sec-req-content"/>
+        </xs:complexType>
+      </xs:element>
+      <xs:any processContents="skip"/>
+      <xs:element ref="sec:Security_Requirements"/>
+    </xs:choice>
+  </xs:group>
+  <xs:group name="cPP-flag">
+    <xs:annotation>
+      <xs:documentation>Denotes that this PP is a collaborative PP (cPP)</xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element minOccurs="0" ref="v1:cPP"/>
+    </xs:sequence>
+  </xs:group>
+  <xs:element name="cPP">
+    <xs:complexType/>
+  </xs:element>
+  <xs:group name="sec-req-content">
+    <xs:sequence>
+      <xs:group ref="v1:basic-content-pat"/>
+      <xs:group minOccurs="0" maxOccurs="unbounded" ref="v1:section"/>
+      <xs:group ref="v1:sfr-section"/>
+      <xs:choice>
+        <xs:element name="section">
+          <xs:complexType>
+            <xs:complexContent>
+              <xs:extension base="v1:sar-content">
+                <xs:attribute name="title" use="required">
+                  <xs:simpleType>
+                    <xs:restriction base="xs:token">
+                      <xs:enumeration value="Security Assurance Requirements"/>
+                    </xs:restriction>
+                  </xs:simpleType>
+                </xs:attribute>
+                <xs:attribute name="id" use="required"/>
+              </xs:extension>
+            </xs:complexContent>
+          </xs:complexType>
+        </xs:element>
+        <xs:any processContents="skip"/>
+        <xs:element ref="sec:Security_Assurance_Requirements"/>
+      </xs:choice>
+    </xs:sequence>
+  </xs:group>
+  <xs:attributeGroup name="sec-req-content">
+    <xs:attributeGroup ref="v1:boilerplate-no-attr"/>
+  </xs:attributeGroup>
+  <xs:complexType name="sar-content" mixed="true">
+    <xs:sequence>
+      <xs:group ref="v1:basic-content-pat"/>
+      <xs:choice maxOccurs="unbounded">
+        <xs:element name="section">
+          <xs:complexType mixed="true">
+            <xs:sequence>
+              <xs:group ref="v1:basic-content-pat"/>
+              <xs:element minOccurs="0" maxOccurs="unbounded" ref="v1:a-component"/>
+            </xs:sequence>
+            <xs:attribute name="title" use="required"/>
+            <xs:attribute name="id" use="required"/>
+          </xs:complexType>
+        </xs:element>
+        <xs:any processContents="skip"/>
+      </xs:choice>
+    </xs:sequence>
+  </xs:complexType>
+  <!--
+    <choice>
+        <element name="section">
+          <attribute name="title"><value>Security Functional Requirements</value></attribute>
+          <optional><attribute name="id"/></optional>
+          <optional><ref name="description"/></optional>
+          <ref name="sfr-content"/>	
+        </element>
+        <element ns="https://niap-ccevs.org/cc/v1/section">
+          <anyName>
+    	<except>
+    	  <nsName ns="https://niap-ccevs.org/cc/v1"/>
+    	  <nsName ns="http://www.w3.org/1999/xhtml"/>
+    	</except>
+          </anyName>
+          <attribute name="title"><value>Security Functional Requirements</value></attribute>
+          <optional><ref name="description"/></optional>
+          <ref name="sfr-content"/>	
+        </element>
+        <element name="sec:Security_Functional_Requirements">
+          <optional><ref name="description"/></optional>
+          <ref name="sfr-content"/>	
+        </element>
+      </choice>
+    </define>
+  -->
+  <!--
+    <define name="sfr-content"> 
+      <oneOrMore>
+    	<element name="subsection">
+    	  <attribute name="title"/>
+    	  <attribute name="id"/>
+    	  <ref name="basic-content-pat"/>
+    	  <oneOrMore>
+    	    <choice>
+    		   <ref name="audit-table-pat"/>
+    		   <ref name="f-component-pattern"/>
+    		   <ref name="ext-comp-def-pat"/>
+    	    </choice>
+    	  </oneOrMore>
+    	</element>
+          </oneOrMore>
+        </element>
+        <element name="section">
+          <attribute name="title"><value>Security Assurance Requirements</value></attribute>
+          <optional><attribute name="id"/></optional>
+          <ref name="basic-content-pat"/>
+          <oneOrMore>
+    	<element name="subsection">
+    	  <attribute name="title"/>
+    	  <attribute name="id"/>
+    	  <ref name="basic-content-pat"/>
+    	  <zeroOrMore>
+    	    <ref name="a-component-pattern"/>
+    	  </zeroOrMore>
+    	</element>
+          </oneOrMore>
+        </element>
+      </element>
+    </define>
+  -->
+  <!--
+    <define name="appendix-pat">
+      <a:documentation>
+        Pattern for title attribute.
+      </a:documentation>
+      <oneOrMore>
+        <element name="appendix">
+          <a:documentation>
+            Element that defines an appendix.
+          </a:documentation>
+          <ref name="id-attr"/>
+          <ref name="title-attr"/>
+          <ref name="boilerplate-no-attr"/>
+          <oneOrMore><choice>
+              <ref name="basic-content-pat"/>
+              <ref name="section"/>
+              <ref name="acronyms"/>
+              <ref name="bibliography"/>
+          </choice></oneOrMore>
+        </element>
+      </oneOrMore>
+    </define>
+  -->
+  <!--
+    <define name="section">
+      <element name="section">
+        <a:documentation>
+          A block smaller than a chapter.
+        </a:documentation>
+        <ref name="id-attr"/>
+        <ref name="title-attr"/>
+        <oneOrMore>
+          <choice>
+            <ref name="basic-content-pat"/>
+            <ref name="subsection-pattern"/>
+  -->
+  <!-- <ref name="OSPs"/> -->
+  <!-- <element name="SOEs"> -->
+  <!-- <a:documentation> -->
+  <!-- Grouping for Security Objectives for the Operational environment. -->
+  <!-- </a:documentation> -->
+  <!-- <oneOrMore> -->
+  <!-- <element name="SOE"> -->
+  <!-- <a:documentation> -->
+  <!-- Security Objective for the Operational environment. -->
+  <!-- </a:documentation> -->
+  <!-- <optional><ref name="id-attr"/></optional> -->
+  <!-- <attribute name="name"> -->
+  <!-- <data type="string"> -->
+  <!-- <param name="pattern">OE.[A-Z_]+</param> -->
+  <!-- </data> -->
+  <!-- </attribute> -->
+  <!-- <ref name="description"/> -->
+  <!-- </element> -->
+  <!-- </oneOrMore> -->
+  <!-- </element> -->
+  <!-- <ref name="SOs"/> -->
+  <!-- <ref name="assumptions"/> -->
+  <!-- <ref name="threats"/> -->
+  <!--
+    </choice>
+        </oneOrMore>
+      </element>
+    </define>
+  -->
+  <!--
+    <define name="usecases-section">
+       <element name="section">
+         <a:documentation>
+           Section specific for use cases.
+         </a:documentation>
+         <ref name="id-attr"/>
+         <ref name="title-attr"/>
+    
+         <ref name="basic-content-pat"/>
+         <element name="usecases">
+           <a:documentation>
+             Wrapper element for uses cases.
+           </a:documentation>
+           <oneOrMore>
+             <element name="usecase">
+               <a:documentation>
+                 A referrable section on how the protection profiled item is used.
+               </a:documentation>
+               <ref name="id-attr"/>
+               <ref name="title-attr"/>
+               <ref name="description"/>
+               <optional><ref name="config"/></optional>
+             </element>
+           </oneOrMore>
+         </element>
+       </element>
+     </define>
+  -->
+  <xs:group name="a-elements">
+    <xs:sequence>
+      <xs:element maxOccurs="unbounded" ref="v1:a-element"/>
+    </xs:sequence>
+  </xs:group>
+  <xs:element name="a-element">
+    <xs:annotation>
+      <xs:documentation>
+          Defines a functional requirement.
+        </xs:documentation>
+    </xs:annotation>
+    <xs:complexType>
+      <xs:complexContent>
+        <xs:extension base="v1:f-element-title">
+          <xs:sequence>
+            <xs:element minOccurs="0" ref="v1:note"/>
+            <xs:element minOccurs="0" name="aactivity">
+              <xs:annotation>
+                <xs:documentation>An Evaluation Activity for that applies to this requirement or possibly all previous requirements in this component.</xs:documentation>
+              </xs:annotation>
+              <xs:complexType mixed="true">
+                <xs:group ref="v1:basic-content-pat"/>
+              </xs:complexType>
+            </xs:element>
+          </xs:sequence>
+          <xs:attribute name="id">
+            <xs:annotation>
+              <xs:documentation>
+              A document-wide unique ID 
+            </xs:documentation>
+            </xs:annotation>
+            <xs:simpleType>
+              <xs:restriction base="xs:string">
+                <xs:pattern value="[\-a-zA-Z0-9]+"/>
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:attribute>
+          <xs:attribute name="type" use="required">
+            <xs:simpleType>
+              <xs:restriction base="xs:string">
+                <xs:pattern value="[DCE]"/>
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:attribute>
+        </xs:extension>
+      </xs:complexContent>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="a-component">
+    <xs:complexType mixed="true">
+      <xs:sequence>
+        <xs:group ref="v1:basic-content-pat"/>
+        <xs:element minOccurs="0" ref="v1:summary"/>
+        <xs:group maxOccurs="unbounded" ref="v1:a-elements"/>
+      </xs:sequence>
+      <xs:attribute name="cc-id" use="required">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:pattern value="a[a-z]{2}_[a-z0-9]{2,10}(_ext)?\.[0-9]"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="id" type="xs:NCName">
+        <xs:annotation>
+          <xs:documentation>A document-wide unique string. Do not start with an underscore('_').</xs:documentation>
+        </xs:annotation>
+      </xs:attribute>
+      <xs:attribute name="name" use="required"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="summary">
+    <xs:annotation>
+      <xs:documentation>
+            Summary of this component.
+          </xs:documentation>
+    </xs:annotation>
+    <xs:complexType mixed="true">
+      <xs:group ref="v1:basic-content-pat"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="glossary">
+    <xs:annotation>
+      <xs:documentation>
+        Section to define terms.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element maxOccurs="unbounded" ref="v1:entry"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:group name="Foreword">
+    <xs:sequence>
+      <xs:element minOccurs="0" ref="v1:foreword"/>
+    </xs:sequence>
+  </xs:group>
+  <xs:element name="foreword">
+    <xs:annotation>
+      <xs:documentation>Flexible section for a foreword.</xs:documentation>
+    </xs:annotation>
+    <xs:complexType>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:group ref="v1:html-element"/>
+        <xs:group ref="v1:section"/>
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="pp-preferences">
+    <xs:annotation>
+      <xs:documentation>
+         A place to define preferences for PP output.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:complexType>
+      <xs:all>
+        <xs:element minOccurs="0" ref="v1:display-audit-with-sfrs"/>
+        <xs:element minOccurs="0" ref="v1:audit-events-in-sfrs"/>
+      </xs:all>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="display-audit-with-sfrs">
+    <xs:complexType/>
+  </xs:element>
+  <xs:element name="audit-events-in-sfrs">
+    <xs:complexType/>
+  </xs:element>
+  <xs:element name="pp-pref">
+    <xs:annotation>
+      <xs:documentation>
+         Declarations and definition of global variables.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:complexType mixed="true">
+      <xs:group ref="v1:basic-content-pat"/>
+      <xs:attribute name="name" use="required">
+        <xs:annotation>
+          <xs:documentation>Name of the preference.</xs:documentation>
+        </xs:annotation>
+        <xs:simpleType>
+          <xs:restriction base="xs:token">
+            <xs:enumeration value="display-audit-with-sfrs"/>
+            <xs:enumeration value="audit-events-in-sfrs"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="PPReference">
+    <xs:annotation>
+      <xs:documentation>
+          A wrapper element for document meta-data.
+        </xs:documentation>
+    </xs:annotation>
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="v1:ReferenceTable"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="ReferenceTable">
+    <xs:annotation>
+      <xs:documentation>
+            A second wrapper element for document meta-data.
+          </xs:documentation>
+    </xs:annotation>
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="v1:PPTitle"/>
+        <xs:element ref="v1:PPVersion"/>
+        <xs:element ref="v1:PPAuthor"/>
+        <xs:element ref="v1:PPPubDate"/>
+        <xs:element ref="v1:Keywords"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="PPTitle" type="xs:string">
+    <xs:annotation>
+      <xs:documentation>Title of this document</xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="PPVersion" type="xs:NMTOKEN">
+    <xs:annotation>
+      <xs:documentation>
+
+Version of Common Criteria this document follows.
+It should be the version listed in the CCPart1/2/3 files consulted.
+
+            </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="PPAuthor" type="xs:string">
+    <xs:annotation>
+      <xs:documentation>
+              Organization that developed this PP (e.g. National Information Assurance Partnership)
+            </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="PPPubDate" type="xs:date">
+    <xs:annotation>
+      <xs:documentation>
+              Date of publication for this PP.
+            </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="Keywords" type="xs:string">
+    <xs:annotation>
+      <xs:documentation>
+              NOT USED. A list of keywords associated with this document.
+            </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+</xs:schema>

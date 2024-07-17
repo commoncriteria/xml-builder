@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" targetNamespace="https://niap-ccevs.org/cc/v1" xmlns:v1="https://niap-ccevs.org/cc/v1" xmlns:sec="https://niap-ccevs.org/cc/v1/section">
+  <xs:import namespace="https://niap-ccevs.org/cc/v1/section" schemaLocation="sec.xsd"/>
+  <xs:group name="selectables">
+    <xs:choice>
+      <xs:group ref="v1:selectables-classic"/>
+      <xs:group ref="v1:selectables-table"/>
+    </xs:choice>
+  </xs:group>
+  <xs:group name="selectables_classic_content">
+    <xs:sequence>
+      <xs:group ref="v1:selectable-group"/>
+    </xs:sequence>
+  </xs:group>
+  <xs:attributeGroup name="selectables_classic_content">
+    <xs:attribute name="linebreak">
+      <xs:annotation>
+        <xs:documentation>
+            Indicates that new lines should be appended to every selectable.
+          </xs:documentation>
+      </xs:annotation>
+      <xs:simpleType>
+        <xs:restriction base="xs:token">
+          <xs:enumeration value="yes"/>
+        </xs:restriction>
+      </xs:simpleType>
+    </xs:attribute>
+  </xs:attributeGroup>
+  <xs:group name="selectables_table_content">
+    <xs:sequence>
+      <xs:element ref="v1:tabularize"/>
+      <xs:element maxOccurs="unbounded" name="selectable">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element maxOccurs="unbounded" ref="v1:col"/>
+          </xs:sequence>
+          <xs:attribute name="id"/>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+  </xs:group>
+  <xs:element name="tabularize">
+    <xs:complexType>
+      <xs:choice maxOccurs="unbounded">
+        <xs:element ref="v1:reqtext"/>
+        <xs:element ref="v1:assigncol"/>
+        <xs:element ref="v1:selectcol"/>
+        <xs:element ref="v1:textcol"/>
+      </xs:choice>
+      <xs:attribute name="id"/>
+      <xs:attribute name="title"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="reqtext" type="xs:string"/>
+  <xs:element name="assigncol" type="xs:string"/>
+  <xs:element name="selectcol">
+    <xs:complexType mixed="true">
+      <xs:group ref="v1:basic-content-pat"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="textcol" type="xs:string"/>
+  <xs:element name="col">
+    <xs:complexType mixed="true">
+      <xs:group ref="v1:basic-content-pat"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:group name="selectables-table">
+    <xs:sequence>
+      <xs:element name="selectables">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="tabularize">
+              <xs:complexType>
+                <xs:choice maxOccurs="unbounded">
+                  <xs:element ref="v1:reqtext"/>
+                  <xs:element ref="v1:assigncol"/>
+                  <xs:element ref="v1:selectcol"/>
+                  <xs:element ref="v1:textcol"/>
+                </xs:choice>
+                <xs:attribute name="id" use="required"/>
+                <xs:attribute name="title" use="required"/>
+              </xs:complexType>
+            </xs:element>
+            <xs:element maxOccurs="unbounded" name="selectable">
+              <xs:complexType>
+                <xs:sequence>
+                  <xs:element minOccurs="0" ref="v1:deprecated"/>
+                  <xs:element maxOccurs="unbounded" ref="v1:col"/>
+                </xs:sequence>
+                <xs:attribute name="id" use="required"/>
+              </xs:complexType>
+            </xs:element>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+  </xs:group>
+  <xs:element name="deprecated">
+    <xs:complexType/>
+  </xs:element>
+  <xs:group name="selectables-classic">
+    <xs:sequence>
+      <xs:element name="selectables">
+        <xs:annotation>
+          <xs:documentation>
+        A grouping of selectable elements.
+      </xs:documentation>
+        </xs:annotation>
+        <xs:complexType>
+          <xs:choice>
+            <xs:group ref="v1:selectables_classic_content"/>
+            <xs:group ref="v1:selectables_table_content"/>
+          </xs:choice>
+          <xs:attribute name="onlyone">
+            <xs:annotation>
+              <xs:documentation>
+            Designates that at only one item may be selected.
+          </xs:documentation>
+            </xs:annotation>
+            <xs:simpleType>
+              <xs:restriction base="xs:token">
+                <xs:enumeration value="yes"/>
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:attribute>
+          <xs:attributeGroup ref="v1:selectables_classic_content"/>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+  </xs:group>
+  <xs:element name="not-selectable">
+    <xs:complexType mixed="true">
+      <xs:group ref="v1:basic-content-pat"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:group name="selectable-single">
+    <xs:sequence>
+      <xs:element name="selectable">
+        <xs:annotation>
+          <xs:documentation>
+        Denotes the start of a selectable in a selectables section.
+      </xs:documentation>
+        </xs:annotation>
+        <xs:complexType mixed="true">
+          <xs:sequence>
+            <xs:element minOccurs="0" ref="v1:deprecated"/>
+            <xs:element minOccurs="0" ref="v1:readable"/>
+            <xs:group ref="v1:basic-content-pat"/>
+          </xs:sequence>
+          <xs:attribute name="style">
+            <xs:annotation>
+              <xs:documentation>
+          Style attributes that are passsed on to the *li* element.
+          </xs:documentation>
+            </xs:annotation>
+          </xs:attribute>
+          <xs:attribute name="exclusive">
+            <xs:simpleType>
+              <xs:restriction base="xs:token">
+                <xs:enumeration value="yes"/>
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:attribute>
+          <xs:attribute name="id" type="xs:NCName">
+            <xs:annotation>
+              <xs:documentation>A document-wide unique string. Do not start with an underscore('_').</xs:documentation>
+            </xs:annotation>
+          </xs:attribute>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+  </xs:group>
+  <xs:element name="readable" type="xs:string">
+    <xs:annotation>
+      <xs:documentation>
+	  If this element is defined, when referencing the selection this text will be shown.
+	</xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:group name="selectable-group">
+    <xs:sequence>
+      <xs:element minOccurs="0" maxOccurs="unbounded" ref="v1:not-selectable"/>
+      <xs:group ref="v1:selectable-single"/>
+      <xs:sequence maxOccurs="unbounded">
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="v1:not-selectable"/>
+        <xs:group ref="v1:selectable-single"/>
+      </xs:sequence>
+    </xs:sequence>
+  </xs:group>
+</xs:schema>

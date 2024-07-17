@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" targetNamespace="https://niap-ccevs.org/cc/v1/section" xmlns:v1="https://niap-ccevs.org/cc/v1" xmlns:sec="https://niap-ccevs.org/cc/v1/section">
+  <xs:import namespace="https://niap-ccevs.org/cc/v1" schemaLocation="CCProtectionProfile.xsd"/>
+  <xs:element name="Security_Problem_Description" type="v1:prob-des-content"/>
+  <xs:element name="Threats">
+    <xs:complexType mixed="true">
+      <xs:sequence>
+        <xs:group ref="v1:basic-content-pat"/>
+        <xs:element ref="v1:threats"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="Assumptions">
+    <xs:complexType mixed="true">
+      <xs:sequence>
+        <xs:group ref="v1:basic-content-pat"/>
+        <xs:element ref="v1:assumptions"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="Security_Objectives" type="v1:sec-obj-content"/>
+  <xs:element name="Security_Objectives_for_the_TOE">
+    <xs:complexType mixed="true">
+      <xs:sequence>
+        <xs:group ref="v1:basic-content-pat"/>
+        <xs:element ref="v1:SOs"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="Security_Objectives_for_the_Operational_Environment">
+    <xs:complexType mixed="true">
+      <xs:sequence>
+        <xs:group ref="v1:basic-content-pat"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="v1:SOEs"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="Security_Objectives_Rationale">
+    <xs:complexType/>
+  </xs:element>
+  <xs:element name="Organizational_Security_Policies" type="v1:OSPs"/>
+  <xs:element name="Security_Functional_Requirements">
+    <xs:complexType mixed="true">
+      <xs:sequence>
+        <xs:group minOccurs="0" ref="v1:basic-content-pat"/>
+        <xs:group ref="v1:sfr_content-pat"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="Conformance_Claims" type="v1:cclaims-content-pat"/>
+  <xs:element name="Introduction" type="v1:introduction-content"/>
+  <xs:element name="Security_Requirements">
+    <xs:complexType mixed="true">
+      <xs:sequence>
+        <xs:element minOccurs="0" ref="v1:description"/>
+        <xs:group ref="v1:sec-req-content"/>
+      </xs:sequence>
+      <xs:attributeGroup ref="v1:sec-req-content"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="Security_Assurance_Requirements" type="v1:sar-content"/>
+</xs:schema>

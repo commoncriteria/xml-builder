@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" targetNamespace="https://niap-ccevs.org/cc/v1" xmlns:v1="https://niap-ccevs.org/cc/v1" xmlns:sec="https://niap-ccevs.org/cc/v1/section">
+  <xs:include schemaLocation="Commons.xsd"/>
+  <xs:import namespace="https://niap-ccevs.org/cc/v1/section" schemaLocation="sec.xsd"/>
+  <xs:group name="Introduction">
+    <xs:choice>
+      <xs:element name="section">
+        <xs:complexType>
+          <xs:complexContent>
+            <xs:extension base="v1:introduction-content">
+              <xs:attribute name="title" use="required">
+                <xs:simpleType>
+                  <xs:restriction base="xs:token">
+                    <xs:enumeration value="Introduction"/>
+                  </xs:restriction>
+                </xs:simpleType>
+              </xs:attribute>
+              <xs:attribute name="id" use="required"/>
+            </xs:extension>
+          </xs:complexContent>
+        </xs:complexType>
+      </xs:element>
+      <xs:any processContents="skip"/>
+      <xs:element ref="sec:Introduction"/>
+    </xs:choice>
+  </xs:group>
+  <xs:complexType name="introduction-content">
+    <xs:sequence>
+      <xs:group ref="v1:section"/>
+      <xs:group ref="v1:cc-terms"/>
+      <xs:element ref="v1:tech-terms"/>
+      <xs:group minOccurs="0" maxOccurs="unbounded" ref="v1:section"/>
+      <xs:group minOccurs="0" ref="v1:usecases-section"/>
+      <xs:group minOccurs="0" maxOccurs="unbounded" ref="v1:section"/>
+    </xs:sequence>
+    <xs:attributeGroup ref="v1:boilerplate-no-attr"/>
+  </xs:complexType>
+  <xs:group name="usecases-section">
+    <xs:choice>
+      <xs:element name="section">
+        <xs:complexType>
+          <xs:complexContent>
+            <xs:extension base="v1:usecases-section-content">
+              <xs:attribute name="title" use="required"/>
+              <xs:attribute name="id"/>
+            </xs:extension>
+          </xs:complexContent>
+        </xs:complexType>
+      </xs:element>
+      <xs:any processContents="skip"/>
+    </xs:choice>
+  </xs:group>
+  <xs:complexType name="usecases-section-content" mixed="true">
+    <xs:sequence>
+      <xs:group ref="v1:basic-content-pat"/>
+      <xs:element ref="v1:usecases"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:element name="usecases">
+    <xs:annotation>
+      <xs:documentation>
+        Wrapper element for uses cases.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element maxOccurs="unbounded" ref="v1:usecase"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="usecase">
+    <xs:annotation>
+      <xs:documentation>
+            A referrable section on how the protection profiled item is used.
+          </xs:documentation>
+    </xs:annotation>
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="v1:description"/>
+        <xs:element minOccurs="0" ref="v1:config"/>
+      </xs:sequence>
+      <xs:attributeGroup ref="v1:id-attr"/>
+      <xs:attributeGroup ref="v1:title-attr"/>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>
