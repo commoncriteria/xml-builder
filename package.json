@@ -1,7 +1,7 @@
 {
   "name": "xml-builder",
   "//for git hub pages homepage": "https://commoncriteria.github.io/xml-builder/",
-  "homepage": "https://commoncriteria.github.io/xml-builder/",
+  "homepage": ".",
   "private": true,
   "version": "0.1.0",
   "type": "module",
