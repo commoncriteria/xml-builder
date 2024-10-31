@@ -106,7 +106,7 @@ const initialState = {
         open: true
     },
     "e3d935a4-a1e1-44be-b868-fa7eb8322e00": {
-        title: "PP Claim",
+        title: "PP Claims",
         xmlTagMeta: {
             tagName: "cclaim",
             attributes: {
@@ -117,7 +117,7 @@ const initialState = {
         open: true
     },
     "37032788-a50d-442b-98e6-e8e3b92b26f7": {
-        title: "Package Claim",
+        title: "Package Claims",
         xmlTagMeta: {
             tagName: "cclaim",
             attributes: {
@@ -132,6 +132,28 @@ const initialState = {
         text: "",
         open: true
     },
+    "ceb738a9-60e1-48b7-bfe9-2e7c2de5153b": {
+        title: "Security Assurance Requirements",
+        text: "The Security Objectives for the TOE in <xref to=\"req\"/> were constructed to address threats identified in  " +
+            "<xref to=\"Threats\"/>. The Security Functional Requirements (SFRs) in <xref to=\"SFRs\"/> are a formal " +
+            "instantiation of the Security Objectives. The PP identifies the Security Assurance Requirements " +
+            "(SARs) to frame the extent to which the evaluator assesses the documentation applicable for the evaluation " +
+            "and performs independent testing.<h:p/> " +
+            "This section lists the set of SARs from CC part 3 that are required in evaluations against this " +
+            "PP. Individual Evaluation Activities (EAs) to be performed are specified both " +
+            "in <xref to=\"req\"/> as well as in this section. <h:p/> " +
+            "The general model for evaluation of TOEs against STs written to conform to this PP is as follows:<h:p/> " +
+            "After the ST has been approved for evaluation, the  CCTL will obtain the TOE, supporting " +
+            "environmental IT, and the administrative/user guides for the TOE. The CCTL is expected to " +
+            "perform actions mandated by the Common Evaluation Methodology (CEM) for the ASE and " +
+            "ALC SARs. The CCTL also performs the evaluation activities contained within <xref to=\"req\"/>, " +
+            "which are intended to be an interpretation of the other CEM assurance requirements as they " +
+            "apply to the specific technology instantiated in the TOE. The evaluation activities that are " +
+            "captured in <xref to=\"req\"/> also provide clarification as to what the developer needs " +
+            "to provide to demonstrate the TOE is compliant with the PP. The results of these activities will be documented " +
+            "and presented (along with the administrative guidance used) for validation.",
+        open: true
+    }
 }
 
 export const editorSlice = createSlice({

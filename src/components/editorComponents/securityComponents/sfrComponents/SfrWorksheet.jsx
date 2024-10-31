@@ -1,21 +1,22 @@
 // Imports
-import React, {useEffect, useState} from "react";
 import PropTypes from "prop-types";
-import Modal from "../../../modalComponents/Modal.jsx";
-import {FormControl, IconButton, InputLabel, MenuItem, Select, Switch, TextField, Tooltip, Typography} from "@mui/material";
+import React, { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { Box, Checkbox, FormControl, IconButton, InputLabel, MenuItem, Select, Switch, TextField, Tooltip, Typography } from "@mui/material";
+import { CREATE_SFR_SECTION_ELEMENT, DELETE_SFR_SECTION_ELEMENT, UPDATE_SFR_SECTION_ELEMENT, UPDATE_SFR_COMPONENT_ITEMS } from "../../../../reducers/SFRs/sfrSectionSlice.js";
+import { RESET_EVALUATION_ACTIVITY_UI } from "../../../../reducers/SFRs/evaluationActivitiesUI.js";
 import AddCircleRoundedIcon from "@mui/icons-material/AddCircleRounded";
 import DeleteForeverRoundedIcon from "@mui/icons-material/DeleteForeverRounded";
-import Checkbox from "@mui/material/Checkbox";
-import FormControlLabel from "@mui/material/FormControlLabel";
+import Modal from "../../../modalComponents/Modal.jsx";
+import MultiSelectDropdown from "../MultiSelectDropdown.jsx";
+import SfrAuditEvents from "./auditEvents/SfrAuditEvents.jsx";
+import CardTemplate from "../CardTemplate.jsx";
+import SfrEvaluationActivity from "./aActivity/SfrEvaluationActivity.jsx";
+import SfrRequirements from "./requirements/SfrRequirements.jsx";
 import TextEditor from "../../TextEditor.jsx";
-import SfrCard from "./SfrCard.jsx";
-import {CREATE_SFR_SECTION_ELEMENT, DELETE_SFR_SECTION_ELEMENT, UPDATE_SFR_SECTION_ELEMENT, UPDATE_SFR_COMPONENT_ITEMS} from "../../../../reducers/SFRs/sfrSectionSlice.js";
-import {useDispatch} from "react-redux";
-import MultiSelectDropdown from "./MultiSelectDropdown.jsx";
-import SfrRequirements from "./SfrRequirements.jsx";
-import SfrEvaluationActivity from "./SfrEvaluationActivity.jsx";
-import SfrAuditEvents from "./SfrAuditEvents.jsx";
-import {RESET_EVALUATION_ACTIVITY_UI} from "../../../../reducers/SFRs/evaluationActivitiesUI.js";
+import ManagementFunctionTable from "./requirements/ManagementFunctionTable.jsx";
+import ResetDataConfirmation from "../../../modalComponents/ResetDataConfirmation.jsx";
+import ApplicationNote from "./ApplicationNote.jsx";
 
 /**
  * The SfrWorksheet class that displays the data for the sfr worksheet as a modal
@@ -35,11 +36,10 @@ function SfrWorksheet(props) {
 
     // Constants
     const dispatch = useDispatch();
-    const style = {primary: "#d926a9", secondary: "#1FB2A6", borderColor: "#9CA3AF", grayTitle: {color: "#4d4d4d"},
-                       checkbox: {color: "#9E9E9E", '&.Mui-checked': {color: "#1FB2A6"}},
-                       switch: {color: "#1FB2A6", '&.Mui-checked': {color: "#1FB2A6"}}}
+    const { textFieldBorder, secondary, primary, grayTitle, checkboxPrimaryNoPad, checkboxSecondaryNoPad, primaryToggleSwitch, icons } = useSelector((state) => state.styling);
     const [openSfrComponent, setOpenSfrComponent] = useState(true)
     const [openSfrElement, setOpenSfrElement] = useState(true)
+    const [openManagementFunctionModal, setOpenManagementFunctionModal] = useState(false)
     const [selectedSfrElement, setSelectedSfrElement] = useState('')
     const [currentElements, setCurrentElements] = useState({})
 
@@ -98,28 +98,91 @@ function SfrWorksheet(props) {
         clearEvaluationActivityStorage();
     }
     const updateOptionalCheckbox = (event) => {
-        let optional = event.target.checked
-        let itemMap = {optional: optional}
+        const optional = event.target.checked
+        let itemMap = {
+            optional: optional
+        }
         if (optional) {
             itemMap.objective = false
+            itemMap.invisible = false
         }
         dispatch(UPDATE_SFR_COMPONENT_ITEMS({sfrUUID: props.sfrUUID, uuid: props.uuid, itemMap: itemMap}))
     }
     const updateObjectiveCheckbox = (event) => {
-        let objective = event.target.checked
-        let itemMap = {objective: objective}
+        const objective = event.target.checked
+        let itemMap = {
+            objective: objective
+        }
+
         if (objective) {
             itemMap.optional = false
+            itemMap.invisible = false
+        }
+        dispatch(UPDATE_SFR_COMPONENT_ITEMS({sfrUUID: props.sfrUUID, uuid: props.uuid, itemMap: itemMap}))
+    }
+    const updateInvisibleCheckbox = (event) => {
+        const invisible = event.target.checked
+        let itemMap = {
+            invisible: invisible
+        }
+
+        if (invisible) {
+            itemMap = {
+                ...itemMap,
+                optional: false,
+                objective: false,
+                selectionBased: false,
+                selections: {},
+                useCaseBased: false,
+                useCases: [],
+                implementationDependent: false,
+                reasons: [],
+            }
         }
         dispatch(UPDATE_SFR_COMPONENT_ITEMS({sfrUUID: props.sfrUUID, uuid: props.uuid, itemMap: itemMap}))
     }
     const updateSelectionBasedToggle = (event) => {
-        let selectionBased = event.target.checked
-        let itemMap = {selectionBased: selectionBased}
-        if (!selectionBased) {
-            itemMap.selections = {}
+        if (!props.value.invisible) {
+            let selectionBased = event.target.checked
+            let itemMap = {selectionBased: selectionBased}
+            if (!selectionBased) {
+                itemMap.selections = {}
+            }
+            dispatch(UPDATE_SFR_COMPONENT_ITEMS({sfrUUID: props.sfrUUID, uuid: props.uuid, itemMap: itemMap}))
         }
-        dispatch(UPDATE_SFR_COMPONENT_ITEMS({sfrUUID: props.sfrUUID, uuid: props.uuid, itemMap: itemMap}))
+    }
+    const handleOpenManagementFunctionConfirmationMenu = () => {
+        setOpenManagementFunctionModal(!openManagementFunctionModal)
+    }
+    const handleSubmitManagementFunctionConfirmationMenu = () => {
+        // Set default management function values
+        let itemMap = {
+            isManagementFunction: false,
+            managementFunctions: {}
+        }
+        let elementUUID = JSON.parse(JSON.stringify(getElementMaps())).elementNameMap[selectedSfrElement]
+        updateSfrSectionElement(elementUUID, props.uuid, itemMap)
+        // Close the Modal
+        handleOpenManagementFunctionConfirmationMenu()
+    }
+    const updateManagementFunctionCheckbox = (event) => {
+        let isManagementFunction = event.target.checked
+        if (!isManagementFunction) {
+            setOpenManagementFunctionModal(true)
+        } else {
+            let itemMap = {
+                isManagementFunction: isManagementFunction,
+                managementFunctions: {
+                    id: "fmt_smf",
+                    tableName: "Management Functions",
+                    statusMarkers: "",
+                    rows: [],
+                    columns: []
+                }
+            }
+            let elementUUID = JSON.parse(JSON.stringify(getElementMaps())).elementNameMap[selectedSfrElement]
+            updateSfrSectionElement(elementUUID, props.uuid, itemMap)
+        }
     }
     const updateSelectionBasedSelections = (title, selections) => {
         let itemMap = {selections: JSON.parse(JSON.stringify(props.value.selections))}
@@ -168,12 +231,14 @@ function SfrWorksheet(props) {
         dispatch(UPDATE_SFR_COMPONENT_ITEMS({sfrUUID: props.sfrUUID, uuid: props.uuid, itemMap: itemMap}))
     }
     const updateUseCaseBasedToggle = (event) => {
-        let useCaseBased = event.target.checked
-        let itemMap = {useCaseBased: useCaseBased}
-        if (!useCaseBased) {
-            itemMap.useCases = []
+        if (!props.value.invisible) {
+            let useCaseBased = event.target.checked
+            let itemMap = {useCaseBased: useCaseBased}
+            if (!useCaseBased) {
+                itemMap.useCases = []
+            }
+            dispatch(UPDATE_SFR_COMPONENT_ITEMS({sfrUUID: props.sfrUUID, uuid: props.uuid, itemMap: itemMap}))
         }
-        dispatch(UPDATE_SFR_COMPONENT_ITEMS({sfrUUID: props.sfrUUID, uuid: props.uuid, itemMap: itemMap}))
     }
     const updateUseCaseBasedSelections = (title, selections) => {
         let useCaseSelections = getSelectionBasedArrayByType(selections, title, "uuid")
@@ -181,16 +246,18 @@ function SfrWorksheet(props) {
         dispatch(UPDATE_SFR_COMPONENT_ITEMS({sfrUUID: props.sfrUUID, uuid: props.uuid, itemMap: itemMap}))
     }
     const updateImplementationDependentToggle = (event) => {
-        let implementationDependent = event.target.checked
-        let itemMap = {implementationDependent: implementationDependent}
-        if (!implementationDependent) {
-            itemMap.reasons = []
-        } else {
-            if (props.value.reasons.length === 0) {
-                itemMap.reasons = [""]
+        if (!props.value.invisible) {
+            let implementationDependent = event.target.checked
+            let itemMap = {implementationDependent: implementationDependent}
+            if (!implementationDependent) {
+                itemMap.reasons = []
+            } else {
+                if (props.value.reasons.length === 0) {
+                    itemMap.reasons = [""]
+                }
             }
+            dispatch(UPDATE_SFR_COMPONENT_ITEMS({sfrUUID: props.sfrUUID, uuid: props.uuid, itemMap: itemMap}))
         }
-        dispatch(UPDATE_SFR_COMPONENT_ITEMS({sfrUUID: props.sfrUUID, uuid: props.uuid, itemMap: itemMap}))
     }
     const updateExtendedDefinitionToggle = (event, extendedComponentDefinition) => {
         extendedComponentDefinition.toggle = event.target.checked
@@ -279,7 +346,15 @@ function SfrWorksheet(props) {
     const updateApplicationNote = (event) => {
         let itemMap = {note: event}
         let elementUUID = JSON.parse(JSON.stringify(getElementMaps())).elementNameMap[selectedSfrElement]
-        dispatch(UPDATE_SFR_SECTION_ELEMENT({sfrUUID: props.sfrUUID, sectionUUID: props.uuid, elementUUID: elementUUID, itemMap: itemMap}))
+        updateSfrSectionElement(elementUUID, props.uuid, itemMap)
+    }
+    const updateSfrSectionElement = (elementUUID, componentUUID, itemMap) => {
+        dispatch(UPDATE_SFR_SECTION_ELEMENT({
+            sfrUUID: props.sfrUUID,
+            sectionUUID: componentUUID,
+            elementUUID: elementUUID,
+            itemMap: itemMap
+        }))
     }
 
     // Helper Methods
@@ -294,8 +369,30 @@ function SfrWorksheet(props) {
             let element = JSON.parse(JSON.stringify(props.value.elements))[elementUUID]
             switch (type) {
                 case "note": case "title": {
-                    return element[type]
-                } case "element": {
+                    return element.hasOwnProperty(type) ? element[type] : ""
+                }
+                case "isManagementFunction": {
+                    return element.hasOwnProperty(type) ? element[type] : false
+                }
+                case "managementFunctions": {
+                    return element.hasOwnProperty(type) ? element[type] : {}
+                }
+                case "managementTextArray": {
+                    return element.hasOwnProperty(type) && element[type].hasOwnProperty("rows") && element[type].rows[key]
+                           && element[type].rows[key].hasOwnProperty("textArray")  ?
+                           element[type].rows[key].textArray : []
+                }
+                case "tabularize": {
+                    if (key) {
+                        return element.hasOwnProperty("tabularize") && element["tabularize"].hasOwnProperty(key) ? element["tabularize"][key] : {}
+                    } else {
+                        return element.hasOwnProperty("tabularize") ? element["tabularize"] : {}
+                    }
+                }
+                case "tabularizeUUIDs": {
+                    return element.hasOwnProperty("tabularize") ? Object.keys(element["tabularize"]) : []
+                }
+                case "element": {
                     return element
                 } case "uuid": {
                     return elementUUID
@@ -315,8 +412,6 @@ function SfrWorksheet(props) {
         }
         return title
     }
-
-    // Helper Methods
     const getElementMaps = () => {
         let elements = JSON.parse(JSON.stringify(props.value.elements))
         let component = JSON.parse(JSON.stringify(props.value))
@@ -376,7 +471,6 @@ function SfrWorksheet(props) {
         return selectionsArray
     }
     const getSelectionBasedToggle = () => {
-        let titleStyle = !props.value.selectionBased ? { fontSize: 16, fontWeight: "medium" } : { fontSize: 16, fontWeight: "bold", color: style.secondary }
         let componentOptions = JSON.parse(JSON.stringify(props.allSfrOptions.dropdownOptions.components))
         let currentComponentName = props.value.cc_id
         let index = componentOptions.indexOf(currentComponentName)
@@ -406,29 +500,19 @@ function SfrWorksheet(props) {
         }
 
         let selectedSelections = getSelectionBasedArrayByType(currentlySelected.selections, "selections", "name")
-        let toggleDivStyle = { paddingX: 1 }
-        if (!props.value.selectionBased) {
-            toggleDivStyle.display = "flex"
-            toggleDivStyle.justifyContent = "left"
-        }
-        let toggle = (
-            <FormControlLabel
-                sx={toggleDivStyle}
-                control={
-                    <Tooltip title={"Selecting this indicates that this SFR is dependent on a selection elsewhere in the " +
-                                    "document."} arrow>
-                        <Switch onChange={updateSelectionBasedToggle} checked={props.value.selectionBased} sx={style.switch}/>
-                    </Tooltip>
-                }
-                label={<Typography sx={titleStyle}>Selection Based</Typography>}
-            />
-        )
-        if (!props.value.selectionBased) {
+        const isToggled = props.value.selectionBased;
+        const title = "Selection Based";
+        const tooltipID = "selectionBasedToggleTooltip";
+        const tooltip = "Selecting this indicates that this SFR is dependent on a selection elsewhere in the document.";
+        const updateToggleMethod = updateSelectionBasedToggle;
+        let toggle = getToggleSwitch(title, isToggled, tooltipID, tooltip, updateToggleMethod)
+
+        if (!isToggled) {
             return toggle
         } else {
             return (
                 <div className="mx-[-10px]">
-                    <SfrCard type={"section"}
+                    <CardTemplate type={"section"}
                              header={
                                  <div className="my-[-6px]">
                                      {toggle}
@@ -457,35 +541,22 @@ function SfrWorksheet(props) {
         }
     }
     const getUseCaseBasedToggle = () => {
-        let titleStyle = !props.value.useCaseBased ? { fontSize: 16, fontWeight: "medium" } : { fontSize: 16, fontWeight: "bold", color: style.secondary }
         let selectionOptions = props.allSfrOptions.dropdownOptions.useCases
         let currentUseCases = JSON.parse(JSON.stringify(props.value.useCases))
         let selectedUseCases = getSelectionBasedArrayByType(currentUseCases, "Use Cases", "name")
-        let toggleDivStyle = { paddingX: 1 }
-        if (!props.value.useCaseBased) {
-            toggleDivStyle.display = "flex"
-            toggleDivStyle.justifyContent = "left"
-        }
-        let toggle = (
-            <FormControlLabel
-                sx={toggleDivStyle}
-                control={
-                    <Tooltip title={"Selecting this indicates that this SFR is dependent on a Use Case defined in the " +
-                                    "Use Case section."} arrow>
-                        <Switch onChange={updateUseCaseBasedToggle}
-                                checked={props.value.useCaseBased}
-                                sx={style.switch}
-                                disabled={props.allSfrOptions.useCaseUUID === null}/>
-                    </Tooltip>
-                }
-                label={<Typography sx={titleStyle}>Use Case Based</Typography>}/>
-        )
-        if (!props.value.useCaseBased) {
+        const isToggled = props.value.useCaseBased;
+        const title = "Use Case Based";
+        const tooltipID = "useCasedBasedToggleTooltip";
+        const tooltip = "Selecting this indicates that this SFR is dependent on a Use Case defined in the Use Case section.";
+        const updateToggleMethod = updateUseCaseBasedToggle;
+        let toggle = getToggleSwitch(title, isToggled, tooltipID, tooltip, updateToggleMethod)
+
+        if (!isToggled) {
             return toggle
         } else {
             return (
                 <div className="mx-[-10px]">
-                    <SfrCard type={"section"}
+                    <CardTemplate type={"section"}
                              header={
                                  <div className="my-[-6px]">
                                      {toggle}
@@ -504,32 +575,20 @@ function SfrWorksheet(props) {
         }
     }
     const getImplementationDependentToggle = () => {
-        let titleStyle = !props.value.implementationDependent ? { fontSize: 16, fontWeight: "medium" } : { fontSize: 16, fontWeight: "bold", color: style.secondary }
         let reasons = JSON.parse(JSON.stringify(props.value.reasons))
-        let toggleDivStyle = { paddingX: 1 }
-        if (!props.value.implementationDependent) {
-            toggleDivStyle.display = "flex"
-            toggleDivStyle.justifyContent = "left"
-        }
-        let toggle = (
-            <FormControlLabel
-                sx={toggleDivStyle}
-                control={
-                    <Tooltip title={"Selecting this indicates that this SFR is dependent on a feature defined elsewhere " +
-                                    "in the document."} arrow>
-                        <Switch onChange={updateImplementationDependentToggle}
-                                checked={props.value.implementationDependent}
-                                sx={style.switch}/>
-                    </Tooltip>
-                }
-                label={<Typography sx={titleStyle}>Implementation Dependent</Typography>}/>
-        )
-        if (!props.value.implementationDependent) {
+        const isToggled = props.value.implementationDependent;
+        const title = "Implementation Dependent";
+        const tooltipID = "implementationDependentToggleTooltip";
+        const tooltip = "Selecting this indicates that this SFR is dependent on a feature defined elsewhere in the document.";
+        const updateToggleMethod = updateImplementationDependentToggle;
+        let toggle = getToggleSwitch(title, isToggled, tooltipID, tooltip, updateToggleMethod)
+
+        if (!isToggled) {
             return toggle
         } else {
             return (
                 <div className="mx-[-10px]">
-                    <SfrCard type={"section"}
+                    <CardTemplate type={"section"}
                              header={
                                  <div className="my-[-6px]">
                                      {toggle}
@@ -542,31 +601,31 @@ function SfrWorksheet(props) {
                                              <div className="w-full pb-3 px-1" key={`${props.uuid}-reason-${index + 1}`}>
                                                  <table className="border-0 m-0 pb-2">
                                                      <tbody>
-                                                     <tr>
-                                                         <td className="p-0 text-center align-center w-full">
-                                                             <FormControl fullWidth>
-                                                                 <TextField label={`Reason ${index + 1}`} defaultValue={reason} key={reason}
-                                                                            onBlur={(event) => {updateReasons(event, "update", index)}} />
-                                                             </FormControl>
-                                                         </td>
-                                                         <td className="p-0 text-center align-middle">
-                                                             <IconButton onClick={() => {updateReasons(null, "delete", index)}}
-                                                                         disabled={!!(props.value.reasons && props.value.reasons.length === 1)}>
-                                                                 <Tooltip title={"Delete Reason"}>
-                                                                     <DeleteForeverRoundedIcon htmlColor={style.secondary} sx={{ width: 32, height: 32 }}/>
-                                                                 </Tooltip>
-                                                             </IconButton>
-                                                         </td>
-                                                     </tr>
+                                                         <tr>
+                                                             <td className="p-0 text-center align-center w-full">
+                                                                 <FormControl fullWidth color={"primary"}>
+                                                                     <TextField label={`Reason ${index + 1}`} defaultValue={reason} key={reason}
+                                                                                onBlur={(event) => {updateReasons(event, "update", index)}} />
+                                                                 </FormControl>
+                                                             </td>
+                                                             <td className="p-0 text-center align-middle">
+                                                                 <IconButton onClick={() => {updateReasons(null, "delete", index)}}
+                                                                             disabled={!!(props.value.reasons && props.value.reasons.length === 1)} variant="contained">
+                                                                     <Tooltip title={"Delete Reason"} id={"deleteReasonTooltip" + index}>
+                                                                         <DeleteForeverRoundedIcon htmlColor={ secondary } sx={ icons.large }/>
+                                                                     </Tooltip>
+                                                                 </IconButton>
+                                                             </td>
+                                                         </tr>
                                                      </tbody>
                                                  </table>
                                              </div>
                                          )
                                      })}
                                      <div className="border-t-2 mx-[-16px] mt-1">
-                                         <IconButton onClick={() => {updateReasons("", "add", null)}} key={props.tooltip + "ToolTip"}>
-                                             <Tooltip title={"Add a New Reason"}>
-                                                 <AddCircleRoundedIcon htmlColor={style.secondary} sx={{ width: 28, height: 28 }}/>
+                                         <IconButton onClick={() => {updateReasons("", "add", null)}} key={"AddReasonButton"} variant="contained">
+                                             <Tooltip title={"Add a New Reason"} id={"addNewReasonTooltip"}>
+                                                 <AddCircleRoundedIcon htmlColor={ primary } sx={{ ...icons.medium, marginTop: 1 }}/>
                                              </Tooltip>
                                          </IconButton>
                                      </div>
@@ -595,32 +654,22 @@ function SfrWorksheet(props) {
         if (!extendedComponentDefinition.hasOwnProperty("dependencies")) {
             extendedComponentDefinition.dependencies = ""
         }
-        let titleStyle = !extendedComponentDefinition.toggle ? { fontSize: 16, fontWeight: "medium" } : { fontSize: 16, fontWeight: "bold", color: style.secondary }
-        let toggleDivStyle = { paddingX: 1 }
-        if (!extendedComponentDefinition.toggle) {
-            toggleDivStyle.display = "flex"
-            toggleDivStyle.justifyContent = "left"
-        }
-        let toggle = (
-            <FormControlLabel
-                sx={toggleDivStyle}
-                control={
-                    <Tooltip title={"Selecting this indicates that this SFR is an extension of an SFR defined in the " +
-                                    "Common Criteria, and may therefore implement Component Leveling, SFR-specific " +
-                                    "Management Functions, Audit events, and Dependencies."} arrow>
-                        <Switch onChange={(event) => {updateExtendedDefinitionToggle(event, extendedComponentDefinition)}}
-                                checked={extendedComponentDefinition.toggle}
-                                sx={style.switch}/>
-                    </Tooltip>
-                }
-                label={<Typography sx={titleStyle}>Extended Component Definition</Typography>}/>
-        )
-        if (!extendedComponentDefinition.toggle) {
+
+        const isToggled = extendedComponentDefinition.toggle;
+        const title = "Extended Component Definition";
+        const tooltipID = "extendedComponentDefinitionToggleTooltip";
+        const tooltip = "Selecting this indicates that this SFR is an extension of an SFR defined in the " +
+            "Common Criteria, and may therefore implement Component Leveling, SFR-specific Management Functions, " +
+            "Audit events, and Dependencies.";
+        const updateToggleMethod = updateExtendedDefinitionToggle
+        let toggle = getToggleSwitch(title, isToggled, tooltipID, tooltip, updateToggleMethod, extendedComponentDefinition)
+
+        if (!isToggled) {
             return toggle
         } else {
             return (
                 <div className="mx-[-10px]">
-                    <SfrCard type={"section"}
+                    <CardTemplate type={"section"}
                              header={
                                  <div className="my-[-6px]">
                                     {toggle}
@@ -629,11 +678,11 @@ function SfrWorksheet(props) {
                              body={
                                  <div className="p-0 m-0 py-[6px] w-full" key={`${props.uuid}-extended-component-definition}`}>
                                      <div className="mt-[-8px] mx-[-10px] pb-[6px]">
-                                         <SfrCard
+                                         <CardTemplate
                                              className="border-gray-300"
                                              type={"section"}
                                              header={
-                                                 <label className="resize-none font-bold text-[15px] p-0 pr-4 text-secondary">Component Leveling Extended Component Description</label>
+                                                 <label className="resize-none font-bold text-[12px] p-0 pr-4 text-accent">Component Leveling Extended Component Description</label>
                                              }
                                              body={
                                                  <TextEditor className="w-full" contentType={"term"} handleTextUpdate={handleComponentLevelingText}
@@ -643,10 +692,10 @@ function SfrWorksheet(props) {
                                          />
                                      </div>
                                      <div className="mx-[-10px]">
-                                         <SfrCard
+                                         <CardTemplate
                                              type={"section"}
                                              header={
-                                                 <label className="resize-none font-bold text-[15px] p-0 pr-4 text-secondary">Management Function Extended Component Description</label>
+                                                 <label className="resize-none font-bold text-[12px] p-0 pr-4 text-accent">Management Function Extended Component Description</label>
                                              }
                                              body={
                                                  <TextEditor className="w-full" contentType={"term"} handleTextUpdate={handleManagementFunctionText}
@@ -656,11 +705,11 @@ function SfrWorksheet(props) {
                                          />
                                      </div>
                                      <div className="mx-[-10px]">
-                                         <SfrCard
+                                         <CardTemplate
                                              className="border-gray-300"
                                              type={"section"}
                                              header={
-                                                 <label className="resize-none font-bold text-[15px] p-0 pr-4 text-secondary">Audit Extended Component Description</label>
+                                                 <label className="resize-none font-bold text-[12px] p-0 pr-4 text-accent">Audit Extended Component Description</label>
                                              }
                                              body={
                                                  <TextEditor className="w-full" contentType={"term"} handleTextUpdate={handleAuditText}
@@ -670,11 +719,11 @@ function SfrWorksheet(props) {
                                          />
                                      </div>
                                      <div className="mx-[-10px]">
-                                         <SfrCard
+                                         <CardTemplate
                                              className="border-gray-300"
                                              type={"section"}
                                              header={
-                                                 <label className="resize-none font-bold text-[15px] p-0 pr-4 text-secondary">Dependencies Extended Component Description</label>
+                                                 <label className="resize-none font-bold text-[12px] p-0 pr-4 text-accent">Dependencies Extended Component Description</label>
                                              }
                                              body={
                                                  <TextEditor className="w-full" contentType={"term"} handleTextUpdate={handleDependenciesText}
@@ -689,6 +738,61 @@ function SfrWorksheet(props) {
                 </div>
             )
         }
+    }
+    const getCheckBox = (title, isChecked, tooltipID, tooltip, updateCheckboxMethod, isDisabled) => {
+        const typographyStyle = {fontSize: 13, paddingLeft: 0.5, paddingTop: 0.1}
+        const checkboxStyle = title === "Management Functions" ? checkboxSecondaryNoPad : checkboxPrimaryNoPad
+
+        if (isDisabled) {
+            typographyStyle.color = textFieldBorder;
+        }
+
+        return (
+            <div style={grayTitle}>
+                <Box display="flex" alignItems={"center"}>
+                    <Tooltip id={tooltipID}
+                             title={tooltip}
+                             arrow>
+                        <Checkbox
+                            disabled={isDisabled ? true : false}
+                            onChange={updateCheckboxMethod}
+                            checked={isChecked}
+                            sx={checkboxStyle}
+                            size="small"/>
+                    </Tooltip>
+                    <Typography sx={typographyStyle}>{title}</Typography>
+                </Box>
+            </div>
+        )
+    }
+    const getToggleSwitch = (title, isToggled, tooltipID, tooltip, updateToggleMethod, extendedComponentDefinition) => {
+        let titleStyle = !isToggled? { fontSize: 13, fontWeight: "medium", paddingLeft: 0.5 } : { fontSize: 13, fontWeight: "bold", color: primary, paddingLeft: 0.5 }
+        let toggleDivStyle = { paddingX: 1, paddingBottom: "12px", paddingTop: "2px" }
+        if (!isToggled) {
+            toggleDivStyle.display = "flex"
+            toggleDivStyle.justifyContent = "left"
+        } else {
+            toggleDivStyle.marginBottom = "-16px"
+            toggleDivStyle.display = "flex"
+            toggleDivStyle.justifyContent = "center"
+        }
+        return (
+            <div style={toggleDivStyle}>
+                <Box display="flex" alignItems="center">
+                    <Tooltip id={tooltipID} title={tooltip} arrow>
+                        <Switch
+                            onChange={extendedComponentDefinition ?
+                                (event) => (updateToggleMethod(event, extendedComponentDefinition)) :
+                                updateToggleMethod}
+                            checked={isToggled}
+                            sx={isToggled ? primaryToggleSwitch : {}}
+                            size="small"
+                        />
+                    </Tooltip>
+                    <Typography sx={titleStyle}>{title}</Typography>
+                </Box>
+            </div>
+        )
     }
     const getSfrEvaluationActivity = () => {
         let elementMaps = JSON.parse(JSON.stringify(getElementMaps()))
@@ -755,31 +859,32 @@ function SfrWorksheet(props) {
             <Modal title={"SFR Worksheet"}
                    content={(
                        <div className="w-screen sm:max-w-screen-sm md:max-w-screen-sm lg:max-w-screen-lg">
-                           <SfrCard type={"parent"} title={"SFR Component"} tooltip={"SFR Component"}
+                           <CardTemplate type={"parent"} title={"SFR Component"} tooltip={"SFR Component"}
                                collapse={openSfrComponent} collapseHandler={handleSetOpenSfrComponent}
                                body={
                                    <div className="min-w-full mt-4 justify-items-left grid grid-flow-row auto-rows-max">
                                        <div className="w-screen sm:max-w-screen-sm md:max-w-screen-sm lg:max-w-screen-lg grid grid-flow-col columns-2 gap-4 p-2 px-4">
                                            <FormControl fullWidth>
-                                               <Tooltip arrow title={"Full ID of the SFR Component. Should follow the following format: " +
-                                                   "(3 letter Family)_(3 Letter Class)_(Optional EXT).(Number representing the component)"}>
+                                               <Tooltip arrow id={"ccIDTooltip"}
+                                                        title={"Full ID of the SFR Component. Should follow the following format: " +
+                                                                "(3 letter Family)_(3 Letter Class)_(Optional EXT).(Number representing the component)"}>
                                                     <TextField key={props.value.cc_id} label="CC-ID" onBlur={updateCcID} defaultValue={props.value.cc_id}/>
                                                </Tooltip>
                                            </FormControl>
                                            <FormControl fullWidth>
-                                               <Tooltip arrow title={"Full name of the component."}>
+                                               <Tooltip arrow title={"Full name of the component."} id={"nameTooltip"}>
                                                    <TextField key={props.value.title} label="Name" onBlur={updateTitle} defaultValue={props.value.title}/>
                                                </Tooltip>
                                            </FormControl>
                                        </div>
                                        <div className="w-screen sm:max-w-screen-sm md:max-w-screen-sm lg:max-w-screen-lg grid grid-flow-col columns-2 gap-4 p-2 px-4">
                                            <FormControl fullWidth>
-                                               <Tooltip arrow title={"Optional iteration abbreviation (Used in ID creation)."}>
+                                               <Tooltip arrow title={"Optional iteration abbreviation (Used in ID creation)."} id={"iterationIDTooltip"}>
                                                    <TextField key={props.value.iteration_id} label="Iteration ID" onBlur={updateIterationID} defaultValue={props.value.iteration_id}/>
                                                </Tooltip>
                                            </FormControl>
                                            <FormControl fullWidth>
-                                               <Tooltip arrow title={"ID that will be used when the document is translated to XML."}>
+                                               <Tooltip arrow title={"ID that will be used when the document is translated to XML."} id={"xmlIDTooltip"}>
                                                    <TextField key={props.value.xml_id} label="XML ID" defaultValue={props.value.xml_id}/>
                                                </Tooltip>
                                            </FormControl>
@@ -790,80 +895,101 @@ function SfrWorksheet(props) {
                                            </FormControl>
                                        </div>
                                        <div className="w-screen sm:max-w-screen-sm md:max-w-screen-sm lg:max-w-screen-lg">
-                                           <SfrCard
+                                           <CardTemplate
                                                type={"section"}
-                                               header={<label className="resize-none font-bold text-[18px] p-0 pr-4 text-accent">Component Selections</label>}
+                                               header={<label className="resize-none font-bold text-[14px] p-0 pr-4 text-accent">Component Selections</label>}
                                                body={
                                                    <div>
                                                        <div className="max-w-screen-sm md:max-w-screen-sm lg:max-w-screen-lg">
-                                                           <FormControl fullWidth sx={style.grayTitle}>
-                                                               <FormControlLabel
-                                                                   sx={{paddingX: 1}}
-                                                                   control={
-                                                                       <Tooltip title={"Selecting this indicates " +
-                                                                           "that this is an optional SFR, and may be " +
-                                                                           "claimed in the ST at the discretion of " +
-                                                                           "the ST author."} arrow>
-                                                                           <Checkbox onChange={updateOptionalCheckbox}
-                                                                                     checked={props.value.optional}
-                                                                                     sx={style.checkbox}/>
-                                                                       </Tooltip>
-                                                                   }
-                                                                   label={<Typography sx={{ fontSize: 16 }}>Optional</Typography>}
-                                                               />
-                                                           </FormControl>
+                                                           {(() => {
+                                                               const title = "Optional";
+                                                               const isChecked = props.value.optional;
+                                                               const tooltipID = "mainOptionalCheckboxTooltip";
+                                                               const tooltip = "Selecting this indicates that this is an optional SFR, " +
+                                                                   "and may be claimed in the ST at the discretion of the ST author.";
+                                                               const updateMethod = updateOptionalCheckbox;
+                                                               return getCheckBox(title, isChecked, tooltipID, tooltip, updateMethod);
+                                                           })()}
                                                        </div>
                                                        <div className="max-w-screen-sm md:max-w-screen-sm lg:max-w-screen-lg">
-                                                           <FormControl fullWidth sx={style.grayTitle}>
-                                                               <FormControlLabel
-                                                                   sx={{paddingX: 1}}
-                                                                   control={
-                                                                       <Tooltip title={"Selecting this requirement indicates that " +
-                                                                           "this SFR is not recognized by the common " +
-                                                                           "criteria, but NIAP expects it to become a " +
-                                                                           "mandatory requirement in the future."} arrow>
-                                                                           <Checkbox onChange={updateObjectiveCheckbox}
-                                                                                     checked={props.value.objective}
-                                                                                     sx={style.checkbox}/>
-                                                                       </Tooltip>
-                                                                   }
-                                                                   label={<Typography sx={{ fontSize: 16 }}>Objective</Typography>}
-                                                               />
-                                                           </FormControl>
+                                                           {(() => {
+                                                               const title = "Objective";
+                                                               const isChecked = props.value.objective;
+                                                               const tooltipID = "mainObjectiveCheckboxTooltip";
+                                                               const tooltip = "Selecting this requirement indicates that this " +
+                                                                   "SFR is not recognized by the common criteria, but NIAP expects " +
+                                                                   "it to become a mandatory requirement in the future.";
+                                                               const updateMethod = updateObjectiveCheckbox;
+                                                               return getCheckBox(title, isChecked, tooltipID, tooltip, updateMethod);
+                                                           })()}
                                                        </div>
                                                        <div className="max-w-screen-sm md:max-w-screen-sm lg:max-w-screen-lg">
+                                                           {(() => {
+                                                               const title = "Invisible";
+                                                               const isChecked = props.value.invisible !== undefined ? props.value.invisible : false;
+                                                               const tooltipID = "mainInvisibleCheckboxTooltip";
+                                                               const tooltip = (
+                                                                   <span>
+                                                                       {`The "invisible" status is rarely used. It's purpose is to allow 
+                                                                         for the declaration of SFRs that should not appear in the PP. 
+                                                                         See the wiki for more examples: `}
+                                                                       <a
+                                                                           href="https://github.com/commoncriteria/pp-template/wiki/Components#component-declaration"
+                                                                           target="_blank"
+                                                                           rel="noopener noreferrer"
+                                                                           style={{ textDecoration: 'underline' }}
+                                                                       >
+                                                                           Component Declaration Wiki
+                                                                       </a>
+                                                                       .
+                                                                       <br/>
+                                                                       <br/>
+                                                                       * Note: This box can only be selected with Extended Component Definition.
+                                                                   </span>
+                                                               )
+                                                               const updateMethod = updateInvisibleCheckbox;
+                                                               return getCheckBox(title, isChecked, tooltipID, tooltip, updateMethod);
+                                                           })()}
+                                                       </div>
+                                                       <div
+                                                           className="max-w-screen-sm md:max-w-screen-sm lg:max-w-screen-lg">
                                                            {getSelectionBasedToggle()}
                                                        </div>
-                                                       <div className="max-w-screen-sm md:max-w-screen-sm lg:max-w-screen-lg">
+                                                       <div
+                                                           className="max-w-screen-sm md:max-w-screen-sm lg:max-w-screen-lg">
                                                            {getUseCaseBasedToggle()}
                                                        </div>
-                                                       <div className="max-w-screen-sm md:max-w-screen-sm lg:max-w-screen-lg">
+                                                       <div
+                                                           className="max-w-screen-sm md:max-w-screen-sm lg:max-w-screen-lg">
                                                            {getImplementationDependentToggle()}
                                                        </div>
-                                                       <div className="max-w-screen-sm md:max-w-screen-sm lg:max-w-screen-lg">
+                                                       <div
+                                                           className="max-w-screen-sm md:max-w-screen-sm lg:max-w-screen-lg">
                                                            {getExtendedComponentDefinitionToggle()}
                                                        </div>
                                                    </div>
                                                }
                                            />
                                            <div className="max-w-screen-sm md:max-w-screen-sm lg:max-w-screen-lg">
-                                                <SfrAuditEvents sfrUUID={props.sfrUUID} uuid={props.uuid} value={props.value}/>
+                                               <SfrAuditEvents sfrUUID={props.sfrUUID} uuid={props.uuid}
+                                                               value={props.value}/>
                                            </div>
                                        </div>
                                    </div>
                                }
                            />
-                           <SfrCard type={"parent"} title={"SFR Element"} tooltip={"SFR Element"}
-                                collapse={openSfrElement} collapseHandler={handleSetOpenSfrElement}
-                                body={
-                                    <div className="min-w-full mt-4 grid grid-flow-row auto-rows-max">
-                                        <div className="w-screen sm:max-w-screen-sm md:max-w-screen-sm lg:max-w-screen-lg grid grid-flow-col columns-3 gap-4 p-2 px-4">
-                                            <FormControl fullWidth>
-                                                <Tooltip
-                                                    title={"This dropdown list allows a user to select between any " +
-                                                           "of the previously created SFR elements attached to this component. " +
-                                                           "New elements can be created by clicking the green \"plus\" symbol " +
-                                                           "at the bottom of this section."} arrow>
+                           <CardTemplate type={"parent"} title={"SFR Element"} tooltip={"SFR Element"}
+                                         collapse={openSfrElement} collapseHandler={handleSetOpenSfrElement}
+                                         body={
+                                             <div className="min-w-full mt-4 grid grid-flow-row auto-rows-max">
+                                                 <div
+                                                     className="w-screen sm:max-w-screen-sm md:max-w-screen-sm lg:max-w-screen-lg grid grid-flow-col columns-3 gap-4 p-2 px-4">
+                                                 <FormControl fullWidth>
+                                                <Tooltip id={"selectElementTooltip"}
+                                                         title={"This dropdown list allows a user to select between any " +
+                                                                "of the previously created SFR elements attached to this component. " +
+                                                                "New elements can be created by clicking the green \"plus\" symbol " +
+                                                                "at the bottom of this section."} arrow>
                                                     <InputLabel key="element-select-label">Select Element</InputLabel>
                                                 </Tooltip>
                                                 <Select
@@ -885,17 +1011,32 @@ function SfrWorksheet(props) {
                                                     <span className="flex justify-stretch min-w-full">
                                                         <div className="flex justify-center w-full">
                                                             <div className="w-full pr-2">
-                                                                 <Tooltip
-                                                                     title={"This is an automatically generated ID that " +
-                                                                            "is defined by the component id and the number " +
-                                                                            "of the element added."} arrow>
-                                                                     <TextField className="w-full" key={`${props.uuid}-element-id`} label="Component ID" disabled={true}
+                                                                 <Tooltip id={"componentIDTooltip"}
+                                                                          title={"This is an automatically generated ID that " +
+                                                                                 "is defined by the component id and the number " +
+                                                                                 "of the element added."} arrow>
+                                                                     <TextField className="w-full"
+                                                                                key={`${props.uuid}-element-id`}
+                                                                                label="Component ID" disabled={true}
                                                                                 defaultValue={selectedSfrElement && selectedSfrElement !== "" ? (JSON.parse(JSON.stringify(getElementMaps())).componentName) : ""}/>
                                                                  </Tooltip>
-                                                             </div>
-                                                            <IconButton onClick={() => {handleDeleteElement(selectedSfrElement)}}>
-                                                                <Tooltip title={`Delete Element`}>
-                                                                    <DeleteForeverRoundedIcon htmlColor={style.secondary} sx={{ width: 28, height: 28 }}/>
+                                                            </div>
+                                                            <div className={`w-[50%] ml-2 pr-2 pt-1 border-[1px] border-[#bdbdbd] rounded-[4px]`}>
+                                                                {(() => {
+                                                                    const title = "Management Functions";
+                                                                    const isChecked = getElementValuesByType("isManagementFunction");
+                                                                    const tooltipID = "managementFunctionCheckbox";
+                                                                    const tooltip = "Select if this SFR Element contains a Management Function Table";
+                                                                    const updateMethod = updateManagementFunctionCheckbox;
+                                                                    const isDisabled = selectedSfrElement.toLowerCase().includes("fmt") ? false : true;
+                                                                    return getCheckBox(title, isChecked, tooltipID, tooltip, updateMethod, isDisabled);
+                                                                })()}
+                                                            </div>
+                                                            <IconButton onClick={() => {
+                                                                handleDeleteElement(selectedSfrElement)
+                                                            }} variant="contained">
+                                                                <Tooltip title={`Delete Element`} id={"deleteElementTooltip"}>
+                                                                    <DeleteForeverRoundedIcon htmlColor={secondary} sx={icons.large}/>
                                                                 </Tooltip>
                                                             </IconButton>
                                                         </div>
@@ -908,6 +1049,7 @@ function SfrWorksheet(props) {
                                             selectedSfrElement && selectedSfrElement !== "" ?
                                                 <div className="w-screen sm:max-w-screen-sm md:max-w-screen-sm lg:max-w-screen-lg">
                                                     <SfrRequirements
+                                                        requirementType={"title"}
                                                         sfrUUID={props.sfrUUID}
                                                         componentUUID={props.uuid}
                                                         component={props.value}
@@ -918,25 +1060,30 @@ function SfrWorksheet(props) {
                                                         getSelectablesMaps={getSelectablesMaps}
                                                         getElementValuesByType={getElementValuesByType}
                                                         getSelectionBasedArrayByType={getSelectionBasedArrayByType}
+                                                        updateSfrSectionElement={updateSfrSectionElement}
                                                     />
-                                                    <SfrCard
-                                                        type={"section"}
-                                                        header={
-                                                            <Tooltip title={"Optional section that contains guidance for ST Authors on filling out the selections and assignments.\n" +
-                                                                "Additionally, if any of the following cases are true, then these should be documented. " +
-                                                                "1. If SFR is Selection-based, the App Note should document the selections that cause the Component to be claimed. " +
-                                                                "2. If the SFR is Implementation-based, the App Note should document the product feature that the Component depends on. " +
-                                                                "3. If any selections in the Element cause other SFRs to be claimed in the ST."} arrow>
-                                                                <label className="resize-none font-bold text-[18px] p-0 pr-4 text-accent">Application Notes</label>
-                                                            </Tooltip>
-                                                        }
-                                                        body={
-                                                            <div>
-                                                                <TextEditor className="w-full" contentType={"term"} handleTextUpdate={updateApplicationNote}
-                                                                            text={getElementValuesByType("note") ? getElementValuesByType("note") : ""}
-                                                                />
-                                                            </div>
-                                                        }
+                                                    { getElementValuesByType("isManagementFunction") ?
+                                                        <ManagementFunctionTable
+                                                            sfrUUID={props.sfrUUID}
+                                                            componentUUID={props.uuid}
+                                                            component={props.value}
+                                                            elementUUID={getElementValuesByType("uuid")}
+                                                            elementTitle={selectedSfrElement}
+                                                            getElementMaps={getElementMaps}
+                                                            allSfrOptions={props.allSfrOptions}
+                                                            getSelectablesMaps={getSelectablesMaps}
+                                                            getElementValuesByType={getElementValuesByType}
+                                                            getSelectionBasedArrayByType={getSelectionBasedArrayByType}
+                                                            managementFunctions={getElementValuesByType("managementFunctions")}
+                                                            updateSfrSectionElement={updateSfrSectionElement}
+                                                        />
+                                                        :
+                                                        null
+                                                    }
+                                                    <ApplicationNote
+                                                        isManagementFunction={false}
+                                                        updateApplicationNote={updateApplicationNote}
+                                                        getElementValuesByType={getElementValuesByType}
                                                     />
                                                 </div>
                                                 :
@@ -946,9 +1093,9 @@ function SfrWorksheet(props) {
                                 }
                                 footer={
                                     <div className="w-full flex justify-center p-0 py-1 rounded-b-lg border-t-2 border-gray-200 bg-white" key={props.uuid + "-NewFormItem"}>
-                                        <IconButton key={props.uuid + "-CreateNewElement"} onClick={handleCreateNewElement}>
-                                            <Tooltip title={"Create New Element"}>
-                                                <AddCircleRoundedIcon htmlColor={"#1FB2A6"} sx={{ width: 28, height: 28 }}/>
+                                        <IconButton key={props.uuid + "-CreateNewElement"} onClick={handleCreateNewElement} variant="contained">
+                                            <Tooltip title={"Create New Element"} id={"createNewElementTooltip"}>
+                                                <AddCircleRoundedIcon htmlColor={ primary } sx={ icons.medium }/>
                                             </Tooltip>
                                         </IconButton>
                                     </div>
@@ -960,6 +1107,13 @@ function SfrWorksheet(props) {
                    open={props.open}
                    handleOpen={props.handleOpen}
                    hideSubmit={true}
+            />
+            <ResetDataConfirmation
+                title={"Reset Management Functions Data Confirmation"}
+                text={"Are you sure you want to reset all Management Functions data to its initial state?"}
+                open={openManagementFunctionModal}
+                handleOpen={handleOpenManagementFunctionConfirmationMenu}
+                handleSubmit={handleSubmitManagementFunctionConfirmationMenu}
             />
         </div>
     );

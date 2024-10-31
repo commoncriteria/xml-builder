@@ -1,11 +1,12 @@
 // Imports
-import NavBar from "./components/NavBar.jsx";
+import { useSelector } from "react-redux";
+import { Box, createTheme, ThemeProvider } from "@mui/material";
 import ContentPane from "./components/ContentPane.jsx";
+import SideBar from "./components/SideBar.jsx";
+import SnackBar from "./components/SnackBar.jsx";
+import NavBar from "./components/NavBar.jsx";
 import "tw-elements-react/dist/css/tw-elements-react.min.css";
 import "../index.css"
-import {Box, createTheme, ThemeProvider} from "@mui/material";
-import SideBar from "./components/SideBar.jsx";
-import {useSelector} from "react-redux";
 
 /**
  * The theme of the mui controls
@@ -18,6 +19,47 @@ const theme = createTheme({
         },
         secondary: {
             main: "#d926a9"
+        }
+    },
+    components: {
+        MuiTooltip: {
+            defaultProps: {
+                placement: 'top',
+                arrow: true,
+            },
+            styleOverrides: {
+                tooltip: {
+                    fontSize: '12px',
+                },
+            }
+        },
+        MuiInputBase: {
+            styleOverrides: {
+                root: {
+                    fontSize: '14px'
+                }
+            }
+        },
+        MuiInputLabel: {
+            defaultProps: {
+                sx: {
+                    fontSize: "13px",
+                },
+            },
+        },
+        MuiOutlinedInput: {
+            defaultProps: {
+                sx: {
+                    fontSize: "13px",
+                }
+            }
+        },
+        MuiMenuItem: {
+            defaultProps: {
+                sx: {
+                    fontSize: "13px",
+                }
+            }
         }
     },
 });
@@ -34,7 +76,7 @@ function App() {
 
     // Return Function
     return (
-        <div className={"min-w-full min-h-screen bg-base-300" + (isNavOpen ? " grid grid-cols-[max-content_1fr]" : "")}>
+        <div className={"object-scale-down min-w-full min-h-screen bg-base-300" + (isNavOpen ? " grid grid-cols-[max-content_1fr]" : "")} style={{ padding: 'var(--base-padding)' }}>
             <ThemeProvider theme={theme}>
                 <div className={(isNavOpen ? "min-w-[300px] max-w-[300px]" : "")}>
                     <SideBar/>
@@ -68,6 +110,7 @@ function App() {
                         </Box>
                     </div>
                 </div>
+                <SnackBar/>
             </ThemeProvider>
         </div>
     )

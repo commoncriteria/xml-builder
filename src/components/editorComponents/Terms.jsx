@@ -1,17 +1,16 @@
 // Imports
 import PropTypes from "prop-types";
-import { useDispatch } from 'react-redux'
-import {COLLAPSE_TERMS_LIST, CREATE_TERM_ITEM, DELETE_TERMS_LIST, UPDATE_TERMS_LIST_TITLE} from '../../reducers/termsSlice.js'
-import { useSelector } from 'react-redux'
-import Term from './Term';
+import { useDispatch, useSelector } from 'react-redux'
 import { Card, CardBody, CardFooter } from "@material-tailwind/react";
-import AddCircleRoundedIcon from '@mui/icons-material/AddCircleRounded';
-import './components.css';
 import { IconButton, Tooltip } from "@mui/material";
-import DeleteForeverRoundedIcon from "@mui/icons-material/DeleteForeverRounded";
+import { COLLAPSE_TERMS_LIST, CREATE_TERM_ITEM, DELETE_TERMS_LIST, UPDATE_TERMS_LIST_TITLE } from '../../reducers/termsSlice.js'
 import { DELETE_ACCORDION_FORM_ITEM } from "../../reducers/accordionPaneSlice.js";
+import AddCircleRoundedIcon from '@mui/icons-material/AddCircleRounded';
 import AddIcon from "@mui/icons-material/Add";
+import DeleteForeverRoundedIcon from "@mui/icons-material/DeleteForeverRounded";
 import RemoveIcon from "@mui/icons-material/Remove";
+import Term from './Term';
+import './components.css';
 
 /**
  * The Terms component
@@ -33,7 +32,7 @@ function Terms(props) {
     // Constants
     const dispatch = useDispatch()
     const termSections = useSelector((state) => state.terms);
-    const style = {primary: "#d926a9", secondary: "#1FB2A6"}
+    const { primary, secondary, icons } = useSelector((state) => state.styling);
 
     // Methods
     const updateTermsListTitle = async (event) => {
@@ -56,28 +55,28 @@ function Terms(props) {
             <Card className="h-full w-full rounded-lg border-2 border-gray-300">
                 <CardBody className="mb-0 rounded-b-none" key={props.uuid + "CardBody"}>
                     <div className="flex">
-                        <label className="mr-2 resize-none font-bold text-lg text-secondary">{props.section}</label>
+                        <label className="mr-2 resize-none font-bold text-[14px] text-secondary">{props.section}</label>
                         <span/>
-                        <Tooltip title={props.titleTooltip ? props.titleTooltip : ""} arrow
+                        <Tooltip title={props.titleTooltip ? props.titleTooltip : ""} id={props.uuid + props.titleTooltip} arrow
                                  disableHoverListener={!props.titleTooltip}>
-                            <textarea className="w-full resize-none font-bold text-lg mb-0 h-[30px] p-0 text-secondary"
+                            <textarea className="w-full resize-none font-bold text-[14px] mb-0 h-[30px] p-0 text-secondary"
                                       onChange={updateTermsListTitle} value={props.title}>{props.title}</textarea>
                         </Tooltip>
                         <span/>
                         <span/>
-                        <IconButton sx={{marginTop: "-8px"}} onClick={deleteTermsList}>
-                            <Tooltip title={"Delete Section"}>
-                                <DeleteForeverRoundedIcon htmlColor={style.primary} sx={{ width: 32, height: 32 }}/>
+                        <IconButton sx={{marginTop: "-8px"}} onClick={deleteTermsList} variant="contained">
+                            <Tooltip title={"Delete Section"} id={props.uuid + "deleteSectionButton"}>
+                                <DeleteForeverRoundedIcon htmlColor={ primary } sx={ icons.large }/>
                             </Tooltip>
                         </IconButton>
                         <span/>
-                        <IconButton sx={{marginTop: "-8px"}} onClick={collapseHandler}>
-                            <Tooltip title={`${props.open ? "Collapse " : "Expand "} Terms List`}>
+                        <IconButton sx={{marginTop: "-8px"}} onClick={collapseHandler} variant="contained">
+                            <Tooltip title={`${props.open ? "Collapse " : "Expand "} Terms List`} id={(props.open ? "collapse" : "expand") + props.uuid + "TermsListTooltip"}>
                                 {
                                     props.open ?
-                                        <RemoveIcon htmlColor={style.primary} sx={{ width: 32, height: 32 }}/>
+                                        <RemoveIcon htmlColor={ primary } sx={ icons.large }/>
                                         :
-                                        <AddIcon htmlColor={style.primary} sx={{ width: 32, height: 32 }}/>
+                                        <AddIcon htmlColor={ primary } sx={ icons.large }/>
                                 }
                             </Tooltip>
                         </IconButton>
@@ -105,9 +104,9 @@ function Terms(props) {
                                    }
                                </div>
                                <div className="flex flex-col items-center h-18 mt-2 mb-3">
-                                   <IconButton onClick={addHandler}>
-                                       <Tooltip title={"Add Term"}>
-                                           <AddCircleRoundedIcon htmlColor={style.secondary} sx={{ width: 32, height: 32 }}/>
+                                   <IconButton onClick={addHandler} variant="contained">
+                                       <Tooltip title={"Add Term"}  id={props.uuid + "addTermToolTip"}>
+                                           <AddCircleRoundedIcon htmlColor={ secondary } sx={ icons.large }/>
                                        </Tooltip>
                                    </IconButton>
                                </div>

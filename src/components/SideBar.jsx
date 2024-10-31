@@ -37,7 +37,7 @@ function SideBar() {
     const [openAccordionMenu, setOpenAccordionMenu] = React.useState(false);
     const [openResetDataMenu, setOpenResetDataMenu] = React.useState(false);
     const [openXMLExporterMenu, setOpenXMLExporterMenu] = React.useState(false);
-    const iconColor = "#d926a9"
+    const { primary, icons } = useSelector((state) => state.styling);
     const isNavOpen = useSelector((state) => state.navBar.isNavOpen)
     const accordions = useSelector((state) => state.accordionPane.sections)
     const terms = useSelector((state) => state.terms)
@@ -55,6 +55,9 @@ function SideBar() {
                 await dispatch(setIsPreviewToggled())
             }
             await dispatch(RESET_EXPORT())
+        } else {
+            // Reload page on dialog close
+            location.reload();
         }
         setOpenFileLoaderMenu(!openFileLoaderMenu);
     }
@@ -74,6 +77,19 @@ function SideBar() {
     }
     const handleOpenResetDataMenu = () => {
         setOpenResetDataMenu(!openResetDataMenu);
+    }
+    const handleSubmitResetDataMenu = () => {
+        // Clear session storage and reset template data to its original state
+        sessionStorage.clear()
+
+        // Reload the page after clearing out local storage
+        location.reload()
+
+        // Close the dialog
+        handleOpenResetDataMenu()
+
+        // Scroll back to the top of the page
+        window.scrollTo(0, 0)
     }
     const handleExpandAllAccordions = async () => {
         await (dispatch(expandAllAccordions()))
@@ -105,7 +121,7 @@ function SideBar() {
     const getCurrentSectionsLists = (item, key) => {
         return (
             <div className="py-0" key={item.title + (key ? key : "") + "SectionMenuItem"}>
-                <Tooltip title={`Go to ${item.title}`} placement={"top"}>
+                <Tooltip title={`Go to ${item.title}`} placement={"top"} id={"goToItemTooltip" + key}>
                     <ListItem
                         disabled={isPreviewToggled}
                         onClick={() => {
@@ -124,12 +140,12 @@ function SideBar() {
                         }}
                     >
                         <ListItemPrefix>
-                            <ArrowRightIcon sx={{width: 22, height: 22}}/>
+                            <ArrowRightIcon sx={ icons.small }/>
                         </ListItemPrefix>
                         <ListItemPrefix>
-                            <WebIcon htmlColor={iconColor} sx={{width: 22, height: 22}}/>
+                            <WebIcon htmlColor={ primary } sx={ icons.small }/>
                         </ListItemPrefix>
-                        <Typography className="text-md">{item.title}</Typography>
+                        <Typography className="text-[14px]">{item.title}</Typography>
                     </ListItem>
                 </Tooltip>
             </div>
@@ -146,7 +162,7 @@ function SideBar() {
                     <Card className="w-full h-full bg-neutral border-2 border-gray-500 pt-5 overflow-y-auto">
                         <div className="h-full w-full">
                             <div className="flex items-center justify-center pb-5 border-b-[3px] rounded-b-sm border-gray-500">
-                                <Typography className="text-4xl font-semibold text-secondary">
+                                <Typography className="text-2xl font-semibold text-secondary">
                                     Menu
                                 </Typography>
                             </div>
@@ -164,9 +180,9 @@ function SideBar() {
                                         <ListItem className="p-0" selected={openMenuItems === 1}>
                                             <AccordionHeader onClick={() => handleOpenMenuItems(1)} className="border-b-0 px-3 py-2">
                                                 <ListItemPrefix>
-                                                    <LayersIcon htmlColor={iconColor} sx={{ width: 30, height: 30 }} />
+                                                    <LayersIcon htmlColor={ primary } sx={ icons.extraLarge } />
                                                 </ListItemPrefix>
-                                                <Typography className="text-xl mr-auto">
+                                                <Typography className="text-[16px] mr-auto">
                                                    Current Sections
                                                 </Typography>
                                             </AccordionHeader>
@@ -188,44 +204,44 @@ function SideBar() {
                                         open={openMenuItems === 2}
                                         icon={
                                             <div className="flex mx-auto">
-                                                <ArrowDropDownIcon sx={{ width: 26, height: 26, marginBottom: "2px", transform: (openMenuItems === 2 ? "rotate(180deg)" : "") }}/>
+                                                <ArrowDropDownIcon sx={{ ...icons.large, marginBottom: "2px", transform: (openMenuItems === 2 ? "rotate(180deg)" : "") }}/>
                                             </div>
                                         }
                                     >
                                         <ListItem className="p-0" selected={openMenuItems === 2}>
                                             <AccordionHeader onClick={() => handleOpenMenuItems(2)} className="border-b-0 px-3 py-2">
                                                 <ListItemPrefix>
-                                                    <FolderIcon htmlColor={iconColor} sx={{ width: 26, height: 26 }} />
+                                                    <FolderIcon htmlColor={ primary } sx={ icons.large }/>
                                                 </ListItemPrefix>
-                                                <Typography className="text-xl mr-auto">
+                                                <Typography className="text-[16px] mr-auto">
                                                     File Options
                                                 </Typography>
                                             </AccordionHeader>
                                         </ListItem>
                                         <AccordionBody className="pl-0 pt-1 pb-0">
                                             <List className="p-0">
-                                                <Tooltip title={"Configures the XML File Settings"} placement={"top"}>
+                                                <Tooltip title={"Configures the XML File Settings"} placement={"top"} id={"importXMLTooltip"}>
                                                     <ListItem onClick={handleOpenFileLoader}>
                                                         <ListItemPrefix>
-                                                            <ArrowRightIcon sx={{ width: 22, height: 22 }} />
+                                                            <ArrowRightIcon sx={ icons.small }/>
                                                         </ListItemPrefix>
                                                         <ListItemPrefix>
-                                                            <UploadFileIcon htmlColor={iconColor} sx={{ width: 22, height: 22 }}/>
+                                                            <UploadFileIcon htmlColor={ primary } sx={ icons.small }/>
                                                         </ListItemPrefix>
-                                                        <Typography className="text-md">
+                                                        <Typography className="text-[14px]">
                                                             Configure XML Settings
                                                         </Typography>
                                                     </ListItem>
                                                 </Tooltip>
-                                                <Tooltip title={"Exports the XML File Content"} placement={"top"}>
+                                                <Tooltip title={"Exports the XML File Content"} placement={"top"} id={"exportXMLTooltip"}>
                                                     <ListItem onClick={handleOpenXMLExporter}>
                                                         <ListItemPrefix>
-                                                            <ArrowRightIcon sx={{ width: 22, height: 22 }} />
+                                                            <ArrowRightIcon sx={ icons.small }/>
                                                         </ListItemPrefix>
                                                         <ListItemPrefix>
-                                                            <FileDownloadIcon htmlColor={iconColor} sx={{ width: 22, height: 22 }}/>
+                                                            <FileDownloadIcon htmlColor={ primary } sx={ icons.small }/>
                                                         </ListItemPrefix>
-                                                        <Typography className="text-md">
+                                                        <Typography className="text-[14px]">
                                                             Export XML
                                                         </Typography>
                                                     </ListItem>
@@ -238,66 +254,66 @@ function SideBar() {
                                         open={openMenuItems === 3}
                                         icon={
                                             <div className="flex mx-auto">
-                                                <ArrowDropDownIcon sx={{ width: 26, height: 26, marginBottom: "2px", transform: (openMenuItems === 3 ? "rotate(180deg)" : "") }}/>
+                                                <ArrowDropDownIcon sx={{ ...icons.large, marginBottom: "2px", transform: (openMenuItems === 3 ? "rotate(180deg)" : "") }}/>
                                             </div>
                                         }
                                     >
                                         <ListItem className="p-0" selected={openMenuItems === 3}>
                                             <AccordionHeader onClick={() => handleOpenMenuItems(3)} className="border-b-0 px-3 py-2">
                                                 <ListItemPrefix>
-                                                    <SettingsSharpIcon htmlColor={iconColor} sx={{ width: 26, height: 26 }} />
+                                                    <SettingsSharpIcon htmlColor={ primary } sx={ icons.large }/>
                                                 </ListItemPrefix>
-                                                <Typography className="text-xl mr-auto">
+                                                <Typography className="text-[16px] mr-auto">
                                                     Settings
                                                 </Typography>
                                             </AccordionHeader>
                                         </ListItem>
                                         <AccordionBody className="pl-0 pt-1 pb-0">
                                             <List className="p-0">
-                                                <Tooltip title={"Add in a New Section to the Template"} placement={"top"}>
+                                                <Tooltip title={"Add in a New Section to the Template"} placement={"top"} id={"newSectionTemplateTooltip"}>
                                                     <ListItem onClick={handleOpenAccordionMenu}>
                                                         <ListItemPrefix>
-                                                            <ArrowRightIcon sx={{ width: 22, height: 22 }} />
+                                                            <ArrowRightIcon sx={ icons.small }/>
                                                         </ListItemPrefix>
                                                         <ListItemPrefix>
-                                                            <QueueIcon htmlColor={iconColor} sx={{ width: 22, height: 22 }}/>
+                                                            <QueueIcon htmlColor={ primary } sx={ icons.small }/>
                                                         </ListItemPrefix>
-                                                        <Typography className="text-md">
+                                                        <Typography className="text-[14px]">
                                                             Create a New Section
                                                         </Typography>
                                                     </ListItem>
                                                 </Tooltip>
                                                 <ListItem onClick={handleExpandAllAccordions}>
                                                     <ListItemPrefix>
-                                                        <ArrowRightIcon sx={{ width: 22, height: 22 }} />
+                                                        <ArrowRightIcon sx={ icons.small }/>
                                                     </ListItemPrefix>
                                                     <ListItemPrefix>
-                                                        <AddCircleIcon htmlColor={iconColor} sx={{ width: 22, height: 22 }}/>
+                                                        <AddCircleIcon htmlColor={ primary } sx={ icons.small }/>
                                                     </ListItemPrefix>
-                                                    <Typography className="text-md">
+                                                    <Typography className="text-[14px]">
                                                         Expand All Sections
                                                     </Typography>
                                                 </ListItem>
                                                 <ListItem onClick={handleCollapseAllAccordions}>
                                                     <ListItemPrefix>
-                                                        <ArrowRightIcon sx={{ width: 22, height: 22 }} />
+                                                        <ArrowRightIcon sx={ icons.small }/>
                                                     </ListItemPrefix>
                                                     <ListItemPrefix>
-                                                        <RemoveCircleIcon htmlColor={iconColor} sx={{ width: 22, height: 22 }}/>
+                                                        <RemoveCircleIcon htmlColor={ primary } sx={ icons.small }/>
                                                     </ListItemPrefix>
-                                                    <Typography className="text-md">
+                                                    <Typography className="text-[14px]">
                                                         Collapse All Sections
                                                     </Typography>
                                                 </ListItem>
-                                                <Tooltip title={"Clears Out All Data"} placement={"top"}>
+                                                <Tooltip title={"Clears Out All Data"} placement={"top"} id={"clearOutDataTooltip"}>
                                                     <ListItem onClick={handleOpenResetDataMenu}>
                                                         <ListItemPrefix>
-                                                            <ArrowRightIcon sx={{ width: 22, height: 22 }} />
+                                                            <ArrowRightIcon sx={ icons.small }/>
                                                         </ListItemPrefix>
                                                         <ListItemPrefix>
-                                                            <RestoreIcon htmlColor={iconColor} sx={{ width: 22, height: 22 }}/>
+                                                            <RestoreIcon htmlColor={ primary } sx={ icons.small }/>
                                                         </ListItemPrefix>
-                                                        <Typography className="text-md">
+                                                        <Typography className="text-[14px]">
                                                             Reset Template Data
                                                         </Typography>
                                                     </ListItem>
@@ -316,7 +332,13 @@ function SideBar() {
             <FileLoader open={openFileLoaderMenu} handleOpen={handleOpenFileLoader}/>
             <XMLExporter open={openXMLExporterMenu} handleOpen={handleOpenXMLExporter} preview={false}/>
             <NewAccordion open={openAccordionMenu} handleOpen={handleOpenAccordionMenu}/>
-            <ResetDataConfirmation open={openResetDataMenu} handleOpen={handleOpenResetDataMenu}/>
+            <ResetDataConfirmation
+                title={"Reset Data Confirmation"}
+                text={"Are you sure you want to reset all data to its initial state?"}
+                open={openResetDataMenu}
+                handleOpen={handleOpenResetDataMenu}
+                handleSubmit={handleSubmitResetDataMenu}
+            />
         </div>
     )
 }

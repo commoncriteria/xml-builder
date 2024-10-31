@@ -20,43 +20,81 @@ export const sfrPreview = createSlice({
         GET_REQUIREMENTS_TITLE_PREVIEW: (state, action) => {
             let titleSection = ""
             try {
-                const { selectables, selectableGroups, title } = action.payload
-                titleSection = getTitle(selectables, selectableGroups, title)
+                const { selectables, selectableGroups, title, tabularize } = action.payload
+                titleSection = getTextString(selectables, selectableGroups, title, tabularize)
             } catch (e) {
                 console.log(e)
             } finally {
                 action.payload.titleSection = titleSection
             }
         },
+        GET_MANAGEMENT_FUNCTION_TEXT_PREVIEW: (state, action) => {
+            let managementFunctionText = ""
+            try {
+                const { selectables, selectableGroups, textArray } = action.payload
+                managementFunctionText = getTextString(selectables, selectableGroups, textArray)
+            } catch (e) {
+                console.log(e)
+            } finally {
+                action.payload.managementFunctionText = managementFunctionText
+            }
+        },
+        GET_TABULARIZE_TABLE_TEXT_PREVIEW: (state, action) => {
+            let tabularizeCellText = ""
+            try {
+                const { selectables, selectableGroups, textArray } = action.payload
+                tabularizeCellText = getTextString(selectables, selectableGroups, textArray)
+            } catch (e) {
+                console.log(e)
+            } finally {
+                action.payload.tabularizeTableText = tabularizeCellText
+            }
+        },
     },
 })
 
 // Helper Methods
-const getTitle = (selectables, selectableGroups, currentTitle) => {
-    let titleString = ""
-    let title = [];
+const getTextString = (selectables, selectableGroups, currentTextArray, tabularize) => {
+    let textString = ""
+    let textArray = [];
     try {
-        if (currentTitle && currentTitle.length > 0) {
-            currentTitle.forEach((section) => {
+        if (currentTextArray && currentTextArray.length > 0) {
+            currentTextArray.forEach((section) => {
                 const key = Object.keys(section)[0]
                 let value = Object.values(section)[0]
+
                 switch (key) {
                     case "assignment": case "selections": {
                         if (value) {
                             const isBullet = false;
                             const notSelectable = false;
                             let selectable = getGroupItemsByType(value, selectables, selectableGroups, isBullet, notSelectable)
-                            if (!title.includes(selectable)) {
-                                title.push(selectable)
+                            if (!textArray.includes(selectable)) {
+                                textArray.push(selectable)
                             }
                         }
                         break;
                     }
                     case "description": case "text": {
-                        value = value.replace("<p>", "<body>")
-                        value = value.replace("</p>", "</body>")
-                        if (value && !title.includes(value)) {
-                            title.push(value)
+                        value = value.replace("<p>", "<div>")
+                        value = value.replace("</p>", "</div>")
+                        if (value && !textArray.includes(value)) {
+                            textArray.push(value)
+                        }
+                        break;
+                    }
+                    case "tabularize": {
+                        if (tabularize && tabularize.hasOwnProperty(value)) {
+                            try {
+                                const tabularizeObject = tabularize[value]
+                                const formatted = getTabularizedSection(tabularizeObject, selectables, selectableGroups);
+
+                                if (!textArray.includes(formatted)) {
+                                    textArray.push(formatted)
+                                }
+                            } catch (e) {
+                                console.log(e)
+                            }
                         }
                         break;
                     }
@@ -65,13 +103,13 @@ const getTitle = (selectables, selectableGroups, currentTitle) => {
             })
 
             // Create title string and remove excess whitespace where possible
-            titleString = title.join(" ")
-            titleString = cleanUpStringHelper(titleString);
+            textString = textArray.join(" ")
+            textString = cleanUpStringHelper(textString);
         }
     } catch (e) {
         console.log(e)
     }
-    return titleString
+    return textString
 }
 const getComplexSelectable = (selectables, selectableGroups, currentSelectable) => {
     let selectableString = ""
@@ -249,6 +287,65 @@ const getSelectablesGroup = (selectables, selectableGroups, currentGroup, notSel
     }
     return selectableGroupString
 }
+const getTabularizedSection = (tabularize, selectables, selectableGroups) => {
+    const { title = "", definitionString = "", columns = [], rows = [] } = tabularize
+
+    const tableString = `
+        ${definitionString}
+        <br/><br/>
+        <div class="text-center font-bold">Table: ${title}</div>
+        <br/>
+        <div className="w-full">
+            <div className="border-t-2 border-gray-300 rounded-md overflow-x-auto">
+                <table className="min-w-full border-0 border-collapse mt-[-4px] overflow-hidden">
+                    ${getTabularizedColumns(columns)}
+                    ${getTabularizedRows(columns, rows, selectables, selectableGroups)}
+                </table>
+            </div>
+        </div>
+    `;
+
+    return tableString
+}
+const getTabularizedColumns = (columns) => {
+    const tableColumns = `
+        <thead>
+            <tr>
+                ${columns
+                    .filter(column => column.field !== "selectableId")
+                    .map(({ headerName }) => `
+                        <th key={column.field} className="min-w-[125px] border-2 border-gray-300 px-4 py-2">${headerName}</th>`
+                    ).join('')
+                }
+            </tr>
+        </thead>
+    `;
+
+    return tableColumns;
+}
+const getTabularizedRows = (columns, rows, selectables, selectableGroups) => {
+    const tableRows = `
+        <tbody>
+            ${rows.map(row => `
+                <tr>
+                    ${columns.map(column => {
+                        const field = column.field;
+                        const cellData = row[field];
+                
+                        if (field !== "selectableId") {
+                            const textString = 
+                                Array.isArray(cellData) ? 
+                                    getTextString(selectables, selectableGroups, cellData) :
+                                    cellData || ''
+                            return `<td classname="border-2 border-gray-300 px-4 py-2">${textString}</td>`;
+                        }
+                    }).join('')}
+                </tr>
+            `).join('')}
+        </tbody>
+    `;
+    return tableRows
+}
 const cleanUpStringHelper = (originalString) => {
     originalString = originalString.trim();
     return originalString.replace(/^[/\s+]/g, ' ');
@@ -257,7 +354,9 @@ const cleanUpStringHelper = (originalString) => {
 // Action creators are generated for each case reducer function
 export const {
     GET_COMPLEX_SELECTABLE_PREVIEW,
-    GET_REQUIREMENTS_TITLE_PREVIEW
+    GET_REQUIREMENTS_TITLE_PREVIEW,
+    GET_MANAGEMENT_FUNCTION_TEXT_PREVIEW,
+    GET_TABULARIZE_TABLE_TEXT_PREVIEW
 } = sfrPreview.actions
 
 export default sfrPreview.reducer

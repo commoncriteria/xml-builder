@@ -121,17 +121,19 @@ function NewAccordion(props) {
                                               key={sectionName}
                                               defaultValue={sectionName}
                                               onBlur={handleSectionName}
+                                              inputProps={{style: {fontSize: 14}}}
+                                              InputLabelProps={{style: {fontSize: 14}}}
                                    />
                                </FormControl>
                            </div>
                            <div className="pt-6">
                                <FormControl fullWidth required>
-                                   <InputLabel id="demo-simple-select-label">Place Section After</InputLabel>
+                                   <InputLabel sx={{ fontSize: '14px' }} id="demo-simple-select-label">Place Section After</InputLabel>
                                    <Select
                                        value={selectedSection}
                                        label="Place Section After"
                                        onChange={handleSelectedSection}
-                                       sx = {{textAlign: "left"}}
+                                       sx = {{textAlign: "left", fontSize: 14}}
                                    >
                                        {
                                            Object.keys(accordions).map((key) => {

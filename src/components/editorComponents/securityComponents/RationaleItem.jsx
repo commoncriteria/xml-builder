@@ -2,11 +2,11 @@
 import React from "react";
 import '../components.css';
 import PropTypes from "prop-types";
-import {IconButton, Tooltip} from "@mui/material";
+import { IconButton, Tooltip } from "@mui/material";
 import DeleteForeverRoundedIcon from "@mui/icons-material/DeleteForeverRounded";
-import {DELETE_THREAT_TERM_OBJECTIVE, UPDATE_THREAT_TERM_OBJECTIVE_RATIONALE} from "../../../reducers/threatsSlice.js";
-import {useDispatch} from "react-redux";
-import { DELETE_SFR_TERM_OBJECTIVE, UPDATE_SFR_TERM_OBJECTIVE_RATIONALE} from "../../../reducers/SFRs/sfrSectionSlice.js";
+import { DELETE_THREAT_TERM_OBJECTIVE, UPDATE_THREAT_TERM_OBJECTIVE_RATIONALE } from "../../../reducers/threatsSlice.js";
+import { useDispatch, useSelector } from "react-redux";
+import { DELETE_SFR_TERM_OBJECTIVE, UPDATE_SFR_TERM_OBJECTIVE_RATIONALE } from "../../../reducers/SFRs/sfrSectionSlice.js";
 /**
  * The RationaleTable component
  * @param props             the import props
@@ -26,7 +26,7 @@ function RationaleItem(props) {
 
     // Constants
     const dispatch = useDispatch()
-    const style = {secondary: "#1FB2A6"}
+    const { secondary, icons } = useSelector((state) => state.styling);
 
     // Methods
     const updateObjectiveRationale = (event) => {
@@ -64,16 +64,16 @@ function RationaleItem(props) {
         <>
             <tr>
                 <th scope="row">
-                    <label className="pt-4 px-1 w-full text-[14px] text-center align-center font-bold text-accent/80">{props.title}</label>
+                    <label className="pt-4 px-1 w-full text-[12px] text-center align-center font-bold text-accent/80">{props.title}</label>
                 </th>
                 <td className="pt-4 px-1 text-center align-center">
-                    <textarea className="w-full text-md mb-0 p-0 border-2 rounded-md"
+                    <textarea className="w-full text-sm mb-0 p-0 border-2 rounded-md"
                               onChange={updateObjectiveRationale} value={props.rationale}>text={props.rationale}</textarea>
                 </td>
                 <td className="pt-4 px-4 text-center align-middle">
-                    <IconButton onClick={deleteTableObjective}>
-                        <Tooltip title={"Delete Objective"}>
-                            <DeleteForeverRoundedIcon htmlColor={style.secondary} sx={{ width: 30, height: 30 }}/>
+                    <IconButton onClick={deleteTableObjective} variant="contained">
+                        <Tooltip title={"Delete Objective"} id={props.uuid + "deleteObjectiveTooltip"}>
+                            <DeleteForeverRoundedIcon htmlColor={ secondary } sx={ icons.large }/>
                         </Tooltip>
                     </IconButton>
                 </td>

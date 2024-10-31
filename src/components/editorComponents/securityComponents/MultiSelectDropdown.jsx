@@ -35,8 +35,8 @@ function MultiSelectDropdown(props) {
 
     // Constants
     const theme = useTheme();
-    const headerStyle = {color: props.style === "primary" ? "#d926a9" : "#1FB2A6", fontSize: "16px", fontWeight: 600}
-    const [menuStyle, setMenuStyle] = useState({fontSize: "15px", fontWeight: 500})
+    const headerStyle = {color: props.style === "primary" ? "#d926a9" : "#1FB2A6", fontSize: "13px", fontWeight: 600}
+    const [menuStyle, setMenuStyle] = useState({fontSize: "13px", fontWeight: 500})
 
     // Use Effects
     useEffect(() => {
@@ -44,7 +44,7 @@ function MultiSelectDropdown(props) {
             setMenuStyle({
                 "&.Mui-selected": {backgroundColor: "#F8D8EF", opacity: "0.9", '&:hover': {backgroundColor:'#FCEFF9', opacity: "0.9"}},
                 '&:hover':{backgroundColor:'#FCEFF9', opacity: "0.9"},
-                fontSize: "15px",
+                fontSize: "13px",
                 fontWeight: 500
             })
         }
@@ -127,7 +127,7 @@ function MultiSelectDropdown(props) {
                                 selected?.map((value) => (
                                     (props.multiple !== undefined && props.multiple === false) ? value :
                                         <Chip sx={{ padding: theme.spacing(1), height: '100%', display: 'flex', flexDirection: 'row',
-                                            '& .MuiChip-label': { overflowWrap: 'break-word', whiteSpace: 'normal', textOverflow: 'clip' }}}
+                                            '& .MuiChip-label': { overflowWrap: 'break-word', whiteSpace: 'normal', textOverflow: 'clip', fontSize: '12px' }}}
                                               key={value} label={value}/>
                                 ))
                                 :

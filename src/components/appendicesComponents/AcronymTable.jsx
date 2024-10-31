@@ -33,13 +33,13 @@ function AcronymTable() {
     const filteredTerms = getAcronyms(terms);
 
     return (
-        <table className="min-w-full divide-y divide-gray-200">
+        <table className="min-w-full divide-y divide-gray-200 mb-3">
             <thead className="bg-gray-50">
                 <tr>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th scope="col" className="px-6 py-3 text-left text-[12px] font-medium text-gray-500 uppercase tracking-wider">
                         Acronym
                     </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th scope="col" className="px-6 py-3 text-left text-[12px] font-medium text-gray-500 uppercase tracking-wider">
                         Meaning
                     </th>
                 </tr>
@@ -47,8 +47,8 @@ function AcronymTable() {
             <tbody className="bg-white divide-y divide-gray-200">
                 {filteredTerms.map((term, index) => (
                     <tr key={index}>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{term.abbreviation}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{term.fullName}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-[12px] text-gray-500">{term.abbreviation}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-[12px] text-gray-500">{term.fullName}</td>
                     </tr>
                 ))}
             </tbody>

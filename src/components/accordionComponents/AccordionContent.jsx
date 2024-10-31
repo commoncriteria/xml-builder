@@ -1,20 +1,21 @@
 // Imports
-import {Accordion, AccordionHeader, AccordionBody, Card, CardBody} from "@material-tailwind/react";
 import PropTypes from "prop-types";
-import {useDispatch, useSelector} from 'react-redux'
-import { DELETE_ACCORDION, setIsAccordionOpen } from '../../reducers/accordionPaneSlice.js'
+import React, { useEffect } from "react";
+import { useDispatch, useSelector } from 'react-redux'
+import { Accordion, AccordionHeader, AccordionBody, Card, CardBody } from "@material-tailwind/react";
 import { Tooltip } from "@mui/material";
-import DeleteForeverSharpIcon from "@mui/icons-material/DeleteForeverSharp";
+import { DELETE_ACCORDION, setIsAccordionOpen } from '../../reducers/accordionPaneSlice.js'
+import { sortThreatsTermsListHelper, UPDATE_MAIN_SECURITY_PROBLEM_DEFINITION } from "../../reducers/threatsSlice.js";
+import { sortObjectiveTermsListHelper } from "../../reducers/objectivesSlice.js";
+import { UPDATE_MAIN_SFR_DEFINITION } from "../../reducers/SFRs/sfrSlice.js";
+import { sortSfrSectionsHelper } from "../../reducers/SFRs/sfrSectionSlice.js";
 import DeleteForeverRoundedIcon from "@mui/icons-material/DeleteForeverRounded";
+import DeleteForeverSharpIcon from "@mui/icons-material/DeleteForeverSharp";
 import ExpandCircleDownIcon from '@mui/icons-material/ExpandCircleDown';
 import ExpandCircleDownOutlinedIcon from '@mui/icons-material/ExpandCircleDownOutlined';
-import React, {useEffect} from "react";
 import AccordionSection from "./AccordionSection.jsx";
-import {sortThreatsTermsListHelper, UPDATE_MAIN_SECURITY_PROBLEM_DEFINITION} from "../../reducers/threatsSlice.js";
-import {sortObjectiveTermsListHelper} from "../../reducers/objectivesSlice.js";
 import TextEditor from "../editorComponents/TextEditor.jsx";
-import {UPDATE_MAIN_SFR_DEFINITION} from "../../reducers/SFRs/sfrSlice.js";
-import {sortSfrSectionsHelper} from "../../reducers/SFRs/sfrSectionSlice.js";
+import AuditEventTable from "../editorComponents/securityComponents/sfrComponents/auditEvents/AuditEventTable.jsx";
 
 /**
  * The Accordion class that displays the accordion
@@ -37,10 +38,7 @@ function AccordionContent(props) {
     const dispatch = useDispatch()
     const sfrDefinition = useSelector((state) => state.sfrs.sfrDefinition);
     const securityProblemDefinition = useSelector(state => state.threats.securityProblemDefinition)
-    const styling = {
-        hoverOpen: { backgroundColor: "#E8E8E8", outline: "6px solid #E8E8E8", borderRadius: "37%" },
-        hoverClosed: { backgroundColor: "#C8C8C8", outline: "6px solid #C8C8C8", borderRadius: "37%" }
-    }
+    const { secondary, hoverOpen, hoverClosed, icons } = useSelector((state) => state.styling);
 
     // Use Effects
     useEffect(() => {
@@ -85,32 +83,32 @@ function AccordionContent(props) {
                     <div>
                         {
                             props.title !== "Metadata Section" ?
-                                <Tooltip title={`Delete Section`}>
+                                <Tooltip title={`Delete Section`} id={"deleteAccordionSectionTooltip" + props.uuid}>
                                     {
                                         !props.open ?
-                                            <DeleteForeverSharpIcon htmlColor={"#1FB2A6"} sx={{ width: 32, height: 32, marginRight: "10px", "&:hover": styling.hoverClosed }} onClick={(event) => accordionClickHandler(event, "Delete")} />
+                                            <DeleteForeverSharpIcon htmlColor={ secondary } sx={{ ...icons.large, marginRight: "10px", "&:hover": hoverClosed }} onClick={(event) => accordionClickHandler(event, "Delete")}/>
                                             :
-                                            <DeleteForeverRoundedIcon htmlColor={"#1FB2A6"} sx={{ width: 32, height: 32, marginRight: "10px", "&:hover": styling.hoverOpen }} onClick={(event) => accordionClickHandler(event, "Delete")}/>
+                                            <DeleteForeverRoundedIcon htmlColor={ secondary } sx={{ ...icons.large, marginRight: "10px", "&:hover": hoverOpen }} onClick={(event) => accordionClickHandler(event, "Delete")}/>
                                     }
                                 </Tooltip>
                                 : null
                         }
-                        <Tooltip title={`${!props.open ? `Open ` : `Close `} Section`}>
+                        <Tooltip title={`${!props.open ? `Open ` : `Close `} Section`} id={(!props.open ? `open` : `close`) + "SectionTooltip" + props.uuid}>
                             {
                                 props.open ?
-                                    <ExpandCircleDownIcon htmlColor={"#1FB2A6"} sx={{ width: 28, height: 28, transform: "rotate(180deg)", "&:hover": styling.hoverOpen }} onClick={(event) => accordionClickHandler(event, "Icon")}/>
+                                    <ExpandCircleDownIcon htmlColor={ secondary } sx={{ ...icons.large, transform: "rotate(180deg)", "&:hover": hoverOpen }} onClick={(event) => accordionClickHandler(event, "Icon")}/>
                                     :
-                                    <ExpandCircleDownOutlinedIcon htmlColor={"#1FB2A6"} sx={{ width: 28, height: 28, "&:hover": styling.hoverClosed }} onClick={(event) => accordionClickHandler(event, "Icon")}/>
+                                    <ExpandCircleDownOutlinedIcon htmlColor={ secondary } sx={{ ...icons.large, "&:hover": hoverClosed }} onClick={(event) => accordionClickHandler(event, "Icon")}/>
                             }
                         </Tooltip>
                     </div>
                 }
             >
                 <AccordionHeader
-                    className={(props.open ? " border-b-2 bg-gray-50 rounded-lg rounded-b-none" : " border-b-0") + " px-6 text-sm xs:max-lg:text-sm sm:max:lg:text-sm max-md:text-[0.5rem] md:max-lg:text-sm lg:max-2xl:text-md 2xl:text-lg font-extrabold text-accent border-gray-400"}
+                    className={(props.open ? " border-b-2 bg-gray-50 rounded-lg rounded-b-none" : " border-b-0") + " px-6 font-extrabold text-accent border-gray-400"}
                     onClick={(event) => accordionClickHandler(event, "Accordion")}
                 >
-                    <div className="text-start">
+                    <div className="text-start text-[14px]">
                         <span>{`${props.title.toLowerCase().includes("appendix") || props.title === "Metadata Section" ? "" : (props.index + 1) + ".0 "}${props.title}`}</span>
                     </div>
                 </AccordionHeader>
@@ -134,6 +132,7 @@ function AccordionContent(props) {
                                     <Card className="rounded-lg border-2 border-gray-300">
                                         <CardBody className="pt-6 pb-4">
                                             <TextEditor text={sfrDefinition} contentType={"term"} handleTextUpdate={updateSfrAccordionDefinition}/>
+                                            <AuditEventTable/>
                                         </CardBody>
                                     </Card>
                                 </div>

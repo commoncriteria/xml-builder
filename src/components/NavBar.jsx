@@ -37,15 +37,15 @@ function NavBar() {
     // Return Function
     return (
         <nav className="navbar flex text-neutral-content min-w-full bg-base-300 border-2 border-t-3 border-l-3 rounded-lg border-gray-500 mt-1">
-            <Hamburger toggled={isNavOpen}  onToggle={() => {dispatch(setIsNavBarOpen())}}/>
-            <div className="navbar-start font-title flex font-bold lg:text-5xl md:text-4xl sm:text-2xl xs:text-2xl text-teal-400 pl-5 lg:py-2">XML Builder</div>
+            <Hamburger toggled={isNavOpen} onToggle={() => {dispatch(setIsNavBarOpen())}}/>
+            <div className="navbar-start font-title flex font-bold lg:text-4xl md:text-3xl sm:text-2xl xs:text-2xl text-teal-400 pl-5 lg:py-2">XML Builder</div>
             <div className="navbar-end mr-4">
-                <Stack direction="row" component="label" alignItems="center" justifyContent="center">
+                <Stack direction="row" component="label" alignItems="center" justifyContent="center" variant="contained">
                     <Typography style={{color:"white"}}>Preview</Typography>
-                    <Tooltip arrow  placement="bottom"
+                    <Tooltip arrow placement="bottom" id={"previewToggleButton"}
                         title={
                             !isPreviewToggled ?
-                                <h1 style={{fontSize: "16px"}}>Enabling this feature may reduce tool performance during updates</h1>
+                                <h1 style={{fontSize: "14px"}}>Enabling this feature may reduce tool performance during updates</h1>
                             : ""
                         }
                     >

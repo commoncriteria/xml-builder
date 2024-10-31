@@ -4,11 +4,21 @@ import { v4 as uuidv4 } from 'uuid';
 const initialState = {
     loadedfile: {
         filename: "",
-        content: ""
+        content: "",
+        pp: false,
+        mod: false
     },
     platformdata: {
         description: "",
         platforms: []
+    },
+    snackbar: {
+        open: false,
+        message: "",
+        severity: "success",
+        vertical: "bottom",
+        horizontal: "left",
+        autoHideDuration: 3000
     },
     metadata: {
         open: true,
@@ -88,12 +98,12 @@ const initialState = {
                     contentType: "editor"
                 },
                 {
-                    // title: "PP Claim",
+                    // title: "PP Claims",
                     uuid: "e3d935a4-a1e1-44be-b868-fa7eb8322e00",
                     contentType: "editor"
                 },
                 {
-                    // title: "Package Claim",
+                    // title: "Package Claims",
                     uuid: "37032788-a50d-442b-98e6-e8e3b92b26f7",
                     contentType: "editor"
                 },
@@ -201,10 +211,19 @@ const initialState = {
 
                 },
                 {
-                    uuid: "6dab26d4-9395-4311-a30b-547b73538ac5",
-                    title: "Security Assurance Requirements",
-                    label: "Produced on Export",
-                    contentType: "label",
+                    uuid: "ceb738a9-60e1-48b7-bfe9-2e7c2de5153b",
+                    contentType: "editor",
+                    // title: "Security Assurance Requirements",
+                    formItems: [
+                        {
+                            uuid: "c69fa400-74bd-4c0a-82a9-dacb8f1bc7f4",
+                            contentType: "sars"
+                        },
+                        {
+                            uuid: "91d2a9f7-b0ae-4113-9a31-d12caf12f294",
+                            contentType: "sars"
+                        }
+                    ]
                 }
             ],
             open: true,
@@ -385,6 +404,30 @@ export const accordionPaneSlice = createSlice({
                 }
             }
         },
+        CREATE_ACCORDION_SAR_FORM_ITEM: (state, action) => {
+            let accordionUUID = action.payload.accordionUUID
+            let editorUUID = action.payload.editorUUID
+            let sarUUID = action.payload.sarUUID
+            if (accordionUUID && editorUUID && sarUUID && state.sections.hasOwnProperty(accordionUUID) &&
+                state.sections[accordionUUID].hasOwnProperty("formItems")) {
+                let formItems = state.sections[accordionUUID].formItems
+                if (formItems && formItems.length > 0) {
+                    formItems.map((item) => {
+                        let uuid = item.uuid
+                        let contentType = item.contentType
+                        if (uuid === editorUUID &&  contentType === "editor") {
+                            if (!item.hasOwnProperty("formItems")) {
+                                item.formItems = []
+                            }
+                            item.formItems.push({
+                                uuid: sarUUID,
+                                contentType: "sars"
+                            })
+                        }
+                    })
+                }
+            }
+        },
         GET_ACCORDION_SFR_FORM_ITEMS : (state, action) => {
             let accordionUUID = action.payload.accordionUUID
             let editorUUID = action.payload.editorUUID
@@ -410,18 +453,67 @@ export const accordionPaneSlice = createSlice({
                 }
             }
         },
+        GET_ACCORDION_SAR_FORM_ITEMS: (state, action) => {
+            let accordionUUID = action.payload.accordionUUID
+            let editorUUID = action.payload.editorUUID
+            action.payload.sars = []
+            if (accordionUUID && editorUUID && state.sections.hasOwnProperty(accordionUUID) &&
+                state.sections[accordionUUID].hasOwnProperty("formItems")) {
+                let formItems = state.sections[accordionUUID].formItems
+                if (formItems && formItems.length > 0) {
+                    formItems.map((item) => {
+                        let uuid = item.uuid
+                        let contentType = item.contentType
+                        if (uuid === editorUUID && contentType === "editor") {
+                            if (item.hasOwnProperty("formItems") && item.formItems.length > 0) {
+                                item.formItems.map((sarItem) => {
+                                    let sarUUID = sarItem.uuid
+                                    if (!action.payload.sars.includes(sarUUID)) {
+                                        action.payload.sars.push(sarUUID)
+                                    }
+                                })
+                            }
+                        }
+                    })
+                }
+            }
+        },
         updateMetaDataItem: (state, action) => {
             let type = action.payload.type
             state.metadata[type] = action.payload.item
         },
         updateFileUploaded: (state, action) => {
-            state.loadedfile.filename = action.payload.filename
-            state.loadedfile.content = action.payload.content
+            const { filename, content, pp, mod } = action.payload
+            if (filename) {
+                state.loadedfile.filename = filename
+            }
+            if (content) {
+                state.loadedfile.content = content ? content: ""
+            }
+            if (pp !== undefined && typeof pp === "boolean") {
+                state.loadedfile.pp = pp
+            }
+            if (mod !== undefined && typeof mod === "boolean") {
+                state.loadedfile.mod = mod
+            }
         },
         updatePlatforms: (state, action) => {
             state.platformdata.description = action.payload.description
             state.platformdata.platforms = action.payload.platforms
             state.platformdata.xml = action.payload.xml
+        },
+        updateSnackBar: (state, action) => {
+            const { open, message, severity, vertical, horizontal, autoHideDuration } = action.payload
+
+            // Update values
+            state.snackbar = {
+                open: open !== undefined ? open : false,
+                message: message !== undefined ? message : "",
+                severity: severity !== undefined ? severity : "success",
+                vertical: vertical !== undefined ? vertical : "bottom",
+                horizontal: horizontal !== undefined ? horizontal : "left",
+                autoHideDuration: autoHideDuration !== undefined ? autoHideDuration : 3000,
+            }
         },
         setIsAccordionOpen: (state, action) => {
             let title = action.payload.title
@@ -484,14 +576,17 @@ export const {
     DELETE_ALL_ACCORDION_FORM_ITEMS,
     CREATE_ACCORDION_SUB_FORM_ITEM,
     CREATE_ACCORDION_SFR_FORM_ITEM,
+    CREATE_ACCORDION_SAR_FORM_ITEM,
     GET_ACCORDION_SFR_FORM_ITEMS,
+    GET_ACCORDION_SAR_FORM_ITEMS,
     updateMetaDataItem,
     setIsAccordionOpen,
     expandAllAccordions,
     collapseAllAccordions,
     RESET_ACCORDION_PANE_STATE,
     updateFileUploaded,
-    updatePlatforms
+    updatePlatforms,
+    updateSnackBar
 } = accordionPaneSlice.actions
 
 export default accordionPaneSlice.reducer

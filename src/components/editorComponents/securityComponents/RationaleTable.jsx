@@ -1,15 +1,15 @@
 // Imports
-import {useEffect, useState} from "react";
 import '../components.css';
 import PropTypes from "prop-types";
+import {useEffect, useState} from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { FormControl, IconButton, InputLabel, MenuItem, Select, Tooltip } from "@mui/material";
+import { ADD_THREAT_TERM_OBJECTIVE, COLLAPSE_THREAT_TO_OBJECTIVE_TABLE, sortObjectivesFromThreatsHelper } from "../../../reducers/threatsSlice.js";
+import { ADD_SFR_TERM_OBJECTIVE, sortObjectivesFromSfrsHelper, UPDATE_SFR_COMPONENT_ITEMS } from "../../../reducers/SFRs/sfrSectionSlice.js";
 import AddCircleRoundedIcon from "@mui/icons-material/AddCircleRounded";
-import RationaleItem from "./RationaleItem.jsx";
-import {useDispatch} from "react-redux";
-import {ADD_THREAT_TERM_OBJECTIVE, COLLAPSE_THREAT_TO_OBJECTIVE_TABLE, sortObjectivesFromThreatsHelper} from "../../../reducers/threatsSlice.js";
-import RemoveIcon from "@mui/icons-material/Remove";
 import AddIcon from "@mui/icons-material/Add";
-import {ADD_SFR_TERM_OBJECTIVE, sortObjectivesFromSfrsHelper, UPDATE_SFR_COMPONENT_ITEMS} from "../../../reducers/SFRs/sfrSectionSlice.js";
+import RemoveIcon from "@mui/icons-material/Remove";
+import RationaleItem from "./RationaleItem.jsx";
 
 /**
  * The RationaleTable component
@@ -36,7 +36,7 @@ function RationaleTable(props) {
     const [selectedObjectives, setSelectedObjectives] = useState([])
     const [objectiveMenuOptions, setObjectiveMenuOptions] = useState([])
     const [selectedObjective, setSelectedObjective] = useState("")
-    const style = {primary: "#d926a9", secondary: "#1FB2A6"}
+    const { secondary, icons } = useSelector((state) => state.styling);
     const [disabled, setDisabled] = useState(true)
 
     // Use Effects
@@ -168,18 +168,19 @@ function RationaleTable(props) {
                     <thead>
                     <tr>
                         <th className="p-0 text-left align-center">
-                            <IconButton sx={{marginTop: "-8px"}} onClick={collapseObjectiveTable}>
-                                <Tooltip title={`${props.open ? "Collapse " : "Expand "} Table`}>
+                            <IconButton sx={{marginTop: "-8px"}} onClick={collapseObjectiveTable} variant="contained">
+                                <Tooltip id={(props.open ? "collapse" : "expand") + props.uuid + "TableTooltip"}
+                                    title={`${props.open ? "Collapse " : "Expand "} Table`}>
                                     {
                                         props.open ?
-                                            <RemoveIcon htmlColor={style.secondary} sx={{ width: 30, height: 30, stroke: style.secondary, strokeWidth: 1 }}/>
+                                            <RemoveIcon htmlColor={ secondary } sx={ icons.large }/>
                                             :
-                                            <AddIcon htmlColor={style.secondary} sx={{ width: 30, height: 30, stroke: style.secondary, strokeWidth: 1 }}/>
+                                            <AddIcon htmlColor={ secondary } sx={ icons.large }/>
                                     }
                                 </Tooltip>
                             </IconButton>
                         </th>
-                        <th className={`p-0 align-center text-lg text-accent font-extrabold ${(props.open ? ' text-right w-[62%]' : 'text-center w-[94%]')}`}>
+                        <th className={`p-0 align-center text-[13.5px] text-accent font-extrabold ${(props.open ? ' text-right w-[62%]' : 'text-center w-[94%]')}`}>
                             <label onClick={collapseObjectiveTable}>Security Objective Selections</label>
                         </th>
                         {
@@ -200,9 +201,9 @@ function RationaleTable(props) {
                                     </FormControl>
                                     <span/>
                                     <IconButton key={props.uuid + "-AddObjective"} style={{marginTop: "4px"}}
-                                                onClick={handleNewSelection} disabled={disabled}>
-                                        <Tooltip title={"Add Objective"}>
-                                            <AddCircleRoundedIcon htmlColor={style.secondary} sx={{ width: 30, height: 30 }}/>
+                                                onClick={handleNewSelection} disabled={disabled} variant="contained">
+                                        <Tooltip title={"Add Objective"} id={"addObjectiveTooltip"}>
+                                            <AddCircleRoundedIcon htmlColor={ secondary } sx={ icons.large }/>
                                         </Tooltip>
                                     </IconButton>
                                 </th>
@@ -219,13 +220,13 @@ function RationaleTable(props) {
                         <table className="w-full border-0">
                             <thead className="border-b-2">
                             <tr>
-                                <th className="w-[30%] pb-4 px-0 text-center align-center font-extrabold text-[15px] text-secondary/70">
+                                <th className="w-[30%] pb-4 px-0 text-center align-center font-extrabold text-[12px] text-secondary/70">
                                     Objective
                                 </th>
-                                <th className="w-[60%] pb-4 text-center align-center font-extrabold text-[15px] text-secondary/70">
+                                <th className="w-[60%] pb-4 text-center align-center font-extrabold text-[12px] text-secondary/70">
                                     Rationale
                                 </th>
-                                <th className="w-[10%] pb-4 px-0 text-center align-center font-extrabold text-[15px] text-secondary/70">
+                                <th className="w-[10%] pb-4 px-0 text-center align-center font-extrabold text-[12px] text-secondary/70">
                                     Options
                                 </th>
                             </tr>

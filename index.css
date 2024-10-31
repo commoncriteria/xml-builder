@@ -20,17 +20,13 @@
 
 @tailwind utilities;
 
-/* Zoom out tool by 85% */
-body {
-    zoom: 0.85;
-}
-
 /* SFR Preview Styles */
 .xml-viewer {
     padding-left: 1em;
     padding-right: 1em;
 }
 .preview {
+    word-break: break-word;
     text-align: left;
     padding-left: 10px;
     padding-bottom: 10px;
@@ -52,6 +48,47 @@ body {
     list-style-type: circle;
 }
 
+/* AG Data Grid Styles */
+.ag-theme-quartz {
+    --ag-font-size: 14px;
+    --ag-header-foreground-color: #d926a9;
+    --ag-row-height: 50px;
+    --ag-row-border-width: 1px;
+    --ag-row-border-color: #dedede;
+}
+.ag-center-cols-viewport {
+    min-height: unset !important;
+}
+.ag-theme-quartz li {
+    list-style-type: disc;
+    padding-left: 2em;
+    text-indent: -1.3em;
+}
+.ag-header-cell-label {
+    font-weight: bold;
+    white-space: normal !important;
+    text-overflow: clip !important;
+    overflow: visible !important;
+    line-height: 1.2 !important;
+}
+.ag-tooltip {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    max-width: 300px;
+    background-color: #616161;
+    color: #eaeaea;
+    font-size: 12px;
+    border: 1px solid #ccc;
+    padding: 10px;
+    border-radius: 4px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* This CSS is to not apply the border for the column having 'no-border' class */
+.no-border.ag-cell:focus{
+    border:none !important;
+    outline: none;
+}
 /* React Quill Styles */
 .ql-editor-haserror .ql-toolbar.ql-snow + .ql-container.ql-snow {
     border: 1px solid #f56565;
@@ -77,7 +114,7 @@ body {
 .ql-container {
     color: #2d3748;
     font-family: inherit;
-    font-size: inherit;
+    font-size: 12px;
 }
 .ql-container.ql-snow {
     box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
@@ -168,4 +205,164 @@ body {
 .ql-snow .ql-tooltip.ql-editing input[type=text] {
     display: inline-block;
     color: white;
+}
+
+/* quill-better-table */
+
+.ql-container .qlbt-selection-line {
+  &.qlbt-selection-line-left {
+    &::before {
+      position: absolute;
+      left: -2px;
+      top: -2px;
+      content: '';
+      width: 5px;
+      height: 5px;
+      background-color: #0589f3;
+      border-radius: 5px;
+    }
+  }
+
+  &.qlbt-selection-line-right {
+    &::before {
+      position: absolute;
+      right: -2px;
+      bottom: -3px;
+      content: '';
+      width: 5px;
+      height: 5px;
+      background-color: #0589f3;
+      border-radius: 5px;
+    }
+  }
+}
+
+.quill-better-table-wrapper {
+  overflow-x: auto;
+}
+
+table.quill-better-table {
+  table-layout: fixed;
+  border-collapse: collapse;
+
+  td {
+    border: 1px solid #000;
+    padding: 2px 5px;
+  }
+}
+
+.qlbt-operation-menu {
+  background-color: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .15);
+  font-size: 14px;
+  z-index: 2000;
+  position: relative;
+  overflow: hidden;
+
+  .qlbt-operation-menu-dividing {
+    height: 1px;
+    background-color: #efefef;
+  }
+
+  .qlbt-operation-menu-subtitle {
+    color: #999;
+    font-size: 14px;
+    padding: 5px 16px;
+  }
+
+  .qlbt-operation-color-picker {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    padding: 0 16px 10px;
+    background-color: #fff;
+    overflow: hidden;
+
+    .qlbt-operation-color-picker-item {
+      width: 20px;
+      height: 20px;
+      border: 1px solid #595959;
+      margin-right: 5px;
+      margin-bottom: 5px;
+      cursor: pointer;
+    }
+  }
+
+  .qlbt-operation-menu-item {
+    display: flex;
+    align-items: center;
+    padding: 10px 16px;
+    background-color: #fff;
+    cursor: pointer;
+    color: #595959;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    &:hover {
+      background-color: #efefef;
+    }
+
+    .qlbt-operation-menu-icon {
+      margin-right: 8px;
+      height: 20px;
+      width: 20px;
+      font-size: 0;
+    }
+  }
+}
+
+.qlbt-col-tool {
+  position: absolute;
+  display: flex;
+  align-items: flex-end;
+  overflow: hidden;
+  z-index: 99;
+  height: 16px;
+
+  .qlbt-col-tool-cell {
+    position: relative;
+    background-color: #fff;
+    border-top: 1px solid #000;
+    border-right: 1px solid #000;
+    border-bottom: 1px solid #000;
+
+    &:first-child {
+      border-left: 1px solid #000;
+    }
+  }
+
+  .qlbt-col-tool-cell-holder {
+    position: absolute;
+    right: -1px;
+    top: 0;
+    bottom: 0;
+    z-index: 3;
+    width: 1px;
+    background-color: transparent;
+    cursor: ew-resize;
+
+    &:hover {
+      background-color: #0589f3;
+    }
+
+    &::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: -6px;
+      display: block;
+      width: 8px;
+      height: 100%;
+    }
+
+    &::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      right: -6px;
+      display: block;
+      width: 8px;
+      height: 100%;
+    }
+  }
 }

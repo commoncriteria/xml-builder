@@ -1,17 +1,15 @@
 // Imports
-import React, { useEffect, useMemo, useState } from "react";
 import PropTypes from "prop-types";
-import { FormControl, IconButton, InputLabel, MenuItem, Select, Stack, Switch, TextField, Tooltip, Typography } from "@mui/material";
-import DeleteForeverRoundedIcon from "@mui/icons-material/DeleteForeverRounded";
-import SfrCard from "./SfrCard.jsx";
-import { GET_SFR_ELEMENT_VALUES_FOR_COMPLEX_SELECTABLE, UPDATE_SFR_SECTION_ELEMENT } from "../../../../reducers/SFRs/sfrSectionSlice.js";
-import { useDispatch } from "react-redux";
-import MultiSelectDropdown from "./MultiSelectDropdown.jsx";
-import Checkbox from "@mui/material/Checkbox";
+import React, { useEffect, useMemo, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { Checkbox, FormControl, IconButton, InputLabel, MenuItem, Select, Stack, Switch, TextField, Tooltip, Typography } from "@mui/material";
+import { GET_SFR_ELEMENT_VALUES_FOR_COMPLEX_SELECTABLE, UPDATE_SFR_SECTION_ELEMENT } from "../../../../../reducers/SFRs/sfrSectionSlice.js";
+import { GET_COMPLEX_SELECTABLE_PREVIEW } from "../../../../../reducers/SFRs/sfrPreview.js";
+import { removeTagEqualities } from "../../../../../utils/fileParser.js"
 import AddCircleIcon from "@mui/icons-material/AddCircle";
-import { GET_COMPLEX_SELECTABLE_PREVIEW } from "../../../../reducers/SFRs/sfrPreview.js";
-import parse from 'html-react-parser';
-import { escapedTagsRegex } from "../../../../utils/fileParser.js"
+import DeleteForeverRoundedIcon from "@mui/icons-material/DeleteForeverRounded";
+import MultiSelectDropdown from "../../MultiSelectDropdown.jsx";
+import CardTemplate from "../../CardTemplate.jsx";
 
 /**
  * The SfrComplexSelectableCard class that displays the complex selectable card
@@ -26,20 +24,17 @@ function SfrComplexSelectableCard(props) {
         componentUUID: PropTypes.string.isRequired,
         elementUUID: PropTypes.string.isRequired,
         element: PropTypes.object.isRequired,
+        styling: PropTypes.object.isRequired,
         getSelectablesMaps: PropTypes.func.isRequired,
     };
 
     // Constants
-    const style = {
-        primary: "#d926a9",
-        secondary: "#1FB2A6",
-        checkbox: { color: "#9E9E9E", paddingLeft: "4px", '&.Mui-checked': { color: "#d926a9" }, "&:hover": { backgroundColor: "transparent" } },
-        switch: { color: "#1FB2A6", '&.Mui-checked': { color: "#1FB2A6" } }
-    }
+    const { icons } = useSelector((state) => state.styling);
     const dispatch = useDispatch();
     const [currentSelectable, setCurrentSelectable] = useState({ exclusive: false, notSelectable: false, description: [] })
     const [complexSelectableType, setComplexSelectableType] = useState("Selectables")
     const [previewToggle, setPreviewToggle] = useState(false)
+    const { styling } = props
 
     // Use Effects
     useEffect(() => {
@@ -184,11 +179,14 @@ function SfrComplexSelectableCard(props) {
                 } catch (e) {
                     console.log(e)
                 }
-                // return (<div className="preview">{parse(complexSelectable)}</div>)
 
                 // Regular expression to escape specific tags (we want them to be represented as xml tags, which otherwise 
                 // would be omitted by the quill editor due to not knowing how to interpret them)
-                return (<div className="preview">{parse(complexSelectable.replace(escapedTagsRegex, (match, tagContent) => `&lt;${tagContent}&gt;`))}</div>)
+                return (
+                    <div className="preview">
+                        {removeTagEqualities(complexSelectable, true)}
+                    </div>
+                )
             }
         },
         [previewToggle]
@@ -202,14 +200,26 @@ function SfrComplexSelectableCard(props) {
                 <span className="min-w-full inline-flex items-baseline">
                     <div className="w-[94%]">
                         <FormControl fullWidth>
-                            <TextField color="secondary" key={text} label="Text" defaultValue={text}
-                                onBlur={(event) => handleTextUpdate(event, index)} />
+                            <TextField
+                                color={styling.secondaryTextField}
+                                key={text}
+                                label="Text"
+                                defaultValue={text}
+                                onBlur={(event) => handleTextUpdate(event, index)}
+                            />
                         </FormControl>
                     </div>
                     <div className="w-[6%]">
-                        <IconButton sx={{ marginBottom: "-26px" }} onClick={() => handleDeleteComplexSelectableItem(index)}>
-                            <Tooltip title={"Delete Text"}>
-                                <DeleteForeverRoundedIcon htmlColor={style.primary} sx={{ width: 30, height: 30 }} />
+                        <IconButton
+                            sx={{ marginBottom: "-26px" }}
+                            onClick={() => handleDeleteComplexSelectableItem(index)}
+                            variant="contained"
+                        >
+                            <Tooltip
+                                title={"Delete Text"}
+                                id={props.elementUUID + "deleteTextTooltip"}
+                            >
+                                <DeleteForeverRoundedIcon htmlColor={ styling.secondaryColor } sx={ icons.large }/>
                             </Tooltip>
                         </IconButton>
                     </div>
@@ -232,13 +242,20 @@ function SfrComplexSelectableCard(props) {
                             groupID={props.id}
                             handleSelections={handleMultiselect}
                             index={index}
-                            style={"primary"}
+                            style={styling.primaryTextField}
                         />
                     </div>
                     <div className="w-[6%]">
-                        <IconButton sx={{ marginBottom: "-26px" }} onClick={() => handleDeleteComplexSelectableItem(index)}>
-                            <Tooltip title={"Delete Selectables"}>
-                                <DeleteForeverRoundedIcon htmlColor={style.primary} sx={{ width: 30, height: 30 }} />
+                        <IconButton
+                            sx={{ marginBottom: "-26px" }}
+                            onClick={() => handleDeleteComplexSelectableItem(index)}
+                            variant="contained"
+                        >
+                            <Tooltip
+                                title={"Delete Selectables"}
+                                id={props.elementUUID + "deleteSelectablesTooltip"}
+                            >
+                                <DeleteForeverRoundedIcon htmlColor={ styling.secondaryColor } sx={ icons.large }/>
                             </Tooltip>
                         </IconButton>
                     </div>
@@ -280,30 +297,53 @@ function SfrComplexSelectableCard(props) {
 
     // Return Method
     return (
-        <div key={`${props.id}-group-card`}>
-            <SfrCard type={"section"}
+        <div key={`${props.id}-complex-selectable-card`}>
+            <CardTemplate type={"section"}
                 header={
                     <div className="w-full p-0 m-0 my-[-6px]">
                         <span className="flex justify-stretch min-w-full">
                             <div className="flex justify-center text-center w-full pl-4">
-                                <Tooltip
+                                <Tooltip id={"sfrComplexSelectableTooltip"}
                                     title={"This section allows a user to create a complex selectable based on the " +
                                         "selections, groups and assignments that have been previously constructed. " +
                                         "Complex selectables can have the option of either text that will be separated " +
                                         "by a space or select multiple selections, groups and/or assignments that will " +
                                         "be separated by a comma."} arrow>
-                                    <label className="resize-none font-bold text-[16px] p-0 m-0 text-accent pr-1 mt-[8px]">{props.id}</label>
+                                    <label
+                                        style={{color: styling.primaryColor}}
+                                        className="resize-none font-bold text-[13px] p-0 m-0 pr-1 mt-[10px]">
+                                        {props.id}
+                                    </label>
                                 </Tooltip>
-                                <IconButton sx={{ marginTop: "-8px", margin: 0, padding: 0 }} onClick={handleDeleteSelectableGroup}>
-                                    <Tooltip title={"Delete Complex Selectable"}>
-                                        <DeleteForeverRoundedIcon htmlColor={style.secondary} sx={{ width: 26, height: 26 }} />
+                                <IconButton
+                                    sx={{ marginTop: "-8px", margin: 0, padding: 0 }}
+                                    onClick={handleDeleteSelectableGroup}
+                                    variant="contained"
+                                >
+                                    <Tooltip
+                                        title={"Delete Complex Selectable"}
+                                        id={props.elementUUID + "deleteTooltip"}
+                                    >
+                                        <DeleteForeverRoundedIcon htmlColor={ styling.primaryColor } sx={ icons.small }/>
                                     </Tooltip>
                                 </IconButton>
                             </div>
                             <div className="flex justify-end w-[0px] pr-1">
-                                <Stack direction="row" component="label" alignItems="center" justifyContent="center">
-                                    <Typography noWrap style={{ color: style.secondary, fontSize: "14px", fontWeight: 600 }}>Preview</Typography>
-                                    <Tooltip arrow placement={"top"}
+                                <Stack
+                                    direction="row"
+                                    component="label"
+                                    alignItems="center"
+                                    justifyContent="center"
+                                >
+                                    <Typography
+                                        noWrap
+                                        style={styling.primaryToggleTypography}
+                                    >
+                                        Preview
+                                    </Typography>
+                                    <Tooltip
+                                        arrow placement={"top"}
+                                        id={props.elementUUID + "previewToggleTooltip"}
                                         title={
                                             <div>
                                                 <h1>Toggling this allows a user to see what the fully constructed
@@ -315,17 +355,13 @@ function SfrComplexSelectableCard(props) {
                                                 <br />
                                                 <h1>* Note: Results may vary</h1>
                                             </div>
-
                                         }
                                     >
-                                        <Switch sx={style.switch} checked={previewToggle} onChange={handleSetPreviewToggle} />
-                                    </Tooltip>
-                                </Stack>
-                                <Stack direction="row" component="label" alignItems="center" justifyContent="center">
-                                    <Typography noWrap style={{ color: style.primary, fontSize: "13px", fontWeight: 600 }}>Exclusive</Typography>
-                                    <Tooltip title={"Selections that when selected, exclude all other selections."} arrow>
-                                        <Checkbox sx={style.checkbox} size={"small"} onChange={handleExclusiveCheckbox}
-                                            checked={currentSelectable.exclusive} />
+                                        <Switch
+                                            sx={previewToggle ? styling.secondaryToggleSwitch : {}}
+                                            checked={previewToggle}
+                                            onChange={handleSetPreviewToggle}
+                                        />
                                     </Tooltip>
                                 </Stack>
                             </div>
@@ -337,19 +373,55 @@ function SfrComplexSelectableCard(props) {
                         {!previewToggle ?
                             <div className="mt-[-8px]">
                                 <span className="flex justify-end mb-2 mr-[-8px]">
-                                    <Stack direction="row" component="label" alignItems="center" justifyContent="center"
-                                        sx={{ paddingRight: "4px" }}>
-                                        <Typography noWrap style={{ color: style.primary, fontSize: "13px", fontWeight: 600 }}>Not Selectable</Typography>
-                                        <Tooltip title={"Selections that must be viewable, but not selectable."} arrow>
-                                            <Checkbox sx={style.checkbox} size={"small"} onChange={handleNotSelectableCheckbox}
-                                                checked={currentSelectable.notSelectable} />
+                                    <Stack
+                                        direction="row"
+                                        component="label"
+                                        alignItems="center"
+                                        justifyContent="center"
+                                        sx={{ paddingRight: "4px" }}
+                                    >
+                                        <Typography
+                                            noWrap
+                                            style={styling.secondaryToggleTypography}
+                                        >
+                                            Not Selectable
+                                        </Typography>
+                                        <Tooltip
+                                            title={"Selections that must be viewable, but not selectable."}
+                                            arrow
+                                            id={props.elementUUID + "NotSelectableCheckboxTooltip"}
+                                        >
+                                            <Checkbox
+                                                sx={styling.secondaryCheckboxNoPad}
+                                                size={"small"}
+                                                onChange={handleNotSelectableCheckbox}
+                                                checked={currentSelectable.notSelectable}
+                                            />
                                         </Tooltip>
                                     </Stack>
-                                    <Stack direction="row" component="label" alignItems="center" justifyContent="center">
-                                        <Typography noWrap style={{ color: style.primary, fontSize: "13px", fontWeight: 600 }}>Exclusive</Typography>
-                                        <Tooltip title={"Selections that when selected, exclude all other selections."} arrow>
-                                            <Checkbox sx={style.checkbox} size={"small"} onChange={handleExclusiveCheckbox}
-                                                checked={currentSelectable.exclusive} />
+                                    <Stack
+                                        direction="row"
+                                        component="label"
+                                        alignItems="center"
+                                        justifyContent="center"
+                                    >
+                                        <Typography
+                                            noWrap
+                                            style={styling.secondaryToggleTypography}
+                                        >
+                                            Exclusive
+                                        </Typography>
+                                        <Tooltip
+                                            title={"Selections that when selected, exclude all other selections."}
+                                            arrow
+                                            id={props.elementUUID + "ExclusiveCheckboxTooltip"}
+                                        >
+                                            <Checkbox
+                                                sx={styling.secondaryCheckboxNoPad}
+                                                size={"small"}
+                                                onChange={handleExclusiveCheckbox}
+                                                checked={currentSelectable.exclusive}
+                                            />
                                         </Tooltip>
                                     </Stack>
                                 </span>
@@ -370,23 +442,42 @@ function SfrComplexSelectableCard(props) {
                                     <div className="px-4 pt-0 pb-2">
                                         <span className="min-w-full inline-flex items-baseline">
                                             <div className="w-[94%]">
-                                                <FormControl fullWidth color={"primary"}>
+                                                <FormControl fullWidth color={styling.primaryTextField}>
                                                     <InputLabel key="type-label">Type</InputLabel>
-                                                    <Select value={complexSelectableType}
+                                                    <Select
+                                                        value={complexSelectableType}
                                                         label="Type"
                                                         autoWidth
                                                         onChange={handleSetComplexSelectableType}
                                                         sx={{ textAlign: "left" }}
                                                     >
-                                                        <MenuItem key={"Selectables"} value={"Selectables"}>Selectables</MenuItem>
-                                                        <MenuItem key={"Text"} value={"Text"}>Text</MenuItem>
+                                                        <MenuItem
+                                                            sx={styling.secondaryMenu}
+                                                            key={"Selectables"}
+                                                            value={"Selectables"}
+                                                        >
+                                                            Selectables
+                                                        </MenuItem>
+                                                        <MenuItem
+                                                            sx={styling.secondaryMenu}
+                                                            key={"Text"}
+                                                            value={"Text"}
+                                                        >
+                                                            Text
+                                                        </MenuItem>
                                                     </Select>
                                                 </FormControl>
                                             </div>
                                             <div className="w-[6%]">
-                                                <IconButton sx={{ marginBottom: "-26px" }} onClick={handleNewComplexSelectableSubmit}>
-                                                    <Tooltip title={"Add Selectable Item"}>
-                                                        <AddCircleIcon htmlColor={style.secondary} sx={{ width: 30, height: 30 }} />
+                                                <IconButton
+                                                    sx={{ marginBottom: "-36px" }}
+                                                    onClick={handleNewComplexSelectableSubmit}
+                                                >
+                                                    <Tooltip
+                                                        title={"Add Selectable Item"}
+                                                        id={"addComplexSelectableItemTooltip"}
+                                                    >
+                                                        <AddCircleIcon htmlColor={ styling.primaryColor } sx={ icons.medium }/>
                                                     </Tooltip>
                                                 </IconButton>
                                             </div>

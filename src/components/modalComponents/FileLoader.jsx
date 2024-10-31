@@ -1,12 +1,11 @@
 // Imports
 import axios from "axios";
-import { useCallback, useState, useEffect, useRef } from "react";
+import React, { useCallback, useState, useEffect, useRef } from "react";
 import PropTypes from "prop-types";
 import Modal from "./Modal.jsx";
 import { Card, CardBody, CardFooter } from "@material-tailwind/react";
 import Button from "@mui/material/Button";
 import Checkbox from "@mui/material/Checkbox";
-import CircularProgress from "@mui/material/CircularProgress";
 import { useDropzone } from "react-dropzone";
 import { useDispatch, useSelector } from "react-redux";
 import { XMLValidator } from "fast-xml-parser";
@@ -15,27 +14,29 @@ import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import PPXML from "../../assets/xml/pp-template.xml";
 import MODXML from "../../assets/xml/module-template.xml";
-import { setXML } from "../../reducers/sarsSlice.js";
+import { SET_XMLTAGMETA, DELETE_ALL_SAR_SECTIONS, RESET_SAR_STATE, CREATE_SAR_SECTION, CREATE_SAR_COMPONENT, CREATE_SAR_ELEMENT } from "../../reducers/sarsSlice.js";
 import * as fileParser from "../../utils/fileParser.js";
 import { CREATE_TERM_ITEM, DELETE_ALL_SECTION_TERMS, RESET_TERMS_STATE } from "../../reducers/termsSlice.js";
 import { CREATE_THREAT_TERM, DELETE_ALL_THREAT_TERMS, RESET_THREATS_STATE, UPDATE_THREAT_SECTION_DEFINITION, UPDATE_MAIN_SECURITY_PROBLEM_DEFINITION } from "../../reducers/threatsSlice.js";
 import { CREATE_OBJECTIVE_TERM, DELETE_ALL_OBJECTIVE_TERMS, RESET_OBJECTIVES_STATE } from "../../reducers/objectivesSlice.js";
 import { CREATE_EDITOR, UPDATE_EDITOR_TEXT, RESET_EDITOR_STATE, UPDATE_EDITOR_METADATA } from "../../reducers/editorSlice.js";
 import { DELETE_ALL_SFR_SECTION_ELEMENTS, RESET_SFR_SECTION_STATE, CREATE_SFR_COMPONENT, UPDATE_SFR_COMPONENT_ITEMS, UPDATE_SFR_COMPONENT_TEST_DEPENDENCIES } from "../../reducers/SFRs/sfrSectionSlice.js";
-import { DELETE_ALL_SFR_SECTIONS, UPDATE_MAIN_SFR_DEFINITION, RESET_SFR_STATE, CREATE_SFR_SECTION, SET_IMPLMENTATION_REASONING } from "../../reducers/SFRs/sfrSlice.js";
-import { CREATE_ACCORDION_FORM_ITEM, DELETE_ALL_ACCORDION_FORM_ITEMS, RESET_ACCORDION_PANE_STATE, CREATE_ACCORDION_SUB_FORM_ITEM, updateMetaDataItem, updateFileUploaded, updatePlatforms } from "../../reducers/accordionPaneSlice.js";
+import { DELETE_ALL_SFR_SECTIONS, UPDATE_MAIN_SFR_DEFINITION, UPDATE_AUDIT_SECTION, RESET_SFR_STATE, CREATE_SFR_SECTION, SET_IMPLMENTATION_REASONING } from "../../reducers/SFRs/sfrSlice.js";
+import { CREATE_ACCORDION_FORM_ITEM, DELETE_ALL_ACCORDION_FORM_ITEMS, RESET_ACCORDION_PANE_STATE, CREATE_ACCORDION_SUB_FORM_ITEM, updateMetaDataItem, updateFileUploaded, updatePlatforms, updateSnackBar } from "../../reducers/accordionPaneSlice.js";
 import { ADD_ENTRIES, RESET_BIBLIOGRAPHY_STATE } from "../../reducers/bibliographySlice.js";
 import { setEntropyXML, RESET_ENTROPY_APPENDIX_STATE } from "../../reducers/entropyAppendixSlice.js";
 import { setEquivGuidelinesXML, RESET_EQUIVALENCY_APPENDIX_STATE } from "../../reducers/equivalencyGuidelinesAppendix.js";
 import { ADD_PACKAGE, RESET_PACKAGE_STATE } from "../../reducers/includePackageSlice.js";
 import { setModulesXML, RESET_MODULES_STATE } from "../../reducers/moduleSlice.js";
 import validator from 'validator';
-import { Box } from "@mui/material";
 import _ from 'lodash';
 import { setSatisfiedReqsXML, RESET_SATISFIED_REQS_APPENDIX_STATE } from "../../reducers/satisfiedReqsAppendix.js";
 import { setValidationGuidelinesXML, RESET_VALIDATION_GUIDELINES_APPENDIX_STATE } from "../../reducers/validationGuidelinesAppendix.js";
-import {RESET_VECTOR_APPENDIX_STATE, setVectorXML} from "../../reducers/vectorAppendix.js";
-import {RESET_ACKNOWLEDGEMENTS_APPENDIX_STATE, setAcknowledgementsXML} from "../../reducers/acknowledgementsAppendix.js";
+import { RESET_VECTOR_APPENDIX_STATE, setVectorXML } from "../../reducers/vectorAppendix.js";
+import { RESET_ACKNOWLEDGEMENTS_APPENDIX_STATE, setAcknowledgementsXML } from "../../reducers/acknowledgementsAppendix.js";
+import { RESET_PROGRESS, setProgress } from "../../reducers/progressSlice.js";
+import ProgressBar from "../ProgressBar.jsx";
+import { setPreferenceXML, RESET_PREFERENCE_STATE } from "../../reducers/ppPreferenceSlice.js";
 
 /**
  * The FileLoader class that gives various options for file loading
@@ -50,21 +51,26 @@ function FileLoader(props) {
     };
 
     // Constants
-    const [xmlTemplate, setXMLTemplate] = useState({ pp: false, mod: false });
-    const { pp, mod } = xmlTemplate;
     const dispatch = useDispatch();
-    const [uploadedFiles, setUploadedFiles] = useState([]);
-    const [isDropzoneDisabled, setIsDropzoneDisabled] = useState(false);
     const checkboxStyling = { color: "#1FB2A6", '&.Mui-checked': { color: "#1FB2A6" } }
     const [isLoading, setIsLoading] = useState(false);
-    const filename = useSelector((state) => state.accordionPane.loadedfile.filename);
-    const state = useSelector((state) => state);
-    const previousSfrSectionsRef = useRef(_.cloneDeep(state.sfrSections));
+    // const state = useSelector((state) => state);
+    const { pp, mod, filename } = useSelector((state) => state.accordionPane.loadedfile);
+    const stateAccordionPane = useSelector((state) => state.accordionPane);
+    const stateEditors = useSelector((state) => state.editors);
+    const stateObjectives = useSelector((state) => state.objectives);
+    const stateSars = useSelector((state) => state.sars);
+    const stateSfrs = useSelector((state) => state.sfrs);
+    const stateSfrSections = useSelector((state) => state.sfrSections);
+    const stateTerms = useSelector((state) => state.terms);
+    const stateThreats = useSelector((state) => state.threats);
+    const ppPreference = useSelector((state) => state.ppPreference);
+    const previousSfrSectionsRef = useRef(_.cloneDeep(stateSfrSections));
 
     // Use Effects
-    useEffect(() => {
-        // console.log(state);
-    }, [state])
+    // useEffect(() => {
+    //     console.log(ppPreference);
+    // }, [ppPreference])
     useEffect(() => {
         // Post-processing to convert selection dependent selections/elements/components IDs + test dependency IDs to UUID
         // Need to put this code in useEffect, or else it doesn't get latest state value for sfrSections and UUIDs
@@ -73,12 +79,12 @@ function FileLoader(props) {
         // Use a deep comparison to determine if the state has changed -- need this or else infinite re-render happens (due to evaluation activity dropdown changing state)
         const previousSfrSections = previousSfrSectionsRef.current;
 
-        if (props.open && !_.isEqual(previousSfrSections.current, state.sfrSections)) {
+        if (props.open && !_.isEqual(previousSfrSections.current, stateSfrSections)) {
             // Update the ref to the current state
-            previousSfrSections.current = state.sfrSections;
+            previousSfrSections.current = stateSfrSections;
 
-            for (const familiyUUID in state.sfrSections) {
-                const family = state.sfrSections[familiyUUID];
+            for (const familiyUUID in stateSfrSections) {
+                const family = stateSfrSections[familiyUUID];
 
                 for (const componentUUID in family) {
                     const component = family[componentUUID];
@@ -97,7 +103,7 @@ function FileLoader(props) {
                                         if (test.hasOwnProperty("dependencies") && test["dependencies"].length != 0) {
                                             test["dependencies"].forEach(dep => {
                                                 // Get the UUID for the selectable
-                                                let selectionUUID = fileParser.getUUID(state.sfrSections, dep, "selectable");
+                                                let selectionUUID = fileParser.getUUID(stateSfrSections, dep, "selectable");
 
                                                 // If there is no UUID found, it is likely a complex selectable
                                                 if (selectionUUID != null) {
@@ -112,7 +118,7 @@ function FileLoader(props) {
                             }
                         }
 
-                        // Set the updated test dependencies in the state 
+                        // Set the updated test dependencies in the state
                         if (Object.keys(dependencyMap).length != 0) {
                             dispatch(UPDATE_SFR_COMPONENT_TEST_DEPENDENCIES({ sfrUUID: familiyUUID, uuid: componentUUID, eAUUID: eAUUID, selectionMap: dependencyMap }));
 
@@ -131,7 +137,7 @@ function FileLoader(props) {
                             let selections = [];
                             component.selections.selections.forEach(selectionID => {
                                 if (!validator.isUUID(selectionID)) {
-                                    let selectionUUID = fileParser.getUUID(state.sfrSections, selectionID, "selectable");
+                                    let selectionUUID = fileParser.getUUID(stateSfrSections, selectionID, "selectable");
                                     if (selectionUUID != null) {
                                         selections.push(selectionUUID);
                                     }
@@ -148,7 +154,7 @@ function FileLoader(props) {
                             component.selections.components.forEach(componentID => {
                                 if (componentID != null) {
                                     if (!validator.isUUID(componentID)) {
-                                        let componentUUID = fileParser.getUUID(state.sfrSections, componentID, "component");
+                                        let componentUUID = fileParser.getUUID(stateSfrSections, componentID, "component");
                                         if (componentUUID != null) {
                                             components.push(componentUUID);
                                         }
@@ -165,7 +171,7 @@ function FileLoader(props) {
                             component.selections.elements.forEach(elementID => {
                                 if (elementID != null) {
                                     if (!validator.isUUID(elementID)) {
-                                        let elementUUID = fileParser.getUUID(state.sfrSections, elementID, "element");
+                                        let elementUUID = fileParser.getUUID(stateSfrSections, elementID, "element");
                                         if (elementUUID != null) {
                                             elements.push(elementUUID);
                                         }
@@ -184,65 +190,167 @@ function FileLoader(props) {
                 }
             }
         }
-    }, [state.sfrSections]);
+    }, [stateSfrSections]);
 
     // Methods
     /**
      * Validate syntax and store in redux
      * @param xml source xml as a string
-     * @param type pp/mod
      */
     const validate_XML = (xml) => {
         // Parse XML using xmlbuilder2
         // validate and store in redux
         try {
+            setTimeout(() => {
+                // Initialize loading
+                setIsLoading(true)
+            }, 500);
+
+            // Validate and generate xml
             XMLValidator.validate(xml);
             var xmlReal = create(xml);
-        } catch (err) {
-            console.log(`XML is not Valid: ${err}`);
-        } finally {
-            // Clear out sections
-            clearOutSections();
 
-            // LOAD XML CONTENTS INTO REDUX SLICES
-            loadPPXML(xmlReal.node);
+            // Load in the xml
+            setTimeout(() => {
+                const currentProgress = 10
+                const currentSteps = {
+                    "Initial File Load": true
+                }
+                handleProgressBar(currentProgress, currentSteps)
+
+                // Clear out sections
+                clearOutSections();
+
+                // LOAD XML CONTENTS INTO REDUX SLICES
+                loadPPXML(xmlReal.node)
+
+                setTimeout(() => {
+                    // Update progress
+                    const currentProgress = 100
+                    const currentSteps = {
+                        "Appendices": true
+                    }
+                    handleProgressBar(currentProgress, currentSteps)
+                }, 500)
+            }, 1000);
+
+            return "success";
+        } catch (err) {
+            const timeout = 1000;
+            const errorMessage = `XML is not Valid: ${err}\nResetting to local template values.`
+            console.log(errorMessage);
+
+            // Update snackbar
+            handleSnackBar({
+                open: true,
+                message: errorMessage,
+                severity: "error",
+                autoHideDuration: 6000
+            }, timeout)
+
+            setTimeout(() => {
+                setIsLoading(false)
+            }, timeout)
+
+            resetState();
+
+            return "fail";
         }
     }
 
     /**
-    * Load PP sections into redux slices
-    * @param xml the xml
-    */
+     * Load PP sections into redux slices
+     * @param xml the xml
+     */
     const loadPPXML = (xml) => {
-        loadPackages(xml);
-        loadModules(xml);
-        loadPlatforms(xml)
-        loadPPReference(xml);
-        loadOverview(xml);
-        loadTOEOverview(xml);
-        loadDocumentScope(xml);
-        loadIntendedReadership(xml);
-        loadTechTerms(xml);
-        const useCaseMap = loadUseCase(xml);
-        loadConformanceClaim(xml);
+        let useCaseMap = {}
 
-        // Get maps from objectives
-        const { objectivesMap, sfrToObjectivesMap } = loadObjectives(xml);
-        loadOEs(xml, objectivesMap);
-        loadSecurityProblemDescription(xml);
-        loadThreats(xml, objectivesMap);
-        loadAssumptions(xml, objectivesMap);
-        loadSFRs(xml, sfrToObjectivesMap, useCaseMap);
-        loadSARs(xml);
+        // Load all file values
+        setTimeout(() => {
+            // Load initial components
+            loadPackages(xml)
+            loadModules(xml)
+            loadPlatforms(xml)
+            loadPPReference(xml)
+            loadOverview(xml);
+            loadTOEOverview(xml);
+            loadPreferences(xml);
 
-        loadBibliography(xml);
-        loadEntropyAppendix(xml);
-        loadGuidelinesAppendix(xml);
-        loadSatisfiedReqsAppendix(xml);
-        loadValidationGuidelinesAppendix(xml);
-        loadVectorAppendix(xml);
-        loadAcknowledgementsAppendix(xml);
-        loadImplementationDeps(xml);
+            // Update progress
+            const currentProgress = 30
+            const currentSteps = {
+                "Packages": true,
+                "Modules": true,
+                "Platforms": true,
+                "PP Reference": true,
+                "Overview": true,
+                "TOE Overview": true,
+            }
+            handleProgressBar(currentProgress, currentSteps)
+        }, 500);
+        setTimeout(() => {
+            // Load more components
+            loadDocumentScope(xml);
+            loadIntendedReadership(xml);
+            loadTechTerms(xml);
+            useCaseMap = loadUseCase(xml);
+            loadConformanceClaim(xml);
+
+            // Update progress
+            const currentProgress = 50
+            const currentSteps = {
+                "Document Scope": true,
+                "Intended Readership": true,
+                "Tech Terms": true,
+                "Use Cases": true,
+                "Conformance Claims": true,
+            }
+            handleProgressBar(currentProgress, currentSteps)
+        }, 500);
+
+        setTimeout(() => {
+            // Get maps from objectives and load other components
+            const { objectivesMap, sfrToObjectivesMap } = loadObjectives(xml);
+            loadOEs(xml, objectivesMap);
+            loadSecurityProblemDescription(xml);
+            loadThreats(xml, objectivesMap);
+            loadAssumptions(xml, objectivesMap);
+
+            // Update progress
+            const currentProgress = 70
+            const currentSteps = {
+                "Objectives": true,
+                "OEs": true,
+                "Threats": true,
+                "Assumptions": true,
+            }
+            handleProgressBar(currentProgress, currentSteps)
+
+            // Load SFRS and SARs
+            loadSFRs(xml, sfrToObjectivesMap, useCaseMap);
+            loadSARs(xml);
+        }, 500);
+        setTimeout(() => {
+            // Update progress
+            const currentProgress = 90
+            const currentSteps = {
+                "SFRs": true,
+                "SARS": true
+            }
+            handleProgressBar(currentProgress, currentSteps)
+
+            // Load the remaining appendices
+            loadBibliography(xml);
+            loadEntropyAppendix(xml);
+            loadGuidelinesAppendix(xml);
+            loadSatisfiedReqsAppendix(xml);
+        }, 500);
+        setTimeout(() => {
+            loadValidationGuidelinesAppendix(xml);
+            loadVectorAppendix(xml);
+            loadAcknowledgementsAppendix(xml);
+            loadImplementationDeps(xml);
+        }, 5000);
     }
 
     /**
@@ -263,7 +371,7 @@ function FileLoader(props) {
     /**
      * Delete all existing data in a certain section
      */
-    const clear_section = async (slice, sliceName, sectionTitle = "") => {
+    const clear_section = (slice, sliceName, sectionTitle = "") => {
         const sectionUUID = getUUIDByTitle(slice, sectionTitle);
         switch (sliceName) {
             case "objectives":
@@ -279,29 +387,36 @@ function FileLoader(props) {
                 // Delete definition(intro to security requirements section)
                 dispatch(UPDATE_MAIN_SFR_DEFINITION({ newDefinition: "" }));
 
-                // Delete the SFR/SAR Components
+                // Delete the SFR Components
                 dispatch(DELETE_ALL_SFR_SECTION_ELEMENTS());
                 // Delete the SFR Class/Family
                 // Get UUID of accordionPane.sections where title is "Security Requirements"
-                const secReqsUUID = getUUIDByTitle(state.accordionPane.sections, "Security Requirements");
+                const secReqsUUID = getUUIDByTitle(stateAccordionPane.sections, "Security Requirements");
 
                 // Delete SFR/SAR accordions
                 dispatch(DELETE_ALL_ACCORDION_FORM_ITEMS({ accordionUUID: secReqsUUID }));
 
-                // Delete any intro text for SFR + SAR (part of editor slice)
-                const sfrEditorUUID = getUUIDByTitle(state.editors, "Security Functional Requirements");
+                // Delete any intro text (part of editor slice)
+                const sfrEditorUUID = getUUIDByTitle(stateEditors, "Security Functional Requirements");
                 dispatch(UPDATE_EDITOR_TEXT({ uuid: sfrEditorUUID, newText: "" }));
 
-                const sarEditorUUID = getUUIDByTitle(state.editors, "Security Assurance Requirements");
-                dispatch(UPDATE_EDITOR_TEXT({ uuid: sarEditorUUID, newText: "" }));
-
-                // Delete the SFR/SAR sections
+                // Delete the SFR sections
                 dispatch(DELETE_ALL_SFR_SECTIONS());
                 return
             }
+            case "sars": {
+                // Delete SAR Family (and associated component + elements)
+                dispatch(DELETE_ALL_SAR_SECTIONS());
+
+                // Delete any intro text (part of editor slice)
+                const sarEditorUUID = getUUIDByTitle(stateEditors, "Security Assurance Requirements");
+                dispatch(UPDATE_EDITOR_TEXT({ uuid: sarEditorUUID, newText: "" }));
+
+                return
+            }
             case "conformance_claims": {
-                const conformanceClaimsUUID = getUUIDByTitle(state.accordionPane.sections, sectionTitle);
-                const cc_section_uuids = state.accordionPane.sections[conformanceClaimsUUID].formItems.map(editor => editor.uuid);
+                const conformanceClaimsUUID = getUUIDByTitle(stateAccordionPane.sections, sectionTitle);
+                const cc_section_uuids = stateAccordionPane.sections[conformanceClaimsUUID].formItems.map(editor => editor.uuid);
 
                 cc_section_uuids.forEach(uuid => {
                     dispatch(UPDATE_EDITOR_TEXT({ uuid: uuid, newText: "" }));
@@ -318,51 +433,59 @@ function FileLoader(props) {
      */
     const clearOutSections = () => {
         // Clear out existing Tech Terms
-        clear_section(state.terms, "terms", "Technical Terms");
+        clear_section(stateTerms, "terms", "Technical Terms");
 
         // Clear out existing Use Cases
-        clear_section(state.terms, "terms", "Use Cases");
+        clear_section(stateTerms, "terms", "Use Cases");
 
-        // // Clear out existing Conformance Claims
-        clear_section(state.accordionPane.sections, "conformance_claims", "Conformance Claims");
+        // Clear out existing Conformance Claims
+        clear_section(stateAccordionPane.sections, "conformance_claims", "Conformance Claims");
 
         // Clear out existing Objectives
-        clear_section(state.objectives, "objectives", "Security Objectives for the TOE");
+        clear_section(stateObjectives, "objectives", "Security Objectives for the TOE");
 
         // Clear out existing OEs
-        clear_section(state.objectives, "objectives", "Security Objectives for the Operational Environment");
+        clear_section(stateObjectives, "objectives", "Security Objectives for the Operational Environment");
 
         // Clear out existing Threats
-        clear_section(state.threats, "threats", "Threats");
+        clear_section(stateThreats, "threats", "Threats");
 
         // Clear out existing Assumptions
-        clear_section(state.threats, "threats", "Assumptions");
+        clear_section(stateThreats, "threats", "Assumptions");
 
         // Clear out existing SFR Sections
-        clear_section(state.sfrs.sections, "sfrs");
+        clear_section(stateSfrs.sections, "sfrs");
+
+        // Clear out existing SAR Sections
+        clear_section(stateSars, "sars");
     }
 
     /**
-     * Resets the state
+     * Handles removing files by resetting the state
      */
     const resetState = () => {
-        // Reset states to initial state
-        dispatch(RESET_TERMS_STATE());
-        dispatch(RESET_THREATS_STATE());
-        dispatch(RESET_OBJECTIVES_STATE());
-        dispatch(RESET_EDITOR_STATE());
-        dispatch(RESET_SFR_SECTION_STATE());
-        dispatch(RESET_SFR_STATE());
-        dispatch(RESET_ACCORDION_PANE_STATE());
-        dispatch(RESET_PACKAGE_STATE());
-        dispatch(RESET_BIBLIOGRAPHY_STATE());
-        dispatch(RESET_MODULES_STATE());
-        dispatch(RESET_ENTROPY_APPENDIX_STATE());
-        dispatch(RESET_EQUIVALENCY_APPENDIX_STATE());
-        dispatch(RESET_SATISFIED_REQS_APPENDIX_STATE());
-        dispatch(RESET_VALIDATION_GUIDELINES_APPENDIX_STATE());
-        dispatch(RESET_VECTOR_APPENDIX_STATE());
-        dispatch(RESET_ACKNOWLEDGEMENTS_APPENDIX_STATE());
+        setTimeout(() => {
+            // Reset states to initial state
+            dispatch(RESET_TERMS_STATE());
+            dispatch(RESET_THREATS_STATE());
+            dispatch(RESET_OBJECTIVES_STATE());
+            dispatch(RESET_EDITOR_STATE());
+            dispatch(RESET_SFR_SECTION_STATE());
+            dispatch(RESET_SFR_STATE());
+            dispatch(RESET_SAR_STATE());
+            dispatch(RESET_ACCORDION_PANE_STATE());
+            dispatch(RESET_PACKAGE_STATE());
+            dispatch(RESET_BIBLIOGRAPHY_STATE());
+            dispatch(RESET_MODULES_STATE());
+            dispatch(RESET_ENTROPY_APPENDIX_STATE());
+            dispatch(RESET_EQUIVALENCY_APPENDIX_STATE());
+            dispatch(RESET_SATISFIED_REQS_APPENDIX_STATE());
+            dispatch(RESET_VALIDATION_GUIDELINES_APPENDIX_STATE());
+            dispatch(RESET_VECTOR_APPENDIX_STATE());
+            dispatch(RESET_ACKNOWLEDGEMENTS_APPENDIX_STATE());
+            dispatch(RESET_PROGRESS());
+            dispatch(RESET_PREFERENCE_STATE());
+        }, 300)
     }
 
     /**
@@ -399,6 +522,22 @@ function FileLoader(props) {
             }
         } catch (err) {
             console.log(`Failed to load Package Data: ${err}`);
+        }
+    }
+
+    /**
+     * Loads the <pp-preferences>
+     * @param xml the xml
+     */
+    const loadPreferences = (xml) => {
+        try {
+            const preferences = fileParser.getPPPreference(xml);
+
+            if (preferences.length != 0) {
+                dispatch(setPreferenceXML({ preference: preferences }));
+            }
+        } catch (err) {
+            console.log(`Failed to load PP Preference Data: ${err}`);
         }
     }
 
@@ -440,7 +579,7 @@ function FileLoader(props) {
      */
     const loadOverview = (xml) => {
         try {
-            const overviewUUID = getUUIDByTitle(state.editors, "Objectives of Document");
+            const overviewUUID = getUUIDByTitle(stateEditors, "Objectives of Document");
             const overviewData = fileParser.getDocumentObjectives(xml);
 
             if (overviewData.doc_objectives.length != 0) {
@@ -459,8 +598,8 @@ function FileLoader(props) {
      */
     const loadTOEOverview = (xml) => {
         try {
-            const introductionUUID = getUUIDByTitle(state.accordionPane.sections, "Introduction");
-            const TOEoverviewUUID = getUUIDByTitle(state.editors, "TOE Overview");
+            const introductionUUID = getUUIDByTitle(stateAccordionPane.sections, "Introduction");
+            const TOEoverviewUUID = getUUIDByTitle(stateEditors, "TOE Overview");
             const compliantTOE = fileParser.getCompliantTOE(xml);
 
             if (compliantTOE) {
@@ -492,15 +631,6 @@ function FileLoader(props) {
                     if (editorUUID) {
                         // Add the editor to the TOE Overview as a subsection
                         dispatch(CREATE_ACCORDION_SUB_FORM_ITEM({ accordionUUID: introductionUUID, uuid: editorUUID, formUUID: TOEoverviewUUID, contentType: "editor" }));
-
-                        // Add the editor as a formItem in the Introduction section in accordionPane
-                        dispatch(
-                            CREATE_ACCORDION_FORM_ITEM({
-                                accordionUUID: introductionUUID,
-                                uuid: editorUUID,
-                                contentType: "editor",
-                            })
-                        );
                     }
                 }
             }
@@ -515,7 +645,7 @@ function FileLoader(props) {
      */
     const loadDocumentScope = (xml) => {
         try {
-            const introductionUUID = getUUIDByTitle(state.accordionPane.sections, "Introduction");
+            const introductionUUID = getUUIDByTitle(stateAccordionPane.sections, "Introduction");
 
             // Create the editor if there is content in the xml
             if (fileParser.getDocumentScope(xml).length != 0) {
@@ -545,7 +675,7 @@ function FileLoader(props) {
      */
     const loadIntendedReadership = (xml) => {
         try {
-            const introductionUUID = getUUIDByTitle(state.accordionPane.sections, "Introduction");
+            const introductionUUID = getUUIDByTitle(stateAccordionPane.sections, "Introduction");
 
             // Create the editor if there is content in the xml
             if (fileParser.getIndendedReadership(xml).length != 0) {
@@ -576,8 +706,8 @@ function FileLoader(props) {
     const loadTechTerms = (xml) => {
         try {
             // Get UUID of the Tech Terms section in order to add terms to that section
-            const termUUID = getUUIDByTitle(state.terms, "Technical Terms");
-            const acronymUUID = getUUIDByTitle(state.terms, "Acronyms");
+            const termUUID = getUUIDByTitle(stateTerms, "Technical Terms");
+            const acronymUUID = getUUIDByTitle(stateTerms, "Acronyms");
 
             // Get all the Tech Terms
             const terms = fileParser.getAllTechTerms(xml);
@@ -608,10 +738,10 @@ function FileLoader(props) {
     const loadUseCase = (xml) => {
         let useCaseMap = {}
         try {
-            const useCaseDescriptionUUID = getUUIDByTitle(state.editors, "TOE Usage");
+            const useCaseDescriptionUUID = getUUIDByTitle(stateEditors, "TOE Usage");
             dispatch(UPDATE_EDITOR_TEXT({ uuid: useCaseDescriptionUUID, newText: fileParser.getUseCaseDescription(xml) }));
 
-            const useCaseUUID = getUUIDByTitle(state.terms, "Use Cases");
+            const useCaseUUID = getUUIDByTitle(stateTerms, "Use Cases");
             const allUseCases = fileParser.getUseCases(xml);
 
             if (allUseCases && allUseCases.length != 0) {
@@ -637,10 +767,10 @@ function FileLoader(props) {
      */
     const loadConformanceClaim = (xml) => {
         try {
-            const conformanceStatementUUID = getUUIDByTitle(state.editors, "Conformance Statement");
-            const ccConformanceClaimsUUID = getUUIDByTitle(state.editors, "CC Conformance Claims");
-            const ppClaimUUID = getUUIDByTitle(state.editors, "PP Claim");
-            const packageClaimUUID = getUUIDByTitle(state.editors, "Package Claim");
+            const conformanceStatementUUID = getUUIDByTitle(stateEditors, "Conformance Statement");
+            const ccConformanceClaimsUUID = getUUIDByTitle(stateEditors, "CC Conformance Claims");
+            const ppClaimUUID = getUUIDByTitle(stateEditors, "PP Claims");
+            const packageClaimUUID = getUUIDByTitle(stateEditors, "Package Claims");
 
             const allCClaims = fileParser.getCClaims(xml);
             if (allCClaims.length != 0) {
@@ -682,7 +812,7 @@ function FileLoader(props) {
 
         try {
             // Get Objectives
-            const objectivesUUID = getUUIDByTitle(state.objectives, "Security Objectives for the TOE");
+            const objectivesUUID = getUUIDByTitle(stateObjectives, "Security Objectives for the TOE");
             const toeObjectives = fileParser.getAllSecurityObjectivesTOE(xml);
             Object.values(toeObjectives).map((objective) => {
                 const name = objective.name;
@@ -725,7 +855,7 @@ function FileLoader(props) {
      */
     const loadOEs = (xml, objectivesMap) => {
         try {
-            const oeUUID = getUUIDByTitle(state.objectives, "Security Objectives for the Operational Environment");
+            const oeUUID = getUUIDByTitle(stateObjectives, "Security Objectives for the Operational Environment");
             const OEs = fileParser.getAllSecurityObjectivesOE(xml);
             Object.values(OEs).map((objective) => {
                 const name = objective.name;
@@ -741,7 +871,7 @@ function FileLoader(props) {
 
     /**
      * Load Security Problem Definition
-     * @param {*} xml 
+     * @param {*} xml
      */
     const loadSecurityProblemDescription = (xml) => {
         try {
@@ -762,7 +892,7 @@ function FileLoader(props) {
      */
     const loadThreats = (xml, objectivesMap) => {
         try {
-            const threatsUUID = getUUIDByTitle(state.threats, "Threats");
+            const threatsUUID = getUUIDByTitle(stateThreats, "Threats");
             const threatMeta = fileParser.getAllThreats(xml);
             const threatDescription = threatMeta.threat_description;
             const allThreats = threatMeta.threats;
@@ -796,7 +926,7 @@ function FileLoader(props) {
      */
     const loadAssumptions = (xml, objectivesMap) => {
         try {
-            const assumptionsUUID = getUUIDByTitle(state.threats, "Assumptions");
+            const assumptionsUUID = getUUIDByTitle(stateThreats, "Assumptions");
             const allAssumptions = fileParser.getAllAssumptions(xml);
             Object.values(allAssumptions).map((assumption) => {
                 const name = assumption.name;
@@ -825,6 +955,9 @@ function FileLoader(props) {
      * @param useCaseMap the use case map
      */
     const loadSFRs = (xml, sfrToObjectivesMap, useCaseMap) => {
+        // Load audit section
+        dispatch(UPDATE_AUDIT_SECTION({ newDefinition: fileParser.getAuditSection(xml) }));
+
         // SFRs
         const allSFRs = fileParser.getSFRs(xml);
         let previousSfrFamily = null;
@@ -840,8 +973,8 @@ function FileLoader(props) {
                 sfrFamilyUUID = result.payload;
 
                 // Create these classes under the Security Functional Requirements section which is under the Security Requirements accordionPane section
-                const secReqsUUID = getUUIDByTitle(state.accordionPane.sections, "Security Requirements");
-                const secFuncReqsUUID = getUUIDByTitle(state.editors, "Security Functional Requirements");
+                const secReqsUUID = getUUIDByTitle(stateAccordionPane.sections, "Security Requirements");
+                const secFuncReqsUUID = getUUIDByTitle(stateEditors, "Security Functional Requirements");
 
                 dispatch(CREATE_ACCORDION_SUB_FORM_ITEM({ accordionUUID: secReqsUUID, uuid: sfrFamilyUUID, formUUID: secFuncReqsUUID, contentType: "sfrs" }));
             }
@@ -893,7 +1026,44 @@ function FileLoader(props) {
      * @param xml the xml
      */
     const loadSARs = (xml) => {
-        dispatch(setXML(fileParser.getSARs(xml)));
+        const sars = fileParser.getSARs(xml);
+        const description = sars.sarsDescription;
+        const families = sars.sections;
+
+        // Store the tag name for the SAR section
+        dispatch(SET_XMLTAGMETA({ xmlTagMeta: sars.xmlTagMeta }));
+
+        // Update intro text if any
+        if (description.length != 0) {
+            const sarsIntroductionUUID = getUUIDByTitle(stateEditors, "Security Assurance Requirements");
+            dispatch(UPDATE_EDITOR_TEXT({ uuid: sarsIntroductionUUID, newText: description }));
+        }
+
+        // Create SARs
+        families.forEach(family => {
+            const title = family.xmlTagMeta.attributes.hasOwnProperty("title") ? family.xmlTagMeta.attributes.title : "";
+            const id = family.xmlTagMeta.attributes.hasOwnProperty("id") ? family.xmlTagMeta.attributes.id : "";
+
+            // Create the SAR Family Accordions
+            const sarSection = dispatch(CREATE_SAR_SECTION({ title: title, summary: family.summary, id: id }));
+            const sarFamilyUUID = sarSection.payload;
+
+            // Create these Families under the Security Assurance Requirements section which is under the Security Requirements accordionPane section
+            const secReqsUUID = getUUIDByTitle(stateAccordionPane.sections, "Security Requirements");
+            const secAssuranceReqsUUID = getUUIDByTitle(stateEditors, "Security Assurance Requirements");
+            dispatch(CREATE_ACCORDION_SUB_FORM_ITEM({ accordionUUID: secReqsUUID, uuid: sarFamilyUUID, formUUID: secAssuranceReqsUUID, contentType: "sars" }));
+
+            family.components.forEach(component => {
+                // Create the components
+                const componentSection = dispatch(CREATE_SAR_COMPONENT({ sarUUID: sarFamilyUUID, component: component }));
+                const componentUUID = componentSection.payload;
+
+                // Create the elements
+                component.elements.forEach(element => {
+                    dispatch(CREATE_SAR_ELEMENT({ componentUUID: componentUUID, element: element }));
+                });
+            });
+        });
     }
 
     /**
@@ -999,60 +1169,132 @@ function FileLoader(props) {
             return;
         }
 
-        // Show spinner
-        setIsLoading(true);
+        // Reset state
+        resetState();
 
         // Only take first file
         const file = acceptedFiles[0];
 
+        // Start file reading
         const reader = new FileReader();
+        reader.onloadstart = () => {
+            resetState();
+        };
+
         reader.onabort = () => {
-            console.log('file reading was aborted');
+            const timeout = 3000;
             setIsLoading(false);
+            resetState();
+            handleSnackBar({
+                open: true,
+                message: `Failed to Load ${file.name}`,
+                severity: "error"
+            }, timeout)
         }
         reader.onerror = () => {
-            console.log('file reading has failed');
+            const timeout = 3000;
             setIsLoading(false);
+            resetState();
+            handleSnackBar({
+                open: true,
+                message: `Failed to Load XML ${file.name}`,
+                severity: "error"
+            }, timeout)
         }
 
         reader.onload = () => {
             // Syntax validation
-            validate_XML(reader.result, 'pp');
+            const validate = validate_XML(reader.result)
 
-            setUploadedFiles([{ file, content: reader.result }]);
-            dispatch(updateFileUploaded({ filename: file.name, content: reader.result }));
+            // Update based on validate value
+            if (validate && validate !== "fail") {
+                setTimeout(() => {
+                    // Update loading
+                    setTimeout(() => {
+                        setIsLoading(false)
+                    }, 1000);
 
-            setIsLoading(false);
+                    // Update files
+                    setTimeout(() => {
+                        handleUpdateFiles(file, reader.result)
+                    }, 1000);
+
+                    // Update snackbar
+                    const timeout = 1000;
+                    handleSnackBar({
+                        open: true,
+                        message: `Loaded in ${file.name}`
+                    }, timeout)
+                }, 3000);
+            }
         };
 
         reader.readAsText(file);
     }, [dispatch]);
 
     /**
-     * Handler for deleting files that were uploaded
+     * Handles updating the progressBar
+     * @param progress  the progress as a number from 0-100
+     * @param steps     any steps that should be visualized/updated
      */
-    const handleRemoveFile = () => {
-        setUploadedFiles([]);
-        resetState();
-    };
+    const handleProgressBar = (progress, steps) => {
+        dispatch(setProgress({
+            progress: progress,
+            steps: steps
+        }))
+    }
+
+    /**
+     * Handles updates to the snackbar
+     * @param snackbar the snackbar values
+     */
+    const handleSnackBar = (snackbar, timeout) => {
+        setTimeout(() => {
+            dispatch(updateSnackBar(snackbar))
+        }, timeout)
+    }
+
+    /**
+     * Handler to update files
+     * @param file      the file
+     * @param content   the content
+     */
+    const handleUpdateFiles = (file, content, currentPP, currentMod) => {
+        if (file !== "" && content !== "") {
+            dispatch(updateFileUploaded({
+                filename: file.name,
+                content: content,
+                pp: currentPP !== undefined ? currentPP : false,
+                mod: currentMod !== undefined ? currentMod : false
+            }));
+        } else {
+            dispatch(updateFileUploaded({
+                filename: file,
+                content: content,
+                pp: currentPP !== undefined ? currentPP : false,
+                mod: currentMod !== undefined ? currentMod : false
+            }));
+        }
+    }
 
     /**
      * Loads in the default templates for pp, mod
      * @param {*} type : the type of xml to load
      */
-    async function loadDefaultXML(type) {
-        let XML;
-        if (type === "pp") {
-            XML = PPXML;
-        } else if (type === "mod") {
-            XML = MODXML;
-        }
-
-        axios.get(XML, {
+    function loadDefaultXML(type) {
+        const XML = type === "pp" ? PPXML : MODXML;
+        return axios.get(XML, {
             "Content-Type": "application/xml; charset=utf-8"
         }).then((response) => {
-            validate_XML(response.data, type);
-        });
+            // Validate XML
+            const validation = validate_XML(response.data);
+
+            setTimeout(() => {
+                setIsLoading(false)
+            }, 6000);
+
+            return validation
+        })
     }
 
     /**
@@ -1062,50 +1304,60 @@ function FileLoader(props) {
     const handleCheckboxChange = (event) => {
         const { name, checked } = event.target;
 
-        // type: pp, mod
-        const type = event.target.name;
-        if (type === "pp" || type === "mod") {
-            // set checkbox to checked
-            setXMLTemplate((prevTemplate) => ({
-                ...prevTemplate,
-                [name]: checked,
-            }));
+        // Update according to checkbox selection
+        if (name === "pp" || name === "mod") {
+            const fileName = name.toUpperCase();
 
-            let isTemplateSelected = false;
-            if (event.target.checked) {
-                // load in the xml
-                loadDefaultXML(type).catch(e => console.log(e))
+            // Remove files
+            resetState();
 
-                // disable dropzone
-                setIsDropzoneDisabled(true);
-                for (const templateType in xmlTemplate) {
-                    // ignore the one that was just clicked, and uncheck other checkboxes
-                    if (templateType !== event.target.name) {
-                        setXMLTemplate((prevTemplate) => ({
-                            ...prevTemplate,
-                            [templateType]: false,
-                        }));
-                    }
-                }
-                setUploadedFiles([])
-            } else {
-                // see if there is another selection checked
-                for (const templateType in xmlTemplate) {
-                    // ignore the one that was just clicked
-                    if (templateType !== event.target.name) {
-                        if (xmlTemplate[templateType] === true) {
-                            isTemplateSelected = true;
+            // Update files
+            setTimeout(() => {
+                const currentPP = name === "pp" ? checked : false;
+                const currentMod = name === "mod" ? checked : false;
+                handleUpdateFiles("", "", currentPP, currentMod);
+            }, 500)
+
+            // Load in the XML
+            if (checked) {
+                try {
+                    loadDefaultXML(name).then((response) => {
+                        if (response === "success") {
+                            // Update snackbar
+                            const timeout = 6000;
+                            handleSnackBar({
+                                open: true,
+                                message: `Loaded in ${fileName} XML`
+                            }, timeout)
+                        } else {
+                            // Update files
+                            setTimeout(() => {
+                                handleUpdateFiles("", "", false, false);
+                            }, 500)
                         }
-                    }
-                }
+                    })
+                } catch (e) {
+                    // Update snackbar
+                    const timeout = 1000;
+                    handleSnackBar({
+                        open: true,
+                        message: `Unable to load in ${fileName} XML`,
+                        severity: "error"
+                    }, timeout)
+                    console.log(e)
 
-                // if one of the templates has been selected to be used, don't allow user to upload
-                if (isTemplateSelected) {
-                    setIsDropzoneDisabled(true);
-                } else {
-                    setIsDropzoneDisabled(false);
-                    resetState();
+                    // Update files
+                    setTimeout(() => {
+                        handleUpdateFiles("", "", false, false);
+                    }, timeout)
                 }
+            } else {
+                // Update snackbar
+                const timeout = 1000;
+                handleSnackBar({
+                    open: true,
+                    message: `Loaded in Default XML Template`
+                }, timeout)
             }
         }
     };
@@ -1113,7 +1365,7 @@ function FileLoader(props) {
     // Use Dropzones
     const { getRootProps, getInputProps } = useDropzone({
         onDrop,
-        disabled: isDropzoneDisabled,
+        disabled: pp || mod,
         accept: {
             "application/xml": [".xml"],
         },
@@ -1122,7 +1374,8 @@ function FileLoader(props) {
     // Return Method
     return (
         <div>
-            <Modal title={"Configure XML Settings"}
+            <Modal
+                title={"Configure XML Settings"}
                 content={(
                     <div>
                         <Card className="rounded-lg border-2 border-gray-200">
@@ -1130,47 +1383,68 @@ function FileLoader(props) {
                                 <div {...getRootProps()} style={{ display: 'inline-block', padding: 2 }}>
                                     <input {...getInputProps()} />
                                     <Button
+                                        sx={{ fontSize: "12px" }}
                                         component="label"
                                         variant="contained"
                                         startIcon={<CloudUploadIcon />}
-                                        style={{ color: "white", marginTop: '0px', marginBottom: '10px', pointerEvents: isDropzoneDisabled ? 'none' : 'auto' }}
-                                        disabled={isDropzoneDisabled}
+                                        style={{ color: "white", marginTop: '0px', marginBottom: '10px', pointerEvents: pp || mod ? 'none' : 'auto' }}
+                                        disabled={isLoading || pp || mod}
                                     >
                                         {/* {`Upload PP XML`} */}
-                                        {uploadedFiles.length > 0 ? 'Replace File' : 'Upload PP XML'}
+                                        {filename !== "" ? 'Replace File' : 'Upload PP XML'}
                                     </Button>
                                 </div>
-                                <div style={{ marginTop: '15px', display: 'flex', justifyContent: 'space-between' }}>
-                                    <span style={{ textAlign: 'left' }}>{filename}</span>
-                                    {filename.length != 0 &&
+                                {(!isLoading && filename !== "" && !pp && !mod) &&
+                                    <div style={{ marginTop: '15px', display: 'flex', justifyContent: 'space-between' }}>
+                                        <span style={{ textAlign: 'left', paddingTop: 10, fontSize: "13px" }}>{filename}</span>
                                         <Button
+                                            sx={{ fontSize: "12px" }}
                                             variant="outlined"
                                             color="secondary"
-                                            onClick={() => handleRemoveFile()}
+                                            onClick={() => {
+                                                resetState()
+
+                                                // Update snackbar
+                                                const timeout = 1000;
+                                                handleSnackBar({
+                                                    open: true,
+                                                    message: `Loaded in Default XML Template`
+                                                }, timeout)
+                                            }}
                                             style={{ marginLeft: '10px', textAlign: 'right' }}
+                                            disabled={isLoading}
                                         >
                                             Remove
                                         </Button>
-                                    }
-                                </div>
-                                {isLoading && (
-                                    <div className="mt-1 w-full">
-                                        <Box sx={{ width: '100%' }}>
-                                            <CircularProgress color={"secondary"} disableShrink />
-                                        </Box>
                                     </div>
-                                )}
-
+                                }
+                                <ProgressBar isLoading={isLoading} />
                             </CardBody>
                             <CardFooter>
                                 <div className="py-1">
                                     <FormControlLabel
-                                        control={<Checkbox checked={pp} onChange={handleCheckboxChange} name="pp" sx={checkboxStyling} />}
-                                        label={`Use PP Template`}
+                                        control={
+                                            <Checkbox
+                                                checked={pp}
+                                                onChange={handleCheckboxChange}
+                                                name="pp"
+                                                sx={checkboxStyling}
+                                                disabled={(isLoading || mod) ? true : false}
+                                            />
+                                        }
+                                        label={<span style={{ fontSize: '13px' }}>Use PP Template</span>}
                                     />
                                     <FormControlLabel
-                                        control={<Checkbox checked={mod} onChange={handleCheckboxChange} name="mod" sx={checkboxStyling} />}
-                                        label='Use Module Template'
+                                        control={
+                                            <Checkbox
+                                                checked={mod}
+                                                onChange={handleCheckboxChange}
+                                                name="mod"
+                                                sx={checkboxStyling}
+                                                disabled={(isLoading || pp) ? true : false}
+                                            />
+                                        }
+                                        label={<span style={{ fontSize: '13px' }}>Use Module Template</span>}
                                     />
                                 </div>
                             </CardFooter>

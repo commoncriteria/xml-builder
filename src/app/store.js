@@ -23,6 +23,10 @@ import satisfiedReqsAppendixReducer from "../reducers/satisfiedReqsAppendix.js";
 import validationGuidelinesAppendixReducer from "../reducers/validationGuidelinesAppendix.js";
 import vectorAppendixReducer from "../reducers/vectorAppendix.js"
 import acknowledgementsAppendixReducer from "../reducers/acknowledgementsAppendix.js"
+import stylingReducer from "../reducers/styling.js"
+import tabularizeReducer from '../reducers/SFRs/tabularizeUI.js'
+import progressBarReducer from "../reducers/progressSlice.js"
+import preferenceReducer from '../reducers/ppPreferenceSlice.js';
 
 const persistConfig = {
     key: 'root',
@@ -52,7 +56,11 @@ const reducer = combineReducers({
     vectorAppendix: vectorAppendixReducer,
     acknowledgementsAppendix: acknowledgementsAppendixReducer,
     includePackage: includePackageReducer,
-    modules: moduleReducer
+    modules: moduleReducer,
+    ppPreference: preferenceReducer,
+    styling: stylingReducer,
+    tabularize: tabularizeReducer,
+    progressBar: progressBarReducer
 });
 
 const persistedReducer = persistReducer(persistConfig, reducer)

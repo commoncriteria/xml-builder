@@ -2,17 +2,17 @@
 import React from "react";
 import '../components.css';
 import PropTypes from "prop-types";
-import {Card, CardBody} from "@material-tailwind/react";
-import {IconButton, Tooltip} from "@mui/material";
+import { Card, CardBody } from "@material-tailwind/react";
+import { IconButton, Tooltip } from "@mui/material";
+import { useDispatch, useSelector } from "react-redux";
+import { COLLAPSE_THREAT_TERM, DELETE_OBJECTIVE_FROM_THREAT_USING_UUID, DELETE_THREAT_TERM, UPDATE_THREAT_TERM_DEFINITION, UPDATE_THREAT_TERM_TITLE } from "../../../reducers/threatsSlice.js";
+import { COLLAPSE_OBJECTIVE_TERM, DELETE_OBJECTIVE_TERM, UPDATE_OBJECTIVE_TERM_DEFINITION, UPDATE_OBJECTIVE_TERM_TITLE } from "../../../reducers/objectivesSlice.js";
+import { DELETE_OBJECTIVE_FROM_SFR_USING_UUID } from "../../../reducers/SFRs/sfrSectionSlice.js";
+import AddIcon from "@mui/icons-material/Add";
 import DeleteForeverRoundedIcon from "@mui/icons-material/DeleteForeverRounded";
 import RemoveIcon from "@mui/icons-material/Remove";
-import AddIcon from "@mui/icons-material/Add";
 import RationaleTable from "./RationaleTable.jsx";
-import {useDispatch, useSelector} from "react-redux";
-import {COLLAPSE_THREAT_TERM, DELETE_OBJECTIVE_FROM_THREAT_USING_UUID, DELETE_THREAT_TERM, UPDATE_THREAT_TERM_DEFINITION, UPDATE_THREAT_TERM_TITLE} from "../../../reducers/threatsSlice.js";
 import TextEditor from "../TextEditor.jsx";
-import {COLLAPSE_OBJECTIVE_TERM, DELETE_OBJECTIVE_TERM, UPDATE_OBJECTIVE_TERM_DEFINITION, UPDATE_OBJECTIVE_TERM_TITLE} from "../../../reducers/objectivesSlice.js";
-import {DELETE_OBJECTIVE_FROM_SFR_USING_UUID} from "../../../reducers/SFRs/sfrSectionSlice.js";
 
 /**
  * The Definition component
@@ -37,7 +37,7 @@ function Definition(props) {
     // Constants
     const dispatch = useDispatch()
     const objectives = useSelector((state) => state.objectives);
-    const style = {primary: "#d926a9", secondary: "#1FB2A6", borderColor: "#9CA3AF"}
+    const { secondary, icons } = useSelector((state) => state.styling);
 
     // Methods
     const updateTitle = (event) => {
@@ -127,23 +127,24 @@ function Definition(props) {
             <Card className="border-2 border-gray-300"  key={props.uuid + "DefinitionCard"} >
                 <CardBody key={props.uuid + "CardBody"}>
                     <div className="flex" key={props.uuid + "CardBodyDiv"}>
-                        <textarea className="w-full resize-none font-bold text-lg mb-0 h-[30px] p-0 text-accent"
+                        <textarea className="w-full resize-none font-bold text-[14px] mb-0 h-[30px] p-0 text-accent"
                                   onChange={updateTitle} id={props.uuid + "Title"}
                                   value={props.title}>{props.title}</textarea>
                         <span/>
-                        <IconButton sx={{marginTop: "-8px"}} onClick={deleteSection}>
-                            <Tooltip title={"Delete Section"}>
-                                <DeleteForeverRoundedIcon htmlColor={style.secondary} sx={{ width: 32, height: 32 }}/>
+                        <IconButton sx={{marginTop: "-8px"}} onClick={deleteSection} variant="contained">
+                            <Tooltip title={"Delete Section"} id={props.termUUID + "deleteDefinitionSectionToolTip"}>
+                                <DeleteForeverRoundedIcon htmlColor={ secondary } sx={ icons.large }/>
                             </Tooltip>
                         </IconButton>
                         <span/>
-                        <IconButton sx={{marginTop: "-8px"}} onClick={collapseSection}>
-                            <Tooltip title={`${props.open ? "Collapse " : "Expand "} Item`}>
+                        <IconButton sx={{marginTop: "-8px"}} onClick={collapseSection} variant="contained">
+                            <Tooltip id={(props.open ? "collapse" : "expand") + props.termUUID + "ItemTooltip"}
+                                title={`${props.open ? "Collapse " : "Expand "} Item`}>
                                 {
                                     props.open ?
-                                        <RemoveIcon htmlColor={style.secondary} sx={{ width: 32, height: 32 }}/>
+                                        <RemoveIcon htmlColor={ secondary } sx={ icons.large }/>
                                         :
-                                        <AddIcon htmlColor={style.secondary} sx={{ width: 32, height: 32 }}/>
+                                        <AddIcon htmlColor={ secondary } sx={ icons.large }/>
                                 }
                             </Tooltip>
                         </IconButton>

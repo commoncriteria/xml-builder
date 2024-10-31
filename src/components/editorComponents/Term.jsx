@@ -1,6 +1,6 @@
 // Imports
 import PropTypes from "prop-types";
-import {useDispatch} from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import { COLLAPSE_TERM_ITEM, DELETE_TERM_ITEM, UPDATE_TERM_DEFINITION, UPDATE_TERM_TITLE } from '../../reducers/termsSlice.js'
 import DeleteForeverRoundedIcon from '@mui/icons-material/DeleteForeverRounded';
 import './components.css';
@@ -30,7 +30,7 @@ function Term(props) {
 
     // Constants
     const dispatch = useDispatch();
-    const style = {secondary: "#1FB2A6"}
+    const { secondary, icons } = useSelector((state) => state.styling);
 
     // Methods
     const updateTermTitle = (event) => {
@@ -54,7 +54,7 @@ function Term(props) {
                     <tr>
                         <th scope="row" className={`py-2 whitespace-normal justify-left ${props.open ? "w-[30%]" : "w-[85%]"}`}>
                             <div id={props.uuid} className="ml-1">
-                                <textarea className="w-full font-bold text-[15px] text-accent" onChange={updateTermTitle}
+                                <textarea className="w-full font-bold text-[13px] text-accent" onChange={updateTermTitle}
                                           rows={`${!props.open ? "1" : ""}`} value={props.title}>{props.title}</textarea>
                             </div>
                         </th>
@@ -70,19 +70,19 @@ function Term(props) {
                             }
                         <td className="pr-6 px-0 text-end align-middle w-[15%]">
                             <div className="mb-2">
-                                <IconButton onClick={deleteTerm}>
-                                    <Tooltip title={"Delete Term"}>
-                                        <DeleteForeverRoundedIcon htmlColor={style.secondary} sx={{ width: 32, height: 32 }}/>
+                                <IconButton onClick={deleteTerm} variant="contained">
+                                    <Tooltip title={"Delete Term"} id={props.uuid + "deleteTermTooltip"}>
+                                        <DeleteForeverRoundedIcon htmlColor={ secondary } sx={ icons.large }/>
                                     </Tooltip>
                                 </IconButton>
                                 <span/>
-                                <IconButton onClick={collapseHandler}>
-                                    <Tooltip title={`${props.open ? "Collapse " : "Expand "} Term`}>
+                                <IconButton onClick={collapseHandler} variant="contained">
+                                    <Tooltip title={`${props.open ? "Collapse " : "Expand "} Term`} id={(props.open ? "collapse" : "expand") + props.uuid + "TermTooltip"}>
                                         {
                                             props.open ?
-                                                <RemoveIcon htmlColor={style.secondary} sx={{ width: 30, height: 30 }}/>
+                                                <RemoveIcon htmlColor={ secondary } sx={ icons.large }/>
                                                 :
-                                                <AddIcon htmlColor={style.secondary} sx={{ width: 30, height: 30 }}/>
+                                                <AddIcon htmlColor={ secondary } sx={ icons.large }/>
                                         }
                                     </Tooltip>
                                 </IconButton>

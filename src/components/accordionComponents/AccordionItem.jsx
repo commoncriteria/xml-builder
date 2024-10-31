@@ -5,7 +5,6 @@ import React from "react";
 import TextEditor from "../editorComponents/TextEditor.jsx";
 import Terms from "../editorComponents/Terms.jsx";
 import SecurityContent from "../editorComponents/securityComponents/SecurityContent.jsx";
-import Label from "../editorComponents/Label.jsx";
 import AcronymTable from "../appendicesComponents/AcronymTable.jsx";
 
 
@@ -33,6 +32,7 @@ function AccordionItem(props) {
     const threats = useSelector((state) => state.threats);
     const objectives = useSelector((state) => state.objectives);
     const sfrs = useSelector((state) => state.sfrs.sections);
+    const sars = useSelector((state) => state.sars.sections);
     const sfrSections = useSelector((state) => state.sfrSections);
 
     // Methods
@@ -43,15 +43,15 @@ function AccordionItem(props) {
         let accordionUUID = props.accordionUUID;
         let formItems = props.formItems;
         return (
-            <div key={props.uuid + "-AccordionItem"}>
-                <div className="pb-1" key={props.uuid + "-AccordionInnerItem"}>
+            <div className="min-w-full" key={props.uuid + "-AccordionItem"}>
+                <div className="min-w-full pb-1" key={props.uuid + "-AccordionInnerItem"}>
                     {itemByType(type, uuid, sectionNumber, accordionUUID)}
                 </div>
                 {
                     (formItems && Array.isArray(formItems) && formItems.length > 0) ?
                         formItems.map((value, index) => {
                             return (
-                                <div key={value.uuid + "-AccordionFormItem"}>
+                                <div className="min-w-full" key={value.uuid + "-AccordionFormItem"}>
                                     <AccordionItem headerIndex={sectionNumber} index={index} key={value.uuid}
                                                    uuid={value.uuid} accordionUUID={props.accordionUUID}
                                                    contentType={value.contentType}/>
@@ -75,9 +75,6 @@ function AccordionItem(props) {
                 return (<TextEditor title={editor.title} section={section} uuid={uuid} text={editor.text}
                                     accordionUUID={accordionUUID} contentType={"editor"} open={editor.open}
                                     titleTooltip={tooltip}/>)
-            }
-            case "label": {
-                return (<Label uuid={uuid} accordionUUID={accordionUUID} section={section}/>)
             }
             case "terms": {
                 let termList = terms[uuid]
@@ -103,6 +100,13 @@ function AccordionItem(props) {
                 let sfrList = sfrSections[uuid]
                 return (<SecurityContent uuid={uuid} accordionUUID={accordionUUID} title={sfr.title} contentType={type}
                                          definition={definition} sfrList={sfrList} section={section} open={sfr.open}/>)
+            }
+            case "sars": {
+                let sar = sars[uuid]
+                let definition = sar.summary ? sar.summary : ""
+                let sarComponents = sar.componentIDs ? sar.componentIDs : []
+                return (<SecurityContent uuid={uuid} accordionUUID={accordionUUID} title={sar.title} contentType={type}
+                                         definition={definition} sarComponents={sarComponents} section={section} open={sar.open}/>)
             }
             default:
                 return null

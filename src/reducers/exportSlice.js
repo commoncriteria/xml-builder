@@ -1,5 +1,6 @@
 // Imports
 import { current, createSlice } from "@reduxjs/toolkit";
+import validator from 'validator';
 
 const initialState = {
 	overallObject: {
@@ -30,6 +31,7 @@ const initialState = {
 			},
 			"include-pkg": {},
 			modules: {},
+			"pp-preferences": {},
 			"sec:Introduction": {
 				"#": [
 					{
@@ -300,34 +302,54 @@ export const exportSlice = createSlice({
 	initialState,
 	reducers: {
 		SET_TECH_TERMS: (state, action) => {
-			const reformatted = Object.values(action.payload.techTerms).map(
-				(term) => {
-					const abbreviation = getAbbreviation(term.title)
-					if (typeof (term) === "object") {
-						return {
-							"@full": getTitle(term.title),
-							"#": [
-								(abbreviation && abbreviation !== "null") ? { "@abbr": abbreviation } : "",
-								removeEnclosingPTag(term.definition)
-							]
-						};
-					}
+			const reformatted = Object.entries(action.payload.techTerms).map(([key, value]) => {
+				const abbreviation = getAbbreviation(action.payload.techTerms.title)
+	
+				// Only parse if its a UUID (signifying an actual term)
+				if (validator.isUUID(key)) {
+					const term = action.payload.techTerms[key]
+					return {
+						"@full": getTitle(term.title),
+						"#": [
+							(abbreviation && abbreviation !== "null") ? { "@abbr": abbreviation } : "",
+							removeEnclosingPTag(term.definition)
+						]
+					};
 				}
-			);
+			});
+			if (action.payload.hasOwnProperty("techTerms")) {
+				const reformatted = Object.entries(action.payload.techTerms).map(
+					([key, value]) => {
+						const abbreviation = getAbbreviation(action.payload.techTerms.title)
 
-			// Format tech-term by file type
-			switch (state.fileType) {
-				case "Mobile Device": {
-					state.techTerms = {
-						"cc:term": reformatted,
-					};
-					break;
-				}
-				default: {
-					state.techTerms = {
-						term: reformatted,
-					};
-					break;
+						// Only parse if its a UUID (signifying an actual term)
+						if (validator.isUUID(key)) {
+							const term = action.payload.techTerms[key]
+							return {
+								"@full": getTitle(term.title),
+								"#": [
+									(abbreviation && abbreviation !== "null") ? { "@abbr": abbreviation } : "",
+									removeEnclosingPTag(term.definition)
+								]
+							};
+						}
+					}
+				);
+
+				// Format tech-term by file type
+				switch (state.fileType) {
+					case "Mobile Device": {
+						state.techTerms = {
+							"cc:term": reformatted,
+						};
+						break;
+					}
+					default: {
+						state.techTerms = {
+							term: reformatted,
+						};
+						break;
+					}
 				}
 			}
 		},
@@ -537,20 +559,22 @@ export const exportSlice = createSlice({
 				state.overallObject.PP.modules = modules.payload.modules;
 			}
 		},
+		SET_PP_PREFERENCE: (state, action) => {
+			const ppPreference = action.payload.ppPreference
+
+			if (ppPreference.hasOwnProperty("xml") && ppPreference.xml.hasOwnProperty("payload") && ppPreference.xml.payload.hasOwnProperty("preference")) {
+				state.overallObject.PP["pp-preferences"] = ppPreference.xml.payload.preference;
+			}
+		},
 		SET_INTRODUCTION: (state, action) => {
 			const intro = action.payload.introduction.formItems;
-			const {
-				description: platform_description,
-				platforms: platform_platforms,
-				xml: platformXML
-			} = action.payload.platformData;
+			const { xml: platformXML } = action.payload.platformData;
 			const sec_overview_section = intro.find(
 				(formItem) => formItem.title == "Objectives of Document"
 			).xmlTagMeta.tagName;
 			const sec_overview_text = removeEnclosingPTag(intro.find(
 				(formItem) => formItem.title == "Objectives of Document"
 			).text);
-
 			const createToe = (title, intro, subTitle = "") => {
 				let formItem = intro.find((item) => item.title == title);
 
@@ -596,7 +620,9 @@ export const exportSlice = createSlice({
 			const toe_boundary = createToe("TOE Overview", intro, "TOE Boundary");
 			const toe_platform = createToe("TOE Overview", intro, "TOE Platform");
 			const toe_list = [toe_overview, toe_boundary, toe_platform];
+
 			const toe_usage = createToe("TOE Usage", intro);
+
 
 			let sections = [];
 			// Add TOE Overview
@@ -607,7 +633,7 @@ export const exportSlice = createSlice({
 			})
 
 			// TODO: Phase 2, once platforms are in UI, change to check if platform slice has content
-			if (platformXML.length != 0) {
+			if (platformXML && platformXML.length != 0) {
 				sections.push({
 					"@title": "Platforms with Specific EAs",
 					"@id": "sec-platforms",
@@ -691,70 +717,129 @@ export const exportSlice = createSlice({
 			const useCases = action.payload.useCases
 				? JSON.parse(JSON.stringify(action.payload.useCases))
 				: {};
-			const sars = action.payload.sars.payload
-			const platforms = action.payload.platforms
+
+			const { sars, platforms, auditSection } = action.payload
 			const { title, definition, formItems } = sfrSections;
+			
 			try {
 				// Get selectable ids from uuid
-				const selectableUUIDtoID = getSelectableMap(formItems);
+				const { selectableUUIDtoID, componentMap} = getSelectableMap(formItems);
 				const useCaseMap = getUseCaseMap(useCases);
-
+				let auditTableExists = false;
+				
 				// Get sfr sections
 				let sfrSections = formItems.map((sfr, sfrIndex) => {
 					const { nestedFormItems, text, title } = sfr;
-					if (nestedFormItems && title) {
-						const { formItems } = nestedFormItems;
-						let innerSections = [];
-						if (formItems && formItems.length > 0) {
-							// Get section values
-							innerSections = formItems.map((section, sfrSectionIndex) => {
-								const sectionID = `5.${sfrIndex + 1}.${sfrSectionIndex + 1}`;
-								const { title, definition, components } = section;
-								let findValues = title.split(/\(([^)]+)\)/);
-								const id =
-									findValues && findValues.length > 1
-										? findValues[1].trim().toLowerCase()
-										: "";
-								let formattedComponents = getSfrComponents(
-									components,
-									selectableUUIDtoID,
-									useCaseMap,
-									platforms,
-									state.fileType
-								);
-								return [
-									{ "!": `${sectionID} ${title ? title : ""}` },
-									{
-										section: {
-											"@id": id,
-											"@title": title ? title : "",
-											"#": [definition, formattedComponents],
-										},
-									},
-								];
-							});
-						}
 
-						return {
-							"@title": title,
-							"#": [text ? text : "", innerSections],
-						};
+					if (nestedFormItems && title) {
+						if (title == "Security Functional Requirements") {
+							const { formItems } = nestedFormItems;
+							let innerSections = [];
+							if (formItems && formItems.length > 0) {
+								// Filter through to grab cc_ids to see if FAU_GEN.1 exists
+								const ccIds = formItems.flatMap((item) =>
+									item.components ?
+									Object.values(item.components).map((component) => {
+											const { cc_id } = component;
+											if (cc_id !== undefined) {
+												return cc_id.toLowerCase();
+											}
+										}
+									)
+									:
+									[]
+								);
+								auditTableExists = ccIds.includes("fau_gen.1")
+
+								// Get section values
+								innerSections = formItems.map((section, sfrSectionIndex) => {
+									const sectionID = `5.${sfrIndex + 1}.${sfrSectionIndex + 1}`;
+									const { title, definition, components } = section;
+									let findValues = title.split(/\(([^)]+)\)/);
+									const id =
+										findValues && findValues.length > 1
+											? findValues[1].trim().toLowerCase()
+											: "";
+									let formattedComponents = getSfrComponents(
+										components,
+										selectableUUIDtoID,
+										componentMap,
+										useCaseMap,
+										platforms,
+										state.fileType,
+										auditTableExists
+									);
+									return [
+										{ "!": `${sectionID} ${title ? title : ""}` },
+										{
+											section: {
+												"@id": id,
+												"@title": title ? title : "",
+												"#": [definition, formattedComponents],
+											},
+										},
+									];
+								});
+							}
+
+							return {
+								"@title": title,
+								"#": [text ? text : "", innerSections],
+							};
+						} else if (title == "Security Assurance Requirements") {
+							const { formItems } = nestedFormItems;
+							let innerSections = [];
+							if (formItems && formItems.length > 0) {
+								// Get section values
+								innerSections = formItems.map((section, sfrSectionIndex) => {
+									const { title, summary, components } = section;
+
+									let formattedComponents = getSARComponents(
+										sars.elements,
+										components,
+									);
+
+									return [
+										{
+											section: {
+												"@title": title ? title : "",
+												"#": [summary, formattedComponents],
+												...(section.id && { "@id": section.id }) // Conditionallly add id if there is one
+											},
+										},
+									];
+								});
+							}
+
+							return {
+								"@title": title,
+								"#": [text ? text : "", innerSections],
+							};
+						}
 					}
 				});
+
 				// Format security requirements by file type
 				if (state.fileType === "General-Purpose Computing Platforms") {
 					delete state.overallObject.PP["sec:req"];
 				}
+
 				state.overallObject.PP[state.fileType === "General-Purpose Computing Platforms" ? "sec:Security_Requirements" : "sec:req"] = {
 					"@title": title,
 					"#": definition ? definition : "",
 					"!1": " 5.1 Security Functional Requirements",
-					"sec:SFRs": [sfrSections],
+					"sec:SFRs": {
+						"#": [
+							auditTableExists ? auditSection : "",
+							sfrSections.find(section => section["@title"] == "Security Functional Requirements")
+						]
+					},
 					"!2": "5.2 Security Assurance Requirements",
-					"section": {
-						"@title": "Security Assurance Requirements",
-						"@id": "SARs",
-						"#": sars
+					[sars.xmlTagMeta.tagName]: {
+						"@title": sars.xmlTagMeta.attributes.hasOwnProperty("title") ? sars.xmlTagMeta.attributes.title : "Security Assurance Requirements",
+						"#": [sfrSections.find(section => section["@title"] == "Security Assurance Requirements")],
+						// Conditionally add id if there is one (not setting a default as transforms doesn't expect the attribute for all PPs)
+						...(sars.xmlTagMeta.attributes.hasOwnProperty("id") && { "@id": sars.xmlTagMeta.attributes.id }),
 					}
 				};
 			} catch (e) {
@@ -806,14 +891,13 @@ export const exportSlice = createSlice({
 			// Delete bibliography and move to the end of the object for gpcp
 			if (state.fileType === "General-Purpose Computing Platforms") {
 				delete state.overallObject.PP.bibliography;
-				state.overallObject.PP = {...state.overallObject.PP, ["bibliography"]: formattedBibliography};
+				state.overallObject.PP = { ...state.overallObject.PP, ["bibliography"]: formattedBibliography };
 			} else {
 				state.overallObject.PP.bibliography = formattedBibliography;
 			}
 		},
 		SET_APPENDICES: (state, action) => {
 			let appendices = [];
-			const fileType = state.fileType
 
 			const valGuideAppendix = action.payload.state.validationGuidelinesAppendix.xmlContent;
 			if (valGuideAppendix) {
@@ -880,7 +964,7 @@ export const exportSlice = createSlice({
 			// Delete appendix and move to the end of the object for gpcp
 			if (state.fileType === "General-Purpose Computing Platforms") {
 				delete state.overallObject.PP.appendix;
-				state.overallObject.PP = {...state.overallObject.PP, ["appendix"]: formattedAppendix};
+				state.overallObject.PP = { ...state.overallObject.PP, ["appendix"]: formattedAppendix };
 			} else {
 				state.overallObject.PP.appendix = formattedAppendix;
 			}
@@ -964,9 +1048,11 @@ const getSecurityObjectives = (terms, objectivesToSFRs) => {
 const getSfrComponents = (
 	initialComponents,
 	selectableUUIDtoID,
+	componentMap,
 	useCaseMap,
 	platforms,
-	fileType
+	fileType,
+	auditTableExists
 ) => {
 	let components = [];
 	try {
@@ -981,6 +1067,7 @@ const getSfrComponents = (
 						definition,
 						optional,
 						objective,
+						invisible,
 						selectionBased,
 						selections,
 						useCaseBased,
@@ -998,7 +1085,7 @@ const getSfrComponents = (
 							: " ") +
 						title
 						}`;
-					let formattedExtendedComponentDefinition = getExtendedComponentDefinition(extendedComponentDefinition)
+					let formattedExtendedComponentDefinition = extendedComponentDefinition ? getExtendedComponentDefinition(extendedComponentDefinition) : []
 					let component = [
 						{ "!": componentName },
 						{
@@ -1009,12 +1096,12 @@ const getSfrComponents = (
 								depends: [],
 								"#": [
 									iteration_id && iteration_id !== ""
-										? {"@iteration": iteration_id}
+										? { "@iteration": iteration_id }
 										: "",
 									(fileType === "Virtualization System" && formattedExtendedComponentDefinition.length > 0) ?
 										{ "consistency-rationale": "" } : "",
 									formattedExtendedComponentDefinition,
-									definition && definition !== "" ? {description: definition } : "",
+									definition && definition !== "" ? { description: definition } : "",
 									getSfrElements(
 										elements ? elements : {},
 										selectableUUIDtoID,
@@ -1022,7 +1109,7 @@ const getSfrComponents = (
 										evaluationActivities,
 										platforms
 									),
-									getAuditEvents(auditEvents),
+									auditTableExists ? getAuditEvents(auditEvents) : [],
 								],
 							},
 						},
@@ -1036,11 +1123,13 @@ const getSfrComponents = (
 						selectionBased,
 						selections,
 						selectableUUIDtoID,
+						componentMap,
 						useCaseBased,
 						useCases,
 						useCaseMap,
 						optional,
 						objective,
+						invisible,
 						extendedComponentDefinition
 					);
 
@@ -1106,7 +1195,7 @@ const getSfrElements = (
 					}
 
 					// Get SFR element
-					const { elementXMLID, title, selectables, selectableGroups, note } =
+					const { elementXMLID, note } =
 						element;
 					try {
 						// Return elements here
@@ -1115,7 +1204,7 @@ const getSfrElements = (
 								"@id": elementXMLID,
 								"#": [
 									{
-										title: getSelections(title, selectables, selectableGroups),
+										title: parseElement(element),
 									},
 									note ? { note: getNote(note) } : "",
 									formattedEvaluationActivities,
@@ -1145,90 +1234,270 @@ const getNote = (note) => {
 	};
 };
 
-const getSelections = (title, selectables, selectableGroups) => {
-	let result = "";
-	title.forEach((title) => {
-		// Check to see if the current title we are reading is a selectable, or just a description
-		if (title.selections) {
-			const group = selectableGroups[title.selections];
-			let formattedSelectables = "";
-			group.groups.forEach((groupKey) => {
-				if (selectables.hasOwnProperty(groupKey)) {
-					const { description, exclusive, id } = selectables[groupKey];
+const parseElement = (element) => {
+	let finalResult = "";
+	const { title, selectables, selectableGroups, isManagementFunction, managementFunctions, tabularize } = element
 
-					const isExclusive = exclusive == true ? `exclusive="yes"` : "";
-					let attributes = `id="${id}" ${isExclusive}`;
+	
+	function parseTitleOrDescriptionArray(titleOrDescription) {
+		if (!titleOrDescription)
+			return
 
-					formattedSelectables += `<selectable ${attributes}>${description}</selectable>`;
-				} else if (selectableGroups[groupKey]) {
-					let complexSelectable = selectableGroups[groupKey];
-					// Go through all descriptions of the complex selectable
+		let result = "";
 
-					formattedSelectables += "<selectable>"
-					complexSelectable.description.forEach((item) => {
-						if (item.text)
-							formattedSelectables += item.text;
-						// If there is a nested group...
-						else if (item.hasOwnProperty("groups")) {
-							let nestedFormattedSelectables = "";
-							item.groups.forEach((complexSelectableGroupKey) => {
-								if (selectableGroups[complexSelectableGroupKey]) {
-									const nestedGroup =
-										selectableGroups[complexSelectableGroupKey];
-									nestedGroup.groups.forEach((groupKey) => {
-										const { description, exclusive, id } =
-											selectables[groupKey];
-										const isExclusive = exclusive == true ? `exclusive="yes"` : "";
-										let attributes = `id="${id}" ${isExclusive}`;
+		titleOrDescription.forEach((item) => {
 
-										nestedFormattedSelectables += `<selectable ${attributes}>${description}</selectable>`;
-									});
-								} else if (selectables[complexSelectableGroupKey]) {
-									const { description, exclusive, id, assignment } =
-										selectables[complexSelectableGroupKey];
-									const isExclusive = exclusive == true ? `exclusive="yes"` : "";
-									let attributes = `id="${id}" ${isExclusive}`;
+			const assignmentEdgeCase = item.groups && item.groups.length == 1 && selectables[item.groups[0]] && selectables[item.groups[0]].assignment
 
-									let tagName = "selectable";
+			if (item.text) {
+				result += item.text;
+			} else if (item.description) {
+				result += item.description;
+			} else if (item.assignment) {
+				result += `<assignable>${selectables[item.assignment].description}</assignable>`;
+			} else if (item.selections) {
+				const group = selectableGroups[item.selections]
+				const onlyone = group.onlyOne ? `onlyone="yes"` : "";
+				const linebreak = group.linebreak ? `linebreak="yes"` : "";
 
-									if (assignment) {
-										tagName = "assignable"
-									}
+				const formattedSelectables = `<selectables ${onlyone} ${linebreak}>${parseSelections(item.selections)} </selectables>`
+				result += formattedSelectables;
+			} else if (assignmentEdgeCase) {
+				const validKey = item.groups[0]
+				if (!selectables[validKey])
+					return
+				
+				const { description } = selectables[validKey]
+				
+				result += `<assignable>${description}</assignable>`
+				
+			} else if (item.tabularize) {
+				result += parseTabularize(tabularize)
+			}
+			else {
+				result += "<selectables>"
+				item.groups.forEach(groupKey => {
+					result += parseSelections(groupKey)
+				})
+				result += "</selectables>"
+			}
+		})
+		return result;
+	}
 
-									nestedFormattedSelectables += `<${tagName} ${attributes}>${description}</${tagName}>`;
-								}
-							});
-							const onlyone = complexSelectable.onlyOne ? `onlyone="yes"` : "";
-							// Only enclose in selectables if nested is a selectable (could be an assignable)
-							nestedFormattedSelectables.includes("<assignable") ? formattedSelectables += nestedFormattedSelectables : formattedSelectables += `<selectables ${onlyone}>${nestedFormattedSelectables}</selectables>`;
-						}
-					});
-					formattedSelectables += '</selectable>'
-				}
-			});
+	// Within the 'selections' field of a title array, one or two things can happen
+	// 1. We have a singular selectable
+	// 2. We have a group
+	function parseSelections(selectionKey) {
+		let nestedResults = "";
+		const group = selectableGroups[selectionKey];
 
-			const onlyone = selectableGroups[title.selections].onlyOne
-				? `onlyone="yes"`
-				: "";
-			result += `<selectables ${onlyone}>${formattedSelectables}</selectables>`;
-		} else if (title.assignment) {
-			const assignable = selectables[title.assignment];
-			const { description } = assignable;
-			result += `<assignable>${description}</assignable>`;
-		} else if (title.description) {
-			result += title.description;
+		if (group == undefined) {
+			const { description, exclusive, id, assignment } = selectables[selectionKey]
+			const isExclusive = exclusive == true ? 'exclusive="yes"' : ""
+			const attributes = `id="${id}" ${isExclusive}`
+			const assignableOpeningTag = assignment ? "<assignable>" : ""
+			const assignableClosingTag = assignment ? "</assignable>" : ""
+
+			nestedResults += `<selectable ${attributes}>${assignableOpeningTag}${description}${assignableClosingTag}</selectable>`;
 		} else {
-			result += title.text;
-		}
-	});
-	// console.log(result);
-	return result;
-};
+			group.groups.forEach(validKey => {
+				if (selectables[validKey]) {
+					const { description, exclusive, id, assignment } = selectables[validKey]
+					const isExclusive = exclusive == true ? 'exclusive="yes"' : ""
+					const attributes = `id="${id}" ${isExclusive}`
+					const assignableOpeningTag = assignment ? "<assignable>" : ""
+					const assignableClosingTag = assignment ? "</assignable>" : ""
 
+					nestedResults += `<selectable ${attributes}>${assignableOpeningTag}${description}${assignableClosingTag}</selectable>`;
+				} else if (selectableGroups[validKey]) {
+					nestedResults += `<selectable id="${validKey}">`
+					nestedResults += parseGroup(validKey);
+					nestedResults += `</selectable>`
+				}
+			})
+		}
+
+		return nestedResults;
+	}
+
+	// Complex selectable
+	function parseGroup(groupKey) {
+		let nestedResults = "";
+		const group = selectableGroups[groupKey];
+		if (group.description) {
+			nestedResults += parseTitleOrDescriptionArray(group.description);
+		} else {
+			nestedResults += parseSelections(groupKey)
+		}
+
+		return nestedResults;
+	}
+
+	function parseTabularize(tabularize) {
+		const tabularizeTablesList = Object.values(tabularize)
+
+		let formattedTabularizeTablesList = ''
+
+		tabularizeTablesList.forEach(tabularizeTable => {
+			const { id, title, definition, rows, columns } = tabularizeTable
+			let formattedTabularize = "" 
+	
+			// TODO: Refactor this segment to not be multi-line with += statements, start w/ this for readability
+			formattedTabularize += '<selectables>'
+			formattedTabularize += `<tabularize id="${id}" title="${title}">`
+			definition.forEach(({value, type}) => {
+				if (value !== "Selectable ID")
+					formattedTabularize += `<${type}>${value}</${type}>`
+			})
+
+			formattedTabularize += `</tabularize>`
+
+			formattedTabularizeTablesList += formattedTabularize;
+	
+			rows.forEach(row => {
+				const { selectableId, identifier, inputParameters, keyDerivationAlgorithm, cryptographicKeySizes, listOfStandards } = row;
+	
+				// Pack the contents of this table into an array for easier parsing
+				const selections = [inputParameters, keyDerivationAlgorithm, cryptographicKeySizes, listOfStandards];
+	
+				formattedTabularizeTablesList += `<selectable id="${selectableId}"><col>${identifier}</col>`
+				selections.forEach(selection => {
+					formattedTabularizeTablesList += `<col>${parseTitleOrDescriptionArray(selection)}</col>`
+				})
+				formattedTabularizeTablesList += `</selectable>`
+	
+			})
+			// Start parsing the tabularized selectables
+
+			formattedTabularizeTablesList += "</selectables>"
+		})	
+		return formattedTabularizeTablesList
+
+	}
+	
+	// Management Functions Table
+	function parseManagementFunctionsTable(managementFunctions) {
+		const { id, tableName, statusMarkers, rows, columns } = managementFunctions;
+		
+		const tableId = id !== "" ? id : "fmt_smf";
+		const tableTitle = tableName !== "" ? tableName : "Management Functions";
+		
+		// Construct the id and table name and status markers
+		let result = `
+			<br/><br/>
+			<b><ctr id="${tableId}" ctr-type="Table">: ${tableTitle}</ctr></b>
+			<br/><br/>
+			Status Markers:<br/> ${statusMarkers}<br/>
+		`;
+
+		// Construct the management function set
+		const { columnResult, fields } = parseManagementFunctionColumns(columns);
+		const rowResult = parseManagementFunctionRows(rows, fields);
+		
+		result += `<management-function-set default="O">${columnResult}${rowResult}</management-function-set>`;
+		
+		return result;
+	}
+	
+
+	// Management Function Columns
+	function parseManagementFunctionColumns(columns) {
+		let result = ""
+		let fields = []
+
+		columns.forEach(({ field, headerName }) => {
+			if (!["rowNum", "id", "textArray"].includes(field)) {
+				result += `<manager cid="${field}">${headerName}</manager>`
+				if (!fields.includes(field)) {
+					fields.push(field)
+				}
+			}
+		})
+
+		return { columnResult: result, fields };
+	}
+
+	// Management Function Rows
+	function parseManagementFunctionRows(rows, fields) {
+		let result = ""
+
+		rows.forEach(row => {
+			const { id, textArray, evaluationActivity, note } = row;
+			const rowText = parseTitleOrDescriptionArray(textArray);
+			const idAttribute = (id && id !== "") ? ` id="${id}"` : "";
+			const activityAndNote = evaluationActivity ? createAActivityAndNote(evaluationActivity, note) : "";
+
+			result += `
+				<management-function${idAttribute}>
+					<text>${rowText}</text>
+					${parseRowFields(row, fields)}
+					${activityAndNote}
+				</management-function>
+			`;
+		});
+
+		return result;
+	}
+
+
+	function createAActivityAndNote(evaluationActivity, note) {
+		const { tss, guidance,testIntroduction, testClosing, testList } = evaluationActivity;
+		let result = "";
+
+		if (note) 
+			note.forEach(appNote => result += `<app-note>${appNote}</app-note>`)
+
+		let formattedTestList = ''
+		testList.forEach((element) => {
+			const { description, tests } = element
+			formattedTestList += description
+			formattedTestList += `<testlist>`
+			tests.forEach(test => formattedTestList += `<test>${test.objective}</test>`)
+			formattedTestList += `</testlist>`
+
+		})
+		formattedTestList += testClosing
+
+			result += `
+				<aactivity>
+					<TSS>${tss}</TSS>
+					<Guidance>${guidance}</Guidance>
+					<Tests>${testIntroduction}${formattedTestList}</Tests>
+				</aactivity>
+			`
+		return result;
+	}
+
+	// Get Management Function Row Fields
+	function parseRowFields(row, fields) {
+		let result = ""
+		fields.forEach((field) => {
+			if (field && row.hasOwnProperty(field)) {
+				const marker = row[field] === "-" ? "NA" : row[field];
+				result += `<${marker} ref="${field}"/>`
+			}
+		})
+		return result;
+	}
+
+	// Get initial title
+	finalResult += parseTitleOrDescriptionArray(title);
+
+	// Get management function table if it exists and return
+	if (isManagementFunction && managementFunctions && Object.keys(managementFunctions).length > 0) {
+		const managementResult = parseManagementFunctionsTable(managementFunctions)
+		finalResult += managementResult
+	}
+	return finalResult;
+}
 const getExtendedComponentDefinition = (extendedComponentDefinition) => {
 	const { toggle, audit, managementFunction, componentLeveling, dependencies } =
-		extendedComponentDefinition;
+		extendedComponentDefinition || {};
 	let formattedExtendedComponentDefinition = [];
+
+	if (extendedComponentDefinition == undefined)
+		return formattedExtendedComponentDefinition
 
 	// Helper function to collapse multiple if statements
 	function addFormattedDefinition(key, value) {
@@ -1256,11 +1525,13 @@ const getComponentSelections = (
 	selectionBased,
 	selections,
 	selectableUUIDtoID,
+	componentMap,
 	useCaseBased,
 	useCases,
 	useCaseMap,
 	optional,
-	objective
+	objective,
+	invisible
 ) => {
 	if (component && component[1]) {
 		let fComponent = component[1]["f-component"];
@@ -1279,19 +1550,34 @@ const getComponentSelections = (
 		// Add selection based
 		if (selectionBased) {
 			if (selections && Object.keys(selections).length > 0) {
-				if (
-					selections.hasOwnProperty("selections") &&
-					Object.keys(selections.selections).length > 0
-				) {
+				if (selections.hasOwnProperty("selections")) {
 					fComponent["@status"] = "sel-based";
-					Object.values(selections.selections).forEach((selection) => {
-						if (selectableUUIDtoID.hasOwnProperty(selection)) {
-							const formattedID = { "@on": selectableUUIDtoID[selection] };
-							if (!fComponent["depends"].includes(formattedID)) {
-								fComponent["depends"].push(formattedID);
+
+					// Get components
+					if (selections.components.length > 0) {
+						selections.components.forEach((component) => {
+							const id = componentMap[component]
+
+							if (id) {
+								const formattedID = {"@on-incl": id};
+								if (!fComponent["depends"].includes(formattedID)) {
+									fComponent["depends"].push(formattedID);
+								}
 							}
-						}
-					});
+						});
+					}
+
+					// Get selections
+					if (Object.keys(selections.selections).length > 0) {
+						Object.values(selections.selections).forEach((selection) => {
+							if (selectableUUIDtoID.hasOwnProperty(selection)) {
+								const formattedID = { "@on-sel": selectableUUIDtoID[selection] };
+								if (!fComponent["depends"].includes(formattedID)) {
+									fComponent["depends"].push(formattedID);
+								}
+							}
+						});
+					}
 				}
 			}
 		}
@@ -1301,12 +1587,17 @@ const getComponentSelections = (
 			fComponent["@status"] = "sel-based";
 			useCases.forEach((useCase) => {
 				if (useCaseMap.hasOwnProperty(useCase)) {
-					let formattedUseCase = { "@on": useCaseMap[useCase] };
+					let formattedUseCase = { "@on-use": useCaseMap[useCase] };
 					if (!fComponent["depends"].includes(formattedUseCase)) {
 						fComponent["depends"].push(formattedUseCase);
 					}
 				}
 			});
+		}
+
+		// Add invisible
+		if (invisible) {
+			fComponent["@status"] = "invisible"
 		}
 
 		// Add optional
@@ -1532,24 +1823,33 @@ const getSfrEvaluationActivities = (
 
 const getSelectableMap = (formItems) => {
 	let selectableUUIDtoID = {};
+	let componentMap = {}
+
 	try {
 		formItems.forEach((sfr) => {
+			// if (sfr.title = "Security Functional Requirements") { // Only want to do this for the SFRs, not SARs
 			const { nestedFormItems } = sfr;
 			if (nestedFormItems) {
 				const { formItems } = nestedFormItems;
+
 				if (formItems && formItems.length > 0) {
 					formItems.forEach((section) => {
 						const { components } = section;
+
 						if (components && Object.keys(components).length > 0) {
-							Object.values(components).forEach((component) => {
-								const { elements } = component;
+							Object.entries(components).forEach(([componentUUID, component]) => {
+								const { elements, xml_id, cc_id, iteration_id } = component;
+
+								// Get selectables
 								if (elements && Object.keys(elements).length > 0) {
 									Object.values(elements).forEach((element) => {
 										const { selectables } = element;
+
 										if (selectables && Object.values(selectables).length > 0) {
 											Object.entries(selectables).forEach(
 												([uuid, selectable]) => {
 													const { id } = selectable;
+
 													if (id && !selectableUUIDtoID.hasOwnProperty(uuid)) {
 														selectableUUIDtoID[uuid] = id;
 													}
@@ -1558,6 +1858,9 @@ const getSelectableMap = (formItems) => {
 										}
 									});
 								}
+
+								// Add component to component map
+								componentMap[componentUUID] = xml_id ? xml_id : getXmlID(cc_id, iteration_id)
 							});
 						}
 					});
@@ -1567,7 +1870,8 @@ const getSelectableMap = (formItems) => {
 	} catch (e) {
 		console.log(e);
 	}
-	return selectableUUIDtoID;
+
+	return { selectableUUIDtoID, componentMap };
 };
 
 const getUseCaseMap = (useCases) => {
@@ -1592,6 +1896,83 @@ const getUseCaseMap = (useCases) => {
 		console.log(e);
 	}
 	return useCaseMap;
+};
+
+const getSARComponents = (
+	allSARElements,
+	initialComponents,
+) => {
+	let components = [];
+	try {
+		if (initialComponents && Object.keys(initialComponents).length > 0) {
+			Object.entries(initialComponents).forEach(
+				([componentUUID, initialComponent]) => {
+					const {
+						name,
+						ccID,
+						summary,
+						elementIDs
+					} = initialComponent;
+
+					const elements = elementIDs.map(elementUUID => allSARElements[elementUUID]);
+					let component = [
+						{
+							"a-component": {
+								"@cc-id": ccID ? ccID.toLowerCase() : "",
+								"@name": name ? name : "",
+								"#": [
+									summary,
+									getSARElements(elements),
+								],
+							},
+						},
+					];
+
+					// Set component
+					if (!components.includes(component)) {
+						components.push(component);
+					}
+				}
+			);
+		}
+	} catch (e) {
+		console.log(e);
+	}
+	return components;
+};
+
+const getSARElements = (
+	initialElements,
+) => {
+	let elements = [];
+	try {
+		initialElements.forEach(element => {
+			// Get SAR element
+			const { aactivity, note, title, type } = element;
+			try {
+				// Return elements here
+				let formattedElement = {
+					"a-element": {
+						"@type": type,
+						"#": [
+							{ title: title },
+							note ? { note: note } : "",
+							{ aactivity: aactivity }
+						],
+					},
+				};
+
+				if (!elements.includes(formattedElement)) {
+					elements.push(formattedElement);
+				}
+			} catch (e) {
+				console.log(e);
+			}
+		});
+	} catch (e) {
+		console.log(e);
+	}
+	return elements;
 };
 
 const getXmlID = (ccID, iterationID) => {
@@ -1642,6 +2023,7 @@ export const {
 	SET_INTRODUCTION,
 	SET_SECURITY_REQUIREMENTS,
 	SET_OVERALL_STATE,
+	SET_PP_PREFERENCE,
 	SET_FORMATTED_XML,
 	SET_BIBLIOGRAPHY,
 	SET_APPENDICES,

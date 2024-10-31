@@ -2,10 +2,10 @@
 import PropTypes from "prop-types";
 import { useSelector } from 'react-redux'
 import AccordionContent from "./accordionComponents/AccordionContent.jsx";
-import React, {useEffect, useRef, useState} from "react";
+import React, { useEffect, useRef, useState } from "react";
 import MetadataSection from "./accordionComponents/MetadataSection.jsx";
 import PreviewPane from "./PreviewPane.jsx";
-import {IconButton, Tooltip} from "@mui/material";
+import { IconButton, Tooltip } from "@mui/material";
 import LaunchRoundedIcon from "@mui/icons-material/LaunchRounded";
 
 /**
@@ -21,7 +21,7 @@ function ContentPane(props) {
     }
 
     // Constants
-    const style = {primary: "#d926a9", secondary: "#1FB2A6", linkText: "#7c3aed"}
+    const { primary, icons } = useSelector((state) => state.styling);
     const title = props.type === "builder" ? "Builder" : "Preview"
     const isPreviewToggled = useSelector((state) => state.navBar.isPreviewToggled)
     const builderSections = useSelector((state) => state.accordionPane.sections)
@@ -54,13 +54,13 @@ function ContentPane(props) {
         <div className="h-full min-w-full" key={props.type + "ContentPane"}>
             <div className="rounded-lg min-h-full parent flex flex-col">
                 <div className="border-2 border-gray-400 rounded-xl p-3 bg-base-200 h-20">
-                    <div className={`text-3xl font-bold text-secondary flex justify-center items-center 
+                    <div className={`text-2xl font-bold text-secondary flex justify-center items-center 
                                     ${title === "Preview" ? "ml-3 pt-1" : "pt-2"}`}
                     >{title}
                         { title === "Preview" ?
-                            <IconButton sx={{ marginLeft: 0.75 }} onClick={handleOpenPreview}>
-                                <Tooltip title={"Expand XML Preview"}>
-                                    <LaunchRoundedIcon htmlColor={style.primary} sx={{ width: 30, height: 30 }}/>
+                            <IconButton sx={{ marginLeft: 0.75 }} onClick={handleOpenPreview} variant="contained">
+                                <Tooltip title={"Expand XML Preview"} id={"expandXMLPreviewTooltip"}>
+                                    <LaunchRoundedIcon htmlColor={ primary } sx={ icons.large }/>
                                 </Tooltip>
                             </IconButton>
                             :
@@ -68,7 +68,7 @@ function ContentPane(props) {
                         }
                     </div>
                 </div>
-                <div className="mt-4 mb-0 border-2 border-gray-300 rounded-lg p-3 bg-gray-300 text-black flex justify-center child flex-1 text-lg min-h-screen min-w-full">
+                <div className="mt-4 mb-0 border-2 border-gray-300 rounded-lg p-3 bg-gray-300 text-black flex justify-center child flex-1 text-md min-h-screen min-w-full">
                     <div className={isPreviewToggled ? "min-w-full h-screen overflow-y-scroll scrollbar scrollbar-thumb-gray-100 scrollbar-track-gray" : "min-w-full "} ref={scrollContainerRef}>
                         {
                             props.type === "builder" ?
@@ -90,7 +90,6 @@ function ContentPane(props) {
                                     <PreviewPane
                                         openPreview={openPreview}
                                         handleOpenPreview={handleOpenPreview}
-                                        style={style}
                                         isScrolling={isScrolling}
                                     />
                                 </div>

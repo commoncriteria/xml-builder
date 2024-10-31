@@ -1,10 +1,10 @@
 // Imports
-import React, {useState} from "react";
+import React, { useState } from "react";
 import PropTypes from "prop-types";
 import Modal from "./Modal.jsx";
-import {useSelector} from "react-redux";
+import { useSelector } from "react-redux";
 import XMLViewer from "react-xml-viewer";
-import {Box, IconButton, Tooltip} from "@mui/material";
+import { Box, IconButton, Tooltip } from "@mui/material";
 import CopyAllIcon from "@mui/icons-material/CopyAll";
 
 /**
@@ -12,16 +12,16 @@ import CopyAllIcon from "@mui/icons-material/CopyAll";
  * @returns {JSX.Element}   the xml data modal content
  * @constructor             passes in props to the class
  */
-function XMLPreview({ open, handleOpen, style }) {
+function XMLPreview({ open, handleOpen }) {
     // Prop Validation
     XMLPreview.propTypes = {
         open: PropTypes.bool.isRequired,
         handleOpen: PropTypes.func.isRequired,
-        style: PropTypes.object.isRequired
     };
 
     // Constants
     const formattedXML = useSelector((state) => state.exports.formattedXML);
+    const { primary, secondary, linkText, icons } = useSelector((state) => state.styling);
     const [confirmationTooltip, setConfirmationTooltip] = useState(false);
     const [isScrolling, setIsScrolling] = useState(false);
 
@@ -51,25 +51,26 @@ function XMLPreview({ open, handleOpen, style }) {
                                             })
                                         }}
                                     >
-                                        <Tooltip arrow
+                                        <Tooltip id={"copyToClipboardExpandedPreviewTooltip"}
+                                            arrow
                                             title={confirmationTooltip ? "Copied!" : "Copy To Clipboard"}
                                             placement="bottom"
                                             leaveDelay={confirmationTooltip ? 2000: 0}
                                         >
-                                            <CopyAllIcon htmlColor={style.primary} sx={{ width: 30, height: 30 }}/>
+                                            <CopyAllIcon htmlColor={ primary } sx={ icons.large }/>
                                         </Tooltip>
                                     </IconButton>
                                 </Box>
                             </Box>
-                            <div className="text-lg pr-6" >
+                            <div className="text-[14px] pr-6" >
                                 <XMLViewer
                                     xml={formattedXML ? formattedXML : ""}
                                     indentSize={4}
                                     collapsible={true}
                                     theme = {{
-                                        "tagColor": style.primary,
-                                        "attributeKeyColor": style.secondary,
-                                        "attributeValueColor": style.linkText
+                                        "tagColor": primary,
+                                        "attributeKeyColor": secondary,
+                                        "attributeValueColor": linkText
                                     }}
                                 />
                             </div>

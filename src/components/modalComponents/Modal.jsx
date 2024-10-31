@@ -21,12 +21,14 @@ function Modal(props) {
     Modal.propTypes = {
         title: PropTypes.string.isRequired,
         content: PropTypes.node.isRequired,
+        dialogActions: PropTypes.node,
         open: PropTypes.bool.isRequired,
         disabled: PropTypes.bool,
         hideSubmit: PropTypes.bool,
         fullscreen: PropTypes.bool,
         handleOpen: PropTypes.func.isRequired,
         handleSubmit: PropTypes.func,
+        handleDialogActions: PropTypes.node,
         handleIsScrolling: PropTypes.func
     };
 
@@ -73,7 +75,7 @@ function Modal(props) {
                         margin: 0,
                         textAlign: "center",
                         fontWeight: "bold",
-                        fontSize: "22px",
+                        fontSize: "16px",
                         lineHeight: "1.6",
                         letterSpacing: "0.0075em",
                         padding: "16px 24px",
@@ -89,7 +91,7 @@ function Modal(props) {
                         textAlign: "center",
                         color: "black",
                         fontWeight: "normal",
-                        fontSize: "14px",
+                        fontSize: "12px",
                         flex: "auto",
                         marginTop: "20px",
                     }}
@@ -97,23 +99,44 @@ function Modal(props) {
                 </DialogContent>
                 <DialogActions
                     sx={{
-                        display: "flex",
-                        justifyContent: "center",
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'stretch',
+                        '& > *': {
+                            marginBottom: 1,
+                        },
+                        '& > *:last-child': {
+                            marginBottom: 0,
+                        },
+                        marginTop: "4px",
                         marginBottom: "8px"
                     }}
                 >
-                    <Button onClick={props.handleOpen} variant={`${(props.hideSubmit ? "contained" : "outlined")}`} color={"primary"} sx={{fontSize: "14px", color: (props.hideSubmit ? "white" : "primary")}}>
-                        <span>Close</span>
-                    </Button>
-                    {
-                        props.hideSubmit ?
-                            null
-                            :
-                            <Button variant="contained" color={"primary"} onClick={props.handleSubmit} disabled={props.disabled}
-                                    sx={{fontSize: "14px", color: "white"}}>
-                                <span>Confirm</span>
-                            </Button>
+                    {props.dialogActions ?
+                        <span style={{alignItems: "stretch"}}>
+                            {props.dialogActions}
+                        </span>
+                        :
+                        null
                     }
+                    <div style={{
+                        display: "flex",
+                        justifyContent: "center",
+                        marginBottom: "8px"
+                    }}>
+                        <Button onClick={props.handleOpen} variant={`${(props.hideSubmit ? "contained" : "outlined")}`} color={"primary"} sx={{fontSize: "12px", color: (props.hideSubmit ? "white" : "primary")}}>
+                            <span>Close</span>
+                        </Button>
+                        {
+                            props.hideSubmit ?
+                                null
+                                :
+                                <Button variant="contained" color={"primary"} onClick={props.handleSubmit} disabled={props.disabled}
+                                        sx={{fontSize: "12px", color: "white", marginLeft: "16px"}}>
+                                    <span>Confirm</span>
+                                </Button>
+                        }
+                    </div>
                 </DialogActions>
             </Dialog>
         </div>

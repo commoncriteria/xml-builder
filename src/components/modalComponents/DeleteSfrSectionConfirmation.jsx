@@ -48,7 +48,7 @@ function DeleteSfrSectionConfirmation(props) {
         <div>
             <Modal title={"Delete SFR Confirmation"}
                    content={(
-                       <div className="p-4 text-[16px] italic">
+                       <div className="p-4 text-[14px] italic">
                           Are you sure you want to delete this entire SFR section and its sub-sections?
                        </div>
                    )}

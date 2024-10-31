@@ -11,37 +11,26 @@ import Modal from "./Modal.jsx";
 function ResetDataConfirmation(props) {
     // Prop Validation
     ResetDataConfirmation.propTypes = {
+        title: PropTypes.string.isRequired,
+        text: PropTypes.oneOfType([PropTypes.string.isRequired, PropTypes.object.isRequired]),
         open: PropTypes.bool.isRequired,
-        handleOpen: PropTypes.func.isRequired
+        handleOpen: PropTypes.func.isRequired,
+        handleSubmit: PropTypes.func.isRequired,
     };
-
-    // Methods
-    const handleSubmit = async () => {
-        // Clear session storage and reset template data to its original state
-        sessionStorage.clear()
-
-        // Reload the page after clearing out local storage
-        location.reload()
-
-        // Close the dialog
-        props.handleOpen()
-
-        // Scroll back to the top of the page
-        window.scrollTo(0, 0)
-    }
 
     // Return Method
     return (
         <div>
-            <Modal title={"Reset Data Confirmation"}
-                   content={(
-                       <div className="p-4 text-[16px] italic">
-                          Are you sure you want to reset all data to its initial state?
-                       </div>
-                   )}
-                   open={props.open}
-                   handleOpen={() => {props.handleOpen()}}
-                   handleSubmit={handleSubmit}
+            <Modal
+                title={props.title}
+                content={(
+                    <div className="p-4 text-[14px] italic">
+                        {props.text}
+                   </div>
+                )}
+                open={props.open}
+                handleOpen={() => {props.handleOpen()}}
+                handleSubmit={props.handleSubmit}
             />
         </div>
     );

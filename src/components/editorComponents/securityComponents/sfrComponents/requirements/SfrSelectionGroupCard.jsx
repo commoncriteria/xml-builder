@@ -1,13 +1,12 @@
 // Imports
-import React, {useEffect, useState} from "react";
 import PropTypes from "prop-types";
-import {IconButton, Stack, Tooltip, Typography} from "@mui/material";
+import React, { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { Checkbox, IconButton, Stack, Tooltip, Typography } from "@mui/material";
+import { UPDATE_SFR_SECTION_ELEMENT } from "../../../../../reducers/SFRs/sfrSectionSlice.js";
 import DeleteForeverRoundedIcon from "@mui/icons-material/DeleteForeverRounded";
-import SfrCard from "./SfrCard.jsx";
-import {UPDATE_SFR_SECTION_ELEMENT} from "../../../../reducers/SFRs/sfrSectionSlice.js";
-import {useDispatch} from "react-redux";
-import MultiSelectDropdown from "./MultiSelectDropdown.jsx";
-import Checkbox from "@mui/material/Checkbox";
+import MultiSelectDropdown from "../../MultiSelectDropdown.jsx";
+import CardTemplate from "../../CardTemplate.jsx";
 
 /**
  * The SfrSelectionGroupCard class that displays the selection group card for teh sfr selection group
@@ -22,17 +21,16 @@ function SfrSelectionGroupCard(props) {
         elementUUID: PropTypes.string.isRequired,
         element: PropTypes.object.isRequired,
         getSelectablesMaps: PropTypes.func.isRequired,
+        styling: PropTypes.object.isRequired,
         id: PropTypes.string.isRequired,
     };
 
     // Constants
-    const style = {
-        secondary: "#1FB2A6",
-        checkbox: {color: "#9E9E9E", paddingLeft: "4px", '&.Mui-checked': {color: "#1FB2A6"}, "&:hover": {backgroundColor: "transparent"}}
-    }
+    const { icons } = useSelector((state) => state.styling);
     const dispatch = useDispatch();
     const [selectableOptions, setSelectableOptions] = useState({})
     const [selected, setSelected] = useState([])
+    const { styling } = props
 
     // Use Effects
     useEffect(() => {
@@ -96,15 +94,34 @@ function SfrSelectionGroupCard(props) {
                 }
             }
         })
+
         // Delete title selections sections that contain the selection uuid key
         title.map((section, index) => {
             if (section.hasOwnProperty("selections") && section.selections === props.id) {
                 title.splice(index, 1)
             }
         })
+        let itemMap = {
+            selectableGroups: selectableGroups,
+            title: title
+        }
+
+        // Delete management function sections that contain the selection uuid key
+        if (props.element.hasOwnProperty("isManagementFunction") && props.element.isManagementFunction
+            && props.element.hasOwnProperty("managementFunctions") && props.element.managementFunctions.hasOwnProperty("rows")) {
+            let managementFunctions = props.element.managementFunctions
+            managementFunctions.rows.map((row) => {
+                let { textArray } = row
+                textArray.map((section, index) => {
+                    if (section.hasOwnProperty("selections") && section.selections === props.id) {
+                        textArray.splice(index, 1)
+                    }
+                })
+            })
+            itemMap.managementFunctions = managementFunctions
+        }
 
         // Update selectable groups and title
-        let itemMap = { selectableGroups: selectableGroups, title: title }
         dispatch(UPDATE_SFR_SECTION_ELEMENT({
             sfrUUID: props.sfrUUID,
             sectionUUID: props.componentUUID,
@@ -138,28 +155,48 @@ function SfrSelectionGroupCard(props) {
     // Return Method
     return (
         <div key={`${props.id}-group-card`}>
-            <SfrCard type={"section"}
+            <CardTemplate type={"section"}
                      header={
                          <div className="w-full p-0 m-0 my-[-6px]">
                              <span className="flex justify-stretch min-w-full">
                                  <div className="flex justify-center w-full pl-4">
                                      <Tooltip
+                                         id={props.id + "groupDescriptionTooltip"}
                                          title={"This section allows a user to group selectables and assignments that have " +
                                                 "been constructed above. Groups can be nested by selecting a inserting a " +
                                                 "previously defined group ID within a newly created group."} arrow>
-                                         <label className="resize-none font-bold text-[16px] p-0 m-0 text-accent pr-1 mt-[8px]">{props.id}</label>
+                                         <label
+                                             style={{color: styling.primaryColor}}
+                                             className="resize-none font-bold text-[13px] p-0 m-0 pr-1 mt-[10px]">
+                                             {props.id}
+                                         </label>
                                      </Tooltip>
-                                     <IconButton sx={{marginTop: "-8px", margin: 0, padding: 0}} onClick={handleDeleteSelectableGroup}>
-                                         <Tooltip title={"Delete Selectables Group"}>
-                                             <DeleteForeverRoundedIcon htmlColor={style.secondary} sx={{ width: 26, height: 26 }}/>
+                                     <IconButton
+                                         sx={{marginTop: "-16px", margin: 0, padding: 0}}
+                                         onClick={handleDeleteSelectableGroup}
+                                         variant="contained"
+                                     >
+                                         <Tooltip
+                                             title={"Delete Selectables Group"}
+                                             id={"deleteSelectablesGroupTooltip" + props.id}
+                                         >
+                                             <DeleteForeverRoundedIcon htmlColor={ styling.primaryColor } sx={ icons.small }/>
                                          </Tooltip>
                                      </IconButton>
                                  </div>
                                  <div className="flex justify-end w-[0px] pr-1">
                                     <Stack direction="row" component="label" alignItems="center" justifyContent="center">
-                                        <Typography noWrap style={{color: style.secondary, fontSize: "14px", fontWeight: 600}}>Only One</Typography>
-                                        <Checkbox sx={style.checkbox} size={"small"} onChange={handleOnlyOneCheckbox}
-                                                  checked={props.element.selectableGroups[props.id].onlyOne} />
+                                        <Typography
+                                            noWrap
+                                            style={styling.primaryToggleTypography}
+                                        >
+                                            Only One
+                                        </Typography>
+                                        <Checkbox
+                                            sx={styling.primaryCheckboxNoPad}
+                                            size={"small"}
+                                            onChange={handleOnlyOneCheckbox}
+                                            checked={props.element.selectableGroups[props.id].onlyOne} />
                                     </Stack>
                                  </div>
                              </span>
@@ -167,11 +204,13 @@ function SfrSelectionGroupCard(props) {
                      }
                      body={
                          <div key={`${props.id}-multi-select-dropdown`} className="pb-2">
-                             <MultiSelectDropdown selectionOptions={selectableOptions}
-                                                  selections={selected}
-                                                  title={"Selectables"}
-                                                  groupID={props.id}
-                                                  handleSelections={handleMultiselect}
+                             <MultiSelectDropdown
+                                 selectionOptions={selectableOptions}
+                                 selections={selected}
+                                 title={"Selectables"}
+                                 groupID={props.id}
+                                 handleSelections={handleMultiselect}
+                                 style={styling.secondaryTextField}
                              />
                          </div>
                     }

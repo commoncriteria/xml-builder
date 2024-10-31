@@ -15,7 +15,8 @@ import {
     SET_BIBLIOGRAPHY,
     SET_APPENDICES,
     SET_PACKAGES,
-    SET_MODULES
+    SET_MODULES,
+    SET_PP_PREFERENCE
 } from "../../reducers/exportSlice";
 import { create } from "xmlbuilder2";
 import CloudDownloadIcon from "@mui/icons-material/CloudDownload";
@@ -36,7 +37,7 @@ function XMLExporter({ open, handleOpen, preview }) {
     };
 
     // Constants
-    const style = { primary: "#d926a9", secondary: "#1FB2A6", linkText: "#7c3aed" }
+    const { primary, secondary, linkText } = useSelector((state) => state.styling);
     const stateObject = useSelector((state) => state);
     const overallObject = useSelector((state) => state.exports.overallObject);
     const formattedXML = useSelector((state) => state.exports.formattedXML);
@@ -173,13 +174,23 @@ function XMLExporter({ open, handleOpen, preview }) {
     }
 
     const getNestedFormItemInfo = (uuid, contentType) => {
-        const { terms, sfrs, sfrSections, editors } = stateObject
+        const { terms, sfrs, sars, sfrSections, editors } = stateObject
         switch (contentType) {
             case "terms":
                 return terms[uuid]
             case "sfrs": {
                 let section = JSON.parse(JSON.stringify(sfrs.sections[uuid]))
                 section.components = sfrSections.hasOwnProperty(uuid) ? JSON.parse(JSON.stringify(sfrSections[uuid])) : {}
+                return section
+            }
+            case "sars": {
+                // Get the SAR family
+                let section = JSON.parse(JSON.stringify(sars.sections[uuid]))
+
+                // Get associated components of the SAR family
+                const components = section.componentIDs.map(compUUID => sars.components[compUUID])
+                section.components = section.componentIDs.length != 0 ? components : []
+
                 return section
             }
             case "editor":
@@ -195,6 +206,7 @@ function XMLExporter({ open, handleOpen, preview }) {
         const platformData = stateObject.accordionPane.platformdata
         const sars = stateObject.sars
         const formattedSections = {}
+        const ppPreference = stateObject.ppPreference
 
         sections.forEach(section => {
             const key = section.xmlTagMeta ? section.xmlTagMeta.tagName : section.title
@@ -232,6 +244,7 @@ function XMLExporter({ open, handleOpen, preview }) {
         // Add in security requirements definition if it is present to Security Requirements section
         if (securityRequirements && securityRequirements.tag === "Security Requirements") {
             const { sfrDefinition } = stateObject.sfrs
+            
             if (sfrDefinition && sfrDefinition !== "" && sfrDefinition !== "<p><br></p>") {
                 securityRequirements.definition = sfrDefinition.valueOf()
             }
@@ -239,8 +252,10 @@ function XMLExporter({ open, handleOpen, preview }) {
 
         // Export sections
         dispatch(SET_INTRODUCTION({ introduction: introduction, platformData: platformData }))
+        if (ppPreference !== "")
+            dispatch(SET_PP_PREFERENCE({ ppPreference: ppPreference}))
         dispatch(SET_CONFORMANCE_CLAIMS({ conformanceClaims: conformanceClaims }))
-        dispatch(SET_SECURITY_REQUIREMENTS({ securityRequirements: securityRequirements, useCases: useCases, sars: sars.xmlContent, platforms: stateObject.accordionPane.platformdata.platforms }))
+        dispatch(SET_SECURITY_REQUIREMENTS({ securityRequirements: securityRequirements, useCases: useCases, sars: sars, platforms: stateObject.accordionPane.platformdata.platforms, auditSection: stateObject.sfrs.auditSection }))
         dispatch(SET_APPENDICES({ state: stateObject }))
         dispatch(SET_BIBLIOGRAPHY({ bibliography: stateObject.bibliography }))
         dispatch(SET_PACKAGES({ packages: stateObject.includePackage.packages }))
@@ -266,9 +281,9 @@ function XMLExporter({ open, handleOpen, preview }) {
             // xmlbuilder2 escapes all xml tags that are stored as text, so we need to "unescape" them
             let txt = document.createElement("textarea");
             txt.innerHTML = doc.end({ prettyPrint: true });
-            let xmlString = addNamespace(txt.value);
+            let xmlString =  extractQuillBetterTableWrapperContent(txt.value)
+            xmlString = addNamespace(xmlString);
             xmlString = cleanUpXml(xmlString); // TODO: remove once SARS are being contructed in UI
-            // console.log(xmlString)
 
             // Flip this to true at top of file if we don't want file downloads
             if (preview) {
@@ -302,72 +317,160 @@ function XMLExporter({ open, handleOpen, preview }) {
 
     // Utils
     const cleanUpXml = (xmlString) => {
+
+        // Fixes tags that have a hanging space at the end
+        const removeWhiteSpaceRegex = /<(\w+)\s+>/g;
+        let cleanedXmlString = xmlString.replace(removeWhiteSpaceRegex, '<$1>');
+
+        // Removes quill-better-table span
+        cleanedXmlString = xmlString.replace(/<span class="ql-ui" contenteditable="false"><\/span>/g, "")
+        
         // Remove default aactivity tags
-        return xmlString.replace(/<aactivity level="element"\/>\n/g, "").replace(/<aactivity level="component"\/>\n/g, "").replace(/<aactivity level="element"\/>/g, "").replace(/<aactivity level="component"\/>/g, "");
+        return cleanedXmlString.replace(/<aactivity level="element"\/>\n/g, "").replace(/<aactivity level="component"\/>\n/g, "").replace(/<aactivity level="element"\/>/g, "").replace(/<aactivity level="component"\/>/g, "");
+    }
+
+    function convertQuillTables(htmlString) {
+        // Parse the HTML string
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(htmlString, 'text/html');
+
+        const rows = doc.querySelectorAll('.quill-better-table tbody tr');
+
+        // Create XML document
+        const xmlDoc = document.implementation.createDocument('', '', null);
+        const xmlTable = xmlDoc.createElement(`table`);
+        xmlDoc.appendChild(xmlTable);
+
+        const headerRow = xmlDoc.createElement(`tr`);
+        headerRow.setAttribute('class', 'header');
+        const headerCells = rows[0].querySelectorAll('td');
+        headerCells.forEach(cell => {
+            const xmlCell = xmlDoc.createElement(`td`);
+            xmlCell.textContent = cell.textContent.trim();
+            headerRow.appendChild(xmlCell);
+        });
+        xmlTable.appendChild(headerRow);
+
+        let rowspanCount = 0;
+
+        for (let i = 1; i < rows.length; i++) {
+            const row = rows[i];
+            const xmlRow = xmlDoc.createElement(`tr`);
+
+            const cells = row.querySelectorAll('td');
+            cells.forEach((cell, index) => {
+                const xmlCell = xmlDoc.createElement(`td`);
+                xmlCell.textContent = cell.textContent.trim();
+
+                if (cell.hasAttribute('rowspan')) {
+                    const rowspan = parseInt(cell.getAttribute('rowspan'), 10);
+
+                    if (rowspan > 1)
+                        xmlCell.setAttribute('rowspan', rowspan);
+                    rowspanCount = rowspan - 1;
+                } else if (rowspanCount > 0 && index === 0) {
+                    rowspanCount--;
+                    return;
+                }
+
+                xmlRow.appendChild(xmlCell);
+            });
+
+            xmlTable.appendChild(xmlRow);
+        }
+
+        const serializer = new XMLSerializer();
+        const xmlString = serializer.serializeToString(xmlDoc);
+
+        return xmlString;
+    }
+
+    // Checks for HTML that starts with a <div class=quill-better-table-wrapper">
+    function extractQuillBetterTableWrapperContent(html) {
+    
+        const regex = new RegExp(`<div class="quill-better-table-wrapper">(.*?)</div>`, 'gs');
+
+        const matches = [...html.matchAll(regex)]
+
+        if (matches.length > 0) {
+            matches.forEach(match => {
+                if (match) {
+                    const convertedTable = convertQuillTables(match[0]);
+                    html = html.replace(match[0], convertedTable);
+                }
+            });
+        }
+
+        return html
     }
 
     function addNamespace(content) {
-        const nsTagNames = ["p", "ol", "ul", "sup", "pre", "s", "code", "i", "b", "a", "h3", "li", "strike", "br", "div", "strong", "em"]; // tags which require namespace
-        // ([\\/]?: capture group to match opening and closing tags
-        // (\\b[>]*): word boundary to match exact tag name
-        const regex = new RegExp(`<([\\/]?)(${nsTagNames.join('|')})(\\b[>]*)>`, 'gi');
+        const nsTagNames = ["p", "ol", "ul", "sup", "pre", "s", "code", "i", "b", "a", "h3", "li", "strike", "br", "div", "strong", "em", "tr", "table", "td", "span"]; // tags which require namespace
+        // ([\\/]?): capture group to match opening and closing tags
 
+        // (\\s[^>]*): word boundary to match exact tag name and capture attributes
+        const regex = new RegExp(`<([\\/]?)(${nsTagNames.join('|')})(\\s[^>]*)?>`, 'gi');
+    
         // Get namespace
         let namespace = '';
         const namespaceKey = Object.keys(overallObject["PP"]).find(key => overallObject["PP"][key] === "http://www.w3.org/1999/xhtml");
         if (namespaceKey) {
-            namespace = namespaceKey.split(":")[1]
+            namespace = namespaceKey.split(":")[1];
         }
-
-        let modifiedXML = content.replace(regex, (match, closingSlash, tagName, attributes) => {
+    
+        let modifiedXML = content.replace(regex, (match, closingSlash, tagName, attributes = '') => {
+            // Some tags should be self closing
             if (nsTagNames.includes(tagName.toLowerCase())) {
                 if (tagName.toLowerCase() == "br") {
-                    // break tags will be self-closing
                     return `<${namespace}:${tagName}${attributes}/>`;
                 } else if (tagName.toLowerCase() == "strong") {
-                    // break tags will be self-closing
-                    return `<${namespace}:b${attributes}/>`;
+                    return `<${closingSlash}${namespace}:b${attributes}>`;
                 } else if (tagName.toLowerCase() == "em") {
-                    // break tags will be self-closing
-                    return `<${namespace}:i${attributes}/>`;
+                    return `<${closingSlash}${namespace}:i${attributes}>`;
                 }
                 return `<${closingSlash}${namespace}:${tagName}${attributes}>`;
             }
+            return match; // Return the original match if no modification is needed
         });
-
-        // TODO: temp fix to handle self closing <br/> tags
+    
         modifiedXML = modifiedXML.replaceAll("<br/>", `<${namespace}:br/>`);
-
+    
         // Temp fix to remove empty ns attr
         modifiedXML = modifiedXML.replaceAll('xmlns=""', "");
-
+    
         modifiedXML = modifiedXML.replace(`id="fpt-w^x-ext-1"`, "");
-
+    
         // escape ampersand
         modifiedXML = modifiedXML.replace(/&/g, "&amp;");
-
+    
         // escape less than signs with &lt;
         modifiedXML = modifiedXML.replace(/<=/g, "&lt;=").replace(/ < /g, " &lt; ");
-
+    
         // replace link tag names (<a href=''>); SAR's a-component and a-element make replacing a tags selectively extremely hard
         if (namespace.length != 0) {
             modifiedXML = modifiedXML.replace(/<a href/g, `<${namespace}:a href`);
         }
-
+    
         // replace empty p tags with self closing p tags (to match existing PP XML standard), need to append namespace first
         const pRegex1 = namespace.length != 0 ? new RegExp(`<\\/${namespace}:p><${namespace}:p>`, 'g') : null;
         const pRegex2 = namespace.length != 0 ? new RegExp(`<${namespace}:p><\\/${namespace}:p>`, 'g') : null;
 
+        const ppPreferenceRegex = new RegExp(`<audit-events-in-sfrs><\\/${namespace}:audit-events-in-sfrs>`, 'g');
+    
+        if (ppPreferenceRegex) {
+            modifiedXML = modifiedXML.replace(ppPreferenceRegex, `<${namespace}:audit-events-in-sfrs/>`)
+        }
+
         if (pRegex1) {
             modifiedXML = modifiedXML.replace(pRegex1, `<${namespace}:p/>`);
         }
-
         if (pRegex2) {
             modifiedXML = modifiedXML.replace(pRegex2, `<${namespace}:p/>`);
         }
-
+    
         return modifiedXML;
     }
+    
 
     // Return Method
     return (
@@ -387,20 +490,15 @@ function XMLExporter({ open, handleOpen, preview }) {
                                                 color={"secondary"}
                                                 label={"XML File"}
                                                 value={fileName}
-                                                inputProps={{
-                                                    style: { fontSize: 17 },
-                                                }}
-                                                InputLabelProps={{
-                                                    style: { fontSize: 18 }
-                                                }}
                                                 onChange={handleSetFileName}
                                             />
-                                            <div className="pl-2 text-[17px] mt-8 text-black">.xml</div>
+                                            <div className="pl-2 text-[14px] mt-8 text-black">.xml</div>
                                         </span>
                                     </div>
                                 </CardBody>
                                 <CardFooter>
                                     <Button
+                                        sx={{ fontSize: "12px" }}
                                         disabled={TESTING || (fileName && fileName !== "") ? false : true}
                                         component="label"
                                         variant="contained"
@@ -419,15 +517,15 @@ function XMLExporter({ open, handleOpen, preview }) {
                     hideSubmit={true}
                 />
                 :
-                <div className="xml-viewer text-[15px]">
+                <div className="xml-viewer text-[13px]">
                     <XMLViewer
                         xml={formattedXML ? formattedXML : ""}
                         indentSize={1}
                         collapsible={true}
                         theme={{
-                            "tagColor": style.primary,
-                            "attributeKeyColor": style.secondary,
-                            "attributeValueColor": style.linkText
+                            "tagColor": primary,
+                            "attributeKeyColor": secondary,
+                            "attributeValueColor": linkText
                         }}
                     />
                 </div>

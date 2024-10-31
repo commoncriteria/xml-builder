@@ -2,6 +2,7 @@ import { createSlice } from '@reduxjs/toolkit'
 import { v4 as uuidv4 } from 'uuid';
 
 const initialState = {
+    auditSection: "",
     sfrDefinition: "<p>This chapter describes the security requirements which have to be fulfilled by the product under " +
                     "evaluation.Those requirements comprise functional components from Part 2 and assurance components " +
                     "from Part 3 of [CC].The following conventions are used for the completion of operations:" +
@@ -73,6 +74,9 @@ export const sfrSlice = createSlice({
     reducers: {
         UPDATE_MAIN_SFR_DEFINITION: (state, action) => {
             state.sfrDefinition = action.payload.newDefinition
+        },
+        UPDATE_AUDIT_SECTION: (state, action) => {
+            state.auditSection = action.payload.newDefinition
         },
         CREATE_SFR_SECTION: (state, action) => {
             let newId = uuidv4();
@@ -148,6 +152,7 @@ export const sfrSlice = createSlice({
 export const {
     UPDATE_MAIN_SFR_DEFINITION,
     CREATE_SFR_SECTION,
+    UPDATE_AUDIT_SECTION,
     UPDATE_SFR_SECTION_TITLE,
     UPDATE_SFR_SECTION_DEFINITION,
     DELETE_ALL_SFR_SECTIONS,
