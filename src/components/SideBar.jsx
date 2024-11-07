@@ -101,7 +101,7 @@ function SideBar() {
     const handleCollapseAllAccordions = async () => {
         await (dispatch(collapseAllAccordions()))
         await collapseSectionsHelper(false)
-        
+
         // Scroll back to the top of the page
         window.scrollTo(0, 0)
     }
@@ -166,10 +166,10 @@ function SideBar() {
                                     Menu
                                 </Typography>
                             </div>
-                            <div className="flex items-start justify-start w-full">
+                            <div className="flex items-start justify-start w-full text-white">
                                 <List className="w-full mt-2">
                                     <Accordion
-                                        className="pb-2"
+                                        className="pb-2 text-white"
                                         open={openMenuItems === 1}
                                         icon={
                                             <div className="flex mx-auto">
@@ -183,11 +183,11 @@ function SideBar() {
                                                     <LayersIcon htmlColor={ primary } sx={ icons.extraLarge } />
                                                 </ListItemPrefix>
                                                 <Typography className="text-[16px] mr-auto">
-                                                   Current Sections
+                                                    Current Sections
                                                 </Typography>
                                             </AccordionHeader>
                                         </ListItem>
-                                        <AccordionBody className="pl-0 pt-1 pb-0">
+                                        <AccordionBody className="pl-0 pt-1 pb-0 text-white">
                                             <List className="p-0">
                                                 {/* Get the Metadata Section Accordion */}
                                                 { getCurrentSectionsLists({ title: "Metadata Section"}) }
@@ -200,7 +200,7 @@ function SideBar() {
                                         </AccordionBody>
                                     </Accordion>
                                     <Accordion
-                                        className="pb-2"
+                                        className="pb-2 text-white"
                                         open={openMenuItems === 2}
                                         icon={
                                             <div className="flex mx-auto">
@@ -218,7 +218,7 @@ function SideBar() {
                                                 </Typography>
                                             </AccordionHeader>
                                         </ListItem>
-                                        <AccordionBody className="pl-0 pt-1 pb-0">
+                                        <AccordionBody className="pl-0 pt-1 pb-0 text-white">
                                             <List className="p-0">
                                                 <Tooltip title={"Configures the XML File Settings"} placement={"top"} id={"importXMLTooltip"}>
                                                     <ListItem onClick={handleOpenFileLoader}>
@@ -250,7 +250,7 @@ function SideBar() {
                                         </AccordionBody>
                                     </Accordion>
                                     <Accordion
-                                        className="pb-5"
+                                        className="pb-5 text-white"
                                         open={openMenuItems === 3}
                                         icon={
                                             <div className="flex mx-auto">
@@ -268,7 +268,7 @@ function SideBar() {
                                                 </Typography>
                                             </AccordionHeader>
                                         </ListItem>
-                                        <AccordionBody className="pl-0 pt-1 pb-0">
+                                        <AccordionBody className="pl-0 pt-1 pb-0 text-white">
                                             <List className="p-0">
                                                 <Tooltip title={"Add in a New Section to the Template"} placement={"top"} id={"newSectionTemplateTooltip"}>
                                                     <ListItem onClick={handleOpenAccordionMenu}>
