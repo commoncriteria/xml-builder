@@ -6,7 +6,9 @@ import { IconButton, Tooltip } from "@mui/material";
 import DeleteForeverRoundedIcon from "@mui/icons-material/DeleteForeverRounded.js";
 import MultiSelectDropdown from "../../MultiSelectDropdown.jsx";
 import CardTemplate from "../../CardTemplate.jsx";
-import TextEditor from "../../../TextEditor.jsx";
+import TipTapEditor from "../../../TipTapEditor.jsx";
+import SecurityComponents from "../../../../../utils/securityComponents.jsx";
+import { deepCopy } from "../../../../../utils/deepCopy.js";
 
 /**
  * The SfrTest class that displays the evaluation activity test for specified components/elements
@@ -32,6 +34,7 @@ function SfrTest(props) {
     };
 
     // Constants
+    const { handleSnackBarError, handleSnackBarSuccess } = SecurityComponents
     const evaluationActivities = useSelector((state) => state.evaluationActivities)
     const { secondary, icons } = useSelector((state) => state.styling);
     const [selected, setSelected] = useState([]);
@@ -82,7 +85,7 @@ function SfrTest(props) {
                     props.updateManagementFunctions(managementFunctions)
                 }
             } else if (uuid && uuid !== "" && activities && activities.hasOwnProperty(uuid)) {
-                let activitiesCopy = JSON.parse(JSON.stringify(activities))
+                let activitiesCopy = deepCopy(activities)
                 activitiesCopy[uuid].testList[testListIndex].tests[index].objective = event
 
                 // Update evaluation activities
@@ -90,6 +93,7 @@ function SfrTest(props) {
             }
         } catch (e) {
             console.log(e)
+            handleSnackBarError(e)
         }
     }
     const handleSelect = (title, selections) => {
@@ -113,7 +117,7 @@ function SfrTest(props) {
                     })
                 })
                 let newSelections = [...new Set(convertDependenciesToUUID(validSelections))]
-                let dependencies = JSON.parse(JSON.stringify(test.dependencies))
+                let dependencies = deepCopy(test.dependencies)
                 if (JSON.stringify(dependencies) !== JSON.stringify(newSelections)) {
                     if (isManagementFunction) {
                         let managementFunctions = props.getElementValuesByType("managementFunctions")
@@ -127,7 +131,7 @@ function SfrTest(props) {
                         }
 
                     } else {
-                        let activitiesCopy = JSON.parse(JSON.stringify(activities))
+                        let activitiesCopy = deepCopy(activities)
                         let testItem = activitiesCopy[uuid].testList[testListIndex].tests[index]
                         testItem.dependencies = newSelections
 
@@ -139,6 +143,7 @@ function SfrTest(props) {
             }
         } catch (e) {
             console.log(e)
+            handleSnackBarError(e)
         }
     }
     const handleDeleteTest = (index) => {
@@ -151,16 +156,23 @@ function SfrTest(props) {
 
                 // Update management functions
                 props.updateManagementFunctions(managementFunctions)
+
+                // Update snackbar
+                handleSnackBarSuccess("Test Successfully Removed")
             } else if (uuid && uuid !== "" && activities && activities.hasOwnProperty(uuid)) {
-                let activitiesCopy = JSON.parse(JSON.stringify(activities))
+                let activitiesCopy = deepCopy(activities)
                 let tests = activitiesCopy[uuid].testList[testListIndex].tests
                 tests.splice(index, 1)
 
                 // Update evaluation activities
                 props.updateEvaluationActivities(activitiesCopy)
+
+                // Update snackbar
+                handleSnackBarSuccess("Test Successfully Removed")
             }
         } catch (e) {
             console.log(e)
+            handleSnackBarError(e)
         }
     }
 
@@ -184,6 +196,7 @@ function SfrTest(props) {
             }
         } catch (e) {
             console.log(e)
+            handleSnackBarError(e)
         }
         return convertedDependencies
     }
@@ -206,6 +219,7 @@ function SfrTest(props) {
             }
         } catch (e) {
             console.log(e)
+            handleSnackBarError(e)
         }
         return convertedDependencies
     }
@@ -247,7 +261,7 @@ function SfrTest(props) {
                             style={"primary"}
                         />
                     </div>
-                    <TextEditor
+                    <TipTapEditor
                         className="w-full"
                         contentType={"term"}
                         title={"objective"}

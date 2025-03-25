@@ -1,50 +1,7 @@
 import { createSlice } from '@reduxjs/toolkit'
 import { v4 as uuidv4 } from 'uuid';
 
-const initialState = {
-    "8ba516d2-8336-4562-a6b3-751d722232d9": {
-        title: "Security Objectives for the TOE",
-        xmlTagMeta: {
-            tagName: "sec:Security_Objectives_for_the_TOE",
-            childTagName: "SOs",
-            attributes: {}
-        },
-        definition: "",
-        open: true,
-        terms: {
-            "7c436dd3-daf9-40a7-b4b0-71eb3e18cb62": {
-                title: "O.PROTECTED_COMMS",
-                xmlTagMeta: {
-                    tagName: "SO",
-                    attributes: {}
-                },
-                definition: "",
-                open: true
-            }
-        }
-    },
-    "9d813e26-364b-4149-ae05-f2459b2d76d5": {
-        title: "Security Objectives for the Operational Environment",
-        xmlTagMeta: {
-            tagName: "sec:Security_Objectives_for_the_Operational_Environment",
-            childTagName: "SOEs",
-            attributes: {}
-        },
-        definition: "",
-        open: true,
-        terms: {
-            "d345b610-6ff9-4f8d-9776-c5f794862f5f": {
-                title: "OE.CONFIG",
-                xmlTagMeta: {
-                    tagName: "SOE",
-                    attributes: {}
-                },
-                definition: "",
-                open: true
-            }
-        }
-    },
-}
+const initialState = { }
 
 export const objectivesSlice = createSlice({
     name: 'objectives',
@@ -58,7 +15,7 @@ export const objectivesSlice = createSlice({
                     title: title,
                     definition: "",
                     terms: {},
-                    open: true
+                    open: false
                 };
                 action.payload = newId
             } else {
@@ -108,7 +65,6 @@ export const objectivesSlice = createSlice({
             let objectiveUUID = action.payload.objectiveUUID;
             let title = action.payload.title;
             let definition = action.payload.definition;
-            let sfrs = action.payload.sfrs;
             let uuid = uuidv4();
             if (state.hasOwnProperty(objectiveUUID)) {
                 let currentTermList = state[objectiveUUID]
@@ -116,13 +72,12 @@ export const objectivesSlice = createSlice({
                     currentTermList.terms[uuid] = {
                         title: title ? title : "",
                         definition: definition ? definition : "",
-                        sfrs: sfrs ? sfrs : [],
-                        open: true,
+                        open: false,
                     }
                 }
             }
             // Sort objective lists
-            objectivesSlice.caseReducers.sortObjectiveTermsListHelper(state)
+            objectivesSlice.caseReducers.SORT_OBJECTIVE_TERMS_LIST_HELPER(state)
 
             // Return the uuid
             action.payload.id = uuid
@@ -138,7 +93,7 @@ export const objectivesSlice = createSlice({
                 }
             }
             // Sort objective lists
-            objectivesSlice.caseReducers.sortObjectiveTermsListHelper(state)
+            objectivesSlice.caseReducers.SORT_OBJECTIVE_TERMS_LIST_HELPER(state)
         },
         UPDATE_OBJECTIVE_TERM_DEFINITION: (state, action) => {
             let objectiveUUID = action.payload.objectiveUUID;
@@ -161,7 +116,7 @@ export const objectivesSlice = createSlice({
                 }
             }
             // Sort objective lists
-            objectivesSlice.caseReducers.sortObjectiveTermsListHelper(state)
+            objectivesSlice.caseReducers.SORT_OBJECTIVE_TERMS_LIST_HELPER(state)
         },
         DELETE_ALL_OBJECTIVE_TERMS: (state, action) => {
             let objectiveUUID = action.payload.objectiveUUID;
@@ -185,7 +140,18 @@ export const objectivesSlice = createSlice({
                 }
             }
         },
-        sortObjectiveTermsListHelper: (state) => {
+        GET_OBJECTIVE_UUID_BY_TITLE: (state, action) => {
+            const { title } = action.payload
+            action.payload.uuid = null;
+
+            // Search for UUID by title
+            for (const [key, value] of Object.entries(state)) {
+                if (value.title === title) {
+                    action.payload.uuid = key;
+                }
+            }
+        },
+        SORT_OBJECTIVE_TERMS_LIST_HELPER: (state) => {
             Object.entries(state).map(([key, value]) => {
                 if (value.terms && Object.entries(value.terms).length > 0) {
                     let sorted = Object.entries(value.terms).sort((a, b) => {
@@ -204,6 +170,15 @@ export const objectivesSlice = createSlice({
                 }
             })
         },
+        SET_OBJECTIVES_INITIAL_STATE: (state, action) => {
+            try {
+                return {
+                    ...action.payload
+                }
+            } catch (e) {
+                console.log(e)
+            }
+        },
         RESET_OBJECTIVES_STATE: () => initialState,
     }
 })
@@ -221,7 +196,9 @@ export const {
     DELETE_OBJECTIVE_TERM,
     DELETE_ALL_OBJECTIVE_TERMS,
     COLLAPSE_OBJECTIVE_TERM,
-    sortObjectiveTermsListHelper,
+    GET_OBJECTIVE_UUID_BY_TITLE,
+    SORT_OBJECTIVE_TERMS_LIST_HELPER,
+    SET_OBJECTIVES_INITIAL_STATE,
     RESET_OBJECTIVES_STATE
 } = objectivesSlice.actions
 

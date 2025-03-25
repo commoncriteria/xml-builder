@@ -1,9 +1,11 @@
 // Imports
 import PropTypes from "prop-types";
 import React from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 import Modal from "./Modal.jsx";
 import SfrRequirements from "../editorComponents/securityComponents/sfrComponents/requirements/SfrRequirements.jsx";
+import { deepCopy } from "../../utils/deepCopy.js";
+import SecurityComponents from "../../utils/securityComponents.jsx";
 
 /**
  * The EditTabularizeRowModal class that displays the edit tabularize row modal
@@ -21,11 +23,9 @@ function EditTabularizeRowModal(props) {
         tabularizeUUID: PropTypes.string.isRequired,
         elementTitle: PropTypes.string.isRequired,
         requirementType: PropTypes.string.isRequired,
-        allSfrOptions: PropTypes.object.isRequired,
         rowIndex: PropTypes.number.isRequired,
         getSelectionBasedArrayByType: PropTypes.func.isRequired,
         getSelectablesMaps: PropTypes.func.isRequired,
-        getElementMaps: PropTypes.func.isRequired,
         getElementValuesByType: PropTypes.func.isRequired,
         updateSfrSectionElement: PropTypes.func.isRequired,
         showTabularizeTablePreview: PropTypes.func.isRequired,
@@ -34,8 +34,9 @@ function EditTabularizeRowModal(props) {
     };
 
     // Constants
-    const dispatch = useDispatch();
+    const { handleSnackBarError, handleSnackBarSuccess } = SecurityComponents
     const { row, originalRows } = useSelector((state) => state.tabularize);
+    const { grayText } = useSelector((state) => state.styling);
 
     // Methods
     const handleSubmit = () => {
@@ -45,12 +46,13 @@ function EditTabularizeRowModal(props) {
 
             // Update or add new row
             if (originalRows && row) {
-                let newRows = JSON.parse(JSON.stringify(originalRows))
+                let newRows = deepCopy(originalRows)
 
                 // Update the current row
                 if (newRows[rowIndex]) {
                     newRows[rowIndex] = row
                 }
+
                 // Otherwise, add a new row
                 else if (newRows.length === rowIndex) {
                     newRows.push(row)
@@ -59,13 +61,21 @@ function EditTabularizeRowModal(props) {
                 // Update tabularize object to update or add new row
                 if (JSON.stringify(newRows) !== JSON.stringify(originalRows)) {
                     const updateMap = {
-                        rows: newRows ? JSON.parse(JSON.stringify(newRows)) : []
+                        rows: newRows ? deepCopy(newRows) : []
                     }
                     props.updateTabularizeObject(updateMap)
+
+                    // Update snack bar
+                    if (originalRows.length === newRows.length) {
+                        handleSnackBarSuccess("Row Successfully Updated")
+                    } else {
+                        handleSnackBarSuccess("New Row Successfully Added")
+                    }
                 }
             }
         } catch (e) {
             console.log(e)
+            handleSnackBarError(e)
         }
 
         // Close Dialog
@@ -75,7 +85,15 @@ function EditTabularizeRowModal(props) {
     // Return Method
     return (
         <Modal
-            title={`Edit Crypto Selection Table Row: ${props.rowIndex + 1}`}
+            title={
+                <div>
+                    {`Edit Crypto Selection Table Row: ${props.rowIndex + 1}`}
+                    <br/>
+                    <label style={{fontWeight: "normal", fontSize: "13px", color: grayText}}
+                    >{` (Press Confirm to Save Changes)`}
+                    </label>
+                </div>
+            }
             content={(
                 <div className="w-screen sm:max-w-screen-sm md:max-w-screen-sm lg:max-w-screen-lg">
                     <SfrRequirements
@@ -86,8 +104,6 @@ function EditTabularizeRowModal(props) {
                         elementTitle={props.elementTitle}
                         requirementType={props.requirementType}
                         rowIndex={props.rowIndex}
-                        allSfrOptions={props.allSfrOptions}
-                        getElementMaps={props.getElementMaps}
                         getSelectablesMaps={props.getSelectablesMaps}
                         getElementValuesByType={props.getElementValuesByType}
                         getSelectionBasedArrayByType={props.getSelectionBasedArrayByType}

@@ -1,4 +1,5 @@
 import { createSlice } from '@reduxjs/toolkit'
+import { deepCopy } from "../../utils/deepCopy.js";
 
 const initialState = {
     title: "",
@@ -62,7 +63,7 @@ export const tabularizeUI = createSlice({
                     validateId(state, id)
                 } else if (key === "definition") {
                     state[key] = value
-                    let currentDefinition = value ? JSON.parse(JSON.stringify(value)) : []
+                    let currentDefinition = value ? deepCopy(value) : []
                     state.definition = validateDefinition(currentDefinition)
                 } else {
                     state[key] = value
@@ -180,7 +181,7 @@ const transformData = (definition, rows, columns) => {
                     rows: rows?.map(row => {
                         const value = row[field];
                         if (Array.isArray(value)) {
-                            return {value: JSON.parse(JSON.stringify(value))};
+                            return {value: deepCopy(value)};
                         }
                         return {value};
                     }),
@@ -198,7 +199,7 @@ const reverseData = (title, id, definition) => {
     let newRows = []
 
     if (definition && definition.length > 0) {
-        let currentDefinition = JSON.parse(JSON.stringify(definition))
+        let currentDefinition = deepCopy(definition)
         newDefinition = currentDefinition.map((def) => {
             const { value, field, type, column, rows} = def
 

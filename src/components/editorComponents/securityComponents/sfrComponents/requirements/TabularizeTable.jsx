@@ -14,6 +14,8 @@ import EditableTable from "../../../EditableTable.jsx";
 import ResetDataConfirmation from "../../../../modalComponents/ResetDataConfirmation.jsx";
 import EditTabularizeDefinitionModal from "../../../../modalComponents/EditTabularizeDefinitionModal.jsx";
 import EditTabularizeRowModal from "../../../../modalComponents/EditTabularizeRowModal.jsx";
+import SecurityComponents from "../../../../../utils/securityComponents.jsx";
+import { deepCopy } from "../../../../../utils/deepCopy.js";
 
 /**
  * The TabularizeTable class that displays a tabularized table for the sfr worksheet
@@ -32,8 +34,6 @@ function TabularizeTable(props) {
         index: PropTypes.number.isRequired,
         updateSfrSectionElement: PropTypes.func.isRequired,
         getTabularizeObject: PropTypes.func.isRequired,
-        getElementMaps: PropTypes.func.isRequired,
-        allSfrOptions: PropTypes.object.isRequired,
         getSelectablesMaps: PropTypes.func.isRequired,
         getElementValuesByType: PropTypes.func.isRequired,
         getSelectionBasedArrayByType: PropTypes.func.isRequired,
@@ -41,6 +41,7 @@ function TabularizeTable(props) {
     };
 
     // Constants
+    const { handleSnackBarError, handleSnackBarSuccess } = SecurityComponents
     const dispatch = useDispatch();
     const { primary, icons } = useSelector((state) => state.styling);
     const editable = { addColumn: false, addRow: true, removeColumn: false, removeRow: true }
@@ -85,7 +86,7 @@ function TabularizeTable(props) {
         if (!open) {
             const { tabularizeUUID } = props;
             if (tabularizeUUID && tabularizeUUID !== "") {
-                let tabularize = JSON.parse(JSON.stringify(props.getElementValuesByType("tabularize", tabularizeUUID)));
+                let tabularize = deepCopy(props.getElementValuesByType("tabularize", tabularizeUUID));
                 if (tabularize && Object.keys(tabularize).length > 0) {
                     const isNewRow = typeof newRow === "boolean" && newRow === true ? newRow : false;
                     const { rows } = tabularize
@@ -142,12 +143,15 @@ function TabularizeTable(props) {
 
         // Close modal
         handleDeleteTableModalOpen()
+
+        // Update snackbar
+        handleSnackBarSuccess("Crypto Selection Table Successfully Removed")
     }
     const handleOpenEditDefinitionModal = () => {
         if (!editDefinitionModal) {
             const { tabularizeUUID } = props;
             if (tabularizeUUID && tabularizeUUID !== "") {
-                let tabularize = JSON.parse(JSON.stringify(props.getElementValuesByType("tabularize", tabularizeUUID)));
+                let tabularize = deepCopy(props.getElementValuesByType("tabularize", tabularizeUUID));
                 if (tabularize && Object.keys(tabularize).length > 0) {
                     // Set item map and update values
                     const itemMap = {
@@ -180,12 +184,15 @@ function TabularizeTable(props) {
 
         // Update tabularize object to remove selected rows
         const updateMap = {
-            rows: newData ? JSON.parse(JSON.stringify(newData)) : []
+            rows: newData ? deepCopy(newData) : []
         }
        updateTabularizeObject(updateMap)
 
         // Close the dialog
         handleDeleteRowsModalOpen();
+
+        // Update snackbar
+        handleSnackBarSuccess("Selected Row(s) Successfully Removed")
     }
     const handleNewTableRow = () => {
         const rowIndex = -1
@@ -198,7 +205,7 @@ function TabularizeTable(props) {
     // Helper Methods
     const updateTabularizeObject = (updateMap) => {
         const { elementUUID, componentUUID, tabularizeUUID } = props
-        let updatedTabularize = JSON.parse(JSON.stringify(props.getElementValuesByType("tabularize")));
+        let updatedTabularize = deepCopy(props.getElementValuesByType("tabularize"));
         const isUpdateMapValid = updateMap && Object.keys(updateMap).length > 0
         const isTabularizeValid = updatedTabularize && Object.keys(updatedTabularize).length > 0 && updatedTabularize.hasOwnProperty(tabularizeUUID)
 
@@ -254,6 +261,7 @@ function TabularizeTable(props) {
             }
         } catch (e) {
             console.log(e)
+            handleSnackBarError(e)
         }
 
         // Regular expression to escape specific tags (we want them to be represented as xml tags, which otherwise
@@ -353,8 +361,8 @@ function TabularizeTable(props) {
                         <EditableTable
                             title={"Selection Table"}
                             editable={editable}
-                            columnData={tabularize && tabularize.hasOwnProperty("columns") ? JSON.parse(JSON.stringify(tabularize.columns)) : []}
-                            rowData={tabularize && tabularize.hasOwnProperty("rows") ? JSON.parse(JSON.stringify(tabularize.rows)) : []}
+                            columnData={tabularize && tabularize.hasOwnProperty("columns") ? deepCopy(tabularize.columns) : []}
+                            rowData={tabularize && tabularize.hasOwnProperty("rows") ? deepCopy(tabularize.rows) : []}
                             isTitleEditable={false}
                             isTabularizeTable={true}
                             editFullRow={true}
@@ -374,8 +382,6 @@ function TabularizeTable(props) {
                             elementTitle={props.elementTitle}
                             requirementType={"crypto"}
                             rowIndex={editRowModal.rowIndex}
-                            allSfrOptions={props.allSfrOptions}
-                            getElementMaps={props.getElementMaps}
                             getSelectablesMaps={props.getSelectablesMaps}
                             getElementValuesByType={props.getElementValuesByType}
                             getSelectionBasedArrayByType={props.getSelectionBasedArrayByType}

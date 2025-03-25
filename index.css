@@ -1,3 +1,4 @@
+/* Tailwind Styles */
 @tailwind base;
 
 @layer base {
@@ -9,7 +10,7 @@
         @apply bg-neutral-800;
     }
     strong {
-        font-weight:bold;
+        font-weight: bold;
     }
     ::-webkit-calendar-picker-indicator {
         filter: invert(1);
@@ -32,13 +33,13 @@
     padding-bottom: 10px;
     padding-top: 5px;
 }
-.preview ul {
-    list-style-position: inside;
+.preview ul, ol {
+    padding-left: 1em;
 }
 .preview li {
     margin-left: 14px;
     list-style-type: disc;
-    padding-left: 2em;
+    padding-left: 1.5em;
     text-indent: -1.3em;
 }
 .preview ul ul li {
@@ -46,6 +47,55 @@
 }
 .preview ul ul ul ul li {
     list-style-type: circle;
+}
+
+/* Ordered lists */
+.preview ol li {
+    /* Default numbering style for ordered lists */
+    margin-left: 14px;
+    list-style-type: decimal;
+    padding-left: 1.5em;
+    text-indent: -1.3em;
+}
+
+/* Nested ordered lists */
+.preview ol ol li {
+    list-style-type: lower-alpha; /* Use lowercase letters for second-level nested lists */
+}
+
+.preview ol ol ol li {
+    list-style-type: lower-roman; /* Use lowercase roman numerals for third-level nested lists */
+}
+
+/* Mixed nested lists: ul inside ol */
+.preview ol ul li {
+    list-style-type: disc;
+    padding-left: 1em;
+}
+
+/* Mixed nested lists: ol inside ul */
+.preview ul ol li {
+    list-style-type: decimal;
+    padding-left: 1em;
+}
+
+
+.ProseMirror ol ol li {
+    list-style-type: lower-alpha;
+}
+
+.ProseMirror ol ol ol li {
+    list-style-type: lower-roman;
+}
+
+.ProseMirror ol ul li {
+    list-style-type: disc;
+    padding-left: 1em;
+}
+
+.ProseMirror ul ol li {
+    list-style-type: decimal;
+    padding-left: 1em;
 }
 
 /* AG Data Grid Styles */
@@ -89,280 +139,140 @@
     border:none !important;
     outline: none;
 }
-/* React Quill Styles */
-.ql-editor-haserror .ql-toolbar.ql-snow + .ql-container.ql-snow {
-    border: 1px solid #f56565;
-    border-radius: 0.5rem;
-}
-.ql-toolbar.ql-snow + .ql-container.ql-snow {
-    border: 1px solid #e2e8f0;
-    border-radius: 0.5rem;
-}
-.ql-toolbar.ql-snow {
-    font-family: inherit;
-    border-top-left-radius: 0.5rem;
-    border-top-right-radius: 0.5rem;
-    background-color: #fff;
-    border: none;
-    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-    position: sticky;
-    top: 0;
-    z-index: 1;
-    margin-left: 1px;
-    margin-right: 1px;
-}
-.ql-container {
-    color: #2d3748;
-    font-family: inherit;
-    font-size: 12px;
-}
-.ql-container.ql-snow {
-    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-    border-color: #e2e8f0;
-    margin-top: -44px;
-}
-.ql-editor {
-    overflow-y: visible;
-    padding-top: 64px;
-    padding-bottom: 30px;
-}
-.ql-scrolling-container {
-    height: 100%;
-    min-height: 100%;
-    overflow-y: auto;
+
+/* TipTap Styles */
+.tiptap {
+    color: #333;
+    font-size: 13px;
+    background-color: #f9f9f9;
 }
 
-.ql-editor.ql-blank::before {
-    color: #a0aec0;
-    font-style: normal;
-}
-.ql-editor:focus {
-    border-radius: 0.5rem;
+.tiptap h1 {
+    font-size: 20px;
+    font-weight: bold;
 }
 
-.ql-editor h1,
-.ql-editor h2,
-.ql-editor h3 {
-    font-size: 1.75rem !important;
-    font-weight: 700;
-    color: #2d3748;
-    border-bottom: 0;
-    margin-bottom: 0.75em;
-    line-height: 1.2;
+.tiptap h3 {
+    font-size: 16px;
 }
-.ql-editor p,
-.ql-editor ul,
-.ql-editor ol,
-.ql-snow .ql-editor pre {
-    margin-bottom: 1em;
-}
-.ql-editor strong {
-    font-weight: 700;
-}
-.ql-editor ol,
-.ql-editor ul {
+
+.tiptap ol {
+    list-style-type: decimal;
+    margin-left: 20px;
     padding-left: 0;
 }
-.ql-editor li {
-    margin-bottom: 0.25em;
-}
-.ql-editor a {
-    color: #4299e1;
-}
-.ql-editor blockquote {
-    position: relative;
-    display: block;
-    margin-top: 1.875em !important;
-    margin-bottom: 1.875em !important;
-    font-size: 1.875rem;
-    line-height: 1.2;
-    border-left: 3px solid #cbd5e0;
-    font-weight: 600;
-    color: #4a5568;
-    font-style: normal;
-    letter-spacing: -0.05em;
-}
-.ql-snow .ql-editor pre {
-    display: block;
-    border-radius: 0.5rem;
-    padding: 1rem;
-    font-size: 1rem;
-}
-.ql-snow .ql-editor img {
-    border-radius: 0.5rem;
-    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.05);
-}
-.ql-editor iframe {
-    width: 100%;
-    max-width: 100%;
-    height: 400px;
-}
-.ql-snow .ql-tooltip {
-    left: 0 !important;
-    transform: translateY(5px);
-    margin-left: 13px;
-}
-.ql-snow .ql-tooltip.ql-editing input[type=text] {
-    display: inline-block;
-    color: white;
+
+.tiptap ul {
+    list-style-type: disc;
+    margin-left: 20px;
+    padding-left: 0;
 }
 
-/* quill-better-table */
-
-.ql-container .qlbt-selection-line {
-  &.qlbt-selection-line-left {
-    &::before {
-      position: absolute;
-      left: -2px;
-      top: -2px;
-      content: '';
-      width: 5px;
-      height: 5px;
-      background-color: #0589f3;
-      border-radius: 5px;
-    }
-  }
-
-  &.qlbt-selection-line-right {
-    &::before {
-      position: absolute;
-      right: -2px;
-      bottom: -3px;
-      content: '';
-      width: 5px;
-      height: 5px;
-      background-color: #0589f3;
-      border-radius: 5px;
-    }
-  }
+.tiptap ul li {
+    margin-bottom: 8px;
+    color: #333;
 }
 
-.quill-better-table-wrapper {
-  overflow-x: auto;
+.tiptap ul ul {
+    list-style-type: circle;
+    margin-left: 20px;
 }
 
-table.quill-better-table {
-  table-layout: fixed;
-  border-collapse: collapse;
-
-  td {
-    border: 1px solid #000;
-    padding: 2px 5px;
-  }
+.tiptap ul ul ul {
+     list-style-type: square;
+     margin-left: 20px;
 }
 
-.qlbt-operation-menu {
-  background-color: #fff;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, .15);
-  font-size: 14px;
-  z-index: 2000;
-  position: relative;
-  overflow: hidden;
+.tiptap ul ul ul ul {
+    list-style-type: disc;
+    margin-left: 20px;
+}
 
-  .qlbt-operation-menu-dividing {
-    height: 1px;
-    background-color: #efefef;
-  }
+.row-before-icon {
+    transform: rotate(90deg);
+    height: 1.5em;
+    width: 1.5em;
+    color: #a6adba;
+}
 
-  .qlbt-operation-menu-subtitle {
-    color: #999;
-    font-size: 14px;
-    padding: 5px 16px;
-  }
+.row-after-icon {
+    transform: rotate(270deg);
+    height: 1.5em;
+    width: 1.5em;
+    color: #a6adba;
+}
 
-  .qlbt-operation-color-picker {
+.tiptap-icon {
+    height: 1.5em;
+    width: 1.5em;
+    color: #a6adba;
+}
+
+.menu-bar {
     display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    padding: 0 16px 10px;
-    background-color: #fff;
-    overflow: hidden;
+    gap: 10px;
+    background: #FFFFFF;
+    padding: 15px 15px 15px;
+}
 
-    .qlbt-operation-color-picker-item {
-      width: 20px;
-      height: 20px;
-      border: 1px solid #595959;
-      margin-right: 5px;
-      margin-bottom: 5px;
-      cursor: pointer;
-    }
-  }
-
-  .qlbt-operation-menu-item {
-    display: flex;
-    align-items: center;
-    padding: 10px 16px;
-    background-color: #fff;
+.menu-bar button {
+    background: none;
+    border: none;
     cursor: pointer;
-    color: #595959;
-    overflow: hidden;
-    text-overflow: ellipsis;
-
-    &:hover {
-      background-color: #efefef;
-    }
-
-    .qlbt-operation-menu-icon {
-      margin-right: 8px;
-      height: 20px;
-      width: 20px;
-      font-size: 0;
-    }
-  }
+    font-size: 20px;
+    color: #a6adba;
 }
 
-.qlbt-col-tool {
-  position: absolute;
-  display: flex;
-  align-items: flex-end;
-  overflow: hidden;
-  z-index: 99;
-  height: 16px;
+.menu-bar button.is-active {
+    color: black;
+}
 
-  .qlbt-col-tool-cell {
-    position: relative;
-    background-color: #fff;
-    border-top: 1px solid #000;
-    border-right: 1px solid #000;
-    border-bottom: 1px solid #000;
+.bubble-menu {
+    display: flex;
+    gap: 8px;
+    padding: 8px;
+    background-color: white;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
 
-    &:first-child {
-      border-left: 1px solid #000;
-    }
-  }
+.bubble-menu button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
 
-  .qlbt-col-tool-cell-holder {
-    position: absolute;
-    right: -1px;
-    top: 0;
-    bottom: 0;
-    z-index: 3;
-    width: 1px;
-    background-color: transparent;
-    cursor: ew-resize;
+.bubble-menu button:hover {
+    background-color: #f0f0f0;
+}
 
-    &:hover {
-      background-color: #0589f3;
-    }
+.ProseMirror {
+    padding: 8px;
+}
 
-    &::before {
-      content: "";
-      position: absolute;
-      top: 0;
-      left: -6px;
-      display: block;
-      width: 8px;
-      height: 100%;
-    }
+.tiptap table {
+    border-collapse: collapse; /* Ensures borders are shared between cells */
+    min-width: 50%; /* Optional: makes the table take the full width */
+}
 
-    &::after {
-      content: "";
-      position: absolute;
-      top: 0;
-      right: -6px;
-      display: block;
-      width: 8px;
-      height: 100%;
-    }
-  }
+.tiptap table th,
+.tiptap table td {
+    border: 1px solid #ccc; /* Adds a border to each cell */
+    padding: 8px; /* Optional: adds padding for better readability */
+}
+
+.tiptap p.is-editor-empty:first-child::before {
+    color: #adb5bd;
+    content: attr(data-placeholder);
+    float: left;
+    height: 0;
+    pointer-events: none;
+}
+
+.tiptap strong {
+    font-weight: bold;
 }

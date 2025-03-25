@@ -3,6 +3,7 @@ import React, {useEffect, useState} from "react";
 import PropTypes from "prop-types";
 import Modal from "./Modal.jsx";
 import {FormControl, FormHelperText, TextField} from "@mui/material";
+import SecurityComponents from "../../utils/securityComponents.jsx";
 
 /**
  * The NewTableColumn class that displays the confirmation dialog for creating a new column header
@@ -19,6 +20,7 @@ function NewTableColumn(props) {
     };
 
     // Constants
+    const { handleSnackbarTextUpdates } = SecurityComponents
     const [disabled, setDisabled] = useState(true)
     const [columnName, setColumnName] = useState("");
 
@@ -66,14 +68,15 @@ function NewTableColumn(props) {
                    content={(
                        <div className="pt-4">
                            <FormControl fullWidth >
-                               <TextField required
-                                          id="outlined-required"
-                                          label="Column Header"
-                                          key={"newColumnHeader" + columnName}
-                                          defaultValue={columnName}
-                                          onBlur={(event) => handleColumnName(event)}
-                                          inputProps={{style: {fontSize: 14}}}
-                                          InputLabelProps={{style: {fontSize: 14}}}
+                               <TextField
+                                   required
+                                   id="outlined-required"
+                                   label="Column Header"
+                                   key={"newColumnHeader" + columnName}
+                                   defaultValue={columnName}
+                                   onBlur={(event) => handleSnackbarTextUpdates(handleColumnName, event)}
+                                   inputProps={{style: {fontSize: 14}}}
+                                   InputLabelProps={{style: {fontSize: 14}}}
                                />
                                <FormHelperText id="component-error-text" sx={{ color: "#ff4d4d", paddingTop: 1 }}>
                                    {checkHeaderNameContainsInput() ? "Column name already exists": null}

@@ -1,42 +1,43 @@
 // Imports
-import axios from "axios";
 import React, { useCallback, useState, useEffect, useRef } from "react";
 import PropTypes from "prop-types";
 import Modal from "./Modal.jsx";
-import { Card, CardBody, CardFooter } from "@material-tailwind/react";
+import { Card, CardBody } from "@material-tailwind/react";
 import Button from "@mui/material/Button";
-import Checkbox from "@mui/material/Checkbox";
 import { useDropzone } from "react-dropzone";
 import { useDispatch, useSelector } from "react-redux";
 import { XMLValidator } from "fast-xml-parser";
 import { create } from "xmlbuilder2";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
-import FormControlLabel from "@mui/material/FormControlLabel";
-import PPXML from "../../assets/xml/pp-template.xml";
-import MODXML from "../../assets/xml/module-template.xml";
 import { SET_XMLTAGMETA, DELETE_ALL_SAR_SECTIONS, RESET_SAR_STATE, CREATE_SAR_SECTION, CREATE_SAR_COMPONENT, CREATE_SAR_ELEMENT } from "../../reducers/sarsSlice.js";
 import * as fileParser from "../../utils/fileParser.js";
 import { CREATE_TERM_ITEM, DELETE_ALL_SECTION_TERMS, RESET_TERMS_STATE } from "../../reducers/termsSlice.js";
-import { CREATE_THREAT_TERM, DELETE_ALL_THREAT_TERMS, RESET_THREATS_STATE, UPDATE_THREAT_SECTION_DEFINITION, UPDATE_MAIN_SECURITY_PROBLEM_DEFINITION } from "../../reducers/threatsSlice.js";
+import { CREATE_THREAT_TERM, UPDATE_THREAT_TERM_SFRS, DELETE_ALL_THREAT_TERMS, RESET_THREATS_STATE, UPDATE_THREAT_SECTION_DEFINITION, UPDATE_MAIN_SECURITY_PROBLEM_DEFINITION } from "../../reducers/threatsSlice.js";
 import { CREATE_OBJECTIVE_TERM, DELETE_ALL_OBJECTIVE_TERMS, RESET_OBJECTIVES_STATE } from "../../reducers/objectivesSlice.js";
 import { CREATE_EDITOR, UPDATE_EDITOR_TEXT, RESET_EDITOR_STATE, UPDATE_EDITOR_METADATA } from "../../reducers/editorSlice.js";
 import { DELETE_ALL_SFR_SECTION_ELEMENTS, RESET_SFR_SECTION_STATE, CREATE_SFR_COMPONENT, UPDATE_SFR_COMPONENT_ITEMS, UPDATE_SFR_COMPONENT_TEST_DEPENDENCIES } from "../../reducers/SFRs/sfrSectionSlice.js";
-import { DELETE_ALL_SFR_SECTIONS, UPDATE_MAIN_SFR_DEFINITION, UPDATE_AUDIT_SECTION, RESET_SFR_STATE, CREATE_SFR_SECTION, SET_IMPLMENTATION_REASONING } from "../../reducers/SFRs/sfrSlice.js";
-import { CREATE_ACCORDION_FORM_ITEM, DELETE_ALL_ACCORDION_FORM_ITEMS, RESET_ACCORDION_PANE_STATE, CREATE_ACCORDION_SUB_FORM_ITEM, updateMetaDataItem, updateFileUploaded, updatePlatforms, updateSnackBar } from "../../reducers/accordionPaneSlice.js";
+import { DELETE_ALL_SFR_SECTIONS, UPDATE_MAIN_SFR_DEFINITION, UPDATE_AUDIT_SECTION, RESET_SFR_STATE, CREATE_SFR_SECTION } from "../../reducers/SFRs/sfrSlice.js";
+import { CREATE_ACCORDION_FORM_ITEM, DELETE_ALL_ACCORDION_FORM_ITEMS, RESET_ACCORDION_PANE_STATE, CREATE_ACCORDION_SUB_FORM_ITEM, updateMetaDataItem, updateFileUploaded, updatePlatforms } from "../../reducers/accordionPaneSlice.js";
 import { ADD_ENTRIES, RESET_BIBLIOGRAPHY_STATE } from "../../reducers/bibliographySlice.js";
-import { setEntropyXML, RESET_ENTROPY_APPENDIX_STATE } from "../../reducers/entropyAppendixSlice.js";
-import { setEquivGuidelinesXML, RESET_EQUIVALENCY_APPENDIX_STATE } from "../../reducers/equivalencyGuidelinesAppendix.js";
+import { SET_ENTROPY_XML, RESET_ENTROPY_APPENDIX_STATE } from "../../reducers/entropyAppendixSlice.js";
+import { SET_EQUIV_GUIDELINES_XML, RESET_EQUIVALENCY_APPENDIX_STATE } from "../../reducers/equivalencyGuidelinesAppendix.js";
 import { ADD_PACKAGE, RESET_PACKAGE_STATE } from "../../reducers/includePackageSlice.js";
-import { setModulesXML, RESET_MODULES_STATE } from "../../reducers/moduleSlice.js";
+import { SET_MODULES_XML, RESET_MODULES_STATE } from "../../reducers/moduleSlice.js";
 import validator from 'validator';
 import _ from 'lodash';
-import { setSatisfiedReqsXML, RESET_SATISFIED_REQS_APPENDIX_STATE } from "../../reducers/satisfiedReqsAppendix.js";
-import { setValidationGuidelinesXML, RESET_VALIDATION_GUIDELINES_APPENDIX_STATE } from "../../reducers/validationGuidelinesAppendix.js";
-import { RESET_VECTOR_APPENDIX_STATE, setVectorXML } from "../../reducers/vectorAppendix.js";
-import { RESET_ACKNOWLEDGEMENTS_APPENDIX_STATE, setAcknowledgementsXML } from "../../reducers/acknowledgementsAppendix.js";
+import { SET_SATISFIED_REQS_XML, RESET_SATISFIED_REQS_APPENDIX_STATE } from "../../reducers/satisfiedReqsAppendix.js";
+import { SET_VALIDATION_GUIDELINES_XML, RESET_VALIDATION_GUIDELINES_APPENDIX_STATE } from "../../reducers/validationGuidelinesAppendix.js";
+import { RESET_VECTOR_APPENDIX_STATE, SET_VECTOR_XML } from "../../reducers/vectorAppendix.js";
+import { RESET_ACKNOWLEDGEMENTS_APPENDIX_STATE, SET_ACKNOWLEDGEMENTS_XML } from "../../reducers/acknowledgementsAppendix.js";
 import { RESET_PROGRESS, setProgress } from "../../reducers/progressSlice.js";
+import { SET_PREFERENCE_XML, RESET_PREFERENCE_STATE } from "../../reducers/ppPreferenceSlice.js";
+import { UPDATE_ST_CONFORMANCE_DROPDOWN, UPDATE_PART_2_CONFORMANCE_DROPDOWN, UPDATE_PART_3_CONFORMANCE_DROPDOWN, CREATE_NEW_PP_CLAIM, CREATE_NEW_PACKAGE_CLAIM, CREATE_NEW_EVALUATION_METHOD, UPDATE_ADDITIONAL_INFORMATION_TEXT, RESET_CONFORMANCE_CLAIMS_STATE } from "../../reducers/conformanceClaimsSlice.js";
 import ProgressBar from "../ProgressBar.jsx";
-import { setPreferenceXML, RESET_PREFERENCE_STATE } from "../../reducers/ppPreferenceSlice.js";
+import SecurityComponents from "../../utils/securityComponents.jsx";
+import { deepCopy } from "../../utils/deepCopy.js";
+import { getPpTemplateVersion } from "../../utils/fileParser.js";
+import { UPDATE_DISTRIBUTED_TOE_INTRO } from "../../reducers/distributedToeSlice.js"
+import { CREATE_ACCORDION } from "../../reducers/accordionPaneSlice.js";
 
 /**
  * The FileLoader class that gives various options for file loading
@@ -51,26 +52,21 @@ function FileLoader(props) {
     };
 
     // Constants
+    const { handleSnackBarError, handleSnackBarSuccess } = SecurityComponents
     const dispatch = useDispatch();
-    const checkboxStyling = { color: "#1FB2A6", '&.Mui-checked': { color: "#1FB2A6" } }
     const [isLoading, setIsLoading] = useState(false);
-    // const state = useSelector((state) => state);
-    const { pp, mod, filename } = useSelector((state) => state.accordionPane.loadedfile);
-    const stateAccordionPane = useSelector((state) => state.accordionPane);
-    const stateEditors = useSelector((state) => state.editors);
-    const stateObjectives = useSelector((state) => state.objectives);
-    const stateSars = useSelector((state) => state.sars);
-    const stateSfrs = useSelector((state) => state.sfrs);
-    const stateSfrSections = useSelector((state) => state.sfrSections);
-    const stateTerms = useSelector((state) => state.terms);
-    const stateThreats = useSelector((state) => state.threats);
-    const ppPreference = useSelector((state) => state.ppPreference);
+    const state = useSelector((state) => state);
+    const stateRef = useRef(state);
+    const { filename } = state.accordionPane.loadedfile;
+    const stateSfrSections = state.sfrSections;
     const previousSfrSectionsRef = useRef(_.cloneDeep(stateSfrSections));
+    const { clearSessionStorageExcept, fetchTemplateData } = SecurityComponents
 
     // Use Effects
-    // useEffect(() => {
-    //     console.log(ppPreference);
-    // }, [ppPreference])
+    useEffect(() => {
+        stateRef.current = state;
+        // console.log(state);
+    }, [state]);
     useEffect(() => {
         // Post-processing to convert selection dependent selections/elements/components IDs + test dependency IDs to UUID
         // Need to put this code in useEffect, or else it doesn't get latest state value for sfrSections and UUIDs
@@ -223,15 +219,6 @@ function FileLoader(props) {
 
                 // LOAD XML CONTENTS INTO REDUX SLICES
                 loadPPXML(xmlReal.node)
-
-                setTimeout(() => {
-                    // Update progress
-                    const currentProgress = 100
-                    const currentSteps = {
-                        "Appendices": true
-                    }
-                    handleProgressBar(currentProgress, currentSteps)
-                }, 500)
             }, 1000);
 
             return "success";
@@ -241,12 +228,7 @@ function FileLoader(props) {
             console.log(errorMessage);
 
             // Update snackbar
-            handleSnackBar({
-                open: true,
-                message: errorMessage,
-                severity: "error",
-                autoHideDuration: 6000
-            }, timeout)
+            handleSnackBarError(errorMessage)
 
             setTimeout(() => {
                 setIsLoading(false)
@@ -264,93 +246,117 @@ function FileLoader(props) {
      */
     const loadPPXML = (xml) => {
         let useCaseMap = {}
+        let ppTemplateVersion = "CC2022 Standard"
 
-        // Load all file values
-        setTimeout(() => {
-            // Load initial components
-            loadPackages(xml)
-            loadModules(xml)
-            loadPlatforms(xml)
-            loadPPReference(xml)
-            loadOverview(xml);
-            loadTOEOverview(xml);
-            loadPreferences(xml);
+        // Create accordions, editors and terms
+        try {
+            ppTemplateVersion = createDefaultSlices(xml)
+        } catch (e) {
+            console.log(e)
+            handleSnackBarError(e)
+        } finally {
+            // Load all file values
+            setTimeout(() => {
+                // Load initial components
+                loadPackages(xml)
+                loadModules(xml)
+                loadPlatforms(xml)
+                loadPPReference(xml)
+                loadOverview(xml);
+                loadTOEOverview(xml);
+                loadDistributedTOE(xml);
+                loadPreferences(xml);
 
-            // Update progress
-            const currentProgress = 30
-            const currentSteps = {
-                "Packages": true,
-                "Modules": true,
-                "Platforms": true,
-                "PP Reference": true,
-                "Overview": true,
-                "TOE Overview": true,
-            }
-            handleProgressBar(currentProgress, currentSteps)
-        }, 500);
-        setTimeout(() => {
-            // Load more components
-            loadDocumentScope(xml);
-            loadIntendedReadership(xml);
-            loadTechTerms(xml);
-            useCaseMap = loadUseCase(xml);
-            loadConformanceClaim(xml);
+                // Update progress
+                const currentProgress = 30
+                const currentSteps = {
+                    "Packages": true,
+                    "Modules": true,
+                    "Platforms": true,
+                    "PP Reference": true,
+                    "Overview": true,
+                    "TOE Overview": true,
+                }
+                handleProgressBar(currentProgress, currentSteps)
+            }, 500);
+            setTimeout(() => {
+                // Load more components
+                loadDocumentScope(xml);
+                loadIntendedReadership(xml);
+                loadTechTerms(xml);
+                useCaseMap = loadUseCase(xml);
+                loadConformanceClaim(xml, ppTemplateVersion);
 
-            // Update progress
-            const currentProgress = 50
-            const currentSteps = {
-                "Document Scope": true,
-                "Intended Readership": true,
-                "Tech Terms": true,
-                "Use Cases": true,
-                "Conformance Claims": true,
-            }
-            handleProgressBar(currentProgress, currentSteps)
-        }, 500);
+                // Update progress
+                const currentProgress = 50
+                const currentSteps = {
+                    "Document Scope": true,
+                    "Intended Readership": true,
+                    "Tech Terms": true,
+                    "Use Cases": true,
+                    "Conformance Claims": true,
+                }
+                handleProgressBar(currentProgress, currentSteps)
+            }, 500);
 
-        setTimeout(() => {
-            // Get maps from objectives and load other components
-            const { objectivesMap, sfrToObjectivesMap } = loadObjectives(xml);
-            loadOEs(xml, objectivesMap);
-            loadSecurityProblemDescription(xml);
-            loadThreats(xml, objectivesMap);
-            loadAssumptions(xml, objectivesMap);
+            setTimeout(() => {
+                // Get maps from objectives and load other components
+                const { objectivesMap, sfrToObjectivesMap, objectivetoSfrsMap } = loadObjectives(xml);
+                loadOEs(xml, objectivesMap);
+                loadSecurityProblemDescription(xml);
+                const threatWithSFR = loadThreats(xml, objectivesMap, objectivetoSfrsMap, ppTemplateVersion);
+                loadAssumptions(xml, objectivesMap);
+                loadOSPs(xml, objectivesMap);
 
-            // Update progress
-            const currentProgress = 70
-            const currentSteps = {
-                "Objectives": true,
-                "OEs": true,
-                "Threats": true,
-                "Assumptions": true,
-            }
-            handleProgressBar(currentProgress, currentSteps)
+                // Update progress
+                const currentProgress = 70
+                const currentSteps = {
+                    "Objectives": true,
+                    "OEs": true,
+                    "Threats": true,
+                    "Assumptions": true,
+                }
+                handleProgressBar(currentProgress, currentSteps)
 
-            // Load SFRS and SARs
-            loadSFRs(xml, sfrToObjectivesMap, useCaseMap);
-            loadSARs(xml);
-        }, 500);
-        setTimeout(() => {
-            // Update progress
-            const currentProgress = 90
-            const currentSteps = {
-                "SFRs": true,
-                "SARS": true
-            }
-            handleProgressBar(currentProgress, currentSteps)
+                loadSecurityRequirement(xml)
 
-            // Load the remaining appendices
-            loadBibliography(xml);
-            loadEntropyAppendix(xml);
-            loadGuidelinesAppendix(xml);
-            loadSatisfiedReqsAppendix(xml);
-        }, 500);
-        setTimeout(() => {
-            loadValidationGuidelinesAppendix(xml);
-            loadVectorAppendix(xml);
-            loadAcknowledgementsAppendix(xml);
-            loadImplementationDeps(xml);
-        }, 5000);
+                // Load SFRS and SARs
+                const { sfrsMap } = loadSFRs(xml, sfrToObjectivesMap, useCaseMap);
+
+                // Add SFR data to the threats
+                updateUUIDDirectRationale(sfrsMap, threatWithSFR);
+
+                loadSARs(xml);
+            }, 500);
+            setTimeout(() => {
+                // Update progress
+                const currentProgress = 90
+                const currentSteps = {
+                    "SFRs": true,
+                    "SARS": true
+                }
+                handleProgressBar(currentProgress, currentSteps)
+
+                // Load the remaining appendices
+                loadBibliography(xml);
+                loadEntropyAppendix(xml);
+                loadGuidelinesAppendix(xml);
+                loadSatisfiedReqsAppendix(xml);
+            }, 500);
+            setTimeout(() => {
+                loadValidationGuidelinesAppendix(xml);
+                loadVectorAppendix(xml);
+                loadAcknowledgementsAppendix(xml);
+            }, 5000);
+            setTimeout(() => {
+                // Update progress
+                const currentProgress = 100
+                const currentSteps = {
+                    "Appendices": true
+                }
+                handleProgressBar(currentProgress, currentSteps)
+            }, 500)
+        }
     }
 
     /**
@@ -372,59 +378,68 @@ function FileLoader(props) {
      * Delete all existing data in a certain section
      */
     const clear_section = (slice, sliceName, sectionTitle = "") => {
+        const {
+            accordionPane: stateAccordionPane,
+            editors: stateEditors
+        } = stateRef.current
         const sectionUUID = getUUIDByTitle(slice, sectionTitle);
-        switch (sliceName) {
-            case "objectives":
-                dispatch(DELETE_ALL_OBJECTIVE_TERMS({ title: sectionTitle, objectiveUUID: sectionUUID }));
-                return
-            case "terms":
-                dispatch(DELETE_ALL_SECTION_TERMS({ title: sectionTitle, termUUID: sectionUUID }));
-                return
-            case "threats":
-                dispatch(DELETE_ALL_THREAT_TERMS({ title: sectionTitle, threatUUID: sectionUUID }));
-                return
-            case "sfrs": {
-                // Delete definition(intro to security requirements section)
-                dispatch(UPDATE_MAIN_SFR_DEFINITION({ newDefinition: "" }));
 
-                // Delete the SFR Components
-                dispatch(DELETE_ALL_SFR_SECTION_ELEMENTS());
-                // Delete the SFR Class/Family
-                // Get UUID of accordionPane.sections where title is "Security Requirements"
-                const secReqsUUID = getUUIDByTitle(stateAccordionPane.sections, "Security Requirements");
+        try {
+            switch (sliceName) {
+                case "objectives": {
+                    dispatch(DELETE_ALL_OBJECTIVE_TERMS({ title: sectionTitle, objectiveUUID: sectionUUID }));
+                    return
+                } case "terms": {
+                    dispatch(DELETE_ALL_SECTION_TERMS({ title: sectionTitle, termUUID: sectionUUID }));
+                    return
+                } case "threats": {
+                    dispatch(DELETE_ALL_THREAT_TERMS({ title: sectionTitle, threatUUID: sectionUUID }));
+                    return
+                } case "sfrs": {
+                    // Delete definition(intro to security requirements section)
+                    dispatch(UPDATE_MAIN_SFR_DEFINITION({ newDefinition: "" }));
 
-                // Delete SFR/SAR accordions
-                dispatch(DELETE_ALL_ACCORDION_FORM_ITEMS({ accordionUUID: secReqsUUID }));
+                    // Delete the SFR Components
+                    dispatch(DELETE_ALL_SFR_SECTION_ELEMENTS());
+                    // Delete the SFR Class/Family
+                    // Get UUID of accordionPane.sections where title is "Security Requirements"
+                    const secReqsUUID = getUUIDByTitle(stateAccordionPane.sections, "Security Requirements");
 
-                // Delete any intro text (part of editor slice)
-                const sfrEditorUUID = getUUIDByTitle(stateEditors, "Security Functional Requirements");
-                dispatch(UPDATE_EDITOR_TEXT({ uuid: sfrEditorUUID, newText: "" }));
+                    // Delete SFR/SAR accordions
+                    dispatch(DELETE_ALL_ACCORDION_FORM_ITEMS({ accordionUUID: secReqsUUID }));
 
-                // Delete the SFR sections
-                dispatch(DELETE_ALL_SFR_SECTIONS());
-                return
+                    // Delete any intro text (part of editor slice)
+                    const sfrEditorUUID = getUUIDByTitle(stateEditors, "Security Functional Requirements");
+                    dispatch(UPDATE_EDITOR_TEXT({ uuid: sfrEditorUUID, newText: "" }));
+
+                    // Delete the SFR sections
+                    dispatch(DELETE_ALL_SFR_SECTIONS());
+                    return
+                } case "sars": {
+                    // Delete SAR Family (and associated component + elements)
+                    dispatch(DELETE_ALL_SAR_SECTIONS());
+
+                    // Delete any intro text (part of editor slice)
+                    const sarEditorUUID = getUUIDByTitle(stateEditors, "Security Assurance Requirements");
+                    dispatch(UPDATE_EDITOR_TEXT({ uuid: sarEditorUUID, newText: "" }));
+
+                    return
+                } case "conformance_claims": {
+                    const conformanceClaimsUUID = getUUIDByTitle(stateAccordionPane.sections, sectionTitle);
+                    if (stateAccordionPane.sections.hasOwnProperty(conformanceClaimsUUID) && stateAccordionPane.sections[conformanceClaimsUUID].hasOwnProperty("formItems")) {
+                        const cc_section_uuids = stateAccordionPane.sections[conformanceClaimsUUID].formItems.map(editor => editor.uuid);
+
+                        cc_section_uuids.forEach(uuid => {
+                            dispatch(UPDATE_EDITOR_TEXT({ uuid: uuid, newText: "" }));
+                        });
+                    }
+                    return
+                }
+                default: return null
             }
-            case "sars": {
-                // Delete SAR Family (and associated component + elements)
-                dispatch(DELETE_ALL_SAR_SECTIONS());
-
-                // Delete any intro text (part of editor slice)
-                const sarEditorUUID = getUUIDByTitle(stateEditors, "Security Assurance Requirements");
-                dispatch(UPDATE_EDITOR_TEXT({ uuid: sarEditorUUID, newText: "" }));
-
-                return
-            }
-            case "conformance_claims": {
-                const conformanceClaimsUUID = getUUIDByTitle(stateAccordionPane.sections, sectionTitle);
-                const cc_section_uuids = stateAccordionPane.sections[conformanceClaimsUUID].formItems.map(editor => editor.uuid);
-
-                cc_section_uuids.forEach(uuid => {
-                    dispatch(UPDATE_EDITOR_TEXT({ uuid: uuid, newText: "" }));
-                });
-                return
-            }
-            default:
-                return null
+        } catch (e) {
+            console.log(e)
+            handleSnackBarError(e)
         }
     }
 
@@ -432,6 +447,15 @@ function FileLoader(props) {
      * Clears out the sections
      */
     const clearOutSections = () => {
+        const {
+            accordionPane: stateAccordionPane,
+            objectives: stateObjectives,
+            sars: stateSars,
+            sfrs: stateSfrs,
+            terms: stateTerms,
+            threats: stateThreats,
+        } = stateRef.current
+
         // Clear out existing Tech Terms
         clear_section(stateTerms, "terms", "Technical Terms");
 
@@ -485,6 +509,7 @@ function FileLoader(props) {
             dispatch(RESET_ACKNOWLEDGEMENTS_APPENDIX_STATE());
             dispatch(RESET_PROGRESS());
             dispatch(RESET_PREFERENCE_STATE());
+            dispatch(RESET_CONFORMANCE_CLAIMS_STATE());
         }, 300)
     }
 
@@ -499,11 +524,15 @@ function FileLoader(props) {
 
             dispatch(updateMetaDataItem({ type: 'xmlTagMeta', item: ppMeta }));
             dispatch(updateMetaDataItem({ type: 'ppName', item: ppReference.PPTitle }));
+            dispatch(updateMetaDataItem({ type: 'author', item: ppReference.PPAuthor }));
+            dispatch(updateMetaDataItem({ type: 'keywords', item: ppReference.Keywords }));
             dispatch(updateMetaDataItem({ type: 'version', item: ppReference.PPVersion }));
             dispatch(updateMetaDataItem({ type: 'releaseDate', item: ppReference.PPPubDate }));
             dispatch(updateMetaDataItem({ type: 'revisionHistory', item: ppReference.RevisionHistory }));
         } catch (err) {
-            console.log(`Failed to load PP Reference Data: ${err}`);
+            const errorMessage = `Failed to load PP Reference Data: ${err}`
+            console.log(errorMessage);
+            handleSnackBarError(errorMessage)
         }
     }
 
@@ -521,7 +550,9 @@ function FileLoader(props) {
                 });
             }
         } catch (err) {
-            console.log(`Failed to load Package Data: ${err}`);
+            const errorMessage = `Failed to load Package Data: ${err}`
+            console.log(errorMessage);
+            handleSnackBarError(errorMessage)
         }
     }
 
@@ -534,10 +565,12 @@ function FileLoader(props) {
             const preferences = fileParser.getPPPreference(xml);
 
             if (preferences.length != 0) {
-                dispatch(setPreferenceXML({ preference: preferences }));
+                dispatch(SET_PREFERENCE_XML({ preference: preferences }));
             }
         } catch (err) {
-            console.log(`Failed to load PP Preference Data: ${err}`);
+            const errorMessage = `Failed to load PP Preference Data: ${err}`
+            console.log(errorMessage);
+            handleSnackBarError(errorMessage)
         }
     }
 
@@ -550,10 +583,12 @@ function FileLoader(props) {
             const mods = fileParser.getExternalModules(xml);
 
             if (mods.length != 0) {
-                dispatch(setModulesXML({ modules: mods }));
+                dispatch(SET_MODULES_XML({ modules: mods }));
             }
         } catch (err) {
-            console.log(`Failed to load Module Data: ${err}`);
+            const errorMessage = `Failed to load Module Data: ${err}`
+            console.log(errorMessage);
+            handleSnackBarError(errorMessage)
         }
     }
 
@@ -569,7 +604,9 @@ function FileLoader(props) {
 
             dispatch(updatePlatforms({ description: platformData.description, platforms: platformData.platforms, xml: platformXML }));
         } catch (err) {
-            console.log(`Failed to load Platform Data: ${err}`);
+            const errorMessage = `Failed to load Platform Data: ${err}`
+            console.log(errorMessage);
+            handleSnackBarError(errorMessage)
         }
     }
 
@@ -579,6 +616,7 @@ function FileLoader(props) {
      */
     const loadOverview = (xml) => {
         try {
+            const { editors: stateEditors } = stateRef.current
             const overviewUUID = getUUIDByTitle(stateEditors, "Objectives of Document");
             const overviewData = fileParser.getDocumentObjectives(xml);
 
@@ -588,7 +626,44 @@ function FileLoader(props) {
 
             dispatch(UPDATE_EDITOR_METADATA({ uuid: overviewUUID, xmlTagMeta: overviewData.xmlTagMeta }));
         } catch (err) {
-            console.log(`Failed to load Overview Data: ${err}`);
+            const errorMessage = `Failed to load Overview Data: ${err}`
+            console.log(errorMessage);
+            handleSnackBarError(errorMessage)
+        }
+    }
+
+    /**
+     * Loads the Distributed TOE section
+     * @param xml the xml
+     */
+    const loadDistributedTOE = (xml) => {
+        try {
+            const distributedTOE = fileParser.getDistributedTOE(xml);
+            if (!distributedTOE) return
+
+            // create TOE accordion section and update intro
+            const accordionUUID = dispatch(CREATE_ACCORDION({title: 'Distributed TOE', selected_section: "Conformance Claims"})).payload.uuid;
+            dispatch(UPDATE_DISTRIBUTED_TOE_INTRO({newIntro: distributedTOE.intro.xml, xmlTagMeta: distributedTOE.intro.xmlTagMeta}));
+
+            // create sub-sections
+            for (let key of Object.keys(distributedTOE)) {
+                if (key === 'intro') continue;
+                let editorUUID = dispatch(CREATE_EDITOR({ title: distributedTOE[key].xmlTagMeta.attributes.title })).payload;
+                dispatch(UPDATE_EDITOR_TEXT({ uuid: editorUUID, newText: distributedTOE[key].xml }));
+                dispatch(UPDATE_EDITOR_METADATA({ uuid: editorUUID, xmlTagMeta: distributedTOE[key].xmlTagMeta }));
+                dispatch(
+                    CREATE_ACCORDION_FORM_ITEM({
+                        accordionUUID: accordionUUID,
+                        uuid: editorUUID,
+                        contentType: "editor",
+                    })
+                );
+            }
+
+        } catch (err) {
+            const errorMessage = `Failed to load Distributed TOE Data: ${err}`
+            console.log(errorMessage);
+            handleSnackBarError(errorMessage)
         }
     }
 
@@ -598,6 +673,10 @@ function FileLoader(props) {
      */
     const loadTOEOverview = (xml) => {
         try {
+            const {
+                accordionPane: stateAccordionPane,
+                editors: stateEditors,
+            } = stateRef.current
             const introductionUUID = getUUIDByTitle(stateAccordionPane.sections, "Introduction");
             const TOEoverviewUUID = getUUIDByTitle(stateEditors, "TOE Overview");
             const compliantTOE = fileParser.getCompliantTOE(xml);
@@ -612,14 +691,8 @@ function FileLoader(props) {
 
                 // Create the editor if there is content in the xml for TOE Boundary
                 if (toeBoundary.length != 0) {
-                    let editorUUID = dispatch(CREATE_EDITOR({ title: "TOE Boundary" })).payload;
-
+                    const editorUUID = getUUIDByTitle(stateEditors, "TOE Boundary");
                     dispatch(UPDATE_EDITOR_TEXT({ uuid: editorUUID, newText: toeBoundary }));
-
-                    if (editorUUID) {
-                        // Add the editor to the TOE Overview as a subsection
-                        dispatch(CREATE_ACCORDION_SUB_FORM_ITEM({ accordionUUID: introductionUUID, uuid: editorUUID, formUUID: TOEoverviewUUID, contentType: "editor" }));
-                    }
                 }
 
                 // Create the editor if there is content in the xml for TOE Platform
@@ -635,7 +708,9 @@ function FileLoader(props) {
                 }
             }
         } catch (err) {
-            console.log(`Failed to load TOE Overview Data: ${err}`);
+            const errorMessage = `Failed to load TOE Overview Data: ${err}`
+            console.log(errorMessage);
+            handleSnackBarError(errorMessage)
         }
     }
 
@@ -645,6 +720,7 @@ function FileLoader(props) {
      */
     const loadDocumentScope = (xml) => {
         try {
+            const { accordionPane: stateAccordionPane } = stateRef.current
             const introductionUUID = getUUIDByTitle(stateAccordionPane.sections, "Introduction");
 
             // Create the editor if there is content in the xml
@@ -665,7 +741,9 @@ function FileLoader(props) {
                 }
             }
         } catch (err) {
-            console.log(`Failed to load Scope of the Document Data: ${err}`);
+            const errorMessage = `Failed to load Scope of the Document Data: ${err}`
+            console.log(errorMessage);
+            handleSnackBarError(errorMessage)
         }
     }
 
@@ -675,6 +753,7 @@ function FileLoader(props) {
      */
     const loadIntendedReadership = (xml) => {
         try {
+            const { accordionPane: stateAccordionPane } = stateRef.current
             const introductionUUID = getUUIDByTitle(stateAccordionPane.sections, "Introduction");
 
             // Create the editor if there is content in the xml
@@ -695,7 +774,9 @@ function FileLoader(props) {
                 }
             }
         } catch (err) {
-            console.log(`Failed to load Indended Readership Data: ${err}`);
+            const errorMessage = `Failed to load Indented Readership Data: ${err}`
+            console.log(errorMessage);
+            handleSnackBarError(errorMessage)
         }
     }
 
@@ -706,6 +787,7 @@ function FileLoader(props) {
     const loadTechTerms = (xml) => {
         try {
             // Get UUID of the Tech Terms section in order to add terms to that section
+            const { terms: stateTerms } = stateRef.current
             const termUUID = getUUIDByTitle(stateTerms, "Technical Terms");
             const acronymUUID = getUUIDByTitle(stateTerms, "Acronyms");
 
@@ -727,7 +809,9 @@ function FileLoader(props) {
             }
 
         } catch (err) {
-            console.log(`Failed to load Tech Terms Data: ${err}`);
+            const errorMessage = `Failed to load Tech Terms Data: ${err}`
+            console.log(errorMessage);
+            handleSnackBarError(errorMessage)
         }
     }
 
@@ -738,6 +822,10 @@ function FileLoader(props) {
     const loadUseCase = (xml) => {
         let useCaseMap = {}
         try {
+            const {
+                editors: stateEditors,
+                terms: stateTerms,
+            } = stateRef.current
             const useCaseDescriptionUUID = getUUIDByTitle(stateEditors, "TOE Usage");
             dispatch(UPDATE_EDITOR_TEXT({ uuid: useCaseDescriptionUUID, newText: fileParser.getUseCaseDescription(xml) }));
 
@@ -756,7 +844,9 @@ function FileLoader(props) {
             }
 
         } catch (err) {
-            console.log(`Failed to load Usecase Data: ${err}`);
+            const errorMessage = `Failed to load Use-case Data: ${err}`
+            console.log(errorMessage);
+            handleSnackBarError(errorMessage)
         }
         return useCaseMap
     }
@@ -765,14 +855,32 @@ function FileLoader(props) {
      * Loads the conformance claim
      * @param xml the xml
      */
-    const loadConformanceClaim = (xml) => {
+    const loadConformanceClaim = (xml, ppTemplateVersion) => {
+        // Helper function to take PPs that are both conformant and configuration and store in its own array (to avoid duplicates in UI)
+        function consolidatePPs(conformantPPs, configurationPPs, consolidatedPPs) {
+            for (let i = conformantPPs.length - 1; i >= 0; i--) {
+                const sourceDescription = conformantPPs[i].description;
+                const matchIndex = configurationPPs.findIndex(pp => pp.description === sourceDescription);
+
+                if (matchIndex !== -1) {
+                    // If a match is found, store separately
+                    consolidatedPPs.push(conformantPPs[i]);
+
+                    // Remove the matched object from both arrays
+                    conformantPPs.splice(i, 1);
+                    configurationPPs.splice(matchIndex, 1);
+                }
+            }
+        }
+
         try {
+            const { editors: stateEditors } = stateRef.current
             const conformanceStatementUUID = getUUIDByTitle(stateEditors, "Conformance Statement");
             const ccConformanceClaimsUUID = getUUIDByTitle(stateEditors, "CC Conformance Claims");
             const ppClaimUUID = getUUIDByTitle(stateEditors, "PP Claims");
             const packageClaimUUID = getUUIDByTitle(stateEditors, "Package Claims");
+            const allCClaims = fileParser.getCClaims(xml, ppTemplateVersion);
 
-            const allCClaims = fileParser.getCClaims(xml);
             if (allCClaims.length != 0) {
                 Object.values(allCClaims).map((claim) => {
                     const name = claim.name;
@@ -791,13 +899,64 @@ function FileLoader(props) {
                         case "Package Claim":
                             dispatch(UPDATE_EDITOR_TEXT({ uuid: packageClaimUUID, newText: description }));
                             return
+                        case "Conformance CC2022":
+                            if (claim.tagName == "cc-st-conf") {
+                                dispatch(UPDATE_ST_CONFORMANCE_DROPDOWN({ stConformance: claim.description }));
+                            } else if (claim.tagName == "cc-pt2-conf") {
+                                dispatch(UPDATE_PART_2_CONFORMANCE_DROPDOWN({ part2Conformance: claim.description }));
+                            } else if (claim.tagName == "cc-pt3-conf") {
+                                dispatch(UPDATE_PART_3_CONFORMANCE_DROPDOWN({ part3Conformance: claim.description }));
+                            }
+                            return
+                        case "PP Claim CC2022":
+                            // Initialize the conformantConfig array - need to consolidate the PPs that are both conformant and configuration
+                            claim.conformantAndConfig = [];
+                            consolidatePPs(claim.ppClaim, claim.configurations.pp, claim.conformantAndConfig);
+
+                            // Store PP that is conformant and part of configuration
+                            claim.conformantAndConfig.forEach(claim => {
+                                dispatch(CREATE_NEW_PP_CLAIM({ isPP: true, status: ["Conformance", "Configuration"], description: claim.description }));
+                            });
+
+                            // Store PP that is only conformant
+                            claim.ppClaim.forEach(claim => {
+                                dispatch(CREATE_NEW_PP_CLAIM({ isPP: true, status: ["Conformance"], description: claim.description }));
+                            });
+
+                            // Store PP/Modules that are part of configuration
+                            claim.configurations.pp.forEach(pp => {
+                                dispatch(CREATE_NEW_PP_CLAIM({ isPP: true, status: ["Configuration"], description: pp.description }));
+                            });
+                            claim.configurations.modules.forEach(module => {
+                                dispatch(CREATE_NEW_PP_CLAIM({ isPP: false, status: ["Configuration"], description: module.description }));
+                            });
+                            return
+                        case "Package Claim CC2022":
+                            claim.configurations.assurancePackages.forEach(aP => {
+                                dispatch(CREATE_NEW_PACKAGE_CLAIM({ isFunctional: false, conf: aP.conf, text: aP.description }));
+                            });
+
+                            claim.configurations.functionalPackages.forEach(fP => {
+                                dispatch(CREATE_NEW_PACKAGE_CLAIM({ isFunctional: true, conf: fP.conf, text: fP.description }));
+                            });
+                            return
+                        case "Evaluation Methods CC2022":
+                            claim.methods.forEach(method => {
+                                dispatch(CREATE_NEW_EVALUATION_METHOD({ method: method.description }));
+                            });
+                            return
+                        case "CClaim Additional Info CC2022":
+                            dispatch(UPDATE_ADDITIONAL_INFORMATION_TEXT({ value: claim.description }));
+                            return
                         default:
                             return null;
                     }
                 });
             }
         } catch (err) {
-            console.log(`Failed to load Conformance Claims Data: ${err}`);
+            const errorMessage = `Failed to load Conformance Claims Data: ${err}`
+            console.log(errorMessage);
+            handleSnackBarError(errorMessage)
         }
     }
 
@@ -809,25 +968,28 @@ function FileLoader(props) {
     const loadObjectives = (xml) => {
         let objectivesMap = {}
         let sfrToObjectivesMap = {}
+        let objectivetoSfrsMap = {}
 
         try {
             // Get Objectives
+            const { objectives: stateObjectives } = stateRef.current
             const objectivesUUID = getUUIDByTitle(stateObjectives, "Security Objectives for the TOE");
             const toeObjectives = fileParser.getAllSecurityObjectivesTOE(xml);
             Object.values(toeObjectives).map((objective) => {
                 const name = objective.name;
                 const definition = objective.definition;
                 const sfrs = objective.sfrs;
-                const result = dispatch(CREATE_OBJECTIVE_TERM({ objectiveUUID: objectivesUUID, title: name, definition: definition, sfrs: sfrs }));
+                const result = dispatch(CREATE_OBJECTIVE_TERM({ objectiveUUID: objectivesUUID, title: name, definition: definition }));
                 const objectiveUUID = result.payload.id;
                 objectivesMap[name] = objectiveUUID;
+                objectivetoSfrsMap[name] = sfrs;
                 const isSfrValid = sfrs && sfrs.length > 0;
                 if (isSfrValid) {
                     sfrs.forEach((sfr) => {
-                        if (sfr && sfr.sfrDetails && sfr.sfrDetails.sfr_name) {
-                            const sfrName = sfr.sfrDetails.sfr_name.replace(/["']/g, '').trim().split("(")[0].replace(/\s/g, '');
-                            const isRationale = sfr.rationale && sfr.rationale.description;
-                            const objective = { uuid: objectiveUUID, rationale: isRationale ? sfr.rationale.description : "" };
+                        if (sfr && sfr.rationale && sfr.name) {
+                            const sfrName = sfr.name.replace(/["']/g, '').trim().split("(")[0].replace(/\s/g, '');
+                            const isRationale = sfr.rationale;
+                            const objective = { uuid: objectiveUUID, rationale: isRationale ? isRationale : "" };
 
                             // Create new key in the map if it does not yet exist
                             if (!sfrToObjectivesMap.hasOwnProperty(sfrName)) {
@@ -843,9 +1005,10 @@ function FileLoader(props) {
                 }
             })
         } catch (err) {
-            console.log(`Failed to load Objectives Data: ${err}`);
+            const errorMessage = `Failed to load Objectives Data: ${err}`
+            handleSnackBarError(errorMessage)
         }
-        return { objectivesMap, sfrToObjectivesMap };
+        return { objectivesMap, sfrToObjectivesMap, objectivetoSfrsMap };
     }
 
     /**
@@ -855,6 +1018,7 @@ function FileLoader(props) {
      */
     const loadOEs = (xml, objectivesMap) => {
         try {
+            const { objectives: stateObjectives } = stateRef.current
             const oeUUID = getUUIDByTitle(stateObjectives, "Security Objectives for the Operational Environment");
             const OEs = fileParser.getAllSecurityObjectivesOE(xml);
             Object.values(OEs).map((objective) => {
@@ -865,7 +1029,9 @@ function FileLoader(props) {
                 objectivesMap[name] = result.payload.id;
             })
         } catch (err) {
-            console.log(`Failed to load Operational Objectives of the Environment Data: ${err}`);
+            const errorMessage = `Failed to load Operational Objectives of the Environment Data: ${err}`
+            console.log(errorMessage);
+            handleSnackBarError(errorMessage)
         }
     }
 
@@ -876,12 +1042,13 @@ function FileLoader(props) {
     const loadSecurityProblemDescription = (xml) => {
         try {
             const definition = fileParser.getSecurityProblemDefinition(xml);
-
             if (definition.length != 0) {
                 dispatch(UPDATE_MAIN_SECURITY_PROBLEM_DEFINITION({ newDefinition: definition }));
             }
         } catch (err) {
-            console.log(`Failed to load Threat Data: ${err}`);
+            const errorMessage = `Failed to load Security Problem Definition: ${err}`
+            console.log(errorMessage);
+            handleSnackBarError(errorMessage)
         }
     }
 
@@ -889,22 +1056,35 @@ function FileLoader(props) {
      * Loads the threats
      * @param xml the xml
      * @param objectivesMap the objectives map
+     * @param objectivetoSfrsMap objective to sfr name, rationale
+     * @param ppTemplateVersion PP version
      */
-    const loadThreats = (xml, objectivesMap) => {
+    const loadThreats = (xml, objectivesMap, objectivetoSfrsMap, ppTemplateVersion) => {
+        let threatWithSFR = {};
+
         try {
+            const { threats: stateThreats } = stateRef.current
             const threatsUUID = getUUIDByTitle(stateThreats, "Threats");
             const threatMeta = fileParser.getAllThreats(xml);
             const threatDescription = threatMeta.threat_description;
             const allThreats = threatMeta.threats;
+            let sfrs = [];
 
             // Set the description
             dispatch(UPDATE_THREAT_SECTION_DEFINITION({ uuid: threatsUUID, title: "Threats", newDefinition: threatDescription }));
 
 
-            Object.values(allThreats).map((threat) => {
-                const objectivesWithUUID = Object.values(threat.securityObjectives).map((so) => {
+            threatWithSFR = Object.values(allThreats).map((threat) => {
+                sfrs = [];
+                const objectivesWithUUID = Object.values(threat.securityObjectives).map((so) => { // if there are objectives (non CC2022 DR version)
                     // get UUID of the matching objective
                     const objectiveUUID = objectivesMap[so.name];
+
+                    // get SFRs associated with the objective
+                    sfrs.push(...objectivetoSfrsMap[so.name].map(sfr => ({
+                        ...sfr,
+                        objectiveUUID: objectivesMap[so.name]
+                    })));
 
                     // return a new securityObjective object that includes the UUID
                     return {
@@ -913,11 +1093,66 @@ function FileLoader(props) {
                     };
                 });
 
-                dispatch(CREATE_THREAT_TERM({ threatUUID: threatsUUID, title: threat.name, definition: threat.definition, objectives: objectivesWithUUID }));
-            })
+                if (ppTemplateVersion == "CC2022 Direct Rationale") {
+                    sfrs = threat.sfrs; // SFRs associated with the threat (CC2022 DR)
+                }
+
+                const threatStateRef = dispatch(CREATE_THREAT_TERM({ threatUUID: threatsUUID, title: threat.name, definition: threat.definition, objectives: objectivesWithUUID, sfrs: sfrs }));
+                return {
+                    ...threat,
+                    uuid: threatStateRef.payload.id,
+                    sfrs: sfrs // passing sfrs here so we're not dependent on state changes by pulling threats from the state and then accessing sfrs
+                }
+            });
+
+            return threatWithSFR;
         } catch (err) {
-            console.log(`Failed to load Threat Data: ${err}`);
+            const errorMessage = `Failed to load Threat Data: ${err}`
+            console.log(errorMessage);
+            handleSnackBarError(errorMessage)
         }
+    }
+
+    /**
+     * Add the UUID for the SFRs in the threat -> SFR relationship for v3.1 to CC2022 DR conversion
+     * @param {*} sfrsMap
+     * @param {*} threatWithSFR 
+     */
+    const updateUUIDDirectRationale = (sfrsMap, threatWithSFR) => {
+        // Passing data via threatsWithSfr instead of using another useState as this is a one time operation
+        const { threats: stateThreats } = stateRef.current
+        const sectionUUID = getUUIDByTitle(stateThreats, "Threats");
+
+        Object.values(threatWithSFR).forEach((threat) => {
+            const sfrMap = new Map();
+        
+            threat.sfrs.forEach((sfr) => {
+                const sfrName = sfr.name;
+                const sfrUUID = sfrsMap[sfrName];
+                const rationale = sfr.rationale;
+                const xmlTagMeta = sfr.xmlTagMeta;
+        
+                if (!sfrMap.has(sfrUUID)) {
+                    sfrMap.set(sfrUUID, {
+                        name: sfrName,
+                        uuid: sfrUUID,
+                        rationale: rationale,
+                        xmlTagMeta: xmlTagMeta,
+                    });
+                } else {
+                    sfrMap.get(sfrUUID).rationale += `\n\n${rationale}`; // concatenate SFR rationale for objectives tied to same SFR
+                }
+            });
+        
+            const sfrsWithGroupedRationale = Array.from(sfrMap.values());
+            dispatch(
+                UPDATE_THREAT_TERM_SFRS({
+                    threatUUID: sectionUUID,
+                    uuid: threat.uuid,
+                    sfrs: sfrsWithGroupedRationale
+                })
+            );
+        });
     }
 
     /**
@@ -926,6 +1161,7 @@ function FileLoader(props) {
      */
     const loadAssumptions = (xml, objectivesMap) => {
         try {
+            const { threats: stateThreats } = stateRef.current
             const assumptionsUUID = getUUIDByTitle(stateThreats, "Assumptions");
             const allAssumptions = fileParser.getAllAssumptions(xml);
             Object.values(allAssumptions).map((assumption) => {
@@ -944,7 +1180,55 @@ function FileLoader(props) {
                 dispatch(CREATE_THREAT_TERM({ threatUUID: assumptionsUUID, title: name, definition: definition, objectives: objectivesWithUUID }));
             })
         } catch (err) {
-            console.log(`Failed to load Assumptions Data: ${err}`);
+            const errorMessage = `Failed to load Assumptions Data: ${err}`
+            console.log(errorMessage);
+            handleSnackBarError(errorMessage)
+        }
+    }
+
+    /**
+     * Loads the OSPs (Organizational Security Policies)
+     * @param xml the xml
+     */
+    const loadOSPs = (xml, objectivesMap) => {
+        try {
+            const { threats: stateThreats } = stateRef.current
+            const ospUUID = getUUIDByTitle(stateThreats, "Organizational Security Policies");
+            const allOSPs = fileParser.getAllOSPs(xml);
+            Object.values(allOSPs).map((osp) => {
+                const name = osp.name;
+                const definition = osp.definition;
+                const objectivesWithUUID = Object.values(osp.securityObjectives).map((soe) => {
+                    // get UUID of the matching objective
+                    const objectiveUUID = objectivesMap[soe.name];
+
+                    // return a new securityObjective object that includes the UUID
+                    return {
+                        ...soe,
+                        uuid: objectiveUUID
+                    };
+                });
+                dispatch(CREATE_THREAT_TERM({ threatUUID: ospUUID, title: name, definition: definition, objectives: objectivesWithUUID }));
+            })
+        } catch (err) {
+            const errorMessage = `Failed to load OSPs Data: ${err}`
+            console.log(errorMessage);
+            handleSnackBarError(errorMessage)
+        }
+    }
+
+    /**
+     * Loads the Security Requirement
+     * @param xml the xml
+     */
+    const loadSecurityRequirement = (xml) => {
+        try {
+            const securityRequirement = fileParser.getSecurityRequirement(xml);
+            dispatch(UPDATE_MAIN_SFR_DEFINITION({ newDefinition: securityRequirement }))
+        } catch (err) {
+            const errorMessage = `Failed to load Security Requirement: ${err}`
+            console.log(errorMessage);
+            handleSnackBarError(errorMessage)
         }
     }
 
@@ -955,21 +1239,34 @@ function FileLoader(props) {
      * @param useCaseMap the use case map
      */
     const loadSFRs = (xml, sfrToObjectivesMap, useCaseMap) => {
+        const {
+            accordionPane: stateAccordionPane,
+            editors: stateEditors
+        } = stateRef.current
+
         // Load audit section
         dispatch(UPDATE_AUDIT_SECTION({ newDefinition: fileParser.getAuditSection(xml) }));
 
         // SFRs
-        const allSFRs = fileParser.getSFRs(xml);
+        const extCompDefMap = fileParser.getSectionExtendedComponentDefinitionMap(xml);
+        const allSFRs = fileParser.getSFRs(xml, extCompDefMap);
         let previousSfrFamily = null;
         let previousFamilyUUID = null;
         let sfrComponents = [];
         let sfrFamilyUUID = null;
+        let sfrName = "";
+        let sfrsMap = {}; // SFR to UUID, to be used in direct rationale mapping
 
-        let familiesDone = [];
+
+        let familiesDone = new Set();
         allSFRs.forEach((sfr, index) => {
-            if (!familiesDone.includes(sfr.family_id) || index == 0) {
+            if (!familiesDone.has(sfr.family_id) || index == 0) {
                 // Create SFR slices (SFR Classes parent high level)
-                const result = dispatch(CREATE_SFR_SECTION({ title: `Class: ${sfr.family_name.replace("Class: ", "")}`, definition: sfr.familyDescription }));
+                const result = dispatch(CREATE_SFR_SECTION({
+                    title: `Class: ${sfr.family_name.replace("Class: ", "")}`,
+                    definition: sfr.familyDescription,
+                    extendedComponentDefinition: sfr.familyExtCompDef
+                }));
                 sfrFamilyUUID = result.payload;
 
                 // Create these classes under the Security Functional Requirements section which is under the Security Requirements accordionPane section
@@ -984,11 +1281,11 @@ function FileLoader(props) {
                 sfrComponents.forEach(component => {
                     // Get objectives
                     const { cc_id, iteration_id } = component;
-                    const sfrName = `${cc_id}${iteration_id && iteration_id !== "" ? "/" + iteration_id : ""}`;
+                    sfrName = `${cc_id}${iteration_id && iteration_id !== "" ? "/" + iteration_id : ""}`;
 
                     // Get the objectives based off of the sfrName and set to empty if no objectives exist for the entry
                     if (sfrToObjectivesMap.hasOwnProperty(sfrName)) {
-                        component.objectives = JSON.parse(JSON.stringify(sfrToObjectivesMap[sfrName]));
+                        component.objectives = deepCopy(sfrToObjectivesMap[sfrName]);
                     } else {
                         component.objectives = [];
                     }
@@ -1004,7 +1301,9 @@ function FileLoader(props) {
                     component.useCases = use_cases;
 
                     // Create SFR Component
-                    dispatch(CREATE_SFR_COMPONENT({ sfrUUID: previousFamilyUUID, component: component }));
+                    const result = dispatch(CREATE_SFR_COMPONENT({ sfrUUID: previousFamilyUUID, component: component }));
+                    const componentUUID = result.payload.id;
+                    sfrsMap[sfrName] = componentUUID;
                 });
                 sfrComponents = [];
             }
@@ -1012,13 +1311,20 @@ function FileLoader(props) {
             sfrComponents.push(sfr);
             previousSfrFamily = sfr.family_id;
             previousFamilyUUID = sfrFamilyUUID;
-            familiesDone.push(sfr.family_id);
+            familiesDone.add(sfr.family_id);
         });
 
         // Create component (if PP only has 1 SFR)
         sfrComponents.forEach(component => {
-            dispatch(CREATE_SFR_COMPONENT({ sfrUUID: previousFamilyUUID, component: component }));
+            const { cc_id, iteration_id } = component;
+            sfrName = `${cc_id}${iteration_id && iteration_id !== "" ? "/" + iteration_id : ""}`;
+
+            const result = dispatch(CREATE_SFR_COMPONENT({ sfrUUID: previousFamilyUUID, component: component }));
+            const componentUUID = result.payload.id;
+            sfrsMap[sfrName] = componentUUID;
         })
+
+        return { sfrsMap };
     }
 
     /**
@@ -1026,6 +1332,10 @@ function FileLoader(props) {
      * @param xml the xml
      */
     const loadSARs = (xml) => {
+        const {
+            accordionPane: stateAccordionPane,
+            editors: stateEditors
+        } = stateRef.current
         const sars = fileParser.getSARs(xml);
         const description = sars.sarsDescription;
         const families = sars.sections;
@@ -1086,7 +1396,7 @@ function FileLoader(props) {
         const appendix = fileParser.getEntropyAppendix(xml);
 
         if (appendix.entropyAppendix) {
-            dispatch(setEntropyXML({ xml: appendix.entropyAppendix, xmlTagMeta: appendix.xmlTagMeta }));
+            dispatch(SET_ENTROPY_XML({ xml: appendix.entropyAppendix, xmlTagMeta: appendix.xmlTagMeta }));
         }
     }
 
@@ -1098,7 +1408,7 @@ function FileLoader(props) {
         const appendix = fileParser.getEquivGuidelinesAppendix(xml);
 
         if (appendix.guidelinesAppendix) {
-            dispatch(setEquivGuidelinesXML({ xml: appendix.guidelinesAppendix, xmlTagMeta: appendix.xmlTagMeta }));
+            dispatch(SET_EQUIV_GUIDELINES_XML({ xml: appendix.guidelinesAppendix, xmlTagMeta: appendix.xmlTagMeta }));
         }
     }
 
@@ -1110,7 +1420,7 @@ function FileLoader(props) {
         const appendix = fileParser.getSatisfiedReqsAppendix(xml);
 
         if (appendix.satisfiedReqsAppendix) {
-            dispatch(setSatisfiedReqsXML({ xml: appendix.satisfiedReqsAppendix, xmlTagMeta: appendix.xmlTagMeta }));
+            dispatch(SET_SATISFIED_REQS_XML({ xml: appendix.satisfiedReqsAppendix, xmlTagMeta: appendix.xmlTagMeta }));
         }
     }
 
@@ -1122,7 +1432,7 @@ function FileLoader(props) {
         const appendix = fileParser.getValidationGuidelinesAppendix(xml);
 
         if (appendix.valGuideAppendix) {
-            dispatch(setValidationGuidelinesXML({ xml: appendix.valGuideAppendix, xmlTagMeta: appendix.xmlTagMeta }));
+            dispatch(SET_VALIDATION_GUIDELINES_XML({ xml: appendix.valGuideAppendix, xmlTagMeta: appendix.xmlTagMeta }));
         }
     }
 
@@ -1135,7 +1445,7 @@ function FileLoader(props) {
         const appendix = fileParser.getVectorAppendix(xml);
 
         if (appendix.vectorReqsAppendix) {
-            dispatch(setVectorXML({ xml: appendix.vectorReqsAppendix, xmlTagMeta: appendix.xmlTagMeta }));
+            dispatch(SET_VECTOR_XML({ xml: appendix.vectorReqsAppendix, xmlTagMeta: appendix.xmlTagMeta }));
         }
     }
 
@@ -1147,19 +1457,7 @@ function FileLoader(props) {
         const appendix = fileParser.getAcknowledgementsAppendix(xml);
 
         if (appendix.acknowledgementsReqsAppendix) {
-            dispatch(setAcknowledgementsXML({ xml: appendix.acknowledgementsReqsAppendix, xmlTagMeta: appendix.xmlTagMeta }));
-        }
-    }
-
-    /**
-     * Load implementation dependent reasonings
-     * @param xml the xml
-     */
-    const loadImplementationDeps = (xml) => {
-        const implementations = fileParser.getImplementations(xml);
-
-        if (implementations) {
-            dispatch(SET_IMPLMENTATION_REASONING({ xml: implementations }));
+            dispatch(SET_ACKNOWLEDGEMENTS_XML({ xml: appendix.acknowledgementsReqsAppendix, xmlTagMeta: appendix.xmlTagMeta }));
         }
     }
 
@@ -1182,27 +1480,24 @@ function FileLoader(props) {
         };
 
         reader.onabort = () => {
-            const timeout = 3000;
             setIsLoading(false);
+            sessionStorage.setItem("isLoading", "false")
             resetState();
-            handleSnackBar({
-                open: true,
-                message: `Failed to Load ${file.name}`,
-                severity: "error"
-            }, timeout)
+            handleSnackBarError(`Failed to Load ${file.name}`)
         }
         reader.onerror = () => {
-            const timeout = 3000;
             setIsLoading(false);
+            sessionStorage.setItem("isLoading", "false")
             resetState();
-            handleSnackBar({
-                open: true,
-                message: `Failed to Load XML ${file.name}`,
-                severity: "error"
-            }, timeout)
+            setTimeout(() => {
+                handleSnackBarError(`Failed to Load XML ${file.name}`)
+            }, 3000)
         }
 
         reader.onload = () => {
+            // Update loading in session storage
+            sessionStorage.setItem("isLoading", "true")
+
             // Syntax validation
             const validate = validate_XML(reader.result)
 
@@ -1220,11 +1515,12 @@ function FileLoader(props) {
                     }, 1000);
 
                     // Update snackbar
-                    const timeout = 1000;
-                    handleSnackBar({
-                        open: true,
-                        message: `Loaded in ${file.name}`
-                    }, timeout)
+                    handleSnackBarSuccess(`Loaded in ${file.name}`)
+
+                    // Update loading in session storage
+                    setTimeout(() => {
+                        sessionStorage.setItem("isLoading", "false")
+                    }, 1000);
                 }, 3000);
             }
         };
@@ -1242,16 +1538,6 @@ function FileLoader(props) {
             progress: progress,
             steps: steps
         }))
-    }
-
-    /**
-     * Handles updates to the snackbar
-     * @param snackbar the snackbar values
-     */
-    const handleSnackBar = (snackbar, timeout) => {
-        setTimeout(() => {
-            dispatch(updateSnackBar(snackbar))
-        }, timeout)
     }
 
     /**
@@ -1278,94 +1564,56 @@ function FileLoader(props) {
     }
 
     /**
-     * Loads in the default templates for pp, mod
-     * @param {*} type : the type of xml to load
+     * Creates the default slices
+     * @param xml the input xml
+     * @returns {string}
      */
-    function loadDefaultXML(type) {
-        const XML = type === "pp" ? PPXML : MODXML;
-        return axios.get(XML, {
-            "Content-Type": "application/xml; charset=utf-8"
-        }).then((response) => {
-            // Validate XML
-            const validation = validate_XML(response.data);
-
-            setTimeout(() => {
-                setIsLoading(false)
-            }, 6000);
-
-            return validation
-        })
+    const createDefaultSlices = (xml) => {
+        const ppTemplateVersion = getPpTemplateVersion(xml)
+        fetchTemplateData({
+            version: ppTemplateVersion,
+            base: true
+        }, dispatch).then()
+        return ppTemplateVersion
     }
+    const resetTemplateData = async () => {
+        const ppTemplateVersion = sessionStorage.getItem('ppTemplateVersion');
+        const version = ppTemplateVersion === "Version 3.1" ? "CC2022 Standard" : ppTemplateVersion
 
-    /**
-     * Handles the checkbox changes
-     * @param event the checkbox event
-     */
-    const handleCheckboxChange = (event) => {
-        const { name, checked } = event.target;
+        // Reset the state and load in the template by version
+        await fetchTemplateData({
+            version: version,
+            base: false
+        }, dispatch)
 
-        // Update according to checkbox selection
-        if (name === "pp" || name === "mod") {
-            const fileName = name.toUpperCase();
+        // Update snackbar
+        handleSnackBarSuccess(`Loaded in Default XML Template`)
+    }
+    const handleOpen = () => {
+        const isLoading = sessionStorage.getItem("isLoading")
 
-            // Remove files
-            resetState();
-
-            // Update files
-            setTimeout(() => {
-                const currentPP = name === "pp" ? checked : false;
-                const currentMod = name === "mod" ? checked : false;
-                handleUpdateFiles("", "", currentPP, currentMod);
-            }, 500)
-
-            // Load in the XML
-            if (checked) {
-                try {
-                    loadDefaultXML(name).then((response) => {
-                        if (response === "success") {
-                            // Update snackbar
-                            const timeout = 6000;
-                            handleSnackBar({
-                                open: true,
-                                message: `Loaded in ${fileName} XML`
-                            }, timeout)
-                        } else {
-                            // Update files
-                            setTimeout(() => {
-                                handleUpdateFiles("", "", false, false);
-                            }, 500)
-                        }
-                    })
-                } catch (e) {
-                    // Update snackbar
-                    const timeout = 1000;
-                    handleSnackBar({
-                        open: true,
-                        message: `Unable to load in ${fileName} XML`,
-                        severity: "error"
-                    }, timeout)
-                    console.log(e)
-
-                    // Update files
-                    setTimeout(() => {
-                        handleUpdateFiles("", "", false, false);
-                    }, timeout)
-                }
-            } else {
-                // Update snackbar
-                const timeout = 1000;
-                handleSnackBar({
-                    open: true,
-                    message: `Loaded in Default XML Template`
-                }, timeout)
+        // If the dialog was closed prematurely, reset isLoading in session storage
+        if (isLoading !== null && isLoading === "true") {
+            try {
+                // Set fileMenuClosed to true and clear out session storage
+                sessionStorage.setItem('fileMenuClosed', 'true');
+                clearSessionStorageExcept(["fileMenuClosed"]).then(() => {
+                    // Close Dialog
+                    props.handleOpen()
+                })
+                sessionStorage.clear();
+            } catch (e) {
+                console.log(e)
+                handleSnackBarError(e)
             }
+        } else {
+            props.handleOpen()
         }
-    };
+    }
 
     // Use Dropzones
     const { getRootProps, getInputProps } = useDropzone({
         onDrop,
-        disabled: pp || mod,
         accept: {
             "application/xml": [".xml"],
         },
@@ -1379,7 +1627,7 @@ function FileLoader(props) {
                 content={(
                     <div>
                         <Card className="rounded-lg border-2 border-gray-200">
-                            <CardBody className="border-b-2 rounded-b-sm border-gray-300 text-secondary">
+                            <CardBody className="border-b-0 rounded-b-sm border-gray-300 text-secondary">
                                 <div {...getRootProps()} style={{ display: 'inline-block', padding: 2 }}>
                                     <input {...getInputProps()} />
                                     <Button
@@ -1387,30 +1635,21 @@ function FileLoader(props) {
                                         component="label"
                                         variant="contained"
                                         startIcon={<CloudUploadIcon />}
-                                        style={{ color: "white", marginTop: '0px', marginBottom: '10px', pointerEvents: pp || mod ? 'none' : 'auto' }}
-                                        disabled={isLoading || pp || mod}
+                                        style={{ color: "white", marginTop: '0px', marginBottom: '10px', pointerEvents: 'auto' }}
+                                        disabled={isLoading}
                                     >
                                         {/* {`Upload PP XML`} */}
                                         {filename !== "" ? 'Replace File' : 'Upload PP XML'}
                                     </Button>
                                 </div>
-                                {(!isLoading && filename !== "" && !pp && !mod) &&
+                                {(!isLoading && filename !== "") &&
                                     <div style={{ marginTop: '15px', display: 'flex', justifyContent: 'space-between' }}>
                                         <span style={{ textAlign: 'left', paddingTop: 10, fontSize: "13px" }}>{filename}</span>
                                         <Button
                                             sx={{ fontSize: "12px" }}
                                             variant="outlined"
                                             color="secondary"
-                                            onClick={() => {
-                                                resetState()
-
-                                                // Update snackbar
-                                                const timeout = 1000;
-                                                handleSnackBar({
-                                                    open: true,
-                                                    message: `Loaded in Default XML Template`
-                                                }, timeout)
-                                            }}
+                                            onClick={resetTemplateData}
                                             style={{ marginLeft: '10px', textAlign: 'right' }}
                                             disabled={isLoading}
                                         >
@@ -1420,39 +1659,11 @@ function FileLoader(props) {
                                 }
                                 <ProgressBar isLoading={isLoading} />
                             </CardBody>
-                            <CardFooter>
-                                <div className="py-1">
-                                    <FormControlLabel
-                                        control={
-                                            <Checkbox
-                                                checked={pp}
-                                                onChange={handleCheckboxChange}
-                                                name="pp"
-                                                sx={checkboxStyling}
-                                                disabled={(isLoading || mod) ? true : false}
-                                            />
-                                        }
-                                        label={<span style={{ fontSize: '13px' }}>Use PP Template</span>}
-                                    />
-                                    <FormControlLabel
-                                        control={
-                                            <Checkbox
-                                                checked={mod}
-                                                onChange={handleCheckboxChange}
-                                                name="mod"
-                                                sx={checkboxStyling}
-                                                disabled={(isLoading || pp) ? true : false}
-                                            />
-                                        }
-                                        label={<span style={{ fontSize: '13px' }}>Use Module Template</span>}
-                                    />
-                                </div>
-                            </CardFooter>
                         </Card>
                     </div>
                 )}
                 open={props.open}
-                handleOpen={() => { props.handleOpen() }}
+                handleOpen={handleOpen}
                 hideSubmit={true}
             />
         </div>

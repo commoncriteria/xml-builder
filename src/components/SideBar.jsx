@@ -1,6 +1,8 @@
 // Imports
+import React, { useEffect } from "react";
 import { useDispatch, useSelector } from 'react-redux'
 import { Accordion, AccordionBody, AccordionHeader, Card, List, ListItem, ListItemPrefix, Typography } from "@material-tailwind/react";
+import { Tooltip } from "@mui/material";
 import QueueIcon from '@mui/icons-material/Queue';
 import RestoreIcon from '@mui/icons-material/Restore';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
@@ -13,17 +15,16 @@ import FileDownloadIcon from '@mui/icons-material/FileDownload';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import LayersIcon from '@mui/icons-material/Layers';
 import WebIcon from '@mui/icons-material/Web';
-import { Tooltip } from "@mui/material";
-import React from "react";
 import { collapseAllAccordions, expandAllAccordions } from "../reducers/accordionPaneSlice.js";
+import { COLLAPSE_TERMS_LIST } from "../reducers/termsSlice.js";
+import { COLLAPSE_EDITOR } from "../reducers/editorSlice.js";
+import { setIsPreviewToggled } from "../reducers/navBarSlice.js";
+import { RESET_EXPORT } from "../reducers/exportSlice.js";
+import SecurityComponents from "../utils/securityComponents.jsx";
 import NewAccordion from "./modalComponents/NewAccordion.jsx";
 import ResetDataConfirmation from "./modalComponents/ResetDataConfirmation.jsx";
 import FileLoader from "./modalComponents/FileLoader.jsx";
 import XMLExporter from './modalComponents/XMLExporter.jsx';
-import {COLLAPSE_TERMS_LIST} from "../reducers/termsSlice.js";
-import {COLLAPSE_EDITOR} from "../reducers/editorSlice.js";
-import {setIsPreviewToggled} from "../reducers/navBarSlice.js";
-import {RESET_EXPORT} from "../reducers/exportSlice.js";
 
 /**
  * The Sidebar class that displays the sidebar menu
@@ -32,6 +33,7 @@ import {RESET_EXPORT} from "../reducers/exportSlice.js";
  */
 function SideBar() {
     // Constants
+    const { handleSnackBarSuccess, handleSubmitResetDataMenu } = SecurityComponents
     const [openMenuItems, setOpenMenuItems] = React.useState(0);
     const [openFileLoaderMenu, setOpenFileLoaderMenu] = React.useState(false);
     const [openAccordionMenu, setOpenAccordionMenu] = React.useState(false);
@@ -44,6 +46,18 @@ function SideBar() {
     const editors = useSelector((state) => state.editors)
     const isPreviewToggled = useSelector((state) => state.navBar.isPreviewToggled)
     const dispatch = useDispatch()
+
+    // Use Effects
+    useEffect(() => {
+        // This runs when the file loader menu is closed prematurely
+        if (sessionStorage.getItem('fileMenuClosed') === 'true') {
+            // Update snackbar
+            handleSnackBarSuccess(`Loaded in Default XML Template`)
+
+            // Perform actions after reload
+            sessionStorage.removeItem('fileMenuClosed');
+        }
+    }, []);
 
     // Methods
     const handleOpenMenuItems = (value) => {
@@ -78,25 +92,15 @@ function SideBar() {
     const handleOpenResetDataMenu = () => {
         setOpenResetDataMenu(!openResetDataMenu);
     }
-    const handleSubmitResetDataMenu = () => {
-        // Clear session storage and reset template data to its original state
-        sessionStorage.clear()
-
-        // Reload the page after clearing out local storage
-        location.reload()
-
-        // Close the dialog
-        handleOpenResetDataMenu()
-
-        // Scroll back to the top of the page
-        window.scrollTo(0, 0)
-    }
     const handleExpandAllAccordions = async () => {
         await (dispatch(expandAllAccordions()))
         await collapseSectionsHelper(true)
 
         // Scroll back to the top of the page
         window.scrollTo(0, 0)
+
+        // Update snackbar
+        handleSnackBarSuccess("All Accordions Successfully Expanded")
     }
     const handleCollapseAllAccordions = async () => {
         await (dispatch(collapseAllAccordions()))
@@ -104,6 +108,9 @@ function SideBar() {
 
         // Scroll back to the top of the page
         window.scrollTo(0, 0)
+
+        // Update snackbar
+        handleSnackBarSuccess("All Accordions Successfully Collapsed")
     }
     const collapseSectionsHelper = async (open) => {
         // Collapse all terms
@@ -337,7 +344,7 @@ function SideBar() {
                 text={"Are you sure you want to reset all data to its initial state?"}
                 open={openResetDataMenu}
                 handleOpen={handleOpenResetDataMenu}
-                handleSubmit={handleSubmitResetDataMenu}
+                handleSubmit={() => handleSubmitResetDataMenu(handleOpenResetDataMenu)}
             />
         </div>
     )

@@ -5,10 +5,12 @@ import { COLLAPSE_TERM_ITEM, DELETE_TERM_ITEM, UPDATE_TERM_DEFINITION, UPDATE_TE
 import DeleteForeverRoundedIcon from '@mui/icons-material/DeleteForeverRounded';
 import './components.css';
 import { IconButton, Tooltip } from "@mui/material";
-import TextEditor from "./TextEditor.jsx";
 import RemoveIcon from "@mui/icons-material/Remove";
 import AddIcon from "@mui/icons-material/Add";
-import React from "react";
+import React, { useState } from "react";
+import TipTapEditor from "./TipTapEditor.jsx";
+import SecurityComponents from "../../utils/securityComponents.jsx";
+import DeleteConfirmation from "../modalComponents/DeleteConfirmation.jsx";
 
 /**
  * The Term component
@@ -29,8 +31,11 @@ function Term(props) {
     }
 
     // Constants
+    const { handleSnackBarSuccess } = SecurityComponents
     const dispatch = useDispatch();
     const { secondary, icons } = useSelector((state) => state.styling);
+    const [openDeleteDialog, setDeleteDialog] = useState(false);
+    
 
     // Methods
     const updateTermTitle = (event) => {
@@ -41,6 +46,9 @@ function Term(props) {
     }
     const deleteTerm = () => {
         {dispatch(DELETE_TERM_ITEM({title: props.title, termUUID: props.termUUID, uuid: props.uuid}))}
+
+        // Update snackbar
+        handleSnackBarSuccess("Term Successfully Deleted")
     }
     const collapseHandler = () => {
         {dispatch(COLLAPSE_TERM_ITEM({termUUID: props.termUUID, uuid: props.uuid, title: props.title}))}
@@ -61,8 +69,13 @@ function Term(props) {
                             {
                                 props.open ?
                                     <td className="py-2 px-2 justify-center align-middle w-[55%]">
-                                        <TextEditor className="w-full" uuid={props.uuid} text={props.definition} contentType={"term"}
-                                                    handleTextUpdate={updateTermDefinition}/>
+                                        <TipTapEditor
+                                            className="w-full"
+                                            uuid={props.uuid}
+                                            text={props.definition}
+                                            contentType={"term"}
+                                            handleTextUpdate={updateTermDefinition}
+                                        />
 
                                     </td>
                                     :
@@ -70,7 +83,7 @@ function Term(props) {
                             }
                         <td className="pr-6 px-0 text-end align-middle w-[15%]">
                             <div className="mb-2">
-                                <IconButton onClick={deleteTerm} variant="contained">
+                                <IconButton onClick={() => setDeleteDialog(!openDeleteDialog)} variant="contained">
                                     <Tooltip title={"Delete Term"} id={props.uuid + "deleteTermTooltip"}>
                                         <DeleteForeverRoundedIcon htmlColor={ secondary } sx={ icons.large }/>
                                     </Tooltip>
@@ -91,6 +104,12 @@ function Term(props) {
                     </tr>
                 </tbody>
             </table>
+            <DeleteConfirmation
+                title={props.title}
+                open={openDeleteDialog}
+                handleOpen={() => setDeleteDialog(!openDeleteDialog)}
+                handleSubmit={deleteTerm}
+            />
         </div>
     )
 }

@@ -6,6 +6,7 @@ import {DELETE_ACCORDION_FORM_ITEM, GET_ACCORDION_SAR_FORM_ITEMS,} from "../../r
 import {useDispatch} from "react-redux";
 import {DELETE_EDITOR} from "../../reducers/editorSlice.js";
 import {DELETE_SAR} from "../../reducers/sarsSlice.js";
+import SecurityComponents from "../../utils/securityComponents.jsx";
 
 /**
  * The DeleteSarSectionConfirmation class that sends a pop-up confirmation for deleting the sfr sections
@@ -23,6 +24,7 @@ function DeleteSarSectionConfirmation(props) {
     };
 
     // Constants
+    const { handleSnackBarSuccess } = SecurityComponents
     const dispatch = useDispatch();
 
     // Methods
@@ -39,6 +41,9 @@ function DeleteSarSectionConfirmation(props) {
 
         // Close the dialog
         props.handleOpen()
+
+        // Update snackbar
+        handleSnackBarSuccess("SAR Section Successfully Removed")
     }
 
     // Return Method

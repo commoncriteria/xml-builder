@@ -2,12 +2,13 @@
 import PropTypes from "prop-types";
 import { useSelector } from 'react-redux';
 import React from "react";
-import TextEditor from "../editorComponents/TextEditor.jsx";
 import Terms from "../editorComponents/Terms.jsx";
 import SecurityContent from "../editorComponents/securityComponents/SecurityContent.jsx";
 import AcronymTable from "../appendicesComponents/AcronymTable.jsx";
-
-
+import TipTapEditor from "../editorComponents/TipTapEditor.jsx";
+import ConformanceClaims from "../editorComponents/ConformanceClaims.jsx";
+import CompliantTargetsOfEvaluation from "../editorComponents/CompliantTargetsOfEvaluation.jsx";
+import SecurityComponents from "../../utils/securityComponents.jsx";
 
 /**
  * The AccordionItem component
@@ -34,6 +35,7 @@ function AccordionItem(props) {
     const sfrs = useSelector((state) => state.sfrs.sections);
     const sars = useSelector((state) => state.sars.sections);
     const sfrSections = useSelector((state) => state.sfrSections);
+    const { getSfrMaps } = SecurityComponents
 
     // Methods
     const showAccordionItem = () => {
@@ -69,12 +71,37 @@ function AccordionItem(props) {
             case "appendixI": {
                 return (<AcronymTable/>)
             }
+            case "compliantTargetsOfEvaluation": {
+                return (
+                   <CompliantTargetsOfEvaluation
+                       section={section}
+                       accordionUUID={accordionUUID}
+                       uuid={uuid}
+                       sfrMaps={getSfrMaps(sfrSections)}
+                   />
+                )
+            }
+            case "conformanceClaims": {
+                return (
+                    <ConformanceClaims/>
+                )
+            }
             case "editor": {
                 let editor = editors[uuid]
                 let tooltip = getTitleToolTip(editor.title)
-                return (<TextEditor title={editor.title} section={section} uuid={uuid} text={editor.text}
-                                    accordionUUID={accordionUUID} contentType={"editor"} open={editor.open}
-                                    titleTooltip={tooltip}/>)
+
+                return (
+                    <TipTapEditor
+                        title={editor.title}
+                        section={section}
+                        uuid={uuid}
+                        text={editor.text}
+                        accordionUUID={accordionUUID}
+                        contentType={"editor"}
+                        open={editor.open}
+                        titleTooltip={tooltip}
+                    />
+                )
             }
             case "terms": {
                 let termList = terms[uuid]

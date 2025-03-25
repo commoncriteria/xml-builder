@@ -2283,7 +2283,7 @@
                                     },
                                     {
                                         "@id": "agd",
-                                        "@title": "Class AGD: Guidance Documentation",
+                                        "@title": "Class AGD: Guidance Documents",
                                         "#": "The guidance documents will be\n        provided with the ST. Guidance must include a description of how the IT\n        personnel verifies that the Operational Environment can fulfill its role for the security\n        functionality. The documentation should be in an informal style and readable by the IT\n        personnel. Guidance must be provided for every operational environment that the product\n        supports as claimed in the ST. This guidance includes instructions to\n        successfully install the TSF in that environment; and Instructions to\n        manage the security of the TSF as a product and as a component of the\n        larger operational environment. Guidance pertaining to particular security functionality is\n        also provided; requirements on such guidance are contained in the assurance activities\n        specified with each requirement. \n\t",
                                         "a-component": [
                                             {

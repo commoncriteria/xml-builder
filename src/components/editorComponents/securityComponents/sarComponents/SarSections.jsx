@@ -9,6 +9,7 @@ import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
 import DeleteForeverRoundedIcon from "@mui/icons-material/DeleteForeverRounded";
 import SarWorksheet from "./SarWorksheet.jsx";
 import '../../components.css';
+import SecurityComponents from "../../../../utils/securityComponents.jsx";
 
 /**
  * The SarSections component
@@ -29,6 +30,7 @@ function SarSections(props) {
     }
 
     // Constants
+    const { handleSnackBarSuccess } = SecurityComponents
     const dispatch = useDispatch();
     const { primary, icons } = useSelector((state) => state.styling);
     const [openSarWorksheet, setOpenSarWorksheet] = useState(false)
@@ -43,6 +45,9 @@ function SarSections(props) {
     // Methods
     const deleteComponent = async () => {
         dispatch(DELETE_SAR_COMPONENT({sarUUID: props.sarUUID, componentUUID: props.componentUUID}))
+
+        // Update snackbar
+        handleSnackBarSuccess("SAR Component Successfully Deleted")
     }
     const handleOpenSarWorksheet = () => {
         if (props.newSarComponent && props.newSarComponent !== "" && props.newSarComponent === props.componentUUID) {

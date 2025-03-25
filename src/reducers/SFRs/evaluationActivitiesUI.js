@@ -1,4 +1,5 @@
 import { createSlice } from '@reduxjs/toolkit'
+import { deepCopy } from '../../utils/deepCopy'
 
 const initialState = {
     selectedEvaluationActivity: [],
@@ -30,7 +31,7 @@ export const evaluationActivitiesUI = createSlice({
 
             // Create dependency map
             if (sfrSections.hasOwnProperty(sfrUUID) && sfrSections[sfrUUID].hasOwnProperty(componentUUID) && sfrSections[sfrUUID][componentUUID].hasOwnProperty("elements")) {
-                let elements = JSON.parse(JSON.stringify(sfrSections[sfrUUID][componentUUID].elements))
+                let elements = deepCopy(sfrSections[sfrUUID][componentUUID].elements)
                 if (elements && Object.entries(elements).length > 0) {
                     Object.entries(elements).forEach(([uuid, element]) => {
                         if (elementMaps.elementUUIDMap.hasOwnProperty(uuid)) {
@@ -39,7 +40,7 @@ export const evaluationActivitiesUI = createSlice({
                             // Get selectables
                             let selectableArray = []
                             if (element.hasOwnProperty("selectables")) {
-                                let selectables = JSON.parse(JSON.stringify(element.selectables))
+                                let selectables = deepCopy(element.selectables)
                                 if (selectables && Object.entries(selectables).length > 0) {
                                     Object.entries(selectables).forEach(([selectableUUID, selectable]) => {
                                         let isAssignment = selectable.assignment ? true : false
@@ -60,7 +61,7 @@ export const evaluationActivitiesUI = createSlice({
                             // Get complex selectables
                             let complexSelectableArray = []
                             if (element.hasOwnProperty("selectableGroups")) {
-                                let selectableGroups = JSON.parse(JSON.stringify(element.selectableGroups))
+                                let selectableGroups = deepCopy(element.selectableGroups)
                                 if (selectableGroups && Object.entries(selectableGroups).length > 0) {
                                     Object.entries(selectableGroups).forEach(([selectableGroupID, value]) => {
                                         let isComplexSelectable = value.hasOwnProperty("description") ? true : false

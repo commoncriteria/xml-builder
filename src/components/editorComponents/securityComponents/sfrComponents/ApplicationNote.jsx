@@ -5,8 +5,9 @@ import { useSelector } from "react-redux";
 import { IconButton, Tooltip } from "@mui/material";
 import DeleteForeverRoundedIcon from "@mui/icons-material/DeleteForeverRounded";
 import AddCircleRoundedIcon from "@mui/icons-material/AddCircleRounded";
-import TextEditor from "../../TextEditor.jsx";
 import CardTemplate from "../CardTemplate.jsx";
+import TipTapEditor from "../../TipTapEditor.jsx";
+import MultiSelectDropdown from "../MultiSelectDropdown.jsx";
 
 /**
  * The Application Note component
@@ -19,6 +20,7 @@ function ApplicationNote(props) {
         isManagementFunction: PropTypes.bool.isRequired,
         updateApplicationNote: PropTypes.func.isRequired,
         deleteApplicationNote: PropTypes.func,
+        updateRefIds: PropTypes.func,
         addApplicationNote: PropTypes.func,
         getElementValuesByType: PropTypes.func,
         getCurrentManagementFunction: PropTypes.func,
@@ -31,27 +33,40 @@ function ApplicationNote(props) {
         secondary: props.isManagementFunction ? primary : secondary,
     }
 
+    // Helper Methods
+    const updateRefIds = (title, event, index) => {
+        const type = "note"
+        props.updateRefIds({ event, index, type })
+    }
+
     // Components
     const getManagementFunctionNotes = () => {
-        let notes = props.getCurrentManagementFunction("note")
+        let { note: notes, refIdOptions } = props.getCurrentManagementFunction()
+
         return (
-            <div className="pt-1" key={`managementFunctionNotes`}>
-                {notes.map((note, index) => {
+            <div key={`managementFunctionNotes`}>
+                {notes.map((currentNote, index) => {
+                    let { note, refIds } = currentNote
+
                     return (
-                        <div className="w-full pb-3 px-1" key={`note-${index + 1}`}>
-                            <table className="border-0 m-0 pb-2">
+                        <div className="w-full p-2 px-4 mb-4 rounded-md border-2 border-gray-300"
+                             key={`note-${index + 1}`}>
+                            <table className="border-0">
                                 <tbody>
                                     <tr>
-                                        <td className="p-0 text-center align-center w-full">
-                                            {getTextEditor(note, index)}
+                                        <td className="p-0 pb-4 text-center align-center w-full">
+                                            {getDropdown(refIds, refIdOptions, index)}
                                         </td>
                                         <td className="p-0 text-center align-middle">
                                             <IconButton
-                                                sx={{marginLeft: 2}}
-                                                onClick={() => {props.deleteApplicationNote(index)}}
+                                                sx={{marginLeft: 1, marginBottom: 2}}
+                                                onClick={() => {
+                                                    props.deleteApplicationNote(index)
+                                                }}
                                                 variant="contained"
                                             >
-                                                <Tooltip title={"Delete Application Note"} id={"deleteApplicationNoteTooltip" + index}>
+                                                <Tooltip title={"Delete Application Note"}
+                                                         id={"deleteApplicationNoteTooltip" + index}>
                                                     <DeleteForeverRoundedIcon htmlColor={secondary} sx={icons.large}/>
                                                 </Tooltip>
                                             </IconButton>
@@ -59,13 +74,32 @@ function ApplicationNote(props) {
                                     </tr>
                                 </tbody>
                             </table>
+                            <div className="p-0 w-full bg-white">
+                                <Tooltip
+                                    title={
+                                        <div>
+                                            {`Add in "<_/>" to indicate the placeholder for the referenced management function.`}
+                                            <br/>
+                                            <br/>
+                                            {`For Example: Functions <_/> must be implemented on a device-wide basis but may also
+                                             be implemented on a per-app basis or on a per-group of applications basis in which
+                                             the configuration includes the list of applications or groups of applications to
+                                             which the enable/disable applies.`}
+                                        </div>
+                                    }
+                                >
+                                    {getTextEditor(note, index)}
+                                </Tooltip>
+                            </div>
                         </div>
                     )
                 })}
                 <div className="border-t-2 mx-[-16px] mt-1">
                     <IconButton
                         sx={{marginTop: 1}}
-                        onClick={() => {props.addApplicationNote()}}
+                        onClick={() => {
+                            props.addApplicationNote()
+                        }}
                         key={"AddNoteButton"}
                         variant="contained"
                     >
@@ -77,15 +111,29 @@ function ApplicationNote(props) {
             </div>
         )
     }
+    const getDropdown = (refIds, refIdOptions, index) => {
+        return (
+            <MultiSelectDropdown
+                title={"Included Management Function's"}
+                index={index}
+                selections={refIds}
+                selectionOptions={refIdOptions}
+                handleSelections={updateRefIds}
+            />
+        )
+    }
     const getTextEditor = (note, index) => {
         return (
-            <TextEditor
-                className="w-full"
-                contentType={"term"}
-                handleTextUpdate={props.updateApplicationNote}
-                text={note}
-                index={index}
-            />
+            <div className="p-0 w-full bg-white">
+                <TipTapEditor
+                    title={"note"}
+                    className="w-full"
+                    contentType={"term"}
+                    handleTextUpdate={props.updateApplicationNote}
+                    text={note}
+                    index={index}
+                />
+            </div>
         )
     }
 

@@ -1,27 +1,11 @@
 // Imports
-import Hamburger from 'hamburger-react'
+import React, { useEffect, useState } from "react";
 import { useSelector, useDispatch } from 'react-redux'
+import Hamburger from 'hamburger-react'
 import { setIsNavBarOpen, setIsPreviewToggled } from '../reducers/navBarSlice.js'
-import {alpha, Stack, styled, Switch, Tooltip, Typography} from "@mui/material";
-import {RESET_EXPORT} from "../reducers/exportSlice.js";
-
-// Styling
-const AccentSwitch = styled(Switch)(({ theme }) => {
-    return ({
-        '& .MuiSwitch-switchBase.Mui-checked': {
-            color: "#D926A9",
-            '&:hover': {
-                backgroundColor: alpha("#D926A9", theme.palette.action.hoverOpacity),
-            },
-        },
-        '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-            backgroundColor: "#D926A9",
-        },
-        '& .MuiSwitch-track': {
-            backgroundColor: "white",
-        }
-    });
-});
+import { RESET_EXPORT } from "../reducers/exportSlice.js";
+import ToggleSwitch from "./ToggleSwitch.jsx";
+import { alpha } from "@mui/material";
 
 /**
  * The NavBar class that displays the navigation bar and search capability
@@ -33,30 +17,80 @@ function NavBar() {
     const isNavOpen = useSelector((state) => state.navBar.isNavOpen)
     const isPreviewToggled = useSelector((state) => state.navBar.isPreviewToggled)
     const dispatch = useDispatch()
+    const { primary } = useSelector((state) => state.styling);
+    const { ppTemplateVersion, ppType } = useSelector((state) => state.accordionPane.metadata);
+    const [shortenedPP, setShortenedPP] = useState("PP");
+    const styling = {
+        largeToggleTypography:  {
+            color: "white",
+        },
+        secondaryToggleSwitch: {
+            '& .MuiSwitch-switchBase.Mui-checked': {
+                color: primary,
+                '&:hover': {
+                    backgroundColor: alpha(primary, 0.04),
+                },
+            },
+            '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                backgroundColor: primary,
+            },
+            '& .MuiSwitch-track': {
+                backgroundColor: "white",
+            }
+        }
+    }
+
+    // Use Effects
+    useEffect(() => {
+        getShortenedPPType(ppType)
+    }, [ppType]);
+
+    // Methods
+    const handlePreviewToggle = async () => {
+        await dispatch(RESET_EXPORT())
+        await dispatch(setIsPreviewToggled())
+    }
+    const getShortenedPPType = (ppType) => {
+        switch (ppType) {
+            case "Functional Package":
+                setShortenedPP("FP")
+                break;
+            case "Protection Profile":
+                setShortenedPP("PP")
+                break;
+            case "Module":
+                setShortenedPP("Mod")
+                break;
+            default:
+                setShortenedPP("")
+                break;
+        }
+    }
 
     // Return Function
     return (
         <nav className="navbar flex text-neutral-content min-w-full bg-base-300 border-2 border-t-3 border-l-3 rounded-lg border-gray-500 mt-1">
             <Hamburger toggled={isNavOpen} onToggle={() => {dispatch(setIsNavBarOpen())}}/>
-            <div className="navbar-start font-title flex font-bold lg:text-4xl md:text-3xl sm:text-2xl xs:text-2xl text-teal-400 pl-5 lg:py-2">XML Builder</div>
+            <div className="navbar-start font-title flex font-bold lg:text-3xl md:text-2xl sm:text-xl xs:text-xl text-teal-400 pl-5 lg:py-2">
+                XML Builder&nbsp;
+                <div className="text-teal-600">
+                    {`(${ppTemplateVersion} ${shortenedPP})`}
+                </div>
+            </div>
             <div className="navbar-end mr-4">
-                <Stack direction="row" component="label" alignItems="center" justifyContent="center" variant="contained">
-                    <Typography style={{color:"white"}}>Preview</Typography>
-                    <Tooltip arrow placement="bottom" id={"previewToggleButton"}
-                        title={
-                            !isPreviewToggled ?
-                                <h1 style={{fontSize: "14px"}}>Enabling this feature may reduce tool performance during updates</h1>
+                <ToggleSwitch
+                    title={"Preview"}
+                    isToggled={isPreviewToggled}
+                    isSfrWorksheetToggle={false}
+                    handleUpdateToggle={handlePreviewToggle}
+                    styling={styling}
+                    tooltip={
+                        !isPreviewToggled ?
+                            <h1 style={{fontSize: "14px"}}>Enabling this feature may reduce tool performance during updates</h1>
                             : ""
-                        }
-                    >
-                        <AccentSwitch
-                            checked={isPreviewToggled} inputProps={{ 'aria-label': 'controlled' }} size="medium"
-                            onChange={async () => {
-                                await dispatch(RESET_EXPORT())
-                                await dispatch(setIsPreviewToggled())
-                            }} />
-                    </Tooltip>
-                </Stack>
+                    }
+                    tooltipId={"previewToggleButton"}
+                />
             </div>
         </nav>
     )

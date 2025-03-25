@@ -3,15 +3,17 @@ import PropTypes from "prop-types";
 import Delta from "quill-delta";
 import React, {useEffect, useMemo, useState} from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { FormControl, IconButton, InputLabel, MenuItem, Select, Stack, Switch, TextField, Tooltip, Typography } from "@mui/material";
+import { FormControl, IconButton, InputLabel, MenuItem, Select, TextField, Tooltip } from "@mui/material";
 import { GET_SFR_ELEMENT_VALUES_FOR_TITLE } from "../../../../../reducers/SFRs/sfrSectionSlice.js";
 import { GET_REQUIREMENTS_TITLE_PREVIEW } from "../../../../../reducers/SFRs/sfrPreview.js";
 import { removeTagEqualities } from "../../../../../utils/fileParser.js";
-import SecurityComponents from "../../../../../utils/securityComponents.js";
-import AddCircleIcon from "@mui/icons-material/AddCircle.js";
-import DeleteForeverRoundedIcon from "@mui/icons-material/DeleteForeverRounded.js";
+import SecurityComponents from "../../../../../utils/securityComponents.jsx";
+import AddCircleIcon from "@mui/icons-material/AddCircle"
+import DeleteForeverRoundedIcon from "@mui/icons-material/DeleteForeverRounded";
 import CardTemplate from "../../CardTemplate.jsx";
-import TextEditor from "../../../TextEditor.jsx";
+import ToggleSwitch from "../../../../ToggleSwitch.jsx";
+import TipTapEditor from "../../../TipTapEditor.jsx";
+import { deepCopy } from "../../../../../utils/deepCopy.js";
 
 /**
  * The SfrRequirementCard class that displays the requirement card
@@ -27,12 +29,10 @@ function SfrRequirementCard(props) {
         elementUUID: PropTypes.string.isRequired,
         elementTitle: PropTypes.string.isRequired,
         requirementType: PropTypes.string.isRequired,
-        allSfrOptions: PropTypes.object.isRequired,
         styling: PropTypes.object.isRequired,
         cryptoColumnName: PropTypes.string,
         rowIndex: PropTypes.number,
         getSelectablesMaps: PropTypes.func.isRequired,
-        getElementMaps: PropTypes.func.isRequired,
         getElementValuesByType: PropTypes.func.isRequired,
         updateSfrSectionElement: PropTypes.func,
         updateManagementFunctions: PropTypes.func,
@@ -43,6 +43,7 @@ function SfrRequirementCard(props) {
     }
 
     // Constants
+    const { handleCryptoUpdate, handleSnackBarError, handleSnackBarSuccess, handleSnackbarTextUpdates } = SecurityComponents
     const dispatch = useDispatch();
     const { icons } = useSelector((state) => state.styling);
     const { row, selectedColumn } = useSelector((state) => state.tabularize);
@@ -133,6 +134,9 @@ function SfrRequirementCard(props) {
                 // Update requirement change and type
                 handleSetSelectedRequirementType("")
                 setRequirementsChange(true)
+
+                // Update snackbar
+                handleSnackBarSuccess(`${selectedRequirementType} Item Successfully Added`)
             }
         }
     }
@@ -142,11 +146,11 @@ function SfrRequirementCard(props) {
         // Update value
         let value;
         if (requirementType === "title" && component.elements[uuid].title) {
-            value = JSON.parse(JSON.stringify(component.elements[uuid].title))
+            value = deepCopy(component.elements[uuid].title)
         } else if (requirementType === "managementFunctions") {
-            value = JSON.parse(JSON.stringify(props.getCurrentManagementFunction("textArray")))
+            value = deepCopy(props.getCurrentManagementFunction("textArray"))
         } else if (requirementType === "crypto") {
-            value = JSON.parse(JSON.stringify(row[cryptoColumnName]))
+            value = deepCopy(row[cryptoColumnName])
         } else {
             value = [];
         }
@@ -182,6 +186,9 @@ function SfrRequirementCard(props) {
         // Update requirement change and type
         handleSetSelectedRequirementType("")
         setRequirementsChange(true)
+
+        // Update snackbar
+        handleSnackBarSuccess("Item Successfully Removed")
     }
     const handleAssignmentSelection = (event, elementUUID, index) => {
         const name = event.target.value
@@ -241,7 +248,8 @@ function SfrRequirementCard(props) {
     const handleTitleUpdate = (updateMap) => {
         const { updateType, value, index } = updateMap
         const { component, elementUUID, componentUUID } = props
-        let title = JSON.parse(JSON.stringify(component.elements[elementUUID].title));
+        const originalTitle = deepCopy(component.elements[elementUUID].title);
+        let title = deepCopy(component.elements[elementUUID].title);
 
         // Set item map by type
         switch (updateType) {
@@ -264,11 +272,14 @@ function SfrRequirementCard(props) {
             default: break;
         }
 
-        // Update title
-        let itemMap = {
-            title: title
+        // Update the title if it has not changed
+        if (JSON.stringify(originalTitle) !== JSON.stringify(title)) {
+            // Update title
+            const itemMap = {
+                title: title
+            }
+            props.updateSfrSectionElement(elementUUID, componentUUID, itemMap)
         }
-        props.updateSfrSectionElement(elementUUID, componentUUID, itemMap)
     }
     const handleManagementFunctionUpdate = (updateMap) => {
         const { rowIndex } = props
@@ -298,6 +309,14 @@ function SfrRequirementCard(props) {
 
         // Update management function
         props.updateManagementFunctions(managementFunctions)
+
+        // Update snackbar
+        if (updateType === "add" || updateType === "delete") {
+            const message = updateType === "add" ?
+                "Management Function Item Successfully Added" :
+                "Management Function Item Successfully Removed"
+            handleSnackBarSuccess(message)
+        }
     }
 
     // Helper Methods
@@ -310,15 +329,14 @@ function SfrRequirementCard(props) {
         } else if (requirementType === "managementFunctions") {
             handleManagementFunctionUpdate(updateMap)
         } else if (requirementType === "crypto") {
-            SecurityComponents.handleCryptoUpdate(updateMap)
+            handleCryptoUpdate(updateMap)
         }
     }
 
     // Components
     const getRequirementBody = () => {
         try {
-            const { requirementType, elementTitle, cryptoColumnName } = props
-            const elementUUID = props.allSfrOptions.nameMap.elements[elementTitle]
+            const { requirementType, elementUUID, cryptoColumnName } = props
             let section = []
 
             // Get section
@@ -327,7 +345,7 @@ function SfrRequirementCard(props) {
             } else if (requirementType === "managementFunctions") {
                 section = props.getCurrentManagementFunction("textArray")
             } else if (requirementType === "crypto") {
-                section = JSON.parse(JSON.stringify(row[cryptoColumnName]))
+                section = deepCopy(row[cryptoColumnName])
             }
 
             // Get requirements body
@@ -351,6 +369,7 @@ function SfrRequirementCard(props) {
             }
         } catch (e) {
             console.log(e)
+            handleSnackBarError(e)
         }
     }
     const getRequirementModalSection = (item, index, elementUUID, parent) => {
@@ -398,7 +417,7 @@ function SfrRequirementCard(props) {
                     let delta = typeof value === "string" ? value : new Delta(value)
                     return (
                         <div className="w-full mb-[-4px]" key={`element-title-section-${uuid}-${index}-${type}`} >
-                            <TextEditor
+                            <TipTapEditor
                                 text={delta}
                                 contentType={"requirement"}
                                 elementData={{ uuid: uuid, index: index }}
@@ -409,7 +428,7 @@ function SfrRequirementCard(props) {
                 }
                 case "selections": {
                     let selectable = currentSection[index].selections ? currentSection[index].selections : ""
-                    let selectables = JSON.parse(JSON.stringify(props.getSelectablesMaps())).dropdownOptions
+                    let selectables = deepCopy(props.getSelectablesMaps()).dropdownOptions
                     let selectionOptions = [...new Set([...selectables.groups, ...selectables.complexSelectables])]
                     return (
                         <div style={style} key={`element-title-section-${uuid}-${index}-${type}`}>
@@ -443,7 +462,7 @@ function SfrRequirementCard(props) {
                                     defaultValue={value}
                                     onBlur={(event) => {
                                         let update = { text: event.target.value }
-                                        handleUpdateFields(update, uuid, index, "update")
+                                        handleSnackbarTextUpdates(handleUpdateFields, update, uuid, index, "update")
                                     }}
                                 />
                             </FormControl>
@@ -451,7 +470,7 @@ function SfrRequirementCard(props) {
                     )
                 }
                 case "assignment": {
-                    let assignmentOptions = JSON.parse(JSON.stringify(props.getSelectablesMaps().dropdownOptions.assignments))
+                    let assignmentOptions = deepCopy(props.getSelectablesMaps().dropdownOptions.assignments)
                     let assignmentValue = props.getSelectablesMaps().uuidMap.assignments[value]
                     return (
                         <div style={style} key={`element-title-section-${uuid}-${index}-${type}`}>
@@ -554,6 +573,7 @@ function SfrRequirementCard(props) {
                 }
             } catch (e) {
                 console.log(e)
+                handleSnackBarError(e)
             }
 
             // Regular expression to escape specific tags (we want them to be represented as xml tags, which otherwise
@@ -567,7 +587,7 @@ function SfrRequirementCard(props) {
             const currentManagementFunction = props.getCurrentManagementFunction("textArray")
             return props.showManagementFunctionPreview(previewToggle, currentManagementFunction, rowIndex)
         } else if (requirementType === "crypto") {
-            const textArray = row[cryptoColumnName] ? JSON.parse(JSON.stringify(row[cryptoColumnName])) : []
+            const textArray = row[cryptoColumnName] ? deepCopy(row[cryptoColumnName]) : []
             return props.showTabularizeTablePreview(previewToggle, textArray, rowIndex)
         }
     }
@@ -591,7 +611,7 @@ function SfrRequirementCard(props) {
             if (!previewToggle || requirementsChange) {
                 return getRequirementBody()
             }
-        }, [previewToggle, requirementsChange, props.component, selectedColumn, isTitleAndFcs]
+        }, [previewToggle, requirementsChange, props.component, selectedColumn, isTitleAndFcs, props.elementTitle]
     )
 
     // Return Method
@@ -618,40 +638,25 @@ function SfrRequirementCard(props) {
                                     </label>
                                 </Tooltip>
                             </div>
-                            <div className="flex justify-end w-[0px] pr-2">
-                                <Stack
-                                    direction="row"
-                                    component="label"
-                                    alignItems="center"
-                                    justifyContent="center"
-                                >
-                                    <Typography
-                                        noWrap
-                                        style={styling.largeToggleTypography}
-                                    >
-                                        Preview
-                                    </Typography>
-                                    <Tooltip arrow placement={"top"} id={"requirementsPreviewToggleTooltip"}
-                                             title={
-                                                 <div>
-                                                     <h1>
-                                                         {`Toggling this allows a user to see what the fully constructed 
-                                                         ${description} text will look like when exported. Use this to see what the 
-                                                         selection below will look like.`}
-                                                     </h1>
-                                                     <br/>
-                                                     <h1>* Note: Results may vary</h1>
-                                                 </div>
-                                             }
-                                    >
-                                        <Switch
-                                            sx={previewToggle ? styling.secondaryToggleSwitch : {}}
-                                            checked={previewToggle}
-                                            onChange={handlePreviewToggle}
-                                        />
-                                    </Tooltip>
-                                </Stack>
-                            </div>
+                            <ToggleSwitch
+                                title={"Preview"}
+                                isToggled={previewToggle}
+                                isSfrWorksheetToggle={false}
+                                handleUpdateToggle={handlePreviewToggle}
+                                styling={styling}
+                                tooltip={
+                                    <div>
+                                        <h1>
+                                            {`Toggling this allows a user to see what the fully constructed 
+                                             ${description} text will look like when exported. Use this to see what the 
+                                             selection below will look like.`}
+                                        </h1>
+                                        <br/>
+                                        <h1>* Note: Results may vary</h1>
+                                    </div>
+                                }
+                                tooltipId={"requirementsPreviewToggleTooltip"}
+                            />
                         </span>
                     </div>
                 }

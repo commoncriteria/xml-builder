@@ -7,7 +7,9 @@ import { GET_DEPENDENCY_MAP, UPDATE_EVALUATION_ACTIVITY_UI_ITEMS } from "../../.
 import AddCircleRoundedIcon from "@mui/icons-material/AddCircleRounded.js";
 import CardTemplate from "../../CardTemplate.jsx";
 import SfrTestList from "./SfrTestList.jsx";
-import TextEditor from "../../../TextEditor.jsx";
+import TipTapEditor from "../../../TipTapEditor.jsx";
+import { deepCopy } from "../../../../../utils/deepCopy.js";
+import SecurityComponents from "../../../../../utils/securityComponents.jsx";
 
 /**
  * The SfrTestListSection class that displays the evaluation activity test list section
@@ -23,7 +25,7 @@ function SfrTestListSection(props) {
         componentUUID: PropTypes.string.isRequired,
         uuid: PropTypes.string.isRequired,
         testIntroduction: PropTypes.string.isRequired,
-        testClosing: PropTypes.string.isRequired,
+        testClosing: PropTypes.string,
         testList: PropTypes.array.isRequired,
         elementMaps: PropTypes.object.isRequired,
         rowIndex: PropTypes.number,
@@ -36,6 +38,7 @@ function SfrTestListSection(props) {
     };
 
     // Constants
+    const { handleSnackBarError } = SecurityComponents
     const dispatch = useDispatch();
     const { secondary, icons } = useSelector((state) => state.styling);
     const sfrSections = useSelector((state) => state.sfrSections);
@@ -68,7 +71,7 @@ function SfrTestListSection(props) {
                 sfrUUID: props.sfrUUID,
                 componentUUID: props.componentUUID,
                 elementMaps: props.elementMaps,
-                sfrSections: JSON.parse(JSON.stringify(sfrSections))}
+                sfrSections: deepCopy(sfrSections)}
             )).payload.dependencies
     }
     const getDependencyDropdown = (selected) => {
@@ -82,7 +85,7 @@ function SfrTestListSection(props) {
             const isValid = selected && selected.length > 0;
             const isManagementFunctionValid = props.isManagementFunction && isValid;
             if ((isManagementFunctionValid || isValid) && evaluationActivities?.hasOwnProperty("dependencyMap")) {
-                let dependencyMap = JSON.parse(JSON.stringify(evaluationActivities.dependencyMap))
+                let dependencyMap = deepCopy(evaluationActivities.dependencyMap)
 
                 // Add Platforms
                 let platformMenu = platforms.map(platform => platform.name)
@@ -98,7 +101,7 @@ function SfrTestListSection(props) {
                 // Add selectable and complex selectable options to dropdowns
                 // Check to see if the selected evaluation activity is a component
                 const isComponent = props.elementMaps.componentName === selected[0] && dependencyMap.hasOwnProperty("selectablesToUUID")
-                let dependencies = JSON.parse(JSON.stringify(dependencyMap))
+                let dependencies = deepCopy(dependencyMap)
                 let selectables = dependencyMap.elementsToSelectables
                 let complexSelectables = dependencyMap.elementsToComplexSelectables
 
@@ -113,18 +116,19 @@ function SfrTestListSection(props) {
                     // Add selectables
                     if (selectedIsValid && selectables.hasOwnProperty(selected[0])) {
                         let selectableItem = selectables[selected[0]]
-                        dropdown.Selectables = JSON.parse(JSON.stringify(selectableItem.sort()))
+                        dropdown.Selectables = deepCopy(selectableItem.sort())
                     }
 
                     // Add complex selectables
                     if (selectedIsValid && complexSelectables.hasOwnProperty(selected[0])) {
                         let complexSelectableItem = complexSelectables[selected[0]]
-                        dropdown.ComplexSelectablesEA = JSON.parse(JSON.stringify(complexSelectableItem.sort()))
+                        dropdown.ComplexSelectablesEA = deepCopy(complexSelectableItem.sort())
                     }
                 }
             }
         } catch (e) {
             console.log(e)
+            handleSnackBarError(e)
         }
         return dropdown
     }
@@ -154,7 +158,7 @@ function SfrTestListSection(props) {
                         <div className="w-full m-0 p-0">
                             <div className="min-w-full mb-3 p-0 m-0">
                                 <div className="mb-4">
-                                    <TextEditor
+                                    <TipTapEditor
                                         className="w-full"
                                         contentType={"term"}
                                         title={"testIntroduction"}
@@ -177,7 +181,7 @@ function SfrTestListSection(props) {
                                                     uuid={uuid}
                                                     testListIndex={index}
                                                     testListDescription={list.description ? list.description : ""}
-                                                    tests={list.tests ? JSON.parse(JSON.stringify(list.tests)) : []}
+                                                    tests={list.tests ? deepCopy(list.tests) : []}
                                                     dependencyDropdown={dependencyDropdown}
                                                     isManagementFunction={props.isManagementFunction}
                                                     rowIndex={props.rowIndex}
@@ -193,7 +197,7 @@ function SfrTestListSection(props) {
                                 }
                                 { isManagementFunction && 
                                     <div className="mb-4">
-                                        <TextEditor
+                                        <TipTapEditor
                                             className="w-full"
                                             contentType={"term"}
                                             title={"testClosing"}

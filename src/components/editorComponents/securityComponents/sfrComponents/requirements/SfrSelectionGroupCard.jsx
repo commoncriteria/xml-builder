@@ -7,6 +7,8 @@ import { UPDATE_SFR_SECTION_ELEMENT } from "../../../../../reducers/SFRs/sfrSect
 import DeleteForeverRoundedIcon from "@mui/icons-material/DeleteForeverRounded";
 import MultiSelectDropdown from "../../MultiSelectDropdown.jsx";
 import CardTemplate from "../../CardTemplate.jsx";
+import SecurityComponents from "../../../../../utils/securityComponents.jsx";
+import { deepCopy } from "../../../../../utils/deepCopy.js";
 
 /**
  * The SfrSelectionGroupCard class that displays the selection group card for teh sfr selection group
@@ -26,6 +28,7 @@ function SfrSelectionGroupCard(props) {
     };
 
     // Constants
+    const { handleSnackBarSuccess } = SecurityComponents
     const { icons } = useSelector((state) => state.styling);
     const dispatch = useDispatch();
     const [selectableOptions, setSelectableOptions] = useState({})
@@ -34,7 +37,7 @@ function SfrSelectionGroupCard(props) {
 
     // Use Effects
     useEffect(() => {
-        let newOptions = JSON.parse(JSON.stringify(props.getSelectablesMaps().dropdownOptions))
+        let newOptions = deepCopy(props.getSelectablesMaps().dropdownOptions)
         if (JSON.stringify(newOptions) !== JSON.stringify(selectableOptions)) {
             setSelectableOptions(newOptions)
         }
@@ -46,7 +49,7 @@ function SfrSelectionGroupCard(props) {
 
     // Methods
     const handleOnlyOneCheckbox = (event) => {
-        let selectableGroups = JSON.parse(JSON.stringify(props.element.selectableGroups))
+        let selectableGroups = deepCopy(props.element.selectableGroups)
         selectableGroups[props.id].onlyOne = event.target.checked
         let itemMap = { selectableGroups: selectableGroups }
         dispatch(UPDATE_SFR_SECTION_ELEMENT({
@@ -58,8 +61,8 @@ function SfrSelectionGroupCard(props) {
     }
     const handleMultiselect = (title, selections) => {
         let newSelections = []
-        let selectables = JSON.parse(JSON.stringify(props.element.selectables))
-        let selectableGroups = JSON.parse(JSON.stringify(props.element.selectableGroups))
+        let selectables = deepCopy(props.element.selectables)
+        let selectableGroups = deepCopy(props.element.selectableGroups)
         Object.entries(selectables).map(([key, value]) => {
             let name = value.id ? (`${value.description} (${value.id})`) : value.description
             selections?.map((selection, index) => {
@@ -82,8 +85,8 @@ function SfrSelectionGroupCard(props) {
         }))
     }
     const handleDeleteSelectableGroup = () => {
-        let selectableGroups = JSON.parse(JSON.stringify(props.element.selectableGroups))
-        let title = JSON.parse(JSON.stringify(props.element.title))
+        let selectableGroups = deepCopy(props.element.selectableGroups)
+        let title = deepCopy(props.element.title)
         delete selectableGroups[props.id]
         Object.values(selectableGroups).map((group) => {
             let groups = group.groups
@@ -128,14 +131,17 @@ function SfrSelectionGroupCard(props) {
             elementUUID: props.elementUUID,
             itemMap: itemMap
         }))
+
+        // Update snackbar
+        handleSnackBarSuccess("Selectable Group Successfully Removed")
     }
 
     // Helper Methods
     const getSFRSelectables = () => {
         let selectables = []
-        let selected = JSON.parse(JSON.stringify(props.element.selectableGroups[props.id].groups))
-        let selectableOptions = JSON.parse(JSON.stringify(props.element.selectables))
-        let selectableGroupOptions = Object.keys(JSON.parse(JSON.stringify(props.element.selectableGroups)))
+        let selected = deepCopy(props.element.selectableGroups[props.id].groups)
+        let selectableOptions = deepCopy(props.element.selectables)
+        let selectableGroupOptions = Object.keys(deepCopy(props.element.selectableGroups))
         selected?.map((value, index) => {
             if (selectableOptions.hasOwnProperty(value) && value !== undefined) {
                 let selection = selectableOptions[value]

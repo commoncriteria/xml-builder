@@ -2,7 +2,8 @@
 import PropTypes from "prop-types";
 import React from "react";
 import CardTemplate from "../../CardTemplate.jsx";
-import TextEditor from "../../../TextEditor.jsx";
+import TipTapEditor from "../../../TipTapEditor.jsx";
+import { deepCopy } from "../../../../../utils/deepCopy.js";
 
 /**
  * The SfrIntroduction class that displays the evaluation activity Introduction
@@ -25,9 +26,9 @@ function SfrIntroduction(props) {
         const { selected, activities, uuid, rowIndex, isManagementFunction } = props
         let introduction = ""
         if (isManagementFunction) {
-            introduction = activities.introduction ? JSON.parse(JSON.stringify(activities.introduction)) : ""
+            introduction = activities.introduction ? deepCopy(activities.introduction) : ""
         } else if (selected && selected.length > 0 && uuid && uuid !== "" && activities && activities[uuid]) {
-            introduction = activities[uuid].introduction ? JSON.parse(JSON.stringify(activities[uuid].introduction)) : ""
+            introduction = activities[uuid].introduction ? deepCopy(activities[uuid].introduction) : ""
         } else {
             return null;
         }
@@ -44,7 +45,7 @@ function SfrIntroduction(props) {
                 }
                 body={
                     <div>
-                        <TextEditor
+                        <TipTapEditor
                             className="w-full"
                             contentType={"term"}
                             title={"introduction"}

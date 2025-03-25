@@ -7,6 +7,7 @@ import {useDispatch} from "react-redux";
 import {DELETE_SFR_SECTION} from "../../reducers/SFRs/sfrSectionSlice.js";
 import {DELETE_SFR} from "../../reducers/SFRs/sfrSlice.js";
 import {DELETE_EDITOR} from "../../reducers/editorSlice.js";
+import SecurityComponents from "../../utils/securityComponents.jsx";
 
 /**
  * The DeleteSfrSectionConfirmation class that sends a pop-up confirmation for deleting the sfr sections
@@ -24,6 +25,7 @@ function DeleteSfrSectionConfirmation(props) {
     };
 
     // Constants
+    const { handleSnackBarSuccess } = SecurityComponents
     const dispatch = useDispatch();
 
     // Methods
@@ -41,6 +43,9 @@ function DeleteSfrSectionConfirmation(props) {
 
         // Close the dialog
         props.handleOpen()
+
+        // Update snackbar
+        handleSnackBarSuccess("SFR Section Successfully Removed")
     }
 
     // Return Method

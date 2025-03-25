@@ -16,13 +16,17 @@ import {
     SET_APPENDICES,
     SET_PACKAGES,
     SET_MODULES,
-    SET_PP_PREFERENCE
+    SET_PP_PREFERENCE,
+    SET_DISTRIBUTED_TOE
 } from "../../reducers/exportSlice";
 import { create } from "xmlbuilder2";
 import CloudDownloadIcon from "@mui/icons-material/CloudDownload";
 import React, { useEffect, useRef, useState } from "react";
 import { Card, CardBody, CardFooter } from "@material-tailwind/react";
 import XMLViewer from "react-xml-viewer";
+import { deepCopy } from "../../utils/deepCopy";
+import SecurityComponents from "../../utils/securityComponents.jsx";
+import format from 'xml-formatter';
 
 /**
  * The XML Exporter class that packages the form into an XML export file
@@ -37,8 +41,10 @@ function XMLExporter({ open, handleOpen, preview }) {
     };
 
     // Constants
+    const { handleSnackBarSuccess, handleSnackBarError } = SecurityComponents
     const { primary, secondary, linkText } = useSelector((state) => state.styling);
     const stateObject = useSelector((state) => state);
+    const ppTemplateVersion = useSelector((state) => state.accordionPane.metadata.ppTemplateVersion)
     const overallObject = useSelector((state) => state.exports.overallObject);
     const formattedXML = useSelector((state) => state.exports.formattedXML);
     const dispatch = useDispatch();
@@ -86,21 +92,23 @@ function XMLExporter({ open, handleOpen, preview }) {
         // Search through object to find the relevant lists
         const threats = threatsSlice.find((group) => group.title == "Threats");
         const assumptions = threatsSlice.find((group) => group.title == "Assumptions");
+        const OSPs = threatsSlice.find((group) => group.title == "Organizational Security Policies");
         const objectiveTerms = getObjectiveTerms(objectivesSlice);
         dispatch(SET_SECURITY_PROBLEM_DEFINITION_SECTION({
             securityProblemDefinition: securityProblemDefinition,
             threats: threats,
             assumptions: assumptions,
-            objectiveTerms: objectiveTerms
+            objectiveTerms: objectiveTerms,
+            OSPs: OSPs,
+            ppTemplateVersion: stateObject.accordionPane.metadata.ppTemplateVersion
         }));
-        return objectiveTerms
     };
-    const getSecurityObjectives = (objectiveTerms) => {
+    const getSecurityObjectives = () => {
         const sfrSlice = Object.values(stateObject.sfrSections);
         const objectivesSlice = Object.values(stateObject.objectives)
         const toe = objectivesSlice.find((group) => group.title == "Security Objectives for the TOE");
         const operationalEnvironment = objectivesSlice.find((group) => group.title == "Security Objectives for the Operational Environment");
-        const objectivesToSFRs = getObjectivesToSFRs(objectiveTerms, sfrSlice)
+        const objectivesToSFRs = getObjectivesToSFRs(sfrSlice)
         dispatch(SET_SECURITY_OBJECTIVES_SECTION({
             toe: toe,
             operationalEnvironment: operationalEnvironment,
@@ -108,7 +116,7 @@ function XMLExporter({ open, handleOpen, preview }) {
         }))
     };
 
-    const getObjectivesToSFRs = (objectiveTerms, sfrs) => {
+    const getObjectivesToSFRs = (sfrs) => {
         let objectivesToSFRs = {}
         if (sfrs) {
             Object.values(sfrs).forEach((sfr) => {
@@ -179,13 +187,13 @@ function XMLExporter({ open, handleOpen, preview }) {
             case "terms":
                 return terms[uuid]
             case "sfrs": {
-                let section = JSON.parse(JSON.stringify(sfrs.sections[uuid]))
-                section.components = sfrSections.hasOwnProperty(uuid) ? JSON.parse(JSON.stringify(sfrSections[uuid])) : {}
+                let section = deepCopy(sfrs.sections[uuid])
+                section.components = sfrSections.hasOwnProperty(uuid) ? deepCopy(sfrSections[uuid]) : {}
                 return section
             }
             case "sars": {
                 // Get the SAR family
-                let section = JSON.parse(JSON.stringify(sars.sections[uuid]))
+                let section = deepCopy(sars.sections[uuid])
 
                 // Get associated components of the SAR family
                 const components = section.componentIDs.map(compUUID => sars.components[compUUID])
@@ -238,7 +246,13 @@ function XMLExporter({ open, handleOpen, preview }) {
         })
 
         // Get sections
-        const { ["sec:Introduction"]: introduction, ["sec:Conformance_Claims"]: conformanceClaims } = formattedSections
+        const { ["sec:Introduction"]: introduction, ["Distributed TOE"]: distributedTOE } = formattedSections
+        const cc2022conformanceClaims = stateObject.conformanceClaims
+        const version3_1conformanceClaimsObject = Object.values(stateObject.accordionPane.sections).find(section => section.title === "Conformance Claims");
+        const version3_1_conformanceEditorUUIDs = version3_1conformanceClaimsObject.formItems.map(editor => editor.uuid);
+        const version3_1_conformanceClaimsObject = Object.fromEntries(
+            Object.entries(stateObject.editors).filter(([key]) => version3_1_conformanceEditorUUIDs.includes(key))
+        );
         let { ["Security Requirements"]: securityRequirements } = formattedSections
 
         // Add in security requirements definition if it is present to Security Requirements section
@@ -254,12 +268,19 @@ function XMLExporter({ open, handleOpen, preview }) {
         dispatch(SET_INTRODUCTION({ introduction: introduction, platformData: platformData }))
         if (ppPreference !== "")
             dispatch(SET_PP_PREFERENCE({ ppPreference: ppPreference}))
-        dispatch(SET_CONFORMANCE_CLAIMS({ conformanceClaims: conformanceClaims }))
+
+        if (stateObject.accordionPane.metadata.ppTemplateVersion == "Version 3.1") {
+            dispatch(SET_CONFORMANCE_CLAIMS({ conformanceClaims: version3_1_conformanceClaimsObject, ppTemplateVersion: ppTemplateVersion }))
+        } else { // CC2022 Conformance
+            dispatch(SET_CONFORMANCE_CLAIMS({ conformanceClaims: cc2022conformanceClaims, ppTemplateVersion: ppTemplateVersion }))
+        }
+
         dispatch(SET_SECURITY_REQUIREMENTS({ securityRequirements: securityRequirements, useCases: useCases, sars: sars, platforms: stateObject.accordionPane.platformdata.platforms, auditSection: stateObject.sfrs.auditSection }))
         dispatch(SET_APPENDICES({ state: stateObject }))
         dispatch(SET_BIBLIOGRAPHY({ bibliography: stateObject.bibliography }))
         dispatch(SET_PACKAGES({ packages: stateObject.includePackage.packages }))
         dispatch(SET_MODULES({ modules: stateObject.modules }))
+        dispatch(SET_DISTRIBUTED_TOE({ state: stateObject?.distributedTOE, subSections: distributedTOE?.formItems }))
     }
 
     const generateFormattedJSON = () => {
@@ -267,10 +288,11 @@ function XMLExporter({ open, handleOpen, preview }) {
             getMetaData();
             let useCases = getTerms();
             parseSections(useCases);
-            let objectiveTerms = getSecurityProblemDefinitionSection();
-            getSecurityObjectives(objectiveTerms);
+            getSecurityProblemDefinitionSection();
+            getSecurityObjectives();
         } catch (e) {
             console.log(e)
+            handleSnackBarError(e)
         }
     };
 
@@ -283,7 +305,7 @@ function XMLExporter({ open, handleOpen, preview }) {
             txt.innerHTML = doc.end({ prettyPrint: true });
             let xmlString =  extractQuillBetterTableWrapperContent(txt.value)
             xmlString = addNamespace(xmlString);
-            xmlString = cleanUpXml(xmlString); // TODO: remove once SARS are being contructed in UI
+            xmlString = cleanUpXml(xmlString);
 
             // Flip this to true at top of file if we don't want file downloads
             if (preview) {
@@ -291,7 +313,11 @@ function XMLExporter({ open, handleOpen, preview }) {
             } else if (TESTING) {
                 console.log(xmlString)
             } else {
-                const blob = new Blob([xmlString], { type: 'text/xml' });
+                const formattedXML = format(xmlString, {
+                    indentation: ' ',
+                    collapseContent: true
+                })
+                const blob = new Blob([formattedXML], { type: 'text/xml' });
                 const href = URL.createObjectURL(blob);
                 const link = document.createElement('a');
 
@@ -300,9 +326,12 @@ function XMLExporter({ open, handleOpen, preview }) {
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
+
+                handleSnackBarSuccess('Exported XML Successfully')
             }
         } catch (e) {
             console.log(e)
+            handleSnackBarError(e)
         } finally {
             if (!preview) {
                 handleOpen();
@@ -320,10 +349,17 @@ function XMLExporter({ open, handleOpen, preview }) {
 
         // Fixes tags that have a hanging space at the end
         const removeWhiteSpaceRegex = /<(\w+)\s+>/g;
+        const removeSecObjsFromTOERegex = /<sec:Security_Objectives_for_the_TOE[\s\S]*?<\/sec:Security_Objectives_for_the_TOE>/;
+        const removeQuillBetterTableSpanRegex = /<span class="ql-ui" contenteditable="false"><\/span>/g
+
         let cleanedXmlString = xmlString.replace(removeWhiteSpaceRegex, '<$1>');
 
         // Removes quill-better-table span
-        cleanedXmlString = xmlString.replace(/<span class="ql-ui" contenteditable="false"><\/span>/g, "")
+        cleanedXmlString = xmlString.replace(removeQuillBetterTableSpanRegex, "")
+
+        // Removes <sec:Security_Objectives_for_the_TOE> in the event of a CC2022 export
+        if (ppTemplateVersion == "CC2022 Direct Rationale")
+            cleanedXmlString = xmlString.replace(removeSecObjsFromTOERegex, ""); 
         
         // Remove default aactivity tags
         return cleanedXmlString.replace(/<aactivity level="element"\/>\n/g, "").replace(/<aactivity level="component"\/>\n/g, "").replace(/<aactivity level="element"\/>/g, "").replace(/<aactivity level="component"\/>/g, "");
@@ -405,70 +441,71 @@ function XMLExporter({ open, handleOpen, preview }) {
     }
 
     function addNamespace(content) {
-        const nsTagNames = ["p", "ol", "ul", "sup", "pre", "s", "code", "i", "b", "a", "h3", "li", "strike", "br", "div", "strong", "em", "tr", "table", "td", "span"]; // tags which require namespace
+        const nsTagNames = ["p", "ol", "ul", "sup", "pre", "s", "code", "i", "b", "a", "h3", "li", "strike", "br", "div", "strong", "em", "tr", "table", "td", "span", "u", "sub"]; // tags which require namespace
         // ([\\/]?): capture group to match opening and closing tags
 
         // (\\s[^>]*): word boundary to match exact tag name and capture attributes
         const regex = new RegExp(`<([\\/]?)(${nsTagNames.join('|')})(\\s[^>]*)?>`, 'gi');
-    
+
         // Get namespace
         let namespace = '';
         const namespaceKey = Object.keys(overallObject["PP"]).find(key => overallObject["PP"][key] === "http://www.w3.org/1999/xhtml");
+
+        // XML Cleanup
+        // Temp fix to remove empty ns attr,
+        // remove snip tags
+        // escape ampersand,
+        // escape less than signs with &lt;,
+        // remove invalid fpt-w^x-ext-1 id which fails transforms
+        content = content.replaceAll('xmlns=""', "").replaceAll('<snip>', "").replaceAll('</snip>', "").replace(/&/g, "&amp;").replace(/<=/g, "&lt;=").replace(/ < /g, " &lt; ").replace(`id="fpt-w^x-ext-1"`, "");
+        
         if (namespaceKey) {
             namespace = namespaceKey.split(":")[1];
-        }
-    
-        let modifiedXML = content.replace(regex, (match, closingSlash, tagName, attributes = '') => {
-            // Some tags should be self closing
-            if (nsTagNames.includes(tagName.toLowerCase())) {
-                if (tagName.toLowerCase() == "br") {
-                    return `<${namespace}:${tagName}${attributes}/>`;
-                } else if (tagName.toLowerCase() == "strong") {
-                    return `<${closingSlash}${namespace}:b${attributes}>`;
-                } else if (tagName.toLowerCase() == "em") {
-                    return `<${closingSlash}${namespace}:i${attributes}>`;
+
+            let modifiedXML = content.replace(regex, (match, closingSlash, tagName, attributes = '') => {
+                // Some tags should be self closing
+                if (nsTagNames.includes(tagName.toLowerCase())) {
+                    if (tagName.toLowerCase() == "br") {
+                        return `<${namespace}:${tagName}${attributes}/>`;
+                    } else if (tagName.toLowerCase() == "strong") {
+                        return `<${closingSlash}${namespace}:b${attributes}>`;
+                    } else if (tagName.toLowerCase() == "em") {
+                        return `<${closingSlash}${namespace}:i${attributes}>`;
+                    }
+                    return `<${closingSlash}${namespace}:${tagName}${attributes}>`;
                 }
-                return `<${closingSlash}${namespace}:${tagName}${attributes}>`;
+                return match; // Return the original match if no modification is needed
+            });
+        
+            modifiedXML = modifiedXML.replaceAll("<br/>", `<${namespace}:br/>`);
+    
+        
+            // replace link tag names (<a href=''>); SAR's a-component and a-element make replacing a tags selectively extremely hard
+            if (namespace.length != 0) {
+                modifiedXML = modifiedXML.replace(/<a href/g, `<${namespace}:a href`);
             }
-            return match; // Return the original match if no modification is needed
-        });
+        
+            // replace empty p tags with self closing p tags (to match existing PP XML standard), need to append namespace first
+            const pRegex1 = namespace.length != 0 ? new RegExp(`<\\/${namespace}:p><${namespace}:p>`, 'g') : null;
+            const pRegex2 = namespace.length != 0 ? new RegExp(`<${namespace}:p><\\/${namespace}:p>`, 'g') : null;
     
-        modifiedXML = modifiedXML.replaceAll("<br/>", `<${namespace}:br/>`);
+            const ppPreferenceRegex = new RegExp(`<audit-events-in-sfrs><\\/${namespace}:audit-events-in-sfrs>`, 'g');
+        
+            if (ppPreferenceRegex) {
+                modifiedXML = modifiedXML.replace(ppPreferenceRegex, `<${namespace}:audit-events-in-sfrs/>`)
+            }
     
-        // Temp fix to remove empty ns attr
-        modifiedXML = modifiedXML.replaceAll('xmlns=""', "");
-    
-        modifiedXML = modifiedXML.replace(`id="fpt-w^x-ext-1"`, "");
-    
-        // escape ampersand
-        modifiedXML = modifiedXML.replace(/&/g, "&amp;");
-    
-        // escape less than signs with &lt;
-        modifiedXML = modifiedXML.replace(/<=/g, "&lt;=").replace(/ < /g, " &lt; ");
-    
-        // replace link tag names (<a href=''>); SAR's a-component and a-element make replacing a tags selectively extremely hard
-        if (namespace.length != 0) {
-            modifiedXML = modifiedXML.replace(/<a href/g, `<${namespace}:a href`);
+            if (pRegex1) {
+                modifiedXML = modifiedXML.replace(pRegex1, `<${namespace}:p/>`);
+            }
+            if (pRegex2) {
+                modifiedXML = modifiedXML.replace(pRegex2, `<${namespace}:p/>`);
+            }
+        
+            return modifiedXML;
+        } else {
+            return content;
         }
-    
-        // replace empty p tags with self closing p tags (to match existing PP XML standard), need to append namespace first
-        const pRegex1 = namespace.length != 0 ? new RegExp(`<\\/${namespace}:p><${namespace}:p>`, 'g') : null;
-        const pRegex2 = namespace.length != 0 ? new RegExp(`<${namespace}:p><\\/${namespace}:p>`, 'g') : null;
-
-        const ppPreferenceRegex = new RegExp(`<audit-events-in-sfrs><\\/${namespace}:audit-events-in-sfrs>`, 'g');
-    
-        if (ppPreferenceRegex) {
-            modifiedXML = modifiedXML.replace(ppPreferenceRegex, `<${namespace}:audit-events-in-sfrs/>`)
-        }
-
-        if (pRegex1) {
-            modifiedXML = modifiedXML.replace(pRegex1, `<${namespace}:p/>`);
-        }
-        if (pRegex2) {
-            modifiedXML = modifiedXML.replace(pRegex2, `<${namespace}:p/>`);
-        }
-    
-        return modifiedXML;
     }
     
 

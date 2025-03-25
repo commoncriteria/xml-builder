@@ -21,269 +21,18 @@ const initialState = {
         autoHideDuration: 3000
     },
     metadata: {
-        open: true,
+        open: false,
+        ppType: "Protection Profile",
+        ppTemplateVersion: "CC2022 Standard",
         ppName: "",
+        author: "",
+        keywords: "",
         version: "",
         releaseDate: "",
         revisionHistory: [],
         xmlTagMeta: {}
     },
-    sections: {
-        "bfeff570-4ed9-461e-b6c4-b380a4399e01": {
-            title: "Introduction",
-            xmlTagMeta: {
-                tagName: "sec:Introduction",
-                attributes: {}
-            },
-            open: true,
-            formItems: [
-                {
-                    uuid: "37ef5096-4e69-4a5a-ba68-277440e24f70",
-                    // title: "Objectives of Document",
-                    contentType: "editor"
-                },
-                {
-                    uuid: "da39f7c1-78dc-4cc0-a564-4f607d511f6f",
-                    // title: "Terms",
-                    contentType: "editor",
-                    formItems: [
-                        {
-                            uuid: "132a214e-ce03-4c48-abe8-5f7d460b5fdf",
-                            // title: "Common Criteria Terms",
-                            contentType: "terms"
-                        },
-                        {
-                            uuid: "2a9beedb-a7ce-4586-b374-1c22ac37c6fa",
-                            // title: "Technical Terms",
-                            contentType: "terms"
-                        },
-                    ],
-                },
-                {
-                    uuid: "f98870e2-4264-4d39-8b02-a5297d0a5b3d",
-                    // title: "TOE Overview",
-                    contentType: "editor"
-                },
-                {
-                    uuid: "d68577d1-5737-4074-a700-764ca6a9189f",
-                    // title: "TOE Usage",
-                    contentType: "editor",
-                    formItems: [
-                        {
-                            uuid: "4fe05e05-3d61-47a6-b4c0-ccc1fcd29391",
-                            // title: "Use Cases",
-                            contentType: "terms"
-                        },
-                    ]
-                },
-            ]
-        },
-        "1c487474-5e05-4837-a1d9-23da1530688d": {
-            title: "Conformance Claims",
-            open: true,
-            xmlTagMeta: {
-                tagName: "sec:Conformance_Claims",
-                childTagName: "cclaims",
-                attributes: {}
-            },
-            formItems: [
-                {
-                    // title: "Conformance Statement",
-                    uuid: "1c487474-5e05-4837-a1d9-23da1530688d",
-                    contentType: "editor",
-                },
-                {
-                    // title: "CC Conformance Claims",
-                    uuid: "68244faa-e405-46b4-9df7-140246ca3463",
-                    contentType: "editor"
-                },
-                {
-                    // title: "PP Claims",
-                    uuid: "e3d935a4-a1e1-44be-b868-fa7eb8322e00",
-                    contentType: "editor"
-                },
-                {
-                    // title: "Package Claims",
-                    uuid: "37032788-a50d-442b-98e6-e8e3b92b26f7",
-                    contentType: "editor"
-                },
-            ],
-        },
-        "0f2f8c02-a71b-4fe7-9e80-da93d1ea70cd": {
-            title: "Security Problem Definition",
-            xmlTagMeta: {
-                tagName: "sec:Security_Problem_Description",
-                attributes: {}
-            },
-            formItems: [
-                {
-                    uuid: "c0dbc61b-cf58-4db6-985b-5539ae2f7455",
-                    // title: "Threats",
-                    contentType: "threats"
-                },
-                {
-                    uuid: "3a8ef499-784b-485c-8321-a02083aafda8",
-                    // title: "Assumptions",
-                    contentType: "threats",
-                    xmlTagMeta: {
-                        tagName: "sec:Assumptions",
-                        childTagName: "assumptions",
-                        attributes: {}
-                    },
-                },
-            ],
-            open: true,
-        },
-        "ee00eb97-a279-41d3-911f-0236fdda9567": {
-            title: "Security Objectives",
-            xmlTagMeta: {
-                tagName: "sec:Security_Objectives",
-                attributes: {}
-            },
-            formItems: [
-                {
-                    uuid: "8ba516d2-8336-4562-a6b3-751d722232d9",
-                    // title: "Security Objectives for the TOE",
-                    contentType: "objectives"
-                },
-                {
-                    uuid: "9d813e26-364b-4149-ae05-f2459b2d76d5",
-                    // title: "Security Objectives for the Operational Environment",
-                    contentType: "objectives"
-                },
-            ],
-            open: true,
-        },
-        "2687f815-d716-4e10-955d-1b506a99a448": {
-            title: "Security Requirements",
-            formItems: [
-                {
-                    uuid: "849fe5bc-7364-4448-863a-d280f63d9516",
-                    // title: "Security Functional Requirements",
-                    contentType: "editor",
-                    formItems: [
-                        {
-                            uuid: "b31a725c-c861-4894-af59-6bbc3f4cfb24",
-                            // title: "Class: Security Audit (FAU)",
-                            contentType: "sfrs"
-                        },
-                        {
-                            uuid: "d1c1f277-ad2e-42ac-9df6-0c3042e6f95e",
-                            // title: "Class: Cryptographic Support (FCS)",
-                            contentType: "sfrs"
-                        },
-                        {
-                            uuid: "4bb085f1-8c48-4eb5-89e2-ac64d3240672",
-                            // title: "Class: Cryptographic Storage (FCS_STG)",
-                            contentType: "sfrs"
-                        },
-                        {
-                            uuid: "51e17056-64d3-47b3-b6ac-965ebb96a48a",
-                            // title: "Class: User Data Protection (FDP)",
-                            contentType: "sfrs"
-                        },
-                        {
-                            uuid: "7736aac5-991f-473c-99dd-dcbf1946b2a7",
-                            // title: "Class: Identification and Authentication (FIA)",
-                            contentType: "sfrs"
-                        },
-                        {
-                            uuid: "2cc212e3-ab29-476a-bc5f-808538963720",
-                            // title: "Class: Security Management (FMT)",
-                            contentType: "sfrs"
-                        },
-                        {
-                            uuid: "fae72dca-fe47-4c3f-a729-782d6750c6c6",
-                            // title: "Class: Protection of the TSF (FPT)",
-                            contentType: "sfrs"
-                        },
-                        {
-                            uuid: "5c4b2567-2084-4b28-89ea-d3fb21806eb5",
-                            // title: "Class: TOE Access (FTA)",
-                            contentType: "sfrs"
-                        },
-                        {
-                            uuid: "011e6f21-8cc9-46d5-ab10-ea9ee86d677c",
-                            // title: "Class: Trusted Path/Channels (FTP)",
-                            contentType: "sfrs"
-                        },
-                    ],
-
-                },
-                {
-                    uuid: "ceb738a9-60e1-48b7-bfe9-2e7c2de5153b",
-                    contentType: "editor",
-                    // title: "Security Assurance Requirements",
-                    formItems: [
-                        {
-                            uuid: "c69fa400-74bd-4c0a-82a9-dacb8f1bc7f4",
-                            contentType: "sars"
-                        },
-                        {
-                            uuid: "91d2a9f7-b0ae-4113-9a31-d12caf12f294",
-                            contentType: "sars"
-                        }
-                    ]
-                }
-            ],
-            open: true,
-        },
-        "c7cd87c6-e7c4-497e-8bed-0f7948db1e27": {
-            title: "Appendix A - Optional Requirements",
-            formItems: [],
-            open: true,
-        },
-        "f86fcb19-bb13-45bb-bc01-ed91256d6743": {
-            title: "Appendix B - Selection-Based Requirements",
-            formItems: [],
-            open: true,
-        },
-        "a0c8d239-42ee-42a5-8d4f-96b3992db4a5": {
-            title: "Appendix C - Extended Component Definitions",
-            formItems: [],
-            open: true,
-        },
-        "0a126d67-e945-41f8-8517-eef6786dca10": {
-            title: "Appendix D - Validation Guidelines",
-            formItems: [],
-            open: true,
-        },
-        "279086d8-89df-41fd-9dff-53be9f979877": {
-            title: "Appendix E - Implicitly Satisfied Requirements",
-            formItems: [],
-            open: true,
-        },
-        "8bb37899-24ee-405b-b33b-4da304e3d016": {
-            title: "Appendix F - Entropy Documentation And Assessment",
-            formItems: [],
-            open: true,
-        },
-        "5a189416-144b-491c-8a82-8fae63552d06": {
-            title: "Appendix H - Use Case Templates",
-            formItems: [],
-            open: true,
-        },
-        "5d13f61c-550e-4ca2-90b5-54d563c44146": {
-            title: "Appendix I - Acronyms",
-            formItems: [
-                {
-                    uuid: "caa5d2b5-ca76-476d-be81-69e5478547cb",
-                    contentType: "appendixI"
-                },
-            ],
-            open: true,
-        },
-        "81e06b51-407f-4daf-a805-2abfd41f2ffd": {
-            title: "Appendix J - Bibliography",
-            formItems: [],
-            open: true,
-        },
-        "c2c5eb25-c3a1-4c17-9595-fffdb80f655a": {
-            title: "Appendix K - Acknowledgments",
-            formItems: [],
-            open: true,
-        },
-    }
+    sections: {}
 }
 
 export const accordionPaneSlice = createSlice({
@@ -299,11 +48,14 @@ export const accordionPaneSlice = createSlice({
             // Add new section if the accordion title does not already exist
             if (index !== -1) {
                 let keyValues = Object.entries(state.sections);
-                keyValues.splice(index + 1, 0, [uuid, { title: title, open: true, formItems: [] }]);
+                keyValues.splice(index + 1, 0, [uuid, { title: title, open: false, formItems: [] }]);
                 state.sections = Object.fromEntries(keyValues)
             } else {
-                state.sections[uuid] = { title: title, open: true, formItems: [] }
+                state.sections[uuid] = { title: title, open: false, formItems: [] }
             }
+
+            // Return the uuid of the accordion
+            action.payload.uuid = uuid
         },
         DELETE_ACCORDION: (state, action) => {
             let title = action.payload.title
@@ -512,7 +264,7 @@ export const accordionPaneSlice = createSlice({
                 severity: severity !== undefined ? severity : "success",
                 vertical: vertical !== undefined ? vertical : "bottom",
                 horizontal: horizontal !== undefined ? horizontal : "left",
-                autoHideDuration: autoHideDuration !== undefined ? autoHideDuration : 3000,
+                autoHideDuration: autoHideDuration !== undefined ? autoHideDuration : 4000,
             }
         },
         setIsAccordionOpen: (state, action) => {
@@ -563,6 +315,18 @@ export const accordionPaneSlice = createSlice({
                 })
             }
         },
+        SET_ACCORDION_PANE_INITIAL_STATE: (state, action) => {
+            const { loadedfile, platformdata, metadata, sections } = action.payload
+
+            try {
+                state.loadedfile = loadedfile
+                state.platformdata = platformdata
+                state.metadata = metadata
+                state.sections = sections
+            } catch (e) {
+                console.log(e)
+            }
+        },
         RESET_ACCORDION_PANE_STATE: () => initialState,
     },
 })
@@ -579,11 +343,12 @@ export const {
     CREATE_ACCORDION_SAR_FORM_ITEM,
     GET_ACCORDION_SFR_FORM_ITEMS,
     GET_ACCORDION_SAR_FORM_ITEMS,
+    RESET_ACCORDION_PANE_STATE,
+    SET_ACCORDION_PANE_INITIAL_STATE,
     updateMetaDataItem,
     setIsAccordionOpen,
     expandAllAccordions,
     collapseAllAccordions,
-    RESET_ACCORDION_PANE_STATE,
     updateFileUploaded,
     updatePlatforms,
     updateSnackBar

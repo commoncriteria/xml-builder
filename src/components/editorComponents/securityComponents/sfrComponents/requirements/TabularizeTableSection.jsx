@@ -10,6 +10,7 @@ import AddIcon from "@mui/icons-material/Add.js";
 import RemoveIcon from "@mui/icons-material/Remove.js";
 import TabularizeTable from "./TabularizeTable.jsx";
 import EditTabularizeDefinitionModal from "../../../../modalComponents/EditTabularizeDefinitionModal.jsx";
+import { deepCopy } from "../../../../../utils/deepCopy.js";
 
 /**
  * The TabularizeTableSection class that displays a tabularize table section for the sfr worksheet
@@ -25,8 +26,6 @@ function TabularizeTableSection(props) {
         elementUUID: PropTypes.string.isRequired,
         elementTitle: PropTypes.string.isRequired,
         updateSfrSectionElement: PropTypes.func.isRequired,
-        getElementMaps: PropTypes.func.isRequired,
-        allSfrOptions: PropTypes.object.isRequired,
         getSelectablesMaps: PropTypes.func.isRequired,
         getElementValuesByType: PropTypes.func.isRequired,
         getSelectionBasedArrayByType: PropTypes.func.isRequired,
@@ -63,7 +62,7 @@ function TabularizeTableSection(props) {
 
     // Helper Methods
     const getTabularizeObject = () => {
-        let tabularize = JSON.parse(JSON.stringify(props.getElementValuesByType("tabularize")))
+        let tabularize = deepCopy(props.getElementValuesByType("tabularize"))
         return tabularize ? tabularize : {};
     }
     const updateTabularizeTableUI = (itemMap) => {
@@ -127,8 +126,6 @@ function TabularizeTableSection(props) {
                                         tabularizeUUID={tabularizeUUID}
                                         updateSfrSectionElement={props.updateSfrSectionElement}
                                         getTabularizeObject={getTabularizeObject}
-                                        getElementMaps={props.getElementMaps}
-                                        allSfrOptions={props.allSfrOptions}
                                         getSelectablesMaps={props.getSelectablesMaps}
                                         getElementValuesByType={props.getElementValuesByType}
                                         getSelectionBasedArrayByType={props.getSelectionBasedArrayByType}

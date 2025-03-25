@@ -10,6 +10,9 @@ import AddCircleIcon from "@mui/icons-material/AddCircle";
 import DeleteForeverRoundedIcon from "@mui/icons-material/DeleteForeverRounded";
 import MultiSelectDropdown from "../../MultiSelectDropdown.jsx";
 import CardTemplate from "../../CardTemplate.jsx";
+import ToggleSwitch from "../../../../ToggleSwitch.jsx";
+import SecurityComponents from "../../../../../utils/securityComponents.jsx";
+import { deepCopy } from "../../../../../utils/deepCopy.js";
 
 /**
  * The SfrComplexSelectableCard class that displays the complex selectable card
@@ -29,6 +32,7 @@ function SfrComplexSelectableCard(props) {
     };
 
     // Constants
+    const { handleSnackBarError, handleSnackBarSuccess, handleSnackbarTextUpdates } = SecurityComponents
     const { icons } = useSelector((state) => state.styling);
     const dispatch = useDispatch();
     const [currentSelectable, setCurrentSelectable] = useState({ exclusive: false, notSelectable: false, description: [] })
@@ -40,7 +44,7 @@ function SfrComplexSelectableCard(props) {
     useEffect(() => {
         if (props.element.selectableGroups[props.id] && (JSON.stringify(props.element.selectableGroups[props.id]) !==
             JSON.stringify(currentSelectable))) {
-            setCurrentSelectable(JSON.parse(JSON.stringify(props.element.selectableGroups[props.id])))
+            setCurrentSelectable(deepCopy(props.element.selectableGroups[props.id]))
         }
     }, [props])
 
@@ -50,31 +54,37 @@ function SfrComplexSelectableCard(props) {
     }
     const handleExclusiveCheckbox = (event) => {
         if (props.element.selectableGroups) {
-            let selectableGroups = JSON.parse(JSON.stringify(props.element.selectableGroups))
+            let selectableGroups = deepCopy(props.element.selectableGroups)
             selectableGroups[props.id].exclusive = event.target.checked
             updateSelectableGroups(selectableGroups)
         }
     }
     const handleNotSelectableCheckbox = (event) => {
         if (props.element.selectableGroups) {
-            let selectableGroups = JSON.parse(JSON.stringify(props.element.selectableGroups))
+            let selectableGroups = deepCopy(props.element.selectableGroups)
             selectableGroups[props.id].notSelectable = event.target.checked
             updateSelectableGroups(selectableGroups)
         }
     }
     const handleNewComplexSelectableSubmit = () => {
         if (props.element.selectableGroups) {
-            let selectableGroups = JSON.parse(JSON.stringify(props.element.selectableGroups))
-            let description = selectableGroups[props.id].description ? JSON.parse(JSON.stringify(selectableGroups[props.id].description)) : []
+            let selectableGroups = deepCopy(props.element.selectableGroups)
+            let description = selectableGroups[props.id].description ? deepCopy(selectableGroups[props.id].description) : []
             if (complexSelectableType === "Text") {
                 description.push({ text: "" })
                 selectableGroups[props.id].description = description
                 updateSelectableGroups(selectableGroups)
                 setComplexSelectableType("Selectables")
+
+                // Update snackbar
+                handleSnackBarSuccess("New Text Item Successfully Added")
             } else if (complexSelectableType === "Selectables") {
                 description.push({ groups: [] })
                 selectableGroups[props.id].description = description
                 updateSelectableGroups(selectableGroups)
+
+                // Update snackbar
+                handleSnackBarSuccess("New Selectables Item Successfully Added")
             }
         }
     }
@@ -84,7 +94,7 @@ function SfrComplexSelectableCard(props) {
     }
     const handleTextUpdate = (event, index) => {
         if (props.element.selectableGroups) {
-            let selectableGroups = JSON.parse(JSON.stringify(props.element.selectableGroups))
+            let selectableGroups = deepCopy(props.element.selectableGroups)
             let description = selectableGroups[props.id].description
             if (description && description[index]) {
                 description[index].text = event.target.value
@@ -94,18 +104,21 @@ function SfrComplexSelectableCard(props) {
     }
     const handleDeleteComplexSelectableItem = (index) => {
         if (props.element.selectableGroups) {
-            let selectableGroups = JSON.parse(JSON.stringify(props.element.selectableGroups))
+            let selectableGroups = deepCopy(props.element.selectableGroups)
             let description = selectableGroups[props.id].description
             if (description && description[index]) {
                 description.splice(index, 1)
                 updateSelectableGroups(selectableGroups)
+
+                // Update snackbar
+                handleSnackBarSuccess("Item Successfully Removed")
             }
         }
     }
     const handleMultiselect = (title, selections, mainIndex) => {
         let newSelections = []
-        let selectables = JSON.parse(JSON.stringify(props.element.selectables))
-        let selectableGroups = JSON.parse(JSON.stringify(props.element.selectableGroups))
+        let selectables = deepCopy(props.element.selectables)
+        let selectableGroups = deepCopy(props.element.selectableGroups)
         Object.entries(selectables).map(([key, value]) => {
             let name = value.id ? (`${value.description} (${value.id})`) : value.description
             selections?.map((selection, index) => {
@@ -122,8 +135,8 @@ function SfrComplexSelectableCard(props) {
         updateSelectableGroups(selectableGroups)
     }
     const handleDeleteSelectableGroup = () => {
-        let selectableGroups = JSON.parse(JSON.stringify(props.element.selectableGroups))
-        let title = JSON.parse(JSON.stringify(props.element.title))
+        let selectableGroups = deepCopy(props.element.selectableGroups)
+        let title = deepCopy(props.element.title)
         if (selectableGroups[props.id]) {
             delete selectableGroups[props.id]
             Object.values(selectableGroups).map((group) => {
@@ -150,6 +163,9 @@ function SfrComplexSelectableCard(props) {
                 elementUUID: props.elementUUID,
                 itemMap: itemMap
             }))
+
+            // Update snackbar
+            handleSnackBarSuccess("Complex Selectable Successfully Removed")
         }
     }
 
@@ -178,6 +194,7 @@ function SfrComplexSelectableCard(props) {
                     }
                 } catch (e) {
                     console.log(e)
+                    handleSnackBarError(e)
                 }
 
                 // Regular expression to escape specific tags (we want them to be represented as xml tags, which otherwise 
@@ -205,7 +222,7 @@ function SfrComplexSelectableCard(props) {
                                 key={text}
                                 label="Text"
                                 defaultValue={text}
-                                onBlur={(event) => handleTextUpdate(event, index)}
+                                onBlur={(event) => handleSnackbarTextUpdates(handleTextUpdate, event, index)}
                             />
                         </FormControl>
                     </div>
@@ -230,8 +247,8 @@ function SfrComplexSelectableCard(props) {
     }
     const showSelectablesContent = (value, index) => {
         let selected = props.element.selectableGroups[props.id].description[index] ?
-            JSON.parse(JSON.stringify(getSFRSelectables(index))) : []
-        let selectableOptions = JSON.parse(JSON.stringify(props.getSelectablesMaps().dropdownOptions))
+            deepCopy(getSFRSelectables(index)) : []
+        let selectableOptions = deepCopy(props.getSelectablesMaps().dropdownOptions)
         return (
             <div className="mb-4" key={index + "SelectablesContent"}>
                 <span className="min-w-full inline-flex items-baseline">
@@ -267,9 +284,9 @@ function SfrComplexSelectableCard(props) {
     const getSFRSelectables = (index) => {
         let selectables = []
         let selected = props.element.selectableGroups[props.id].description[index].groups ?
-            JSON.parse(JSON.stringify(props.element.selectableGroups[props.id].description[index].groups)) : []
-        let selectableOptions = JSON.parse(JSON.stringify(props.element.selectables))
-        let selectableGroupOptions = Object.keys(JSON.parse(JSON.stringify(props.element.selectableGroups)))
+            deepCopy(props.element.selectableGroups[props.id].description[index].groups) : []
+        let selectableOptions = deepCopy(props.element.selectables)
+        let selectableGroupOptions = Object.keys(deepCopy(props.element.selectableGroups))
         selected?.map((value, index) => {
             if (selectableOptions.hasOwnProperty(value) && value !== undefined) {
                 let selection = selectableOptions[value]
@@ -328,43 +345,26 @@ function SfrComplexSelectableCard(props) {
                                     </Tooltip>
                                 </IconButton>
                             </div>
-                            <div className="flex justify-end w-[0px] pr-1">
-                                <Stack
-                                    direction="row"
-                                    component="label"
-                                    alignItems="center"
-                                    justifyContent="center"
-                                >
-                                    <Typography
-                                        noWrap
-                                        style={styling.primaryToggleTypography}
-                                    >
-                                        Preview
-                                    </Typography>
-                                    <Tooltip
-                                        arrow placement={"top"}
-                                        id={props.elementUUID + "previewToggleTooltip"}
-                                        title={
-                                            <div>
-                                                <h1>Toggling this allows a user to see what the fully constructed
-                                                    complex
-                                                    selectable will look like when exported. Use this to see what
-                                                    the
-                                                    selection below will look like.
-                                                </h1>
-                                                <br />
-                                                <h1>* Note: Results may vary</h1>
-                                            </div>
-                                        }
-                                    >
-                                        <Switch
-                                            sx={previewToggle ? styling.secondaryToggleSwitch : {}}
-                                            checked={previewToggle}
-                                            onChange={handleSetPreviewToggle}
-                                        />
-                                    </Tooltip>
-                                </Stack>
-                            </div>
+                            <ToggleSwitch
+                                title={"Preview"}
+                                isToggled={previewToggle}
+                                isSfrWorksheetToggle={false}
+                                handleUpdateToggle={handleSetPreviewToggle}
+                                styling={styling}
+                                tooltip={
+                                    <div>
+                                        <h1>Toggling this allows a user to see what the fully constructed
+                                            complex
+                                            selectable will look like when exported. Use this to see what
+                                            the
+                                            selection below will look like.
+                                        </h1>
+                                        <br/>
+                                        <h1>* Note: Results may vary</h1>
+                                    </div>
+                                }
+                                tooltipId={props.elementUUID + "previewToggleTooltip"}
+                            />
                         </span>
                     </div>
                 }

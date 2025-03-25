@@ -7,6 +7,8 @@ import { UPDATE_SFR_COMPONENT_ITEMS } from "../../../../../reducers/SFRs/sfrSect
 import AddCircleRoundedIcon from "@mui/icons-material/AddCircleRounded";
 import DeleteForeverRoundedIcon from "@mui/icons-material/DeleteForeverRounded";
 import CardTemplate from "../../CardTemplate.jsx";
+import SecurityComponents from "../../../../../utils/securityComponents.jsx";
+import { deepCopy } from "../../../../../utils/deepCopy.js";
 
 /**
  * The SfrAuditEvents class that displays the sfr audit events section
@@ -22,6 +24,7 @@ function SfrAuditEvents(props) {
     };
 
     // Constants
+    const { handleSnackBarSuccess, handleSnackbarTextUpdates } = SecurityComponents
     const dispatch = useDispatch();
     const { primary, secondary, checkboxPrimaryNoPad, checkboxSecondaryNoPad, icons } = useSelector((state) => state.styling);
 
@@ -51,7 +54,7 @@ function SfrAuditEvents(props) {
         updateAuditEvents(auditEvents)
     }
     const handleAddAuditEvent = () => {
-        let auditEvents = props.value.auditEvents ? JSON.parse(JSON.stringify(props.value.auditEvents)) : {}
+        let auditEvents = props.value.auditEvents ? deepCopy(props.value.auditEvents) : {}
         let uuid = uuidv4();
         auditEvents[uuid] = {
             optional: false,
@@ -59,11 +62,17 @@ function SfrAuditEvents(props) {
             items: []
         }
         updateAuditEvents(auditEvents)
+
+        // Update snackbar
+        handleSnackBarSuccess("Audit Event Successfully Added")
     }
     const handleDeleteAuditEvent = (auditEvents, uuid) => {
         if (auditEvents.hasOwnProperty(uuid)) {
             delete auditEvents[uuid]
             updateAuditEvents(auditEvents)
+
+            // Update snackbar
+            handleSnackBarSuccess("Audit Event Successfully Removed")
         }
     }
     const handleAddAuditEventItem = (auditEvents, uuid) => {
@@ -73,6 +82,9 @@ function SfrAuditEvents(props) {
             }
             auditEvents[uuid].items.push({info: "", optional: false})
             updateAuditEvents(auditEvents)
+
+            // Update snackbar
+            handleSnackBarSuccess("Audit Event Item Successfully Added")
         }
     }
     const handleUpdateAuditEventItem = (event, type, index, auditEvents, uuid) => {
@@ -94,6 +106,9 @@ function SfrAuditEvents(props) {
             if (auditEvents[uuid].items && auditEvents[uuid].items[index]) {
                 auditEvents[uuid].items.splice(index, 1)
                 updateAuditEvents(auditEvents)
+
+                // Update snackbar
+                handleSnackBarSuccess("Audit Event Item Successfully Removed")
             }
         }
     }
@@ -112,10 +127,14 @@ function SfrAuditEvents(props) {
                 <div className="mb-5" key={`${uuid}-audit-event-item-${index}`}>
                     <span className="flex justify-center min-w-full">
                         <div className="w-[100%]">
-                            <TextField className="w-full" key={item.info} label="Info" defaultValue={item.info}
-                                       onBlur={(event) => {
-                                           handleUpdateAuditEventItem(event, "info", index, auditEvents, uuid)
-                                       }}
+                            <TextField
+                                className="w-full"
+                                key={item.info}
+                                label="Info"
+                                defaultValue={item.info}
+                                onBlur={(event) => {
+                                    handleSnackbarTextUpdates(handleUpdateAuditEventItem, event, "info", index, auditEvents, uuid)
+                                }}
                             />
                         </div>
                         <div className="pt-2 ml-3 border-[#BDBDBD] border-[1px] rounded-[5px]">
@@ -141,7 +160,7 @@ function SfrAuditEvents(props) {
         }
     }
     const displayAuditEvents = () => {
-        let auditEvents = props.value.hasOwnProperty("auditEvents") ? JSON.parse(JSON.stringify(props.value.auditEvents)) : {}
+        let auditEvents = props.value.hasOwnProperty("auditEvents") ? deepCopy(props.value.auditEvents) : {}
         if (Object.entries(auditEvents).length > 0) {
             return (
                 Object.entries(auditEvents).map(([key, auditEvent], index) => {
@@ -185,8 +204,15 @@ function SfrAuditEvents(props) {
                                     <div className="w-full p-0 m-0 mt-[-8px] mb-[2px]">
                                         <div className="pt-3 px-2">
                                             <div className={"pb-5"}>
-                                                <TextField className="w-full" key={description} label="Audit Event Description" defaultValue={description}
-                                                           onBlur={(event) => {handleAuditEventDescription(event, auditEvents, key)}}/>
+                                                <TextField
+                                                    className="w-full"
+                                                    key={description}
+                                                    label="Audit Event Description"
+                                                    defaultValue={description}
+                                                    onBlur={(event) => {
+                                                        handleSnackbarTextUpdates(handleAuditEventDescription, event, auditEvents, key)
+                                                    }}
+                                                />
                                             </div>
                                             {items?.map((item, index) => {
                                                 return getAuditItems(item, index, auditEvents, key)

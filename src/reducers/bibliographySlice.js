@@ -19,11 +19,25 @@ export const bibliographySlice = createSlice({
                 state.entries.push(e);
             });
         },
+        SET_BIBLIOGRAPHY_INITIAL_STATE: (state, action) => {
+            try {
+                return {
+                    ...action.payload
+                }
+            } catch (e) {
+                console.log(e)
+            }
+        },
         RESET_BIBLIOGRAPHY_STATE: () => ({...initialState}),
     },
 })
 
 // Action creators are generated for each case reducer function
-export const { UPDATE_CC_ENTRY, ADD_ENTRIES, RESET_BIBLIOGRAPHY_STATE } = bibliographySlice.actions
+export const {
+    UPDATE_CC_ENTRY,
+    ADD_ENTRIES,
+    SET_BIBLIOGRAPHY_INITIAL_STATE,
+    RESET_BIBLIOGRAPHY_STATE
+} = bibliographySlice.actions
 
 export default bibliographySlice.reducer

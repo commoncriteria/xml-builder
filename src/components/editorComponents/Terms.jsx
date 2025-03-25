@@ -1,4 +1,5 @@
 // Imports
+import React, { useState } from "react";
 import PropTypes from "prop-types";
 import { useDispatch, useSelector } from 'react-redux'
 import { Card, CardBody, CardFooter } from "@material-tailwind/react";
@@ -11,6 +12,8 @@ import DeleteForeverRoundedIcon from "@mui/icons-material/DeleteForeverRounded";
 import RemoveIcon from "@mui/icons-material/Remove";
 import Term from './Term';
 import './components.css';
+import SecurityComponents from "../../utils/securityComponents.jsx";
+import DeleteConfirmation from "../modalComponents/DeleteConfirmation.jsx";
 
 /**
  * The Terms component
@@ -30,9 +33,11 @@ function Terms(props) {
     }
 
     // Constants
+    const { handleSnackBarSuccess } = SecurityComponents
     const dispatch = useDispatch()
     const termSections = useSelector((state) => state.terms);
     const { primary, secondary, icons } = useSelector((state) => state.styling);
+    const [openDeleteDialog, setDeleteDialog] = useState(false);
 
     // Methods
     const updateTermsListTitle = async (event) => {
@@ -40,10 +45,16 @@ function Terms(props) {
     }
     const addHandler = async () => {
         {dispatch(CREATE_TERM_ITEM({termUUID: props.uuid}))}
+
+        // Update snackbar
+        handleSnackBarSuccess("New Term Successfully Added")
     }
     const deleteTermsList = async() => {
         await dispatch(DELETE_ACCORDION_FORM_ITEM({accordionUUID: props.accordionUUID, uuid: props.uuid}))
         await dispatch(DELETE_TERMS_LIST({title: props.title, uuid: props.uuid}))
+
+        // Update snackbar
+        handleSnackBarSuccess("Terms List Section Successfully Deleted")
     }
     const collapseHandler = () => {
         dispatch(COLLAPSE_TERMS_LIST({uuid: props.uuid, title: props.title}))
@@ -64,7 +75,7 @@ function Terms(props) {
                         </Tooltip>
                         <span/>
                         <span/>
-                        <IconButton sx={{marginTop: "-8px"}} onClick={deleteTermsList} variant="contained">
+                        <IconButton sx={{marginTop: "-8px"}} onClick={() => setDeleteDialog(!openDeleteDialog)} variant="contained">
                             <Tooltip title={"Delete Section"} id={props.uuid + "deleteSectionButton"}>
                                 <DeleteForeverRoundedIcon htmlColor={ primary } sx={ icons.large }/>
                             </Tooltip>
@@ -115,6 +126,12 @@ function Terms(props) {
                            <div className="m-0 p-0 mt-[-15px]"/>
                    }
             </Card>
+            <DeleteConfirmation
+                title={props.title}
+                open={openDeleteDialog}
+                handleOpen={() => setDeleteDialog(!openDeleteDialog)}
+                handleSubmit={deleteTermsList}
+            />
         </div>
     )
 }

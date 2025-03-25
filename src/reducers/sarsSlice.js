@@ -1,119 +1,15 @@
 import { createSlice } from '@reduxjs/toolkit'
 import { v4 as uuidv4 } from "uuid";
+import { deepCopy } from '../utils/deepCopy';
 
 const initialState = {
     xmlTagMeta: {
         tagName: "section",
         attributes: {}
     },
-    sections: {
-        "c69fa400-74bd-4c0a-82a9-dacb8f1bc7f4": {
-            title: "Class ASE: Security Target",
-            summary: "As per ASE activities defined in <xref to=\"bibCEM\"/>.",
-            open: false,
-            componentIDs: []
-        },
-        "91d2a9f7-b0ae-4113-9a31-d12caf12f294": {
-            title: "Class ADV: Development",
-            summary: "The information about the TOE is contained in the guidance documentation available to the end user as " +
-                "well as the TSS portion of the ST. The TOE developer must concur with the description of the product " +
-                "that is contained in the TSS as it relates to the functional requirements. The evaluation activities " +
-                "contained in <xref to=\"SFRs\"/> should provide the ST authors with sufficient information to " +
-                "determine the appropriate content for the TSS section.",
-            open: false,
-            componentIDs: [
-                "57b55381-e780-4bf7-992f-15670c0f96e7",
-            ]
-        },
-    },
-    components: {
-        "57b55381-e780-4bf7-992f-15670c0f96e7": {
-            ccID: "ADV_FSP.1",
-            name: "Basic Functional Specification",
-            optional: false,
-            summary: "The functional specification describes the TSFIs. It is not necessary to have a formal or complete " +
-                "specification of these interfaces. Additionally, because TOEs conforming to this PP will necessarily " +
-                "have interfaces to the Operational Environment that are not directly invocable by TOE users,  there " +
-                "is little point specifying that such interfaces be described in and of themselves since only indirect " +
-                "testing of such interfaces may be possible. For this PP, the activities for this family should focus " +
-                "on understanding the interfaces presented in the TSS in response to the functional requirements and " +
-                "the interfaces presented in the AGD documentation. No additional “functional specification” " +
-                "documentation is necessary to satisfy the evaluation activities specified. The interfaces that need " +
-                "to be evaluated are characterized through the information needed to perform the assurance activities " +
-                "listed, rather than as an independent, abstract list. ",
-            elementIDs: [
-                "e4f8bb06-6486-40e6-9058-593c06fd5ba5",
-                "a6b31aae-ee41-4129-9287-c4eb0aba611d",
-                "c5c69267-3361-4099-9442-96e1da168145",
-                "9a503195-0e47-4864-ac08-cf94a78114b3",
-                "50932319-ad87-452a-ab9a-0747211d69f9",
-                "04064ee9-c7ed-49e6-ba10-5a5e207ae9ac",
-                "f913d547-8b8c-4e9c-86d7-f7b21e2a0779",
-                "44846696-43d4-4b5c-bbb7-bbbef17c517b"
-            ]
-        },
-    },
-    elements: {
-        "e4f8bb06-6486-40e6-9058-593c06fd5ba5": {
-            type: "D",
-            title: "The developer shall provide a functional specification.",
-            note: "",
-            aactivity: ""
-        },
-        "a6b31aae-ee41-4129-9287-c4eb0aba611d": {
-            type: "D",
-            title: "The developer shall provide a tracing from the functional specification to the SFRs.",
-            note: "As indicated in the introduction to this section, the functional specification is comprised of the " +
-                "information contained in the AGD_OPE and AGD_PRE documentation. The developer may reference a website " +
-                "accessible to application developers and the evaluator. The evaluation activities in the functional " +
-                "requirements point to evidence that should exist in the documentation and TSS section; since these are " +
-                "directly associated with the SFRs, the tracing in element ADV_FSP.1.2D is implicitly already done and " +
-                "no additional documentation is necessary.",
-            aactivity: ""
-        },
-        "c5c69267-3361-4099-9442-96e1da168145": {
-            type: "C",
-            title: "The functional specification shall describe the purpose and method of use for each SFR-enforcing and SFR-supporting TSFI.",
-            note: "",
-            aactivity: ""
-        },
-        "9a503195-0e47-4864-ac08-cf94a78114b3": {
-            type: "C",
-            title: "The functional specification shall identify all parameters associated with each SFR-enforcing and SFR-supporting TSFI.",
-            note: "",
-            aactivity: ""
-        },
-        "50932319-ad87-452a-ab9a-0747211d69f9": {
-            type: "C",
-            title: "The functional specification shall identify all parameters associated with each SFR-enforcing and SFR-supporting TSFI.",
-            note: "",
-            aactivity: ""
-        },
-        "04064ee9-c7ed-49e6-ba10-5a5e207ae9ac": {
-            type: "C",
-            title: "The tracing shall demonstrate that the SFRs trace to TSFIs in the functional specification.",
-            note: "",
-            aactivity: ""
-        },
-        "f913d547-8b8c-4e9c-86d7-f7b21e2a0779": {
-            type: "E",
-            title: "The evaluator shall confirm that the information provided meets all requirements for content and presentation of evidence.",
-            note: "",
-            aactivity: ""
-        },
-        "44846696-43d4-4b5c-bbb7-bbbef17c517b": {
-            type: "E",
-            title: "The evaluator shall determine that the functional specification is an accurate and complete instantiation of the SFRs.",
-            note: "",
-            aactivity: "There are no specific evaluation activities associated with these SARs, except ensuring the information " +
-                "is provided. The functional specification documentation is provided to support the evaluation activities " +
-                "described in <xref to=\"SFRs\"/>, and other activities described for AGD, ATE, and AVA SARs. The " +
-                "requirements on the content of the functional specification information is implicitly assessed by " +
-                "virtue of the other evaluation activities being performed; if the evaluator is unable to perform " +
-                "an activity because there is insufficient interface information, then an adequate functional " +
-                "specification has not been provided."
-        },
-    },
+    sections: {},
+    components: {},
+    elements: {},
 }
 
 // Additional Methods
@@ -122,7 +18,7 @@ const deleteComponent = (state, sarUUID, componentUUID) => {
         let currentComponent = state.components[componentUUID];
         if (currentComponent.hasOwnProperty("elementIDs") && currentComponent.elementIDs.length > 0) {
             // Run through elements and delete associated elements
-            let elementIDs = JSON.parse(JSON.stringify(currentComponent.elementIDs));
+            let elementIDs = deepCopy(currentComponent.elementIDs);
             elementIDs.forEach((elementUUID) => {
                if (state.elements.hasOwnProperty(elementUUID)) {
                    deleteElement(state, componentUUID, elementUUID)
@@ -148,7 +44,7 @@ const deleteElement = (state, componentUUID, elementUUID) => {
     if (state.elements.hasOwnProperty(elementUUID)) {
         // Delete from parent section array if componentUUID was included
         if (componentUUID && state.components.hasOwnProperty(componentUUID) && state.components[componentUUID].hasOwnProperty("elementIDs")) {
-            let elementIDs = JSON.parse(JSON.stringify(state.components[componentUUID].elementIDs));
+            let elementIDs = deepCopy(state.components[componentUUID].elementIDs);
             if (elementIDs && elementIDs.length > 0) {
                 let elementIndex = elementIDs.indexOf(elementUUID)
                 if (elementIndex > -1) {
@@ -192,7 +88,7 @@ export const sarsSlice = createSlice({
                 let currentSection = state.sections[sarUUID];
                 if (currentSection.hasOwnProperty("componentIDs") && currentSection.componentIDs.length > 0) {
                     // Run through components and delete associated components
-                    let componentIDs = JSON.parse(JSON.stringify(currentSection.componentIDs));
+                    let componentIDs = deepCopy(currentSection.componentIDs);
                     componentIDs.forEach((componentUUID) => {
                         if (state.components.hasOwnProperty(componentUUID)) {
                             deleteComponent(state, sarUUID, componentUUID)
@@ -227,7 +123,7 @@ export const sarsSlice = createSlice({
         },
         CREATE_SAR_COMPONENT: (state, action) => {
             const componentUUID = uuidv4();
-            const { sarUUID, component } = action.payload;
+            const { sarUUID } = action.payload;
             if (sarUUID) {
                 if (!state.sections.hasOwnProperty(sarUUID)) {
                     state.sections[sarUUID] = {
@@ -250,6 +146,7 @@ export const sarsSlice = createSlice({
                 // Set the component ID
                 let compCCID = "";
                 let compName = "";
+                let component = action.payload.hasOwnProperty("component") ? action.payload.component : {}
                 if (component.hasOwnProperty("xmlTagMeta")) { // Attributes from imported xml
                     if (component.xmlTagMeta.attributes.hasOwnProperty("cc-id")) {
                         compCCID = component.xmlTagMeta.attributes["cc-id"];
@@ -379,6 +276,15 @@ export const sarsSlice = createSlice({
                 delete state.sections[key];
             });
         },
+        SET_SARS_INITIAL_STATE: (state, action) => {
+            try {
+                return {
+                    ...action.payload
+                }
+            } catch (e) {
+                console.log(e)
+            }
+        },
         RESET_SAR_STATE: () => initialState
     },
 })
@@ -398,6 +304,7 @@ export const {
     UPDATE_SAR_ELEMENT,
     DELETE_SAR_ELEMENT,
     DELETE_ALL_SAR_SECTIONS,
+    SET_SARS_INITIAL_STATE,
     RESET_SAR_STATE
 } = sarsSlice.actions
 

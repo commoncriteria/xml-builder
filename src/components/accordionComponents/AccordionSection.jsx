@@ -11,6 +11,7 @@ import { CREATE_ACCORDION_FORM_ITEM } from "../../reducers/accordionPaneSlice.js
 import { CREATE_TERM_ITEM, CREATE_TERMS_LIST } from "../../reducers/termsSlice.js";
 import { CREATE_THREAT_SECTION } from "../../reducers/threatsSlice.js";
 import { CREATE_OBJECTIVE_SECTION } from "../../reducers/objectivesSlice.js";
+import SecurityComponents from "../../utils/securityComponents.jsx";
 
 /**
  * The AccordionSection component
@@ -27,6 +28,8 @@ function AccordionSection(props) {
 
 	// Constants
 	const dispatch = useDispatch();
+	const { handleSnackBarSuccess } = SecurityComponents
+	const { ppTemplateVersion, ppType } = useSelector((state) => state.accordionPane.metadata);
 	const { secondary, icons } = useSelector((state) => state.styling);
 	const accordions = useSelector((state) => state.accordionPane.sections);
 	let [selectedType, setSelectedType] = React.useState("");
@@ -134,6 +137,9 @@ function AccordionSection(props) {
 			// Reset type and name to default
 			setSelectedType("");
 			setSelectedName("");
+
+			// Update snackbar
+			handleSnackBarSuccess(`New ${type} Section Successfully Added`)
 		}
 	};
 
@@ -170,11 +176,10 @@ function AccordionSection(props) {
 								: null}
 						</dl>
 					</div>
-					{!accordions[props.uuid].title
-						.toString()
-						.toLowerCase()
-						.includes("appendix") ? (
-						<div
+					{!accordions[props.uuid].title.toString().toLowerCase().includes("appendix") &&
+					(ppTemplateVersion !== "Version 3.1" && !accordions[props.uuid].title.toString().toLowerCase().includes("conformance claims"))
+						?
+						(<div
 							className="w-full flex justify-center py-2 rounded-b-lg border-y-2 border-gray-300 bg-white"
 							key={props.uuid + "-NewFormItem"}
 						>
@@ -224,9 +229,11 @@ function AccordionSection(props) {
 										) : null}
 										{accordions[props.uuid].title ===
 										"Security Requirements" ? ([
-											<MenuItem key={"sars"} value={"SARs"}>
-												SARs
-											</MenuItem>,
+											ppType === "Protection Profile" && (
+												<MenuItem key={"sars"} value={"SARs"}>
+													SARs
+												</MenuItem>
+											),
 											<MenuItem key={"sfrs"} value={"SFRs"}>
 												SFRs
 											</MenuItem>

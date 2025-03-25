@@ -21,7 +21,7 @@ const getToggleSwitch = (color) => {
             backgroundColor: color,
         },
         '& .MuiSwitch-track': {
-            backgroundColor: "white",
+            backgroundColor: "lightGrey",
         }
     }
 }
@@ -152,6 +152,10 @@ const initialState = (() => {
             xSmall: {
                 width: 20,
                 height: 20
+            },
+            textEditor: {
+                width: "14px",
+                height: "14px"
             },
             color: {
                 primary: {

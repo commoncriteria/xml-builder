@@ -29,8 +29,12 @@ function MultiSelectDropdown(props) {
         elementData: PropTypes.object,
         groupID: PropTypes.string,
         multiple: PropTypes.bool,
+        disabled: PropTypes.bool,
         index: PropTypes.number,
-        style: PropTypes.string
+        style: PropTypes.string,
+        required: PropTypes.bool,
+        handleOpenModal: PropTypes.func,
+        defaultValue: PropTypes.oneOfType([PropTypes.array, PropTypes.string]),
     };
 
     // Constants
@@ -54,6 +58,7 @@ function MultiSelectDropdown(props) {
     const handleChange = (event) => {
         const {target: { value }} = event;
         let newSelections = (typeof value === 'string' ? value.split(',') : value)
+
         if (props.elementData) {
             props.handleSelections({selections: newSelections}, props.elementData.uuid, props.elementData.index, "update")
         } else {
@@ -65,9 +70,12 @@ function MultiSelectDropdown(props) {
             return (
                 Object.entries(props.selectionOptions).map(([key, value]) => {
                     let title = (key === "complexSelectables" || key === "ComplexSelectablesEA") ? "Complex Selectables" : key.charAt(0).toUpperCase() + key.slice(1)
-                    if ((title === "Groups" && value.length === 1 && value[0] === props.groupID) || value.length === 0) {
+                    const includesDisabled = typeof value !== "string" && value.hasOwnProperty("disabled") && value.hasOwnProperty("label")
+                    const noMenuItems = (title === "Groups" && value.length === 1 && value[0] === props.groupID) || value.length === 0
+
+                    if (noMenuItems) {
                         return
-                    } else if (typeof value !== "string") {
+                    } else if (typeof value !== "string" && !value.hasOwnProperty("disabled")) {
                         return (
                             [
                                 <ListSubheader sx={headerStyle}>{title}</ListSubheader>,
@@ -83,14 +91,31 @@ function MultiSelectDropdown(props) {
                                 })
                             ]
                         )
-                    } else if (typeof value === "string") {
+                    } else if (includesDisabled)  {
+                        const { label, disabled } = value
+
                         return (
-                            <MenuItem style={getStyles(value, props.selections, theme)} sx={menuStyle}
-                                      key={value} value={value}>{value}
+                            <MenuItem
+                                style={getStyles(label, props.selections, theme)}
+                                sx={menuStyle}
+                                key={label}
+                                value={label}
+                                disabled={disabled}
+                            >
+                                {label}
                             </MenuItem>
                         )
-                    } else {
-                        return
+                    } else if (typeof value === "string") {
+                        return (
+                            <MenuItem
+                                style={getStyles(value, props.selections, theme)}
+                                sx={menuStyle}
+                                key={value}
+                                value={value}
+                            >
+                                {value}
+                            </MenuItem>
+                        )
                     }
                 })
             )
@@ -111,12 +136,19 @@ function MultiSelectDropdown(props) {
     return (
         <div key={`${props.id}-multi-select-dropdown`} className="w-full">
             <FormControl fullWidth>
-                <InputLabel color={props.style === "primary" ? "secondary" : "primary"}>{props.title}</InputLabel>
+                <InputLabel
+                    required={props.required !== undefined ? props.required : false}
+                    color={props.style === "primary" ? "secondary" : "primary"}
+                >
+                    {props.title}
+                </InputLabel>
                 <Select
+                    defaultValue={props.defaultValue !== undefined ? props.defaultValue : null}
                     color={props.style === "primary" ? "secondary" : "primary"}
                     key={props.id}
                     label={props.title}
                     multiple={props.multiple !== undefined ? props.multiple : true}
+                    disabled={props.disabled !== undefined ? props.disabled : false}
                     value={props.selections}
                     onChange={handleChange}
                     autoWidth

@@ -2,18 +2,38 @@ import { v4 as uuidv4 } from 'uuid';
 import { select } from 'xpath';
 import parse from "html-react-parser";
 
+// Constants
 const raw_xml_tags = ["xref", "rule", "figure", "ctr", "snip", "if-opt-app", "also", "_"];
-export const escapedTagsRegex = /<\/?(xref|rule|figure|ctr|snip|if-opt-app|also|_)\b[^>]*>/g;
+const style_tags = ["p", "s", "i", "strike", "h3", "span", "u", "ol", "ul", "li", "sup", "sub", "pre", "code", "table"];
+export const escapedTagsRegex = /<(\/?)(xref|rule|figure|ctr|snip|if-opt-app|also|_)\b([^>]*)>/g;
 
+/**
+ * Selector function to get UUID by title
+ * @param slice the slice
+ * @param title the title
+ * @returns {null|string} the uuid, null if no matching title is found
+ */
+export const getUUIDByTitle = (slice, title) => {
+    for (const [uuid, termDetails] of Object.entries(slice)) {
+        if (termDetails.title === title) {
+            return uuid;
+        }
+    }
+    return null; // return null if no matching title is found
+};
+
+// Escape XML tags, while preserving attributes
 export const removeTagEqualities = (content, isParse) => {
     try {
-        const newContent = content.replace(escapedTagsRegex, (match, tagContent) => `&lt;${tagContent}&gt;`)
+        const newContent = content.replace(escapedTagsRegex, (match, closingSlash, tagName, attributes) => {
+            return `&lt;${closingSlash}${tagName}${attributes}&gt;`;
+        });
 
-        return isParse ? parse(newContent) : newContent
+        return isParse ? parse(newContent) : newContent;
     } catch (e) {
-        console.log(e)
+        console.error(e);
     }
-}
+};
 
 export const findAllByTagName = (nodeName, domNode) => {
 
@@ -116,7 +136,6 @@ export const getPPPreference = (domNode) => {
     return preferences;
 }
 
-
 /**
  * <modules> related tags
  * @param {*} domNode 
@@ -211,7 +230,6 @@ export const getPPMetadata = (domNode) => {
     return xmlTagMeta;
 }
 
-
 export const getPPReference = (domNode) => {
     const ppRef = findAllByTagName('PPReference', domNode);
     let ppObj = {
@@ -227,15 +245,17 @@ export const getPPReference = (domNode) => {
         ppRef[0].childNodes.forEach((child) => {
             if (child.tagName.toLowerCase() == 'referencetable') {
                 child.childNodes.forEach((c) => {
-                    if (c.tagName.toLowerCase() == 'pptitle') {
+                    const refTableChildTag = c.tagName.toLowerCase();
+
+                    if (refTableChildTag == 'pptitle') {
                         ppObj.PPTitle = c.textContent
-                    } else if (c.tagName.toLowerCase() == 'ppversion') {
+                    } else if (refTableChildTag == 'ppversion') {
                         ppObj.PPVersion = c.textContent
-                    } else if (c.tagName.toLowerCase() == 'ppauthor') {
+                    } else if (refTableChildTag == 'ppauthor') {
                         ppObj.PPAuthor = c.textContent
-                    } else if (c.tagName.toLowerCase() == 'pppubdate') {
+                    } else if (refTableChildTag == 'pppubdate') {
                         ppObj.PPPubDate = c.textContent
-                    } else if (c.tagName.toLowerCase() == 'keywords') {
+                    } else if (refTableChildTag == 'keywords') {
                         ppObj.Keywords = c.textContent
                     }
                 });
@@ -253,11 +273,12 @@ export const getPPReference = (domNode) => {
                     'comment': ""
                 }
                 child.childNodes.forEach((c) => {
-                    if (c.tagName.toLowerCase() == 'version') {
+                    const revHistoryChildTag = c.tagName.toLowerCase();
+                    if (revHistoryChildTag == 'version') {
                         revisionInstance.version = c.textContent
-                    } else if (c.tagName.toLowerCase() == 'date') {
+                    } else if (revHistoryChildTag == 'date') {
                         revisionInstance.date = c.textContent
-                    } else if (c.tagName.toLowerCase() == 'subject') {
+                    } else if (revHistoryChildTag == 'subject') {
                         revisionInstance.comment = c.textContent
                     }
                 });
@@ -269,18 +290,19 @@ export const getPPReference = (domNode) => {
     return ppObj;
 }
 
-
 export const getSecurityProblemDefinition = (domNode) => {
-    const spd_section = findAllByTagName('Security_Problem_Description', domNode);
     let spd = '';
 
-    if (spd_section.length !== 0) {
-        spd = parseRichTextChildren(spd_section[0]);
+    if (findAllByTagName('Security_Problem_Description', domNode).length !== 0) {
+        spd = parseRichTextChildren(findAllByTagName('Security_Problem_Description', domNode)[0]);
+    }
+
+    if (findAllByTagName('spd', domNode).length !== 0) {
+        spd = parseRichTextChildren(findAllByTagName('spd', domNode)[0]);
     }
 
     return spd;
 }
-
 
 export const getAllThreats = (domNode) => {
     // Get threat description (if exists)
@@ -300,33 +322,55 @@ export const getAllThreats = (domNode) => {
         let securityObjectives = new Array();
 
         if (threat.nodeType == Node.ELEMENT_NODE && threat.tagName == "threat") {
-            let description = findAllByTagName('description', threat);
-            description = description.length !== 0 ? description[0].textContent : "";
-            let name = threat.getAttribute("name");
+            let name = threat.getAttribute("name") || "";
+            let description = "";
+            let sfrs = [];
+            let lastSfrName = "";
 
-            let objectives = findAllByTagName('objective-refer', threat);
-            objectives.forEach(objective => {
-                let objective_name = objective.getAttribute("ref");
+            threat.childNodes.forEach(threatChild => {
+                if (threatChild.nodeType == Node.ELEMENT_NODE) {
+                    if (threatChild.nodeName.toLowerCase() == "description") {
+                        description = threatChild.textContent;
+                    } else if (threatChild.nodeName.toLowerCase() == "objective-refer") {
+                        let objective_name = threatChild.getAttribute("ref");
+                        let rationale = "";
 
-                let rationale = findAllByTagName('rationale', objective);
-                rationale = rationale.length !== 0 ? rationale[0].textContent : "";
+                        threatChild.childNodes.forEach(objReferChild => {
+                            if (objReferChild.nodeType == Node.ELEMENT_NODE && objReferChild.nodeName.toLowerCase() == "rationale") {
+                                rationale = objReferChild.textContent;
 
-                securityObjectives.push({
-                    name: objective_name,
-                    rationale: rationale.replace(/[\n\t]/g, ""),
-                    xmlTagMeta: {
-                        tagName: "objective-refer",
-                        attributes: {
-                            ref: objective_name
-                        }
+                                securityObjectives.push({
+                                    name: objective_name,
+                                    rationale: rationale.replace(/[\n\t]/g, ""),
+                                    xmlTagMeta: {
+                                        tagName: "objective-refer",
+                                        attributes: {
+                                            ref: objective_name
+                                        }
+                                    }
+                                });
+                            }
+                        });
+                    } else if (threatChild.nodeName.toLowerCase() == "addressed-by") { // for Direct Rationale
+                        lastSfrName = threatChild.textContent.replace(/["']/g, '').split("(")[0].trim();
+                    } else if (threatChild.nodeName.toLowerCase() == "rationale") { // for Direct Rationale
+                        sfrs.push({
+                            name: lastSfrName,
+                            rationale: threatChild.textContent,
+                            xmlTagMeta: {
+                                tagName: "addressed-by",
+                            }
+                        });
+                        lastSfrName = "";
                     }
-                });
+                }
             });
 
             threats.push({
                 name: name,
                 definition: description.replace(/[\n\t]/g, ""),
-                securityObjectives: securityObjectives,
+                securityObjectives,
+                sfrs,
                 xmlTagMeta: {
                     tagName: threat.tagName,
                     attributes: {
@@ -388,7 +432,53 @@ export const getAllAssumptions = (domNode) => {
     return assumptions;
 }
 
+export const getAllOSPs = (domNode) => {
+    let osp_tags = findAllByTagName('OSP', domNode);
+    let OSPs = new Array();
 
+    osp_tags.forEach((osp) => {
+        let securityObjectives = new Array();
+
+        if (osp.nodeType == Node.ELEMENT_NODE && osp.tagName == "OSP") {
+            let description = findAllByTagName('description', osp);
+            description = description.length !== 0 ? description[0].textContent : "";
+            let name = osp.getAttribute("name");
+
+            let objectives = findAllByTagName('objective-refer', osp);
+            objectives.forEach(objective => {
+                let objective_name = objective.getAttribute("ref");
+
+                let rationale = findAllByTagName('rationale', objective);
+                rationale = rationale.length !== 0 ? rationale[0].textContent : "";
+
+                securityObjectives.push({
+                    name: objective_name,
+                    rationale: rationale,
+                    xmlTagMeta: {
+                        tagName: "objective-refer",
+                        attributes: {
+                            ref: objective_name
+                        }
+                    }
+                });
+            });
+
+            OSPs.push({
+                name: name,
+                definition: description,
+                securityObjectives: securityObjectives,
+                xmlTagMeta: {
+                    tagName: osp.tagName,
+                    attributes: {
+                        name: name
+                    }
+                }
+            });
+        }
+    });
+
+    return OSPs;
+}
 
 export const getAllSecurityObjectivesTOE = (domNode) => {
     const securityobjective_tags = findAllByTagName('SO', domNode);
@@ -409,19 +499,14 @@ export const getAllSecurityObjectivesTOE = (domNode) => {
                 }
                 const rationale = rationaleNode && rationaleNode.tagName == 'rationale' ? rationaleNode.textContent.trim() : '';
                 return {
-                    sfrDetails: {
-                        sfr_name: sfr_name,
-                        xmlTagMeta: {
-                            tagName: "addressed-by",
-                        }
-                    },
-                    rationale: {
-                        description: rationale,
-                        xmlTagMeta: {
-                            tagName: "rationale",
+                    name: sfr_name,
+                    rationale: rationale,
+                    xmlTagMeta: {
+                        tagName: "addressed-by",
+                        attributes: {
+                            ref: sfr_name
                         }
                     }
-
                 };
             });
 
@@ -565,6 +650,36 @@ export const getDocumentObjectives = (domNode) => {
     return { doc_objectives, xmlTagMeta };
 }
 
+/**
+ * @param {*} domNode
+ */
+export const getDistributedTOE = (domNode) => {
+    let introNode = findAllByAttribute("title", "Introduction to Distributed TOEs", domNode)[0] || null;
+    if (!introNode) return null
+
+    let registrationNode = findAllByAttribute("title", "Registration of Distributed TOE Components", domNode)[0] || null;
+    let allocationNode = findAllByAttribute("title", "Allocation of Requirements in Distributed TOEs", domNode)[0] || null;
+    let securityNode = findAllByAttribute("title", "Security Audit for Distributed TOEs", domNode)[0] || null;
+
+    let intro = { node: introNode, xml: parseRichTextChildren(introNode) }
+    let registration = { node: registrationNode, xml: parseRichTextChildren(registrationNode) }
+    let allocation = { node: allocationNode, xml: parseRichTextChildren(allocationNode) }
+    let security = { node: securityNode, xml: parseRichTextChildren(securityNode) }
+
+    let sections = [intro, registration, allocation, security]
+    sections.forEach((section) => {
+        let xmlTagMeta = {
+            tagName: "section",
+            attributes: {}
+        };
+        section.node.attributes.forEach((attr) => {
+            xmlTagMeta.attributes[attr.name] = attr.value;
+        });
+        section.xmlTagMeta = xmlTagMeta
+    })
+
+    return { intro, registration, allocation, security }
+}
 
 /**
  * @param {*} domNode
@@ -607,7 +722,7 @@ export const getCompliantTOE = (domNode) => {
 
         toeSection.childNodes.forEach(subsection => {
             if (subsection.nodeType == Node.ELEMENT_NODE) {
-                if (subsection.tagName.toLowerCase() == "sec:toe_boundary") {
+                if (subsection.getAttribute("title") === "TOE Boundary" || subsection.tagName.toLowerCase() == "sec:toe_boundary") {
                     toe_boundary = parseRichTextChildren(subsection);
                 } else if (subsection.tagName.toLowerCase() == "sec:toe_platform") {
                     toe_platform = parseRichTextChildren(subsection);
@@ -618,7 +733,6 @@ export const getCompliantTOE = (domNode) => {
 
     return { toe_overview, toe_boundary, toe_platform };
 }
-
 
 /**
  * 
@@ -642,7 +756,6 @@ export const getUseCaseDescription = (domNode) => {
 
     return use_case_description;
 }
-
 
 /**
  * 
@@ -690,7 +803,6 @@ export const getUseCases = (domNode) => {
     }
 }
 
-
 /**
  * 
  * @param {*} domNode
@@ -705,7 +817,6 @@ export const getDocumentScope = (domNode) => {
 
     return scope_of_doc;
 }
-
 
 /**
  * 
@@ -722,93 +833,219 @@ export const getIndendedReadership = (domNode) => {
     return indended_readership;
 }
 
+/**
+ * Gets the pp template version
+ * Types: Version 3.1, CC2022 Direct Rationale, CC2022 Standard
+ * @param domNode the xml domNode
+ */
+export const getPpTemplateVersion = (domNode) => {
+    let cclaims = findAllByTagName("CClaimsInfo", domNode) || []
+    let version = "Version 3.1"
+
+    if (cclaims.length !== 0) {
+        cclaims = cclaims[0];
+        const cc_version = cclaims.getAttribute("cc-version")
+        const cc_approach = cclaims.getAttribute("cc-approach")
+
+        if (cc_version === "cc-2022r1") {
+            version = cc_approach === "standard" ? "CC2022 Standard" : "CC2022 Direct Rationale"
+        }
+    }
+
+    return version
+}
 
 /**
  * 
  * @param {*} domNode 
  */
-export const getCClaims = (domNode) => {
-    let cclaims = findAllByTagName('cclaims', domNode) || [];
+export const getCClaims = (domNode, ppVersion) => {
+    let cclaims = null;
+    let cclaimArray = new Array();
 
-    if (cclaims.length !== 0) {
-        cclaims = cclaims[0];
+    if (ppVersion == "Version 3.1") {
+        cclaims = findAllByTagName('cclaims', domNode) || [];
 
-        let cclaimArray = new Array();
+        if (cclaims.length !== 0) {
+            cclaims = cclaims[0];
 
-        for (let cclaim of cclaims.childNodes) {
-            if (cclaim.nodeType == Node.ELEMENT_NODE && cclaim.tagName == "cclaim") {
-                let description = parseRichTextChildren(findAllByTagName('description', cclaim)[0]);
+            for (let cclaim of cclaims.childNodes) {
+                if (cclaim.nodeType == Node.ELEMENT_NODE && cclaim.tagName.toLowerCase() == "cclaim") {
+                    let description = parseRichTextChildren(findAllByTagName('description', cclaim)[0]);
 
-                cclaimArray.push({
-                    name: cclaim.getAttribute("name") ? cclaim.getAttribute("name") : "",
-                    description: description,
-                    xmlTagMeta: {
-                        tagName: "cclaim",
-                        attributes: {
-                            name: cclaim.getAttribute("name") ? cclaim.getAttribute("name") : ""
+                    cclaimArray.push({
+                        name: cclaim.getAttribute("name") ? cclaim.getAttribute("name") : "",
+                        description: description,
+                        xmlTagMeta: {
+                            tagName: "cclaim",
+                            attributes: {
+                                name: cclaim.getAttribute("name") ? cclaim.getAttribute("name") : ""
+                            },
+
                         },
-
-                    },
-                });
+                    });
+                }
             }
         }
+    } else {
+        let cClaimsInfo = {};
+        cclaims = findAllByTagName('CClaimsInfo', domNode) || [];
 
-        return cclaimArray;
+        if (cclaims.length !== 0) {
+            cclaims = cclaims[0];
+
+            cClaimsInfo["cc-version"] = cclaims.getAttribute("cc-version") || "";
+            cClaimsInfo["cc-approach"] = cclaims.getAttribute("cc-approach") || "";
+
+            let conformanceTypes = ["cc-st-conf", "cc-pt2-conf", "cc-pt3-conf"];
+            cclaimArray.push({
+                name: "PP Claim CC2022",
+                ppClaim: [],
+                configurations: []
+            });
+
+            for (let cclaim of cclaims.childNodes) {
+                if (cclaim.nodeType == Node.ELEMENT_NODE) {
+                    if (conformanceTypes.includes(cclaim.tagName.toLowerCase())) {
+                        cclaimArray.push({
+                            name: "Conformance CC2022",
+                            description: cclaim.textContent,
+                            tagName: cclaim.tagName.toLowerCase()
+                        });
+                    }
+                    else if (cclaim.tagName.toLowerCase() == "cc-pp-conf" || cclaim.tagName.toLowerCase() == "cc-pp-config-with") {
+                        let ppClaimArr = cclaimArray.filter((entry) => entry.name == "PP Claim CC2022")[0];
+                        let ppConformanceClaims = [];
+                        let ppConfig = {
+                            pp: [],
+                            modules: []
+                        }
+
+                        if (cclaim.tagName.toLowerCase() == "cc-pp-conf") {
+                            cclaim.childNodes.forEach(ppClaimChild => {
+                                if (ppClaimChild.nodeType == Node.ELEMENT_NODE) {
+                                    if (ppClaimChild.tagName.toLowerCase() == "pp-cc-ref") {
+                                        ppConformanceClaims.push({
+                                            name: "PP Conformance",
+                                            description: ppClaimChild.textContent
+                                        });
+                                    }
+                                }
+                            });
+
+                            ppClaimArr.ppClaim = ppConformanceClaims;
+                        } else if (cclaim.tagName.toLowerCase() == "cc-pp-config-with") {
+                            cclaim.childNodes.forEach(ppClaimChild => {
+                                if (ppClaimChild.nodeType == Node.ELEMENT_NODE) {
+                                    if (ppClaimChild.tagName.toLowerCase() == "pp-cc-ref") {
+                                        ppConfig.pp.push({
+                                            name: "PP Configuration",
+                                            description: ppClaimChild.textContent,
+                                        });
+                                    } else if (ppClaimChild.tagName.toLowerCase() == "mod-cc-ref") {
+                                        ppConfig.modules.push({
+                                            name: "Module Configuration",
+                                            description: ppClaimChild.textContent
+                                        });
+                                    }
+                                }
+                            });
+                            ppClaimArr.configurations = ppConfig;
+                        }
+                    }
+                    else if (cclaim.tagName.toLowerCase() == "cc-pkg-claim") {
+                        let packageClaim = {
+                            functionalPackages: [],
+                            assurancePackages: []
+                        }
+
+                        cclaim.childNodes.forEach(packageClaimChild => {
+                            if (packageClaimChild.nodeType == Node.ELEMENT_NODE) {
+                                if (packageClaimChild.tagName.toLowerCase() == "fp-cc-ref") {
+                                    packageClaim.functionalPackages.push({
+                                        name: "Functional Package",
+                                        description: packageClaimChild.textContent,
+                                        conf: packageClaimChild.getAttribute("conf") ? packageClaimChild.getAttribute("conf") : ""
+                                    });
+                                } else if (packageClaimChild.tagName.toLowerCase() == "ap-cc-ref") {
+                                    packageClaim.assurancePackages.push({
+                                        name: "Assurance Package",
+                                        description: packageClaimChild.textContent,
+                                        conf: packageClaimChild.getAttribute("conf") ? packageClaimChild.getAttribute("conf") : ""
+                                    });
+                                }
+                            }
+                        });
+                        cclaimArray.push({
+                            name: "Package Claim CC2022",
+                            configurations: packageClaim,
+                        });
+                    } else if (cclaim.tagName.toLowerCase() == "cc-eval-methods") {
+                        let evalMethods = [];
+
+                        cclaim.childNodes.forEach(evalMethodChild => {
+                            if (evalMethodChild.nodeType == Node.ELEMENT_NODE) {
+                                if (evalMethodChild.tagName.toLowerCase() == "em-cc-ref") {
+                                    evalMethods.push({ description: evalMethodChild.textContent });
+                                }
+                            }
+                        });
+
+                        cclaimArray.push({
+                            name: "Evaluation Methods CC2022",
+                            methods: evalMethods,
+                        });
+                    } else if (cclaim.tagName.toLowerCase() == "cc-claims-addnl-info") {
+                        cclaimArray.push({
+                            name: "CClaim Additional Info CC2022",
+                            description: cclaim.textContent,
+                        });
+                    }
+                }
+            }
+        }
     }
-    return cclaims;
+
+    return cclaimArray;
 }
 
-
-
 // Constructs HTML by recursively calling getNodeContent
-const getNodeContentWithTags = (node) => {
+const getNodeContentWithTags = (node, retainNamespace = false) => {
     let content = "";
     for (let childNode of node.childNodes) {
-        content += getNodeContent(childNode);
+        content += getNodeContent(childNode, retainNamespace);
     }
     return content;
 }
 
 // Recursively traverses and constructs HTML content for each node
-const getNodeContent = (node) => {
+const getNodeContent = (node, retainNamespace = false) => {
     if (node.nodeType == Node.TEXT_NODE) {
         // If text node, return text content
-        return node.textContent;
+        return removeWhitespace(node.textContent);
     } else if (node.nodeType == Node.COMMENT_NODE) {
         return `<!--  ${node.textContent}  -->`;
-    } 
+    }
     else if (node.nodeType == Node.ELEMENT_NODE) {
         // Constructs opening tag with attributes, recursively get content for child nodes
-        let content = `<${node.tagName}`;
+        let nodeName = node.localName;
+        if (retainNamespace) {
+            nodeName = node.tagName;
+        }
+        let content = `<${nodeName}`;
         for (let attr of node.attributes) {
             content += ` ${attr.name}="${attr.value}"`;
         }
         content += ">";
         for (let childNode of node.childNodes) {
-            content += getNodeContent(childNode);
+            content += getNodeContent(childNode, retainNamespace);
         }
-        content += `</${node.tagName}>`;
-        return content;
+        content += `</${nodeName}>`;
+        return removeWhitespace(content);
     } else {
         return "";
     }
 }
-
-
-
-
-
-/**
- * 
- * @param {*} domNode 
- */
-export const getAppendices = (domNode) => {
-    // let sections = findAllMultipleTagNames(['appendix'], domNode);
-
-    let inherent_requirements = findAllByAttribute("id", "satisfiedreqs", domNode)[0].textContent;
-    return inherent_requirements;
-}
-
 
 /**
  * 
@@ -911,7 +1148,7 @@ export const getSARs = (domNode) => {
                 if (child.nodeName.toLowerCase() == "section" || (child.prefix && child.prefix.toLowerCase() == "sec")) {
                     let section = {
                         summary: "",
-                        open: true,
+                        open: false,
                         components: [],
                         xmlTagMeta: {
                             tagName: child.nodeName.toLowerCase(),
@@ -956,20 +1193,27 @@ export const getSARs = (domNode) => {
     return { sarsDescription, sections, xmlTagMeta };
 }
 
-
 /**
  * 
  * @param {*} domNode 
  */
 export const getImplementations = (domNode) => {
-    const implementation_section = findAllByTagName('implements', domNode);
-    let implementsXML = null;
+    const featureElements = domNode.getElementsByTagName('feature');
+    let featuresArray = []
 
-    if (implementation_section.length !== 0) {
-        implementsXML = getNodeContentWithTags(implementation_section[0]);
+    // Iterate over each <feature> element
+    for (let i = 0; i < featureElements.length; i++) {
+        const featureElement = featureElements[i];
+
+        // Extract id, title, and description
+        const id = featureElement.getAttribute('id');
+        const title = featureElement.getAttribute('title');
+        const description = removeWhitespace(featureElement.getElementsByTagName('description')[0].textContent);
+
+        // Create an object and push it to the array
+        featuresArray.push({ id, title, description });
     }
-
-    return implementsXML;
+    return featuresArray;
 }
 
 /**
@@ -981,18 +1225,32 @@ export const getAuditSection = (domNode) => {
 
     let auditTables = findAllByTagName('audit-table', domNode);
     if (auditTables.length !== 0) {
-        section = escapeXmlTags(getNodeContent(auditTables[0].parentNode)); // only care about first one since we are getting everything from the parent node
+        section = getNodeContent(auditTables[0].parentNode, true); // only care about first one since we are getting everything from the parent node
     }
 
     return section;
 }
 
+/**
+ * This loads the top level content of Security Requirements
+ * @param {*} domNode 
+ */
+export const getSecurityRequirement = (domNode) => {
+    let securityRequirement = '';
+    const securityNode = findAllByAttribute("title", "Security Requirements", domNode);
+
+    if (securityNode.length !== 0) {
+        securityRequirement = parseRichTextChildren(securityNode[0])
+    }
+
+    return securityRequirement;
+}
 
 /**
  * 
  * @param {*} domNode 
  */
-export const getSFRs = (domNode) => {
+export const getSFRs = (domNode, extCompDefMap) => {
     const sfrComponents = findAllByTagName('f-component', domNode);
     let selectableGroupCounter = 0;
 
@@ -1004,18 +1262,33 @@ export const getSFRs = (domNode) => {
     const ppReference = getPPReference(domNode);
     const ppName = ppReference.PPTitle;
 
+    // Implement sections (if exists)
+    const implementObject = getImplementations(domNode)
+
     if (sfrComponents.length !== 0) {
         let sfrCompArr = new Array();
+
+        // Management function status marker definiion
+        const statusMarkers = {
+            "M": "Indicates that this function is mandatory for this role.",
+            "O": "Indicates that this function is optional for this role",
+            "NA": "Indicates that this function is not applicable for this role",
+            "X": "Indicates that this function is not permitted for this role"
+        }
 
         for (let component of sfrComponents) {
             const xml_id = component.getAttribute("id") ? component.getAttribute("id") : "";
 
+            // need to genereate UUID here as opposed to at time of component creation in sfrSection slice since component level EA needs reference 
+            // to UUID in order to reference it in the state
+            let sfrCompUUID = uuidv4();
             let family_name = "";
             let family_id = "";
             let family_description = "";
+            let familyExtCompDef = []
             let evaluationActivities = {};
             // Selection dependency related
-            let isSelBased = component.getAttribute("status") ? component.getAttribute("status") == "sel-based" ? true : false : false;
+            let isSelBased = component.getAttribute("status") ? (component.getAttribute("status") == "sel-based" ? true : false) : false;
             let selections = {
                 components: [],
                 elements: [],
@@ -1025,7 +1298,7 @@ export const getSFRs = (domNode) => {
             let useCaseBased = false;
             let use_cases = [];
 
-            let isOptional = component.getAttribute("status") ? component.getAttribute("status") == "optional" ? true : false : false;
+            let isOptional = component.getAttribute("status") ? (component.getAttribute("status") == "optional" ? true : false) : false;
 
             let extendedComponentDefinition = {
                 audit: "",
@@ -1035,7 +1308,10 @@ export const getSFRs = (domNode) => {
                 toggle: false
             }
 
-            const isInvisible = component.getAttribute("status") ? component.getAttribute("status") == "invisible" ? true : false : false;
+            const isInvisible = component.getAttribute("status") ? (component.getAttribute("status") == "invisible" ? true : false) : false;
+
+            let implementationDependent = component.getAttribute("status") ? (component.getAttribute("status") === "feat-based" ? true : false) : false
+            const reasons = []
 
             // SFR Class description may just be text in between section header and <f-component> definition
             family_description = parseRichTextChildren(component.parentElement);
@@ -1087,11 +1363,18 @@ export const getSFRs = (domNode) => {
                                     } else if (attributeName.toLowerCase().includes("on-incl")) { // Check if component dependent
                                         selections.components.push(depend.getAttribute(attributeName));
                                     } else {
-                                        selections.selections.push(depend.getAttribute(attributeName));
+                                        const id = depend.getAttribute(attributeName);
+                                        const reason = implementObject.filter(x => x.id === id);
+                                        if (attributeName.toLowerCase().includes("on") && reason.length > 0 && reason[0].hasOwnProperty("id") && reason[0].id === id) {
+                                            reasons.push(reason[0])
+                                            implementationDependent = true
+                                        } else {
+                                            selections.selections.push(id);
 
-                                        // Get element ID from parent node
-                                        let parent = getSelDepParents(domNode, depend.getAttribute(attributeName));
-                                        selections.elements.push(parent.fElementId);
+                                            // Get element ID from parent node
+                                            let parent = getSelDepParents(domNode, id);
+                                            selections.elements.push(parent.fElementId);
+                                        }
                                     }
                                 }
                             });
@@ -1108,6 +1391,26 @@ export const getSFRs = (domNode) => {
                     }
                 }
 
+                // Get implementation dependent
+                if (implementationDependent && !isSelBased) {
+                    // Find all dependencies (attributes in xml are totally inconsistent)
+                    const dependsAttributes = ['on', 'and', 'on-se1', 'on1', 'on2', 'on3', 'on4', 'on5', 'on-sel', 'also', 'on-incl', 'on-use', 'on-uc'];
+                    let depends = findAllByTagName("depends", component);
+
+                    if (depends.length !== 0) {
+                        depends.forEach(depend => {
+                            dependsAttributes.forEach(attributeName => {
+                                if (depend.getAttribute(attributeName) !== null) {
+                                    const id = depend.getAttribute(attributeName);
+                                    const reason = implementObject.filter(x => x.id === id);
+                                    if (reason.length > 0 && reason[0].hasOwnProperty("id") && reason[0].id === id) {
+                                        reasons.push(reason[0])
+                                    }
+                                }
+                            })
+                        })
+                    }
+                }
 
                 // Get family information (normally parent to the f-component)
                 // TODO: add some validation checking for parent element (not all PP's have section tag)
@@ -1119,6 +1422,10 @@ export const getSFRs = (domNode) => {
                     family_id = component.parentElement.tagName.split(":")[1];
                 }
 
+                // Add family extended component definition if the family id exists
+                if (family_id && family_id !== "") {
+                    familyExtCompDef = extCompDefMap.has(family_id) ? extCompDefMap.get(family_id) : []
+                }
 
                 const sfrElements = findAllByTagName('f-element', component);
                 let allSFRElements = {}; // contains multiple sfrElement's
@@ -1140,8 +1447,8 @@ export const getSFRs = (domNode) => {
 
                     // Dynamincally create element name (XML has random id's)
                     let elementName = `${component.getAttribute("cc-id")}.${++elem_counter}${iteration_id}`; // eg. fcs_ckm.1.1
-                    // XMLID is used for looking up UUID
-                    let elementXMLID = element.getAttribute("id") ? element.getAttribute("id") : "";
+                    // XMLID is used for looking up UUID; generate one if there is none - transforms doesn't accept "." in the id
+                    let elementXMLID = element.getAttribute("id") ? element.getAttribute("id") : elementName.replaceAll(".", "-");
 
                     // selectables, title, content etc.
                     let sfrElementMeta = {};
@@ -1186,7 +1493,6 @@ export const getSFRs = (domNode) => {
                     const titleTag = findAllByTagName('title', element)[0];
 
                     // Parse title tag
-                    const style_tags = ["ol", "ul", "li", "refinement", "b", "i", "s", "snip", "strike", "p", "sup", "pre", "code", "h3"];
                     for (const child of titleTag.childNodes) {
                         // Skip comments
                         if (child.nodeType == Node.COMMENT_NODE) {
@@ -1195,304 +1501,301 @@ export const getSFRs = (domNode) => {
 
                         switch (child.nodeType) {
                             case Node.ELEMENT_NODE:
-                                if (child.tagName == "selectables") {
-                                    const tabularizeNode = findDirectChildrenByTagName('tabularize', child);
-                                    if (tabularizeNode.length !== 0) {
-                                        const result = parseTabularize(child, selectable_id, selectableGroupCounter, component, elementName);
-                                        selectable_id = result.selectable_id;
-                                        selectableGroupCounter = result.selectableGroupCounter;
+                                {
+                                    const titleChildTag = child.tagName.toLowerCase();
 
-                                        // Add all the selectables to masterlist; using Object.assign to prevent/preserve existing data
-                                        Object.assign(allSelectables, result.allSelectables);
+                                    if (titleChildTag == "selectables") {
+                                        const tabularizeNode = findDirectChildrenByTagName('tabularize', child);
+                                        if (tabularizeNode.length !== 0) {
+                                            const result = parseTabularize(child, selectable_id, selectableGroupCounter, component, elementName);
+                                            selectable_id = result.selectable_id;
+                                            selectableGroupCounter = result.selectableGroupCounter;
 
-                                        // Create the groups
-                                        selectableGroups = result.selectableGroups;
+                                            // Add all the selectables to masterlist; using Object.assign to prevent/preserve existing data
+                                            Object.assign(allSelectables, result.allSelectables);
 
-                                        sfrContent.push({ 'tabularize': result.tabularizeEntry.uuid });
-                                        sfrElementMeta["tabularize"] = {
-                                            [result.tabularizeEntry.uuid]: result.tabularizeEntry
-                                        };
-                                    } else {
-                                        const result = processSelectables(child, selectable_id, selectableGroupCounter, component, elementName);
-                                        selectable_id = result.selectable_id;
-                                        selectableGroupCounter = result.lastGroupCounter;
+                                            // Create the groups
+                                            selectableGroups = result.selectableGroups;
 
-                                        // Add all the selectables to masterlist; using Object.assign to prevent/preserve existing data
-                                        Object.assign(allSelectables, result.allSelectables);
+                                            sfrContent.push({ 'tabularize': result.tabularizeEntry.uuid });
+                                            sfrElementMeta["tabularize"] = {
+                                                [result.tabularizeEntry.uuid]: result.tabularizeEntry
+                                            };
+                                        } else {
+                                            const result = processSelectables(child, selectable_id, selectableGroupCounter, component, elementName);
+                                            selectable_id = result.selectable_id;
+                                            selectableGroupCounter = result.lastGroupCounter;
 
-                                        // Create the groups
-                                        selectableGroups = checkNestedGroups(result.group, selectableGroups);
+                                            // Add all the selectables to masterlist; using Object.assign to prevent/preserve existing data
+                                            Object.assign(allSelectables, result.allSelectables);
 
-                                        // Selectables are prefaced with text, add this group to the selections which comes after opening text
-                                        sfrContent.push({ 'selections': result.group.id });
-                                    }
-                                } else if (child.tagName == "assignable") { // standalone assignables
-                                    const text = sfrContent.slice(-1)[0];
-                                    const uuid = uuidv4();
+                                            // Create the groups
+                                            selectableGroups = checkNestedGroups(result.group, selectableGroups);
 
-                                    if (text && (text.hasOwnProperty('text') || text.hasOwnProperty('description'))) {
-                                        let id = child.getAttribute("id");
-                                        if (!id) {
-                                            id = `${elementName}_${++selectable_id}`;
+                                            // Selectables are prefaced with text, add this group to the selections which comes after opening text
+                                            sfrContent.push({ 'selections': result.group.id });
                                         }
+                                    } else if (titleChildTag == "assignable") { // standalone assignables
+                                        const text = sfrContent.slice(-1)[0];
+                                        const uuid = uuidv4();
 
-                                        allSelectables[uuid] = {
-                                            id: id,
-                                            leadingText: "",
-                                            description: removeWhitespace(child.textContent),
-                                            trailingText: "",
-                                            assignment: true,
-                                            exclusive: false,
-                                            notSelectable: false,
-                                        }
-                                        sfrContent.push({ 'assignment': uuid });
-                                    }
-                                } else if (style_tags.includes(child.localName)) {
-                                    let tagName = child.localName;
-
-                                    if (tagName == "refinement") {
-                                        tagName = "b";
-                                    }
-
-                                    let selectableMeta = {
-                                        selectable_id,
-                                        selectableGroupCounter,
-                                        allSelectables,
-                                        selectableGroups,
-                                        component,
-                                        elementName,
-                                        is_content_pushed: false,
-                                    }
-
-                                    const content = parseRichTextChildren(child, `<${tagName}>`, sfrContent, selectableMeta);
-
-                                    selectable_id = selectableMeta.selectable_id;
-                                    selectableGroupCounter = selectableMeta.selectableGroupCounter;
-                                    allSelectables = selectableMeta.allSelectables;
-                                    selectableGroups = selectableMeta.selectableGroups;
-
-                                    // Aka if there were no selectables
-                                    if (!selectableMeta.is_content_pushed || content.length !== 0) {
-                                        // Check if previous entry is a text entry, so you can concatenate
-                                        // else add as a new text section
-                                        const lastElement = sfrContent.slice(-1)[0];
-
-                                        if (lastElement && (lastElement.hasOwnProperty("text") || lastElement.hasOwnProperty("description"))) {
-                                            let previousText = '';
-
-                                            if (lastElement.hasOwnProperty("text")) {
-                                                previousText = lastElement["text"];
-                                            } else if (lastElement.hasOwnProperty("description")) {
-                                                previousText = lastElement["description"];
+                                        if (text && (text.hasOwnProperty('text') || text.hasOwnProperty('description'))) {
+                                            let id = child.getAttribute("id");
+                                            if (!id) {
+                                                id = `${elementName}_${++selectable_id}`;
                                             }
 
-                                            sfrContent.pop(); // remove entry
-                                            sfrContent.push({ 'description': `${previousText} ${content}</${tagName}>` });
-                                        } else {
-                                            sfrContent.push({ 'description': `${content}</${tagName}>` });
+                                            allSelectables[uuid] = {
+                                                id: id,
+                                                leadingText: "",
+                                                description: removeWhitespace(child.textContent),
+                                                trailingText: "",
+                                                assignment: true,
+                                                exclusive: false,
+                                                notSelectable: false,
+                                            }
+                                            sfrContent.push({ 'assignment': uuid });
                                         }
-                                    } else {
-                                        if (["ol", "ul", "li", "refinement", "b", "i", "s", "p",].includes(tagName)) {
+                                    } else if (style_tags.includes(child.localName) || ["refinement", "b"].includes(child.localName)) {
+                                        let tagName = child.localName;
+
+                                        if (tagName == "refinement") {
+                                            tagName = "b";
+                                        }
+
+                                        let selectableMeta = {
+                                            selectable_id,
+                                            selectableGroupCounter,
+                                            allSelectables,
+                                            selectableGroups,
+                                            component,
+                                            elementName,
+                                            is_content_pushed: false,
+                                        }
+
+                                        const content = parseRichTextChildren(child, `<${tagName}>`, sfrContent, selectableMeta);
+
+                                        selectable_id = selectableMeta.selectable_id;
+                                        selectableGroupCounter = selectableMeta.selectableGroupCounter;
+                                        allSelectables = selectableMeta.allSelectables;
+                                        selectableGroups = selectableMeta.selectableGroups;
+
+                                        // Aka if there were no selectables
+                                        if (!selectableMeta.is_content_pushed || content.length !== 0) {
+                                            // Check if previous entry is a text entry, so you can concatenate
+                                            // else add as a new text section
+                                            const lastElement = sfrContent.slice(-1)[0];
+
+                                            if (lastElement && (lastElement.hasOwnProperty("text") || lastElement.hasOwnProperty("description"))) {
+                                                let previousText = '';
+
+                                                if (lastElement.hasOwnProperty("text")) {
+                                                    previousText = lastElement["text"];
+                                                } else if (lastElement.hasOwnProperty("description")) {
+                                                    previousText = lastElement["description"];
+                                                }
+
+                                                sfrContent.pop(); // remove entry
+                                                sfrContent.push({ 'description': `${previousText} ${removeWhitespace(content)}</${tagName}>` });
+                                            } else {
+                                                sfrContent.push({ 'description': `${removeWhitespace(content)}</${tagName}>` });
+                                            }
+                                        } else {
                                             sfrContent.push({ 'description': `</${tagName}>` });
                                         }
-                                    }
-                                } else if (child.tagName.toLowerCase() == "snip" || child.tagName.toLowerCase() == "xref") {
-                                    sfrContent.push({ 'description': `${escapeXmlTags(getNodeContent(child))}` });
-                                } else if (child.tagName.toLowerCase() == "management-function-set") {
-                                    isManagementFunction = true;
+                                    } else if (raw_xml_tags.includes(child.localName)) {
+                                        sfrContent.push({ 'description': `${escapeXmlTags(getNodeContent(child))}` });
+                                    } else if (titleChildTag == "management-function-set") {
+                                        isManagementFunction = true;
 
-                                    let managerRefs = [];
+                                        let managerRefs = [];
+                                        // Track which status markers exist in the PP, so that the relevant marker definitions can be pulled from global statusMarkers object
+                                        let foundMarkers = new Set();
 
-                                    let mfID = 0;
+                                        let mfID = 0;
 
-                                    let defaultVal = "";
-                                    let mfsAttributes = {};
-                                    child.attributes.forEach(attr => {
-                                        mfsAttributes[attr.name] = attr.value;
-                                    });
-                                    if (mfsAttributes.hasOwnProperty("default")) {
-                                        defaultVal = mfsAttributes["default"];
-                                    }
+                                        let defaultVal = "";
+                                        let mfsAttributes = {};
+                                        child.attributes.forEach(attr => {
+                                            mfsAttributes[attr.name] = attr.value;
+                                        });
+                                        if (mfsAttributes.hasOwnProperty("default")) {
+                                            defaultVal = mfsAttributes["default"];
+                                        }
 
-                                    for (const c of child.childNodes) {
-                                        if (c.nodeType == Node.ELEMENT_NODE && c.tagName) {
-                                            if (c.tagName.toLowerCase() == "manager") {
-                                                let managerAttributes = {};
-                                                c.attributes.forEach(attr => {
-                                                    managerAttributes[attr.name] = attr.value;
-                                                });
+                                        for (const c of child.childNodes) {
+                                            if (c.nodeType == Node.ELEMENT_NODE && c.tagName) {
+                                                if (c.tagName.toLowerCase() == "manager") {
+                                                    let managerAttributes = {};
+                                                    c.attributes.forEach(attr => {
+                                                        managerAttributes[attr.name] = attr.value;
+                                                    });
 
-                                                let columDef = {
-                                                    headerName: c.textContent,
-                                                    editable: true,
-                                                    resizable: true,
-                                                    type: "Editor",
-                                                    flex: 0.5,
-                                                    default: defaultVal
-                                                };
+                                                    let columDef = {
+                                                        headerName: c.textContent,
+                                                        editable: true,
+                                                        resizable: true,
+                                                        type: "Editor",
+                                                        flex: 0.5,
+                                                        default: defaultVal
+                                                    };
 
-                                                if (managerAttributes.hasOwnProperty("cid")) {
-                                                    columDef["field"] = managerAttributes["cid"].toUpperCase();
-                                                    managerRefs.push(managerAttributes["cid"]);
-                                                }
+                                                    if (managerAttributes.hasOwnProperty("cid")) {
+                                                        columDef["field"] = managerAttributes["cid"].toUpperCase();
+                                                        managerRefs.push(managerAttributes["cid"]);
+                                                    }
 
-                                                managementFunctions.columns.push(columDef);
-                                            } else if (c.tagName.toLowerCase() == "management-function") { // Parse through rows
-                                                let rowDef = {
-                                                    rowNum: "",
-                                                    id: c.id ? c.id : `mf-${++mfID}`,
-                                                    note: [],
-                                                    evaluationActivity: {
-                                                        guidance: "",
-                                                        introduction: "",
-                                                        testIntroduction: "",
-                                                        testClosing: "",
-                                                        testList: [],
-                                                        tss: "",
-                                                    },
-                                                    textArray: [],
-                                                }
+                                                    managementFunctions.columns.push(columDef);
+                                                } else if (c.tagName.toLowerCase() == "management-function") { // Parse through rows
+                                                    let rowDef = {
+                                                        rowNum: "",
+                                                        id: c.id ? c.id : `mf-${++mfID}`,
+                                                        note: [],
+                                                        evaluationActivity: {
+                                                            guidance: "",
+                                                            introduction: "",
+                                                            testIntroduction: "",
+                                                            testClosing: "",
+                                                            testList: [],
+                                                            tss: "",
+                                                            refIds: []
+                                                        },
+                                                        textArray: [],
+                                                    }
 
-                                                c.childNodes.forEach(mfChild => {
-                                                    if (mfChild.nodeType == Node.ELEMENT_NODE) {
-                                                        const nodeName = mfChild.nodeName
+                                                    c.childNodes.forEach(mfChild => {
+                                                        if (mfChild.nodeType == Node.ELEMENT_NODE) {
+                                                            const nodeName = mfChild.nodeName
 
-                                                        if (nodeName.toLowerCase() == "text") {
-                                                            let selectableMeta = {
-                                                                selectable_id,
-                                                                selectableGroupCounter,
-                                                                allSelectables,
-                                                                selectableGroups,
-                                                                component,
-                                                                elementName,
-                                                                is_content_pushed: false,
-                                                            }
-
-                                                            parseManagementFunction(mfChild, selectableMeta, "", rowDef);
-
-                                                            selectable_id = selectableMeta.selectable_id;
-                                                            selectableGroupCounter = selectableMeta.selectableGroupCounter;
-                                                            allSelectables = selectableMeta.allSelectables;
-                                                            selectableGroups = selectableMeta.selectableGroups;
-
-                                                            Object.assign(sfrElementMeta["selectableGroups"], selectableGroups);
-
-                                                            // clear out previous group data
-                                                            selectableGroups = {};
-                                                        } else if (nodeName.toLowerCase() == "app-note" || nodeName.toLowerCase() == "note") {
-                                                            rowDef.note.push(parseRichTextChildren(mfChild));
-                                                        } else if (nodeName.toLowerCase() == "aactivity") {
-                                                            mfChild.childNodes.forEach(aactivityChild => {
-                                                                if (aactivityChild.nodeName.toLowerCase() == "tss") {
-                                                                    rowDef.evaluationActivity.tss = parseRichTextChildren(aactivityChild).trim();
-                                                                } else if (aactivityChild.nodeName.toLowerCase() == "guidance") {
-                                                                    rowDef.evaluationActivity.guidance = parseRichTextChildren(aactivityChild).trim();
-                                                                } else if (aactivityChild.nodeName.toLowerCase() == "tests" && aactivityChild.childNodes) {
-                                                                    const contents = parseRichTextChildren(aactivityChild, "", [], {}, rowDef.evaluationActivity);
-
-                                                                    // For instances without testlist, just add it
-                                                                    let lastElement = rowDef.evaluationActivity.testList.slice(-1)[0];
-                                                                    if (lastElement && lastElement.hasOwnProperty("objective") && lastElement["objective"].length == 0) {
-                                                                        rowDef.evaluationActivity.testList.push({
-                                                                            description: "",
-                                                                            dependencies: [],
-                                                                            objective: contents
-                                                                        });
-                                                                    }
-
-                                                                    if (rowDef.evaluationActivity.testList.length == 0) {
-                                                                        rowDef.evaluationActivity.testIntroduction = contents;
-                                                                        
-                                                                        rowDef.evaluationActivity.testClosing = contents;
-                                                                    }
+                                                            if (nodeName.toLowerCase() == "text") {
+                                                                let selectableMeta = {
+                                                                    selectable_id,
+                                                                    selectableGroupCounter,
+                                                                    allSelectables,
+                                                                    selectableGroups,
+                                                                    component,
+                                                                    elementName,
+                                                                    is_content_pushed: false,
                                                                 }
-                                                            });
-                                                        } else {
-                                                            // Add the existing status marker columns
-                                                            const ref = Array.from(mfChild.attributes).find(({name}) => name === "ref");
 
-                                                            if (ref) {
-                                                                const refValue = ref.value.toUpperCase()
-                                                                // Filter the array for the specific uppercase string
-                                                                const filteredValues = managerRefs.filter(
-                                                                    managerRef => managerRef.toUpperCase() === refValue
-                                                                );
+                                                                parseManagementFunction(mfChild, selectableMeta, "", rowDef);
 
-                                                                // Add row value
-                                                                const includesValue = filteredValues.length > 0;
-                                                                if (includesValue) {
-                                                                    if (nodeName === "NA") {
-                                                                        rowDef[ref.value.toUpperCase()] = "-";
+                                                                selectable_id = selectableMeta.selectable_id;
+                                                                selectableGroupCounter = selectableMeta.selectableGroupCounter;
+                                                                allSelectables = selectableMeta.allSelectables;
+                                                                selectableGroups = selectableMeta.selectableGroups;
+
+                                                                Object.assign(sfrElementMeta["selectableGroups"], selectableGroups);
+
+                                                                // clear out previous group data
+                                                                selectableGroups = {};
+                                                            } else if (nodeName.toLowerCase() == "app-note" || nodeName.toLowerCase() == "note") {
+                                                                // Get the application note
+                                                                let note = parseRichTextChildren(mfChild)
+
+                                                                // Grab any ref-id's if they exist
+                                                                const refIds = getRefIds(note)
+
+                                                                // Remove also tags from note
+                                                                const cleanedNote = removeAlsoTags(note)
+
+                                                                // Add the application note
+                                                                rowDef.note.push({
+                                                                    note: cleanedNote,
+                                                                    refIds: refIds,
+                                                                });
+                                                            } else if (nodeName.toLowerCase() == "aactivity") {
+                                                                mfChild.childNodes.forEach(aactivityChild => {
+                                                                    if (aactivityChild.nodeName.toLowerCase() == "tss") {
+                                                                        rowDef.evaluationActivity.tss = parseRichTextChildren(aactivityChild).trim();
+                                                                    } else if (aactivityChild.nodeName.toLowerCase() == "guidance") {
+                                                                        rowDef.evaluationActivity.guidance = parseRichTextChildren(aactivityChild).trim();
+                                                                    } else if (aactivityChild.nodeName.toLowerCase() == "tests" && aactivityChild.childNodes) {
+                                                                        const contents = parseRichTextChildren(aactivityChild, "", [], {}, rowDef.evaluationActivity);
+
+                                                                        // For instances without testlist, just add it
+                                                                        let lastElement = rowDef.evaluationActivity.testList.slice(-1)[0];
+                                                                        if (lastElement && lastElement.hasOwnProperty("objective") && lastElement["objective"].length == 0) {
+                                                                            rowDef.evaluationActivity.testList.push({
+                                                                                description: "",
+                                                                                dependencies: [],
+                                                                                objective: contents
+                                                                            });
+                                                                        }
+
+                                                                        if (rowDef.evaluationActivity.testList.length == 0) {
+                                                                            rowDef.evaluationActivity.testIntroduction = contents;
+
+                                                                            rowDef.evaluationActivity.testClosing = contents;
+                                                                        }
                                                                     } else {
-                                                                        rowDef[ref.value.toUpperCase()] = nodeName;
+                                                                        // Get the evaluation activity also tags, if they exist
+                                                                        let additionalText = parseRichTextChildren(mfChild)
+
+                                                                        // Grab any refIds
+                                                                        const refIds = getRefIds(additionalText)
+
+                                                                        // Add refIds to evaluation activity
+                                                                        rowDef.evaluationActivity.refIds = refIds
+                                                                    }
+                                                                });
+                                                            } else {
+                                                                // Add the existing status marker columns
+                                                                const ref = Array.from(mfChild.attributes).find(({ name }) => name === "ref");
+
+                                                                // Only add valid status markers
+                                                                if (Object.keys(statusMarkers).includes(nodeName.toUpperCase())) {
+                                                                    foundMarkers.add(nodeName.toUpperCase());
+                                                                }
+
+                                                                if (ref) {
+                                                                    const refValue = ref.value.toUpperCase()
+                                                                    // Filter the array for the specific uppercase string
+                                                                    const filteredValues = managerRefs.filter(
+                                                                        managerRef => managerRef.toUpperCase() === refValue
+                                                                    );
+
+                                                                    // Add row value
+                                                                    const includesValue = filteredValues.length > 0;
+                                                                    if (includesValue) {
+                                                                        if (nodeName === "NA") {
+                                                                            rowDef[ref.value.toUpperCase()] = "-";
+                                                                        } else {
+                                                                            rowDef[ref.value.toUpperCase()] = nodeName;
+                                                                        }
                                                                     }
                                                                 }
                                                             }
                                                         }
-                                                    }
-                                                });
+                                                    });
 
-                                                // Set status marker columns
-                                                // Set any missing refs to the default value, typically "O"
-                                                managerRefs.forEach(ref => {
-                                                    const newRef = ref.toUpperCase()
+                                                    // Set status marker columns
+                                                    // Set any missing refs to the default value, typically "O"
+                                                    managerRefs.forEach(ref => {
+                                                        const newRef = ref.toUpperCase()
 
-                                                    if (!rowDef.hasOwnProperty(newRef) || rowDef[newRef] === "") {
-                                                        rowDef[newRef] = defaultVal;
-                                                    }
-                                                });
+                                                        if (!rowDef.hasOwnProperty(newRef) || rowDef[newRef] === "") {
+                                                            rowDef[newRef] = defaultVal;
+                                                        }
+                                                    });
 
-                                                managementFunctions.rows.push(rowDef);
+                                                    managementFunctions.rows.push(rowDef);
+                                                }
                                             }
                                         }
+
+                                        // Add status marker section
+                                        managementFunctions.statusMarkers += `${defaultVal} - ${statusMarkers[defaultVal]}<br/>`; // add default value
+                                        foundMarkers.forEach(marker => {
+                                            if (marker !== defaultVal) {
+                                                managementFunctions.statusMarkers += `${marker} - ${statusMarkers[marker]}<br/>`;
+                                            }
+                                        });
                                     }
-                                } else if (child.localName.toLowerCase() == "table" && ppName.toLowerCase() == "protection profile for general-purpose computing platforms" &&
-                                    component.getAttribute("cc-id").toLowerCase() == "fmt_smf.1") { // GPCP doesn't have any tags to indicate mangement function
-                                    isManagementFunction = true;
-
-                                    let rowDef = {
-                                        rowNum: "",
-                                        id: 0,
-                                        textArray: [],
-                                    }
-
-                                    let selectableMeta = {
-                                        selectable_id,
-                                        selectableGroupCounter,
-                                        allSelectables,
-                                        selectableGroups,
-                                        component,
-                                        elementName,
-                                        is_content_pushed: false,
-                                        managementFunctions: managementFunctions,
-                                        mfID: 0,
-                                    }
-
-                                    parseManagementFunction(child.parentNode, selectableMeta, "", rowDef);
-
-                                    selectable_id = selectableMeta.selectable_id;
-                                    selectableGroupCounter = selectableMeta.selectableGroupCounter;
-                                    allSelectables = selectableMeta.allSelectables;
-                                    selectableGroups = selectableMeta.selectableGroups;
-                                    managementFunctions = selectableMeta.managementFunctions;
-
-                                    Object.assign(sfrElementMeta["selectableGroups"], selectableGroups);
-
-                                    // clear out previous group data
-                                    selectableGroups = {};
                                 }
 
                                 break
                             case Node.TEXT_NODE: {
-                                if (child.textContent.toLowerCase().includes("status markers")) { // for management functions, want to strip this out and put in Status Markers section
-                                    continue;
-                                }
-
-                                if (["m - mandatory", "o - optional/objective", "o - optional/selectable", "o - optional/selectable/conditional", "x - not permitted"].includes(child.textContent.toLowerCase().trim())) {
-                                    managementFunctions.statusMarkers += `${child.textContent.trim()}<br/>`;
-                                    continue;
-                                }
-
                                 // Check if previous entry is a rich text entry, so you can concatenate
                                 const lastElement = sfrContent.slice(-1)[0];
 
@@ -1532,36 +1835,41 @@ export const getSFRs = (domNode) => {
                     }
                     sfrElementMeta["note"] = note;
 
-
                     // Parse EA if it exists
                     const eActivity = findAllByTagName('aactivity', element);
-
                     if (eActivity.length !== 0) {
-                        let eA = {
-                            "tss": "",
-                            "guidance": "",
-                            "testIntroduction": "",
-                            "testClosing": "",
-                            "testList": [],
-                            "level": "element",
-                            "platformMap": platformMap,
-                        }
+                        // There can be up to 2 aactivity tags (one for element, one for component)
+                        eActivity.forEach(activity => {
+                            let eActivityLevel = "";
+                            let eA = {
+                                "tss": "",
+                                "guidance": "",
+                                "testIntroduction": "",
+                                "testClosing": "",
+                                "testList": [],
+                                "level": "element",
+                                "platformMap": platformMap,
+                                "isNoTest": false,
+                                "noTest": ""
+                            }
 
-                        // Handle rich text styling
-                        if (eActivity[0].childNodes) {
-                            eActivity[0].childNodes.forEach(c => {
+                            eActivityLevel = activity.getAttribute("level") ? activity.getAttribute("level").toLowerCase() : "component";
+
+                            activity.childNodes.forEach(c => {
                                 if (c.nodeType == Node.TEXT_NODE) {
-                                    eA.introduction = parseRichTextChildren(eActivity[0]);
+                                    eA.testIntroduction = parseRichTextChildren(activity);
                                 } else if (c.nodeType == Node.ELEMENT_NODE) {
-                                    if (c.tagName.toLowerCase() == "tss") {
+                                    const aactivityChildTag = c.tagName.toLowerCase();
+
+                                    if (aactivityChildTag == "tss") {
                                         if (c.childNodes) {
                                             eA.tss = parseRichTextChildren(c).trim();
                                         }
-                                    } else if (c.tagName.toLowerCase() == "guidance") {
+                                    } else if (aactivityChildTag == "guidance") {
                                         if (c.childNodes) {
                                             eA.guidance = parseRichTextChildren(c);
                                         }
-                                    } else if (c.tagName.toLowerCase() == "tests" && c.childNodes) {
+                                    } else if (aactivityChildTag == "tests" && c.childNodes) {
                                         const contents = parseRichTextChildren(c, "", [], {}, eA);
 
                                         // For instances without testlist, just add it
@@ -1573,11 +1881,20 @@ export const getSFRs = (domNode) => {
                                         if (eA.testList.length == 0) {
                                             eA.testIntroduction = contents;
                                         }
+                                    } else if (aactivityChildTag == "no-tests") {
+                                        eA.noTest = parseRichTextChildren(c);
+                                        eA.isNoTest = true;
                                     }
                                 }
                             });
-                        }
-                        evaluationActivities[sfrElemUUID] = eA
+
+                            // Set EA based of if it is element or component
+                            if (eActivityLevel == "element") {
+                                evaluationActivities[sfrElemUUID] = eA
+                            } else if (eActivityLevel == "component") {
+                                evaluationActivities[sfrCompUUID] = eA
+                            }
+                        });
                     }
 
                     // Store all meta for the SFR element
@@ -1660,14 +1977,16 @@ export const getSFRs = (domNode) => {
 
 
                 sfrCompArr.push({
+                    sfrCompUUID: sfrCompUUID,
                     title: component.getAttribute("name"),
                     cc_id: component.getAttribute("cc-id").toUpperCase(),
                     iteration_id: component.getAttribute("iteration"),
                     xml_id: xml_id,
                     definition: sfrDescription,
                     familyDescription: family_description,
+                    familyExtCompDef: familyExtCompDef,
                     optional: isOptional,
-                    objective: component.getAttribute("status") ? component.getAttribute("status") == "objective" ? true : false : false,
+                    objective: component.getAttribute("status") ? (component.getAttribute("status") == "objective" ? true : false) : false,
                     selectionBased: isSelBased,
                     family_name: family_name ? family_name : "",
                     family_id: family_id ? family_id : "",
@@ -1676,13 +1995,12 @@ export const getSFRs = (domNode) => {
                     auditEvents: audit,
                     selections: selections,
                     extendedComponentDefinition: extendedComponentDefinition,
-                    tableOpen: true,
-                    implementationDependent: component.getAttribute("status") ? component.getAttribute("status") == "feat-based" ? true : false : false,
+                    tableOpen: false,
+                    implementationDependent: implementationDependent,
                     useCaseBased: useCaseBased,
                     useCases: use_cases,
                     invisible: isInvisible,
-                    // TODO: have not populated following
-                    reasons: [],
+                    reasons: reasons,
                 });
             }
         }
@@ -1690,6 +2008,60 @@ export const getSFRs = (domNode) => {
     }
 }
 
+/**
+ * Gets the section extended component definition map
+ * @param domNode
+ * @returns {Map<any, any>}
+ */
+export const getSectionExtendedComponentDefinitionMap = (domNode) => {
+    const extCompDef = findAllByTagName('ext-comp-def', domNode);
+    let extCompDefMap = new Map()
+
+    try {
+        // Create the extended component definition map
+        if (extCompDef.length !== 0) {
+            extCompDef.forEach((def) => {
+                // Find family_id
+                let family_id = ""
+                if (def.parentElement.tagName == "section") {
+                    family_id = def.parentElement.getAttribute("id").toUpperCase();
+                } else if (def.parentElement.tagName.includes("sec:")) {
+                    family_id = def.parentElement.tagName.split(":")[1];
+                }
+
+                // Get extended component definition
+                if (family_id && family_id !== "") {
+                    const title = def.getAttribute("title") ? def.getAttribute("title") : "";
+                    const fam_id = def.getAttribute("fam-id") ? def.getAttribute("fam-id") : ""
+                    const famBehaviorElement = def.getElementsByTagName("fam-behavior")[0];
+                    const fam_behavior = removeWhitespace(famBehaviorElement.textContent.trim());
+
+                    // Create extended component definition object
+                    const extCompDef = {
+                        famId: fam_id,
+                        title: title,
+                        famBehavior: fam_behavior,
+                    }
+
+                    // Create new key value pair
+                    if (!extCompDefMap.has(family_id)) {
+                        extCompDefMap.set(family_id, [])
+                    }
+
+                    // Add extended component definition to key
+                    if (!extCompDefMap.get(family_id).includes(extCompDef)) {
+                        extCompDefMap.get(family_id).push(extCompDef);
+                    }
+                }
+            })
+        }
+    } catch (e) {
+        console.log(e)
+    }
+
+    // Return the map
+    return extCompDefMap
+}
 
 /**
  * Similar to parseRichTextChildren, but tailored for management function SFRs
@@ -1715,11 +2087,14 @@ function parseManagementFunction(parent, selectableMeta, contents = "", rowDef =
                 const href = c.getAttribute("href");
                 contents += href ? ` <a href="${href}">${c.textContent}</a>` : ` <a>${c.textContent}</a>`;
             } else if (raw_xml_tags.includes(c.localName.toLowerCase())) {
-                // pull in raw xml
-                contents += ` ${escapeXmlTags(getNodeContent(c))}`;
+                if (c.localName.toLowerCase() == "snip") { // omit snip tag and just store contents
+                    contents += c.textContent;
+                } else {
+                    contents += ` ${escapeXmlTags(getNodeContent(c))}`; // pull in raw xml
+                }
             } else if (c.localName.toLowerCase() == 'br') {
                 contents += '<br/>'
-            } else if (["p", "ol", "ul", "sup", "pre", "s", "code", "i", "h3", "li", "strike"].includes(c.localName.toLowerCase())) {
+            } else if (["p", "ol", "ul", "sup", "pre", "s", "code", "i", "h3", "li", "strike", "table", "span", "u"].includes(c.localName.toLowerCase())) {
                 contents += `<${c.localName}>`;
                 contents = parseManagementFunction(c, selectableMeta, contents, rowDef);
                 contents += `</${c.localName}>`;
@@ -1777,11 +2152,6 @@ function parseManagementFunction(parent, selectableMeta, contents = "", rowDef =
     return contents;
 }
 
-
-
-
-
-
 /**
  * Retain styling for child elements of a node (non-selectable node -> selectable nodes have their own processing in processSelectables)
  */
@@ -1797,8 +2167,8 @@ function parseRichTextChildren(parent, contents = "", sfrContent = [], selectabl
             const pattern = /(?<=\S)\s*<\s*(?=\S)|(?<=\S)<(?=\s)|(?<=\s)<(?=\S)/g;
             // prevTextNodeContent = c.textContent;
 
-            // For tests, set the last piece of text as the testClosing text, else add to the contents string builder
-            if (c.parentNode.nodeName.toLowerCase() == "tests" && c.parentElement.childNodes[c.parentElement.childNodes.length-1].textContent == c.textContent) {
+            // For tests, set the last piece of text (if it follows a testlist) as the testClosing text, else add to the contents string builder
+            if (c.parentNode.nodeName.toLowerCase() == "tests" && c.parentElement.childNodes[c.parentElement.childNodes.length - 1].textContent == c.textContent && (c.previousSibling && c.previousSibling.nodeType == Node.ELEMENT_NODE && c.previousSibling.tagName.toLowerCase() == "testlist")) {
                 eA.testClosing = c.textContent.replace(pattern, ' &lt; ');
             } else {
                 contents += c.textContent.replace(pattern, ' &lt; ');
@@ -1813,18 +2183,21 @@ function parseRichTextChildren(parent, contents = "", sfrContent = [], selectabl
                 const href = c.getAttribute("href");
                 contents += href ? ` <a href="${href}">${c.textContent}</a>` : ` <a>${c.textContent}</a>`;
             } else if (raw_xml_tags.includes(c.localName.toLowerCase())) {
-                // pull in raw xml
-                contents += ` ${escapeXmlTags(getNodeContent(c))}`;
+                if (c.localName.toLowerCase() == "snip") { // omit snip tag and just store contents
+                    contents += c.textContent;
+                } else {
+                    contents += ` ${escapeXmlTags(getNodeContent(c))}`; // pull in raw xml
+                }
             } else if (c.localName.toLowerCase() == 'br') {
                 contents += '<br/>'
-            } else if (["p", "ol", "ul", "sup", "pre", "s", "code", "i", "h3", "li", "strike", "table", "span"].includes(c.localName.toLowerCase())) {
+            } else if (style_tags.includes(c.localName.toLowerCase())) {
                 let attributes = "";
                 if (c.attributes.length != 0) {
                     c.attributes.forEach(attr => {
                         attributes += ` ${attr.name}="${attr.value}"`
                     });
                 }
-               
+
                 contents += `<${c.localName}${attributes}>`;
                 contents = parseRichTextChildren(c, contents, sfrContent, selectableMeta);
                 contents += `</${c.localName}>`;
@@ -1878,9 +2251,9 @@ function parseRichTextChildren(parent, contents = "", sfrContent = [], selectabl
                     }
 
                     sfrContent.pop(); // remove entry
-                    sfrContent.push({ 'description': `${previousText}  ${contents}` });
+                    sfrContent.push({ 'description': `${previousText}  ${removeWhitespace(contents)}` });
                 } else {
-                    sfrContent.push({ 'description': contents });
+                    sfrContent.push({ 'description': removeWhitespace(contents) });
                 }
 
                 // Reset the contents buffer so that text doesn't repeat on next iteration
@@ -1929,9 +2302,9 @@ function parseRichTextChildren(parent, contents = "", sfrContent = [], selectabl
                     }
 
                     sfrContent.pop(); // remove entry
-                    sfrContent.push({ 'description': `${previousText}  ${contents}` });
+                    sfrContent.push({ 'description': `${previousText}  ${removeWhitespace(contents)}` });
                 } else {
-                    sfrContent.push({ 'description': contents });
+                    sfrContent.push({ 'description': removeWhitespace(contents) });
                 }
 
                 // Reset the contents buffer so that text doesn't repeat on next iteration
@@ -2000,9 +2373,6 @@ function checkNestedGroups(currentGroup, selectableGroups, subgroup = 0) {
     }
 
     // Process each selectable in the current group
-    // console.log(currentGroup.selectables);
-    // console.log(currentGroup);
-    // console.log(selectableGroups);
     // Only iterate if type is selectable(s)
     if (currentGroup.type == "selectable" || currentGroup.type == "selectables") {
 
@@ -2070,7 +2440,7 @@ function checkNestedGroups(currentGroup, selectableGroups, subgroup = 0) {
                         // Initialize the structure for the current group if it doesn't exist
                         if (!selectableGroups[group.id]) {
                             selectableGroups[group.id] = {
-                                onlyOne: currentGroup.onlyOne,
+                                onlyOne: group.onlyOne,
                                 linebreak: group.linebreak,
                                 groups: [], // in UI will store UUID of selectable or name of selectables group
                             };
@@ -2107,8 +2477,6 @@ function checkNestedGroups(currentGroup, selectableGroups, subgroup = 0) {
 
     return selectableGroups;
 }
-
-
 
 /**
  * Parse through <selectables> tag
@@ -2181,8 +2549,11 @@ function processSelectables(node, selectable_id, selectableGroupCounter, compone
                         parseChildren(childNode, context);
                         context.contents += `</${childNode.localName}>`;
                     } else if (raw_xml_tags.includes(childNode.localName.toLowerCase())) {
-                        // pull in raw xml
-                        context.contents += ` ${getNodeContent(childNode)}`;
+                        if (childNode.localName.toLowerCase() == "snip") { // omit snip tag and just store contents
+                            context.contents += childNode.textContent;
+                        } else {
+                            context.contents += ` ${escapeXmlTags(getNodeContent(childNode))}`; // pull in raw xml
+                        }
                     } else if (childNode.localName.toLowerCase() == "a") {
                         const href = childNode.getAttribute("href");
                         context.contents += href ? ` <a href="${href}">${childNode.textContent}</a>` : ` <a>${childNode.textContent}</a>`;
@@ -2224,7 +2595,7 @@ function processSelectables(node, selectable_id, selectableGroupCounter, compone
                 type: "selectable",
                 uuid,
                 id,
-                description: context.description,
+                description: removeWhitespace(context.description),
                 exclusive,
                 nestedGroups: context.nestedGroups,
             };
@@ -2261,7 +2632,6 @@ function processSelectables(node, selectable_id, selectableGroupCounter, compone
     };
 }
 
-
 /**
  * 
  * @param {*} selectablesNode : <selectables> node which contains tabularize table
@@ -2290,10 +2660,6 @@ function parseTabularize(selectablesNode, selectable_id, selectableGroupCounter,
                             "value": "Selectable ID",
                             "type": "textcol"
                         },
-                        {
-                            "value": "Identifier",
-                            "type": "textcol"
-                        }
                     ],
                     columns: [
                         {
@@ -2304,42 +2670,40 @@ function parseTabularize(selectablesNode, selectable_id, selectableGroupCounter,
                             "type": "Editor",
                             "flex": 3
                         },
-                        {
-                            "headerName": "Identifier",
-                            "field": "identifier",
-                            "editable": false,
-                            "resizable": true,
-                            "type": "Editor",
-                            "flex": 3
-                        }
                     ],
                     rows: [],
                 };
 
                 child.childNodes.forEach(tabularizeChild => {
-                    if (["selectcol", "reqtext"].includes(tabularizeChild.nodeName.toLowerCase())) {
+                    if (["selectcol", "reqtext", "textcol"].includes(tabularizeChild.nodeName.toLowerCase())) {
+                        const value = tabularizeChild.textContent
+                        const type = tabularizeChild.nodeName.toLowerCase().replace(" ", "_")
+
                         tabularizeEntry.definition.push({
-                            "value": tabularizeChild.textContent,
-                            "type": tabularizeChild.nodeName.toLowerCase().replace(" ", "_")
+                            "value": value,
+                            "type": type
                         });
                     }
 
                     if (["selectcol", "textcol"].includes(tabularizeChild.nodeName.toLowerCase())) {
+                        const headerName = tabularizeChild.textContent
+                        const field = toCamelCase(tabularizeChild.textContent)
+                        const editable = false
+                        const resizeable = true
+                        const type = tabularizeChild.nodeName.toLowerCase() == "selectcol" ? "Button" : "Editor"
+                        const flex = tabularizeChild.nodeName.toLowerCase() == "selectcol" ? 5 : 3
+
                         // Add as column header
-                        if (tabularizeChild.nodeName.toLowerCase() == "selectcol") {
-                            tabularizeEntry.columns.push({
-                                "headerName": tabularizeChild.textContent,
-                                "field": toCamelCase(tabularizeChild.textContent),
-                                "editable": false,
-                                "resizable": true,
-                                "type": "Button",
-                                "flex": 3
-                            });
-                        }
+                        tabularizeEntry.columns.push({
+                            "headerName": headerName,
+                            "field": field,
+                            "editable": editable,
+                            "resizable": resizeable,
+                            "type": type,
+                            "flex": flex,
+                        });
                     }
                 });
-
-
             } else if (child.tagName.toLowerCase() == "selectable") {
                 let tabularizeSelectable = {
                     selectableId: child.getAttribute("id") || ""
@@ -2353,7 +2717,7 @@ function parseTabularize(selectablesNode, selectable_id, selectableGroupCounter,
 
                 child.childNodes.forEach(selectableChild => {
                     if (selectableChild.nodeType == Node.ELEMENT_NODE) {
-                        if (selectableChild.nodeName.toLowerCase() == "col") {
+                        if (selectableChild.nodeName.toLowerCase() == "col" && columns[childCtr] && columns[childCtr].hasOwnProperty("type")) {
                             const columnType = columns[childCtr].type;
 
                             if (columnType == "textcol") { // column with plain text
@@ -2417,7 +2781,6 @@ function parseTabularize(selectablesNode, selectable_id, selectableGroupCounter,
     };
 }
 
-
 /**
  * 
  * @param {*} domNode 
@@ -2456,7 +2819,6 @@ export const getBibliography = (domNode) => {
 
     return bibObj;
 }
-
 
 /**
  * 
@@ -2549,7 +2911,7 @@ export const getSatisfiedReqsAppendix = (domNode) => {
             xmlTagMeta.attributes[attr.name] = attr.value;
         });
 
-        satisfiedReqsAppendix = getNodeContentWithTags(satisfiedReqsAppendix);
+        satisfiedReqsAppendix = getNodeContentWithTags(satisfiedReqsAppendix, true);
     }
 
     return { satisfiedReqsAppendix, xmlTagMeta };
@@ -2581,7 +2943,6 @@ export const getValidationGuidelinesAppendix = (domNode) => {
 
     return { valGuideAppendix, xmlTagMeta };
 }
-
 
 /**
  *
@@ -2637,7 +2998,6 @@ export const getAcknowledgementsAppendix = (domNode) => {
     return { acknowledgementsReqsAppendix, xmlTagMeta };
 }
 
-
 /**
  *  HELPER FUNCTIONS
  */
@@ -2672,7 +3032,6 @@ function toCamelCase(str) {
         .join('');
 }
 
-
 /**
  * 
  * @param {*} content : string
@@ -2681,7 +3040,6 @@ function toCamelCase(str) {
 function removeWhitespace(content) {
     return content.replace(/\s+/g, " ").trim();
 }
-
 
 // Parse through selectable to get lowest layer child
 function flattenSelectable(selectable, allSelectables, id) {
@@ -2715,7 +3073,6 @@ function flattenSelectable(selectable, allSelectables, id) {
     };
 }
 
-
 function findDirectChildrenByTagName(tagName, parentNode) {
     let result = [];
     parentNode.childNodes.forEach((child) => {
@@ -2725,7 +3082,6 @@ function findDirectChildrenByTagName(tagName, parentNode) {
     });
     return result;
 }
-
 
 // Get first positional piece of text content of a node
 function getDirectTextContent(node) {
@@ -2738,7 +3094,6 @@ function getDirectTextContent(node) {
     });
     return textContent;
 }
-
 
 // Get component and element IDs for a given selectable ID (used for selection dependent components)
 function getSelDepParents(xmlComp, selectableId) {
@@ -2770,8 +3125,6 @@ function getSelDepParents(xmlComp, selectableId) {
 
     return { fComponentId, fElementId };
 }
-
-
 
 // Get UUID of a selectable (for selection dependent SFRs)
 export function getUUID(slice, id, type) {
@@ -2811,4 +3164,30 @@ export function getUUID(slice, id, type) {
         }
     }
     return null;
+}
+
+// Get the ref-id values from a string as an array
+const getRefIds = (inputString) => {
+    let refIds = []
+
+    try {
+        const regex = /ref-id="([^"]+)"/g;
+        const matchArray = inputString.match(regex);
+        refIds = matchArray ? matchArray.map(match => match.match(/"([^"]+)"/)[1]) : [];
+    } catch (e) {
+        console.log(e)
+    }
+
+    return refIds
+}
+
+// Remove also tags from strings
+function removeAlsoTags(inputString) {
+    // Regular expression to match <also> tags with any attributes
+    const alsoTagRegex = /&lt;also\s+ref-id="[^"]*"&gt;&lt;\/also&gt;/g;
+
+    // Replace all matches with an empty string
+    const resultString = inputString.replace(alsoTagRegex, '');
+
+    return resultString;
 }

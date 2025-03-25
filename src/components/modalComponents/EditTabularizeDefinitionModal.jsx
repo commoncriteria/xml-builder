@@ -9,6 +9,8 @@ import AddCircleIcon from "@mui/icons-material/AddCircle.js"
 import DeleteForeverRoundedIcon from "@mui/icons-material/DeleteForeverRounded.js";
 import Modal from "./Modal.jsx";
 import ResetDataConfirmation from "./ResetDataConfirmation.jsx";
+import SecurityComponents from "../../utils/securityComponents.jsx";
+import { deepCopy } from "../../utils/deepCopy.js";
 
 /**
  * The EditTabularizeDefinitionModal class that displays the higher level tabularize table data
@@ -30,8 +32,9 @@ function EditTabularizeDefinitionModal(props) {
     };
 
     // Constants
+    const { handleSnackBarError, handleSnackBarSuccess, handleSnackbarTextUpdates } = SecurityComponents
     const dispatch = useDispatch();
-    const { secondary, primary, primaryMenu, icons } = useSelector((state) => state.styling);
+    const { secondary, primary, primaryMenu, icons, grayText } = useSelector((state) => state.styling);
     const { tabularize } = useSelector((state) => state);
     const { title, titleError, titleHelperText, id, idError, idHelperText, definition, componentType, selectType } = useSelector((state) => state.tabularize);
     const [disabled, setDisabled] = useState(true);
@@ -66,7 +69,7 @@ function EditTabularizeDefinitionModal(props) {
         }
 
         // Get new tabularize object and then create new or update item
-        const newTabularize = JSON.parse(JSON.stringify(dispatch(TRANSFORM_TABULARIZE_DATA(itemMap)).payload.tabularize));
+        const newTabularize = deepCopy(dispatch(TRANSFORM_TABULARIZE_DATA(itemMap))).payload.tabularize;
         if (newTabularize && Object.keys(newTabularize).length > 0) {
             const {elementUUID, componentUUID, tabularizeUUID} = props
             let tabularize = props.getTabularizeObject()
@@ -78,6 +81,9 @@ function EditTabularizeDefinitionModal(props) {
                 tabularize: tabularize,
             }
             props.updateSfrSectionElement(elementUUID, componentUUID, itemMap)
+
+            // Update snackbar
+            handleSnackBarSuccess("Crypto Selection Table Definition Successfully Updated")
         }
 
         // Close the dialog
@@ -92,6 +98,7 @@ function EditTabularizeDefinitionModal(props) {
             props.updateTabularizeTableUI(itemMap)
         } catch (e) {
             console.log(e)
+            handleSnackBarError(e)
         }
     }
     const handleComponentTypeSelection = (event) => {
@@ -100,6 +107,7 @@ function EditTabularizeDefinitionModal(props) {
             props.updateTabularizeTableUI({componentType})
         } catch (e) {
             console.log(e)
+            handleSnackBarError(e)
         }
     }
     const handleSelectTypeSelection = (event) => {
@@ -108,6 +116,7 @@ function EditTabularizeDefinitionModal(props) {
             props.updateTabularizeTableUI({selectType})
         } catch (e) {
             console.log(e)
+            handleSnackBarError(e)
         }
     }
     const handleAddNewTableComponent = () => {
@@ -125,9 +134,13 @@ function EditTabularizeDefinitionModal(props) {
 
                 // Update definition
                 updateDefinition(updateMap)
+
+                // Update snackbar
+                handleSnackBarSuccess(`${selectType} ${componentType} Successfully Added`)
             }
         } catch (e) {
             console.log(e)
+            handleSnackBarError(e)
         }
     }
     const handleDefinitionText = (event, index, type) => {
@@ -144,6 +157,7 @@ function EditTabularizeDefinitionModal(props) {
             updateDefinition(updateMap)
         } catch (e) {
             console.log(e)
+            handleSnackBarError(e)
         }
     }
     const handleDefinitionSelectionType = (event, index) => {
@@ -160,11 +174,12 @@ function EditTabularizeDefinitionModal(props) {
             updateDefinition(updateMap)
         } catch (e) {
             console.log(e)
+            handleSnackBarError(e)
         }
     }
     const handleDeleteDefinitionItem = (index) => {
         try {
-            let currentDefinition = JSON.parse(JSON.stringify(definition))
+            let currentDefinition = deepCopy(definition)
 
             // Delete definition item and update rows/columns
             if (currentDefinition[index]) {
@@ -175,9 +190,13 @@ function EditTabularizeDefinitionModal(props) {
 
                 // Delete from definition
                 updateDefinition(updateMap)
+
+                // Update snackbar
+                handleSnackBarSuccess("Definition Item Successfully Removed")
             }
         } catch (e) {
             console.log(e)
+            handleSnackBarError(e)
         }
     }
     const handleDeleteComponentModalOpen = () => {
@@ -190,6 +209,7 @@ function EditTabularizeDefinitionModal(props) {
             })
         } catch (e) {
             console.log(e)
+            handleSnackBarError(e)
         }
     }
     const handleDeleteComponentModalSubmit = () => {
@@ -199,8 +219,12 @@ function EditTabularizeDefinitionModal(props) {
 
             // Close the modal
             handleDeleteComponentModalOpen()
+
+            // Update snackbar
+            handleSnackBarSuccess("Item Successfully Removed")
         } catch (e) {
             console.log(e)
+            handleSnackBarError(e)
         }
     }
 
@@ -208,7 +232,7 @@ function EditTabularizeDefinitionModal(props) {
     const updateDefinition = (updateMap) => {
         try {
             let { selectionType, newText, index, type } = updateMap
-            let currentDefinition = JSON.parse(JSON.stringify(definition))
+            let currentDefinition = deepCopy(definition)
 
             // Update definition based on type
             if (currentDefinition) {
@@ -256,6 +280,7 @@ function EditTabularizeDefinitionModal(props) {
             }
         } catch (e) {
             console.log(e)
+            handleSnackBarError(e)
         }
     }
     const defineRows = (update) => {
@@ -281,7 +306,7 @@ function EditTabularizeDefinitionModal(props) {
         }
     }
     const getDisabled = () => {
-        const currentDefinition = JSON.parse(JSON.stringify(definition))
+        const currentDefinition = deepCopy(definition)
 
         // Check for title and id error
         if (titleError || idError) {
@@ -302,7 +327,7 @@ function EditTabularizeDefinitionModal(props) {
     }
     const getColumnHeader = (value, type, index) => {
         const editingDisabled = value === "Selectable ID" ? true : false
-        const currentDefinition = JSON.parse(JSON.stringify(definition))
+        const currentDefinition = deepCopy(definition)
         const { error, helperText, selectDisabled } = currentDefinition[index]
         const isError = error ? error : false
 
@@ -315,7 +340,7 @@ function EditTabularizeDefinitionModal(props) {
                             key={"columnHeaderText" + index}
                             label="Column Header"
                             onBlur={(event) => {
-                                handleDefinitionText(event, index, type)
+                                handleSnackbarTextUpdates(handleDefinitionText, event, index, type)
                             }}
                             disabled={editingDisabled}
                             defaultValue={value}
@@ -365,7 +390,7 @@ function EditTabularizeDefinitionModal(props) {
                             key={"requirementsText" + index}
                             label="Requirements Text"
                             onBlur={(event) => {
-                                handleDefinitionText(event, index, type)
+                                handleSnackbarTextUpdates(handleDefinitionText, event, index, type)
                             }}
                             defaultValue={value}
                             error={error}
@@ -419,7 +444,7 @@ function EditTabularizeDefinitionModal(props) {
         )
     }
     const getResetDataConfirmationText = () => {
-        const currentDefinition = JSON.parse(JSON.stringify(definition))
+        const currentDefinition = deepCopy(definition)
         let confirmationText = "Are you sure that you want to delete this requirements text component?"
         const { open, index } = deleteComponentModal
 
@@ -443,7 +468,15 @@ function EditTabularizeDefinitionModal(props) {
     // Return Method
     return (
         <Modal
-            title={"Crypto Selection Table Definitions"}
+            title={
+                <div>
+                    Crypto Selection Table Definitions
+                    <br/>
+                    <label style={{fontWeight: "normal", fontSize: "13px", color: grayText}}
+                        >{` (Press Confirm to Save Changes)`}
+                    </label>
+                </div>
+            }
             content={
                 <div className="min-w-full justify-items-left grid grid-flow-row auto-rows-max mb-[-16px]">
                     <div style={{zIndex: 1000}} key={"resetComponentConfirmation"}>
@@ -467,7 +500,7 @@ function EditTabularizeDefinitionModal(props) {
                                     key={"tableIDText"}
                                     label="Table ID"
                                     onBlur={(event) => {
-                                        handleTextUpdate(event, "id")
+                                        handleSnackbarTextUpdates(handleTextUpdate, event, "id")
                                     }}
                                     value={id}
                                     error={idError ? idError : false}
@@ -491,7 +524,7 @@ function EditTabularizeDefinitionModal(props) {
                                     key={"tableTitleText"}
                                     label="Table Title"
                                     onBlur={(event) => {
-                                        handleTextUpdate(event, "title")
+                                        handleSnackbarTextUpdates(handleTextUpdate, event, "title")
                                     }}
                                     value={title}
                                     error={titleError ? titleError : false}

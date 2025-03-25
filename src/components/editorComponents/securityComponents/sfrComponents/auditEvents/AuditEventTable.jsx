@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import { Tooltip } from "@mui/material";
 import { GET_ALL_SFR_OPTIONS_MAP } from "../../../../../reducers/SFRs/sfrSectionSlice.js";
 import { RESET_EVALUATION_ACTIVITY_UI } from "../../../../../reducers/SFRs/evaluationActivitiesUI.js";
+import SecurityComponents from "../../../../../utils/securityComponents.jsx";
 import EditableTable from "../../../EditableTable.jsx";
 import SfrWorksheet from "../SfrWorksheet.jsx";
 
@@ -14,6 +15,7 @@ import SfrWorksheet from "../SfrWorksheet.jsx";
  */
 function AuditEventTable() {
     // Constants
+    const { getComponentXmlID } = SecurityComponents
     const dispatch = useDispatch();
     const { primary } = useSelector((state) => state.styling);
     const sfrSections = useSelector((state) => state.sfrSections);
@@ -89,7 +91,7 @@ function AuditEventTable() {
                 const { optional, objective, invisible, selectionBased, useCaseBased, implementationDependent, auditEvents } = value
 
                 // Get the requirement name
-                const requirement = getXmlID(ccID, iterationID)
+                const requirement = getComponentXmlID(ccID, iterationID, true, false)
 
                 // Get table tags
                 const tables = []
@@ -199,15 +201,6 @@ function AuditEventTable() {
     const formatSelection = (value) => {
         // Format the selection as a selectable
         return `[<b>selection, choose one of</b>: <i>${value.trim()}, none</i>]`
-    }
-    const getXmlID = (ccID, iterationID) => {
-        // Get the requirement title value for the table
-        let requirement = ccID.valueOf().toUpperCase()
-        if (iterationID && iterationID.length > 0) {
-            iterationID = "/" + iterationID.toUpperCase()
-            requirement += iterationID
-        }
-        return requirement
     }
     const isSfrWorksheetOpen = () => {
         return openSfrWorksheet && sfrUUID && componentUUID && sfrSections.hasOwnProperty(sfrUUID) && sfrSections[sfrUUID].hasOwnProperty(componentUUID)

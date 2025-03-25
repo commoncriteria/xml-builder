@@ -9,7 +9,9 @@ import DeleteForeverRoundedIcon from "@mui/icons-material/DeleteForeverRounded";
 import RemoveIcon from "@mui/icons-material/Remove";
 import CardTemplate from "../../CardTemplate.jsx";
 import SfrTest from "./SfrTest.jsx";
-import TextEditor from "../../../TextEditor.jsx";
+import TipTapEditor from "../../../TipTapEditor.jsx";
+import SecurityComponents from "../../../../../utils/securityComponents.jsx";
+import { deepCopy } from "../../../../../utils/deepCopy.js";
 
 /**
  * The SfrTestList class that displays the evaluation activity test list for specified components/elements
@@ -35,6 +37,7 @@ function SfrTestList(props) {
     };
 
     // Constants
+    const { handleSnackBarError, handleSnackBarSuccess } = SecurityComponents
     const { primary, icons } = useSelector((state) => state.styling);
     const [collapse, setCollapse] = useState(true)
     const evaluationActivities = useSelector((state) => state.evaluationActivities)
@@ -57,8 +60,11 @@ function SfrTestList(props) {
 
                 // Update management functions
                 props.updateManagementFunctions(managementFunctions)
+
+                // Update snackbar
+                handleSnackBarSuccess("New Test Successfully Added")
             } else if (activities && uuid && uuid !== "") {
-                let activitiesCopy = JSON.parse(JSON.stringify(activities))
+                let activitiesCopy = deepCopy(activities)
                 let testListItem = activitiesCopy[uuid].testList[testListIndex]
                 if (!testListItem.hasOwnProperty("tests")) {
                     testListItem.tests = []
@@ -70,9 +76,13 @@ function SfrTestList(props) {
 
                 // Update evaluation activities
                 props.updateEvaluationActivities(activitiesCopy)
+
+                // Update snackbar
+                handleSnackBarSuccess("New Test Successfully Added")
             }
         } catch (e) {
             console.log(e)
+            handleSnackBarError(e)
         }
     }
     const handleTextUpdate = (event, type, index, uuid) => {
@@ -86,7 +96,7 @@ function SfrTestList(props) {
                 // Update management functions
                 props.updateManagementFunctions(managementFunctions)
             } else if (uuid && uuid !== "" && activities && activities.hasOwnProperty(uuid)) {
-                let activitiesCopy = JSON.parse(JSON.stringify(activities))
+                let activitiesCopy = deepCopy(activities)
                 let testListItem = activitiesCopy[uuid].testList[testListIndex]
                 testListItem.description = event
 
@@ -95,6 +105,7 @@ function SfrTestList(props) {
             }
         } catch (e) {
             console.log(e)
+            handleSnackBarError(e)
         }
     }
     const handleDeleteTestList = (index) => {
@@ -107,16 +118,23 @@ function SfrTestList(props) {
 
                 // Update management functions
                 props.updateManagementFunctions(managementFunctions)
+
+                // Update snackbar
+                handleSnackBarSuccess("Test List Successfully Deleted")
             } else if (props.uuid && props.uuid !== "" && props.activities && props.activities.hasOwnProperty(props.uuid)) {
-                let activitiesCopy = JSON.parse(JSON.stringify(activities))
+                let activitiesCopy = deepCopy(activities)
                 let testList = activitiesCopy[uuid].testList
                 testList.splice(index, 1)
 
                 // Update evaluation activities
                 props.updateEvaluationActivities(activitiesCopy)
+
+                // Update snackbar
+                handleSnackBarSuccess("Test List Successfully Deleted")
             }
         } catch (e) {
             console.log(e)
+            handleSnackBarError(e)
         }
     }
     const collapseHandler = () => {
@@ -175,8 +193,13 @@ function SfrTestList(props) {
                     collapse ?
                         <div className="w-full m-0 p-0">
                             <div className="min-w-full mb-4 p-0 m-0">
-                                <TextEditor className="w-full" contentType={"term"} title={"testListDescription"} handleTextUpdate={handleTextUpdate}
-                                            text={props.testListDescription} uuid={evaluationActivities.selectedUUID}
+                                <TipTapEditor
+                                    className="w-full"
+                                    contentType={"term"}
+                                    title={"testListDescription"}
+                                    handleTextUpdate={handleTextUpdate}
+                                    text={props.testListDescription}
+                                    uuid={evaluationActivities.selectedUUID}
                                 />
                                 { props.tests && props.tests.length > 0 ?
                                     <div className="min-w-full m-0 p-0 mx-[-16px]">
@@ -188,13 +211,14 @@ function SfrTestList(props) {
                                                     sfrUUID={props.sfrUUID}
                                                     componentUUID={props.componentUUID}
                                                     uuid={props.uuid}
-                                                    test={test ? JSON.parse(JSON.stringify(test)) : {}}
+                                                    test={test ? deepCopy(test) : {}}
                                                     testListIndex={props.testListIndex}
                                                     index={index}
                                                     dependencyMenuOptions={props.dependencyDropdown}
                                                     isManagementFunction={props.isManagementFunction}
                                                     rowIndex={props.rowIndex}
                                                     updateManagementFunctions={props.updateManagementFunctions}
+                                                    updateEvaluationActivities={props.updateEvaluationActivities}
                                                     getElementValuesByType={props.getElementValuesByType}
                                                 />)
                                             })

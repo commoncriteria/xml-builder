@@ -14,6 +14,8 @@ import CardTemplate from "../../CardTemplate.jsx";
 import SfrComplexSelectableCard from "./SfrComplexSelectableCard.jsx";
 import SfrSelectionGroupCard from "./SfrSelectionGroupCard.jsx";
 import EditableTable from "../../../EditableTable.jsx";
+import SecurityComponents from "../../../../../utils/securityComponents.jsx";
+import { deepCopy } from "../../../../../utils/deepCopy.js";
 
 /**
  * The SfrSelectionGroups class that displays the selection groups per f-element
@@ -33,6 +35,7 @@ function SfrSelectionGroups(props) {
     };
 
     // Constants
+    const { handleSnackBarError, handleSnackBarSuccess, handleSnackbarTextUpdates } = SecurityComponents
     const dispatch = useDispatch();
     const { icons } = useSelector((state) => state.styling);
     const sfrSections = useSelector((state) => state.sfrSections)
@@ -67,6 +70,7 @@ function SfrSelectionGroups(props) {
             generateRowData()
         } catch (e) {
             console.log(e)
+            handleSnackBarError(e)
         }
     }, [sfrSections, props]);
 
@@ -87,10 +91,10 @@ function SfrSelectionGroups(props) {
     }
     const handleDeleteSelectable = (newData, selectedData) => {
         let element = getElement()
-        let selectables = element.selectables ? JSON.parse(JSON.stringify(element.selectables)) : {}
-        let selectableGroups = element.selectableGroups ? JSON.parse(JSON.stringify(element.selectableGroups)) : {}
-        let title = element.title ? JSON.parse(JSON.stringify(element.title)) : []
-        let managementFunctions = element.managementFunctions ? JSON.parse(JSON.stringify(element.managementFunctions)) : {}
+        let selectables = element.selectables ? deepCopy(element.selectables) : {}
+        let selectableGroups = element.selectableGroups ? deepCopy(element.selectableGroups) : {}
+        let title = element.title ? deepCopy(element.title) : []
+        let managementFunctions = element.managementFunctions ? deepCopy(element.managementFunctions) : {}
 
         // Delete associated values accordingly
         selectedData.forEach((row) => {
@@ -159,7 +163,7 @@ function SfrSelectionGroups(props) {
         let element = getElement()
 
         if (selectableType === "Assignment" || selectableType === "Selectable") {
-            let selectables = element.selectables ? JSON.parse(JSON.stringify(element.selectables)) : {}
+            let selectables = element.selectables ? deepCopy(element.selectables) : {}
             let idExists = false
             let descriptionExists = false
             Object.values(selectables).map((value) => {
@@ -195,6 +199,9 @@ function SfrSelectionGroups(props) {
                 setSelectableDescription("")
                 setSelectableType("Selectable")
                 setSelectableDisabled(true)
+
+                // Update snackbar
+                handleSnackBarSuccess(`${selectableType} Successfully Added`)
             } else {
                 if (idExists) {
                     setSelectableID("")
@@ -221,7 +228,7 @@ function SfrSelectionGroups(props) {
     }
     const handleNewSelectableGroupSubmit = () => {
         let element = getElement()
-        let selectableGroups = element.selectableGroups ? JSON.parse(JSON.stringify(element.selectableGroups)) : {}
+        let selectableGroups = element.selectableGroups ? deepCopy(element.selectableGroups) : {}
         let idExists = false
 
         if (selectableGroupType && selectableGroupType === "Selectable Group") {
@@ -240,6 +247,9 @@ function SfrSelectionGroups(props) {
                 }
                 updateSfrElement(itemMap)
                 setSelectableGroupDisabled(true)
+
+                // Update snackbar
+                handleSnackBarSuccess(`${selectableGroupType} Successfully Added`)
             }
         } else if (selectableGroupType && selectableGroupType === "Complex Selectable") {
             if (selectableGroups.hasOwnProperty(complexSelectableID)) {
@@ -262,6 +272,15 @@ function SfrSelectionGroups(props) {
         }
         setSelectableGroupID("")
         setComplexSelectableID("")
+
+        // Update snackbar
+        if (selectableGroupType && (selectableGroupType === "Selectable Group" || selectableGroupType === "Complex Selectable")) {
+            if (!idExists) {
+                handleSnackBarSuccess(`${selectableGroupType} Successfully Added`)
+            } else {
+                handleSnackBarError(`${selectableGroupType} Already Exists`)
+            }
+        }
     }
     const handleSetSelectableType = (event) => {
         setSelectableType(event.target.value)
@@ -270,7 +289,7 @@ function SfrSelectionGroups(props) {
         const { data, value } = event
         const { uuid } = data
         let element = getElement()
-        let selectables = element.selectables ? JSON.parse(JSON.stringify(element.selectables)) : {}
+        let selectables = element.selectables ? deepCopy(element.selectables) : {}
 
         if (selectables.hasOwnProperty(uuid)) {
             selectables[uuid].id = value
@@ -312,6 +331,7 @@ function SfrSelectionGroups(props) {
             }
         } catch (e) {
             console.log(e)
+            handleSnackBarError(e)
         }
     }
     const getTableText = (value) => {
@@ -325,13 +345,15 @@ function SfrSelectionGroups(props) {
             }
         } catch (e) {
             console.log(e)
+            handleSnackBarError(e)
         }
     }
     const getElement = () => {
         try {
-            return JSON.parse(JSON.stringify(sfrSections[props.sfrUUID][props.componentUUID].elements[props.elementUUID]));
+            return deepCopy(sfrSections[props.sfrUUID][props.componentUUID].elements[props.elementUUID]);
         } catch (e) {
             console.log(e)
+            handleSnackBarError(e)
         }
         return {}
     }
@@ -369,7 +391,7 @@ function SfrSelectionGroups(props) {
                                     sfrUUID={props.sfrUUID}
                                     componentUUID={props.componentUUID}
                                     elementUUID={props.elementUUID}
-                                    element={element ? JSON.parse(JSON.stringify(element)) : {}}
+                                    element={element ? deepCopy(element) : {}}
                                     getSelectablesMaps={props.getSelectablesMaps}
                                     id={key}
                                     styling={props.styling}
@@ -499,7 +521,7 @@ function SfrSelectionGroups(props) {
                                                                 label="ID"
                                                                 color={styling.secondaryTextField}
                                                                 defaultValue={selectableID}
-                                                                onBlur={handleSelectableID}
+                                                                onBlur={(event) => handleSnackbarTextUpdates(handleSelectableID, event)}
                                                             />
                                                         </FormControl>
                                                     </div>
@@ -512,7 +534,7 @@ function SfrSelectionGroups(props) {
                                                                 color={styling.secondaryTextField}
                                                                 label="Assignment"
                                                                 defaultValue={assignmentDescription}
-                                                                onBlur={handleAssignmentDescription}
+                                                                onBlur={(event) => handleSnackbarTextUpdates(handleAssignmentDescription, event)}
                                                             />
                                                         </FormControl>
                                                     </div>
@@ -525,7 +547,7 @@ function SfrSelectionGroups(props) {
                                                                 color={styling.secondaryTextField}
                                                                 label="Description"
                                                                 defaultValue={selectableDescription}
-                                                                onBlur={handleSelectableDescription}
+                                                                onBlur={(event) => handleSnackbarTextUpdates(handleSelectableDescription, event)}
                                                             />
                                                         </FormControl>
                                                     </div>
@@ -619,7 +641,7 @@ function SfrSelectionGroups(props) {
                                                                         color={styling.secondaryTextField}
                                                                         label="Complex Selectable ID"
                                                                         defaultValue={complexSelectableID}
-                                                                        onBlur={handleComplexSelectableID}
+                                                                        onBlur={(event) => handleSnackbarTextUpdates(handleComplexSelectableID, event)}
                                                                     />
                                                                 </Tooltip>
                                                             </FormControl>
@@ -638,7 +660,7 @@ function SfrSelectionGroups(props) {
                                                                         color={styling.secondaryTextField}
                                                                         label="SFR Group ID"
                                                                         defaultValue={selectableGroupID}
-                                                                        onBlur={handleSelectableGroupID}
+                                                                        onBlur={(event) => handleSnackbarTextUpdates(handleSelectableGroupID, event)}
                                                                     />
                                                                 </Tooltip>
                                                             </FormControl>

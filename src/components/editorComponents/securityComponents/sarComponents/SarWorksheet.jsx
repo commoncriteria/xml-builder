@@ -8,7 +8,8 @@ import AddCircleRoundedIcon from "@mui/icons-material/AddCircleRounded";
 import DeleteForeverRoundedIcon from "@mui/icons-material/DeleteForeverRounded";
 import CardTemplate from "../CardTemplate.jsx";
 import Modal from "../../../modalComponents/Modal.jsx";
-import TextEditor from "../../TextEditor.jsx";
+import TipTapEditor from "../../TipTapEditor.jsx";
+import SecurityComponents from "../../../../utils/securityComponents.jsx";
 
 /**
  * The SarWorksheet class that displays the data for the sar worksheet as a modal
@@ -26,6 +27,7 @@ function SarWorksheet(props) {
     };
 
     // Constants
+    const { handleSnackBarSuccess, handleSnackbarTextUpdates } = SecurityComponents
     const dispatch = useDispatch();
     const sarElements = useSelector(state => state.sars.elements)
     const { primary, secondary, primaryMenu, checkboxSecondary, secondaryToggleTypography, icons } = useSelector((state) => state.styling);
@@ -107,6 +109,9 @@ function SarWorksheet(props) {
 
             // Update dropdowns
             setSelectedNewElementType('')
+
+            // Update snackbar
+            handleSnackBarSuccess("New SAR Element Successfully Added")
         }
     }
     const handleDeleteElement = () => {
@@ -116,6 +121,9 @@ function SarWorksheet(props) {
             setSelectedElementUUID('')
             setSelectedElementType('')
             setSelectedNewElementType('')
+
+            // Update snackbar
+            handleSnackBarSuccess("SAR Element Successfully Deleted")
         }
     }
 
@@ -251,18 +259,22 @@ function SarWorksheet(props) {
                                            <FormControl fullWidth>
                                                <Tooltip arrow id={"ccIDTooltip"}
                                                         title={"Full ID of the SAR Component."}>
-                                                   <TextField key={props.value.ccID} label="CC-ID"
-                                                              onBlur={updateCcID}
-                                                              defaultValue={props.value.ccID}
+                                                   <TextField
+                                                       key={props.value.ccID}
+                                                       label="CC-ID"
+                                                       onBlur={(event) => handleSnackbarTextUpdates(updateCcID, event)}
+                                                       defaultValue={props.value.ccID}
                                                    />
                                                </Tooltip>
                                            </FormControl>
                                            <FormControl fullWidth>
                                                <Tooltip arrow title={"Full name of the component."}
                                                         id={"nameTooltip"}>
-                                                   <TextField key={props.value.name} label="Name"
-                                                              onBlur={updateName}
-                                                              defaultValue={props.value.name}
+                                                   <TextField
+                                                       key={props.value.name}
+                                                       label="Name"
+                                                       onBlur={(event) => handleSnackbarTextUpdates(updateName, event)}
+                                                       defaultValue={props.value.name}
                                                    />
                                                </Tooltip>
                                            </FormControl>
@@ -280,10 +292,12 @@ function SarWorksheet(props) {
                                                type={"section"}
                                                header={<label className="resize-none font-bold text-[14px] p-0 pr-4 text-accent">Summary</label>}
                                                body={
-                                                   <TextEditor uuid={props.componentUUID}
-                                                               text={props.value.summary}
-                                                               contentType={"term"}
-                                                               handleTextUpdate={updateSummary}/>
+                                                   <TipTapEditor
+                                                       uuid={props.componentUUID}
+                                                       text={props.value.summary}
+                                                       contentType={"term"}
+                                                       handleTextUpdate={updateSummary}
+                                                   />
                                                }
                                            />
                                        </div>
@@ -377,7 +391,7 @@ function SarWorksheet(props) {
                                                              type={"section"}
                                                              header={<label className="resize-none font-bold text-[14px] p-0 pr-4 text-accent">Title</label>}
                                                              body={
-                                                                 <TextEditor className="w-full"
+                                                                 <TipTapEditor className="w-full"
                                                                              uuid={props.componentUUID}
                                                                              text={title}
                                                                              contentType={"term"}
@@ -391,7 +405,7 @@ function SarWorksheet(props) {
                                                                  className="resize-none font-bold text-[14px] p-0 pr-4 text-accent">Application
                                                                  Note</label>}
                                                              body={
-                                                                 <TextEditor className="w-full"
+                                                                 <TipTapEditor className="w-full"
                                                                              uuid={props.componentUUID}
                                                                              text={note}
                                                                              contentType={"term"}
@@ -402,7 +416,7 @@ function SarWorksheet(props) {
                                                              type={"section"}
                                                              header={<label className="resize-none font-bold text-[14px] p-0 pr-4 text-accent">Evaluation Activity</label>}
                                                              body={
-                                                                 <TextEditor uuid={props.componentUUID}
+                                                                 <TipTapEditor uuid={props.componentUUID}
                                                                              text={aactivity}
                                                                              contentType={"term"}
                                                                              handleTextUpdate={updateAactivity}/>

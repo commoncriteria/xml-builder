@@ -7,6 +7,7 @@ import MetadataSection from "./accordionComponents/MetadataSection.jsx";
 import PreviewPane from "./PreviewPane.jsx";
 import { IconButton, Tooltip } from "@mui/material";
 import LaunchRoundedIcon from "@mui/icons-material/LaunchRounded";
+import CardTemplate from "./editorComponents/securityComponents/CardTemplate.jsx";
 
 /**
  * The Content pane class that displays the content of the builder

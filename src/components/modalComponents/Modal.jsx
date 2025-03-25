@@ -19,7 +19,10 @@ const Transition = React.forwardRef(function Transition(props, ref) {
 function Modal(props) {
     // Prop Validation
     Modal.propTypes = {
-        title: PropTypes.string.isRequired,
+        title: PropTypes.oneOfType([
+            PropTypes.string,
+            PropTypes.node
+        ]).isRequired,
         content: PropTypes.node.isRequired,
         dialogActions: PropTypes.node,
         open: PropTypes.bool.isRequired,

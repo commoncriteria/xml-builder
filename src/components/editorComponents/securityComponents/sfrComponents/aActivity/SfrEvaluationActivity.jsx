@@ -13,6 +13,10 @@ import SfrIntroduction from "./SfrIntroduction.jsx";
 import SfrTss from "./SfrTss.jsx";
 import SfrGuidance from "./SfrGuidance.jsx";
 import SfrTestListSection from "./SfrTestListSection.jsx";
+import { deepCopy } from "../../../../../utils/deepCopy.js";
+import SfrNoTestToggle from "./SfrNoTestToggle.jsx";
+import SfrNoTest from "./SfrNoTest.jsx";
+import SecurityComponents from "../../../../../utils/securityComponents.jsx";
 
 /**
  * The SfrEvaluationActivity class that displays the evaluation activities for specified components/elements
@@ -28,6 +32,7 @@ function SfrEvaluationActivity(props) {
     };
 
     // Constants
+    const { handleSnackBarSuccess } = SecurityComponents
     const { primary, secondary, icons } = useSelector((state) => state.styling);
     const dispatch = useDispatch();
     const sfrSections = useSelector((state) => state.sfrSections);
@@ -40,9 +45,17 @@ function SfrEvaluationActivity(props) {
     }, [props])
 
     // Methods
+    const sfrElementSort = (sfrArray) => {
+        // Sort the SFR elements in ascending order
+        sfrArray.sort((a, b) => {
+            const getLastNumber = (str) => parseInt(str.substring(str.lastIndexOf('.') + 1), 10);
+            return getLastNumber(a) - getLastNumber(b);
+        });
+    }
+
     const initializeValues = (elementMaps, sfrUUID, componentUUID) => {
-        let mainDropdown = {Component: [], Elements: []}
-        let newDropdown = {Component: [], Elements: []}
+        let mainDropdown = { Component: [], Elements: [] }
+        let newDropdown = { Component: [], Elements: [] }
         let activities = getEvaluationActivitiesList()
 
         // Run through activities and add to main dropdown
@@ -58,7 +71,7 @@ function SfrEvaluationActivity(props) {
                     }
                 }
             })
-            mainDropdown.Elements.sort();
+            sfrElementSort(mainDropdown.Elements);
         }
 
         // Run through remaining components/elements and add to new evaluation activity dropdown options
@@ -70,7 +83,7 @@ function SfrEvaluationActivity(props) {
                 newDropdown.Elements.push(name)
             }
         })
-        newDropdown.Elements.sort();
+        sfrElementSort(newDropdown.Elements);
 
         // Get dependency map
         let dependencies = getDependencyMap(sfrUUID, componentUUID, elementMaps)
@@ -93,13 +106,13 @@ function SfrEvaluationActivity(props) {
     }
     const handleSelectEvaluationActivity = (title, selections) => {
         if (selections) {
-            let updateMap = {selectedEvaluationActivity: selections, selectedUUID: ""}
+            let updateMap = { selectedEvaluationActivity: selections, selectedUUID: "" }
             if (props.elementMaps && props.elementMaps.hasOwnProperty("componentName") &&
                 props.elementMaps.hasOwnProperty("componentUUID") &&
                 props.elementMaps.componentName === selections[0]) {
                 updateMap.selectedUUID = props.elementMaps.componentUUID
             } else if (props.elementMaps && props.elementMaps.hasOwnProperty("elementNameMap") &&
-                       props.elementMaps.elementNameMap.hasOwnProperty(selections[0])) {
+                props.elementMaps.elementNameMap.hasOwnProperty(selections[0])) {
                 updateMap.selectedUUID = props.elementMaps.elementNameMap[selections[0]]
             }
             updateEvaluationActivitiesUI(updateMap)
@@ -107,7 +120,7 @@ function SfrEvaluationActivity(props) {
     }
     const handleNewSelectedEvaluationActivity = (title, selections) => {
         if (selections && (JSON.stringify(evaluationActivities.newSelectedEvaluationActivity) !== JSON.stringify(selections))) {
-            updateEvaluationActivitiesUI({newSelectedEvaluationActivity: selections})
+            updateEvaluationActivitiesUI({ newSelectedEvaluationActivity: selections })
         }
     }
     const handleSubmitNewEvaluationActivities = () => {
@@ -120,11 +133,13 @@ function SfrEvaluationActivity(props) {
                     let uuid;
                     if (props.elementMaps.hasOwnProperty("componentName") && props.elementMaps.componentName === name && !mainDropdown.Component.includes(name)) {
                         uuid = props.elementMaps.componentUUID
-                    } else if (props.elementMaps.hasOwnProperty("elementNameMap") && props.elementMaps.elementNameMap.hasOwnProperty(name)&& !mainDropdown.Elements.includes(name)) {
+                    } else if (props.elementMaps.hasOwnProperty("elementNameMap") && props.elementMaps.elementNameMap.hasOwnProperty(name) && !mainDropdown.Elements.includes(name)) {
                         uuid = props.elementMaps.elementNameMap[name]
                     }
                     if (uuid && !activities.hasOwnProperty(uuid)) {
                         activities[uuid] = {
+                            isNoTest: false,
+                            noTest: "",
                             introduction: "",
                             tss: "",
                             guidance: "",
@@ -135,6 +150,9 @@ function SfrEvaluationActivity(props) {
                 })
                 updateEvaluationActivities(activities)
                 dispatch(RESET_EVALUATION_ACTIVITY_UI())
+
+                // Update snackbar
+                handleSnackBarSuccess("New Evaluation Activity Successfully Added")
             }
         }
     }
@@ -145,7 +163,10 @@ function SfrEvaluationActivity(props) {
             if (uuid && activities.hasOwnProperty(uuid)) {
                 delete activities[uuid];
                 updateEvaluationActivities(activities)
-                updateEvaluationActivitiesUI({selectedUUID: "", selectedEvaluationActivity: []})
+                updateEvaluationActivitiesUI({ selectedUUID: "", selectedEvaluationActivity: [] })
+
+                // Update snackbar
+                handleSnackBarSuccess("Evaluation Activity Successfully Removed")
             }
         }
     }
@@ -161,6 +182,8 @@ function SfrEvaluationActivity(props) {
                 activities[uuid].guidance = event
             } else if (type === "testIntroduction") {
                 activities[uuid].testIntroduction = event
+            } else if (type === "noTest") {
+                activities[uuid].noTest = event
             }
 
             // Update evaluation activities
@@ -174,8 +197,29 @@ function SfrEvaluationActivity(props) {
             }
             activities[uuid].testList.push({
                 description: "",
-                tests: [{dependencies: [], objective: ""}]
+                tests: [{ dependencies: [], objective: "" }]
             })
+            updateEvaluationActivities(activities)
+
+            // Update snackbar
+            handleSnackBarSuccess("New Test List Successfully Added")
+        }
+    }
+    const handleNoTestToggle = (isNoTest, uuid) => {
+        let activities = getEvaluationActivitiesList()
+
+        if (uuid && uuid !== "" && activities && activities.hasOwnProperty(uuid)) {
+            activities[uuid] = {
+                isNoTest: isNoTest,
+                noTest: "",
+                introduction: "",
+                tss: "",
+                guidance: "",
+                testIntroduction: "",
+                testList: [],
+            }
+
+            // Update evaluation activities
             updateEvaluationActivities(activities)
         }
     }
@@ -183,151 +227,184 @@ function SfrEvaluationActivity(props) {
     // Helper Methods
     const getEvaluationActivitiesList = () => {
         return sfrSections[props.sfrUUID][props.componentUUID].evaluationActivities ?
-            JSON.parse(JSON.stringify(sfrSections[props.sfrUUID][props.componentUUID].evaluationActivities)) : {}
+            deepCopy(sfrSections[props.sfrUUID][props.componentUUID].evaluationActivities) : {}
     }
     const updateEvaluationActivities = (activities) => {
         let originalActivities = getEvaluationActivitiesList()
         if (JSON.stringify(originalActivities) !== JSON.stringify(activities)) {
-            let itemMap = {evaluationActivities: activities}
-            dispatch(UPDATE_SFR_COMPONENT_ITEMS({sfrUUID: props.sfrUUID, uuid: props.componentUUID, itemMap: itemMap}))
+            let itemMap = { evaluationActivities: activities }
+            dispatch(UPDATE_SFR_COMPONENT_ITEMS({ sfrUUID: props.sfrUUID, uuid: props.componentUUID, itemMap: itemMap }))
         }
     }
     const updateEvaluationActivitiesUI = (updateMap) => {
-        dispatch(UPDATE_EVALUATION_ACTIVITY_UI_ITEMS({updateMap: updateMap}))
+        dispatch(UPDATE_EVALUATION_ACTIVITY_UI_ITEMS({ updateMap: updateMap }))
     }
 
     // Methods
     const getDependencyMap = () => {
-       return dispatch(
-           GET_DEPENDENCY_MAP({
-               sfrUUID: props.sfrUUID,
-               componentUUID: props.componentUUID,
-               elementMaps: props.elementMaps,
-               sfrSections: JSON.parse(JSON.stringify(sfrSections))}
-           )).payload.dependencies
+        return dispatch(
+            GET_DEPENDENCY_MAP({
+                sfrUUID: props.sfrUUID,
+                componentUUID: props.componentUUID,
+                elementMaps: props.elementMaps,
+                sfrSections: deepCopy(sfrSections)
+            }
+        )).payload.dependencies
     }
     const getSections = () => {
         const selected = evaluationActivities.selectedEvaluationActivity
         let activities = getEvaluationActivitiesList()
         let uuid = evaluationActivities.selectedUUID
-        let testIntroduction = activities[uuid].testIntroduction ? JSON.parse(JSON.stringify(activities[uuid].testIntroduction)) : ""
-        let testList = activities[uuid].testList ? JSON.parse(JSON.stringify(activities[uuid].testList)) : []
-        return (
-            <div className="mt-2">
-                <SfrIntroduction
-                    selected={selected}
-                    activities={activities}
+        let testIntroduction = activities[uuid].hasOwnProperty("testIntroduction") ? deepCopy(activities[uuid].testIntroduction) : ""
+        let testList = activities[uuid].hasOwnProperty("testList") ? deepCopy(activities[uuid].testList) : []
+        let isNoTest = activities.hasOwnProperty(uuid) && activities[uuid].hasOwnProperty("isNoTest") ? activities[uuid].isNoTest : false
+
+        if (isNoTest) {
+            return (
+                <div className="mt-2">
+                    <SfrNoTest
+                        selected={selected}
+                        activities={activities}
+                        uuid={uuid}
+                        handleTextUpdate={handleTextUpdate}
+                    />
+                </div>
+            )
+        } else {
+            return (
+                <div className="mt-2">
+                    <SfrIntroduction
+                        selected={selected}
+                        activities={activities}
+                        uuid={uuid}
+                        handleTextUpdate={handleTextUpdate}
+                    />
+                    <SfrTss
+                        selected={selected}
+                        activities={activities}
+                        uuid={uuid}
+                        handleTextUpdate={handleTextUpdate}
+                    />
+                    <SfrGuidance
+                        selected={selected}
+                        activities={activities}
+                        uuid={uuid}
+                        handleTextUpdate={handleTextUpdate}
+                    />
+                    <SfrTestListSection
+                        selected={selected}
+                        activities={activities}
+                        sfrUUID={props.sfrUUID}
+                        componentUUID={props.componentUUID}
+                        uuid={uuid}
+                        testIntroduction={testIntroduction}
+                        testList={testList}
+                        elementMaps={props.elementMaps}
+                        handleTextUpdate={handleTextUpdate}
+                        handleNewTestList={handleNewTestList}
+                        updateEvaluationActivities={updateEvaluationActivities}
+                        updateEvaluationActivitiesUI={updateEvaluationActivitiesUI}
+                    />
+                </div>
+            )
+        }
+    }
+    const noTestToggle = () => {
+        const activities = getEvaluationActivitiesList()
+        const uuid = evaluationActivities.selectedUUID
+        const isNoTest = activities.hasOwnProperty(uuid) && activities[uuid].hasOwnProperty("isNoTest") ? activities[uuid].isNoTest : false
+
+        if (activities.hasOwnProperty(uuid)) {
+            return (
+                <SfrNoTestToggle
+                    isNoTest={isNoTest}
+                    handleNoTestToggle={handleNoTestToggle}
+                    isManagementFunction={false}
                     uuid={uuid}
-                    handleTextUpdate={handleTextUpdate}
                 />
-                <SfrTss
-                    selected={selected}
-                    activities={activities}
-                    uuid={uuid}
-                    handleTextUpdate={handleTextUpdate}
-                />
-                <SfrGuidance
-                    selected={selected}
-                    activities={activities}
-                    uuid={uuid}
-                    handleTextUpdate={handleTextUpdate}
-                />
-                <SfrTestListSection
-                    selected={selected}
-                    activities={activities}
-                    sfrUUID={props.sfrUUID}
-                    componentUUID={props.componentUUID}
-                    uuid={uuid}
-                    testIntroduction={testIntroduction}
-                    testList={testList}
-                    elementMaps={props.elementMaps}
-                    handleTextUpdate={handleTextUpdate}
-                    handleNewTestList={handleNewTestList}
-                    updateEvaluationActivities={updateEvaluationActivities}
-                    updateEvaluationActivitiesUI={updateEvaluationActivitiesUI}
-                />
-            </div>
-        )
+            )
+        }
     }
 
     // Return Method
     return (
         <div>
             <CardTemplate type={"parent"} title={"Evaluation Activities"} tooltip={"Evaluation Activities"}
-                     collapse={openEvaluationActivity} collapseHandler={handleSetOpenEvaluationActivity}
-                     body={
-                         <div className="mb-2">
-                             <div className="mt-4 px-4 w-full">
-                                 <span className="w-full inline-flex items-baseline">
-                                     <div className="w-[96%]">
-                                          <MultiSelectDropdown
-                                              selectionOptions={evaluationActivities.evaluationActivityDropdown}
-                                              selections={evaluationActivities.selectedEvaluationActivity}
-                                              title={"Evaluation Activity"}
-                                              handleSelections={handleSelectEvaluationActivity}
-                                              multiple={false}
-                                          />
-                                     </div>
-                                     <div className="w-[4%]">
-                                         <IconButton
-                                             sx={{marginBottom: "-32px"}}
-                                             key={"DeleteEvaluationActivityButton"}
-                                             disabled={evaluationActivities.selectedEvaluationActivity &&
-                                                       evaluationActivities.selectedEvaluationActivity.length > 0 ? false : true}
-                                             onClick={handleDeleteEvaluationActivity}
-                                             variant="contained">
-                                             <Tooltip
-                                                 title={"Delete Evaluation Activity"}
-                                                 id={props.componentUUID + "DeleteEvaluationActivityTooltip"}
-                                             >
-                                                 <DeleteForeverRoundedIcon htmlColor={ secondary } sx={ icons.large }/>
-                                             </Tooltip>
-                                         </IconButton>
-                                     </div>
-                                 </span>
-                             </div>
-                             { evaluationActivities.selectedEvaluationActivity && evaluationActivities.selectedEvaluationActivity.length > 0 ?
-                                 getSections()
-                                 : null
-                             }
-                         </div>
-                     }
-                     footer={
-                         <div className="min-w-full flex justify-center p-0 py-1 rounded-b-lg border-t-2 border-gray-200 bg-white"
-                              key={"NewEvaluationActivityFooter"}
-                         >
-                             <div className="p-3 px-4 w-full">
-                                 <span className="w-full inline-flex items-baseline">
-                                     <div className="w-[96%]">
-                                          <MultiSelectDropdown
-                                              selectionOptions={evaluationActivities.newEvaluationActivityDropdown}
-                                              selections={evaluationActivities.newSelectedEvaluationActivity}
-                                              title={"Evaluation Activities"}
-                                              handleSelections={handleNewSelectedEvaluationActivity}
-                                              style={"primary"}
-                                          />
-                                     </div>
-                                     <div className="w-[4%]">
-                                         <IconButton
-                                             sx={{marginBottom: "-32px"}}
-                                             key={"NewEvaluationActivitiesButton"}
-                                             disabled={evaluationActivities.newSelectedEvaluationActivity &&
-                                             evaluationActivities.newSelectedEvaluationActivity.length > 0 ? false : true}
-                                             onClick={handleSubmitNewEvaluationActivities}
-                                             variant="contained"
-                                         >
-                                             <Tooltip
-                                                 title={"Add New Evaluation Activities"}
-                                                 id={props.componentUUID + "addNewEvaluationActivityTooltip"}
-                                             >
-                                                 <AddCircleRoundedIcon htmlColor={ primary } sx={ icons.medium }/>
-                                             </Tooltip>
-                                         </IconButton>
-                                     </div>
-                                 </span>
-                             </div>
-                         </div>
-                     }
+                collapse={openEvaluationActivity} collapseHandler={handleSetOpenEvaluationActivity}
+                body={
+                    <div className="mb-2">
+                        <div className="mt-4 px-4 w-full">
+                            <span className="flex justify-stretch min-w-full">
+                                <div className="flex justify-center w-full">
+                                    <div className="w-full">
+                                        <MultiSelectDropdown
+                                            selectionOptions={evaluationActivities.evaluationActivityDropdown}
+                                            selections={evaluationActivities.selectedEvaluationActivity}
+                                            title={"Evaluation Activity"}
+                                            handleSelections={handleSelectEvaluationActivity}
+                                            multiple={false}
+                                        />
+                                    </div>
+                                    {noTestToggle()}
+                                    <IconButton
+                                        key={"DeleteEvaluationActivityButton"}
+                                        disabled={evaluationActivities.selectedEvaluationActivity &&
+                                        evaluationActivities.selectedEvaluationActivity.length > 0 ? false : true}
+                                        onClick={handleDeleteEvaluationActivity}
+                                        variant="contained">
+                                        <Tooltip
+                                            title={"Delete Evaluation Activity"}
+                                            id={props.componentUUID + "DeleteEvaluationActivityTooltip"}
+                                        >
+                                            <DeleteForeverRoundedIcon htmlColor={secondary} sx={icons.large}/>
+                                        </Tooltip>
+                                    </IconButton>
+                                </div>
+                            </span>
+                        </div>
+                        {evaluationActivities.selectedEvaluationActivity && evaluationActivities.selectedEvaluationActivity.length > 0 ?
+                            getSections()
+                            : null
+                        }
+                    </div>
+                }
+                footer={
+                    <div
+                        className="min-w-full flex justify-center p-0 py-1 rounded-b-lg border-t-2 border-gray-200 bg-white"
+                        key={"NewEvaluationActivityFooter"}
+                    >
+                        <div className="p-3 px-4 w-full">
+                            <span className="w-full inline-flex items-baseline">
+                                <div className="w-[96%]">
+                                    <MultiSelectDropdown
+                                        selectionOptions={evaluationActivities.newEvaluationActivityDropdown}
+                                        selections={evaluationActivities.newSelectedEvaluationActivity}
+                                        title={"Evaluation Activities"}
+                                        handleSelections={handleNewSelectedEvaluationActivity}
+                                        style={"primary"}
+                                    />
+                                </div>
+                                <div className="w-[4%]">
+                                    <IconButton
+                                        sx={{ marginBottom: "-32px" }}
+                                        key={"NewEvaluationActivitiesButton"}
+                                        disabled={evaluationActivities.newSelectedEvaluationActivity &&
+                                            evaluationActivities.newSelectedEvaluationActivity.length > 0 ? false : true}
+                                        onClick={handleSubmitNewEvaluationActivities}
+                                        variant="contained"
+                                    >
+                                        <Tooltip
+                                            title={"Add New Evaluation Activities"}
+                                            id={props.componentUUID + "addNewEvaluationActivityTooltip"}
+                                        >
+                                            <AddCircleRoundedIcon htmlColor={primary} sx={icons.medium} />
+                                        </Tooltip>
+                                    </IconButton>
+                                </div>
+                            </span>
+                        </div>
+                    </div>
+                }
             />
         </div>
     );

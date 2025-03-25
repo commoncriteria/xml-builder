@@ -3,57 +3,6 @@ import { v4 as uuidv4 } from 'uuid';
 
 const initialState = {
     "securityProblemDefinition": "",
-    "c0dbc61b-cf58-4db6-985b-5539ae2f7455": {
-        title: "Threats",
-        xmlTagMeta: {
-            tagName: "sec:Threats",
-            childTagName: "threats",
-            attributes: {}
-        },
-        definition: "",
-        open: true,
-        terms: {
-            "879ebadf-0293-4a90-b4c1-66462a66b553": {
-                title: "T.NETWORK_EAVESDROP",
-                xmlTagMeta: {
-                    tagName: "threat",
-                    attributes: {}
-                },
-                definition: "",
-                objectives: [
-                    {
-                        uuid: "7c436dd3-daf9-40a7-b4b0-71eb3e18cb62",
-                        rationale: ""
-                    },
-                ],
-                open: true,
-                tableOpen: false
-            }
-        }
-    },
-    "3a8ef499-784b-485c-8321-a02083aafda8": {
-        title: "Assumptions",
-        xmlTagMeta: {
-            tagName: "sec:Assumptions",
-            childTagName: "assumptions",
-            attributes: {}
-        },
-        definition: "",
-        open: true,
-        terms: {
-            "9bba769f-6aa8-4249-9c3f-a7c38da06e41": {
-                title: "A.CONFIG",
-                xmlTagMeta: {
-                    tagName: "assumption",
-                    attributes: {}
-                },
-                definition: "",
-                objectives: [],
-                open: true,
-                tableOpen: false
-            }
-        }
-    },
 }
 
 export const threatsSlice = createSlice({
@@ -71,7 +20,7 @@ export const threatsSlice = createSlice({
                     title: title,
                     definition: "",
                     terms: {},
-                    open: true
+                    open: false
                 };
                 action.payload = newId
             } else {
@@ -122,6 +71,7 @@ export const threatsSlice = createSlice({
             let title = action.payload.title;
             let definition = action.payload.definition;
             let objectives = action.payload.objectives;
+            let sfrs = action.payload.sfrs;
             let uuid = uuidv4();
             if (state.hasOwnProperty(threatUUID)) {
                 let currentTermList = state[threatUUID]
@@ -129,14 +79,17 @@ export const threatsSlice = createSlice({
                     currentTermList.terms[uuid] = {
                         title: title ? title : "",
                         definition: definition ? definition : "",
-                        objectives: objectives ? objectives: [],
-                        open: true,
+                        objectives: objectives ? objectives : [],
+                        sfrs: sfrs ? sfrs : [],
+                        open: false,
                         tableOpen: false,
                     }
                 }
             }
             // Sort terms lists
-            threatsSlice.caseReducers.sortThreatsTermsListHelper(state)
+            threatsSlice.caseReducers.SORT_THREATS_TERMS_LIST_HELPER(state)
+
+            action.payload.id = uuid;
         },
         UPDATE_THREAT_TERM_TITLE: (state, action) => {
             let threatUUID = action.payload.threatUUID;
@@ -149,7 +102,7 @@ export const threatsSlice = createSlice({
                 }
             }
             // Sort terms lists
-            threatsSlice.caseReducers.sortThreatsTermsListHelper(state)
+            threatsSlice.caseReducers.SORT_THREATS_TERMS_LIST_HELPER(state)
         },
         UPDATE_THREAT_TERM_DEFINITION: (state, action) => {
             let threatUUID = action.payload.threatUUID;
@@ -159,6 +112,16 @@ export const threatsSlice = createSlice({
             if (state.hasOwnProperty(threatUUID)) {
                 if (state[threatUUID].terms.hasOwnProperty(uuid) && state[threatUUID].terms[uuid].title === originalTitle) {
                     state[threatUUID].terms[uuid].definition = newDefinition
+                }
+            }
+        },
+        UPDATE_THREAT_TERM_SFRS: (state, action) => {
+            let threatUUID = action.payload.threatUUID;
+            let uuid = action.payload.uuid;
+            let sfrs = action.payload.sfrs;
+            if (state.hasOwnProperty(threatUUID)) {
+                if (state[threatUUID].terms.hasOwnProperty(uuid)) {
+                    state[threatUUID].terms[uuid].sfrs = sfrs
                 }
             }
         },
@@ -172,7 +135,7 @@ export const threatsSlice = createSlice({
                 }
             }
             // Sort terms lists
-            threatsSlice.caseReducers.sortThreatsTermsListHelper(state)
+            threatsSlice.caseReducers.SORT_THREATS_TERMS_LIST_HELPER(state)
         },
         DELETE_ALL_THREAT_TERMS: (state, action) => {
             let threatUUID = action.payload.threatUUID;
@@ -217,6 +180,42 @@ export const threatsSlice = createSlice({
                 }
             }
         },
+        ADD_THREAT_TERM_SFR: (state, action) => {
+            let { threatUUID, uuid, sfrUUID, rationale, title, sfrName } = action.payload
+            let currentRationale = rationale ? rationale : ""
+            let objectiveUUID = action.payload.objectiveUUID ? action.payload.objectiveUUID : ""; // only present for non-CC2022 PP's
+
+            if (state.hasOwnProperty(threatUUID)) {
+                let currentThreatList = state[threatUUID].terms
+
+                if (currentThreatList.hasOwnProperty(uuid)) {
+                    let currentThreat = currentThreatList[uuid]
+                    let uuidExists = false
+
+                    if (!currentThreat.hasOwnProperty("sfrs")) {
+                        currentThreat.sfrs = []
+                    }
+
+                    if (currentThreat.title === title) {
+                        currentThreat.sfrs.map((sfr) => {
+                            if (objectiveUUID != "") {
+                                if (sfr.uuid === sfrUUID && objectiveUUID == sfr.objectiveUUID) {
+                                    uuidExists = true
+                                }
+                            } else {
+                                if (sfr.uuid === sfrUUID) {
+                                    uuidExists = true
+                                }
+                            }
+                        })
+
+                        if (!uuidExists) {
+                            currentThreat.sfrs.push({ uuid: sfrUUID, rationale: currentRationale, name: sfrName, objectiveUUID: objectiveUUID })
+                        }
+                    }
+                }
+            }
+        },
         UPDATE_THREAT_TERM_OBJECTIVE_RATIONALE: (state, action) => {
             let threatUUID = action.payload.threatUUID;
             let uuid = action.payload.uuid;
@@ -230,6 +229,26 @@ export const threatsSlice = createSlice({
                             objective.rationale = newRationale
                         }
                     })
+                }
+            }
+        },
+        UPDATE_THREAT_TERM_SFR_RATIONALE: (state, action) => {
+            const { threatUUID, uuid, sfrUUID, prevRationale, newRationale } = action.payload
+
+            if (state.hasOwnProperty(threatUUID)) {
+                let currentThreatList = state[threatUUID].terms
+                if (currentThreatList.hasOwnProperty(uuid)) {
+                    let currentThreat = currentThreatList[uuid]
+
+                    if (currentThreat.hasOwnProperty("sfrs")) {
+                        currentThreat.sfrs.map((sfr) => {
+                            if (sfr.uuid === sfrUUID) {
+                                sfr.rationale = sfr.rationale.replace(prevRationale, newRationale);
+                            }
+                        })
+                    } else {
+                        currentThreat.sfrs = []
+                    }
                 }
             }
         },
@@ -248,7 +267,34 @@ export const threatsSlice = createSlice({
                 }
             }
         },
-        COLLAPSE_THREAT_TO_OBJECTIVE_TABLE: (state, action) => {
+        DELETE_THREAT_TERM_SFR: (state, action) => {
+            const { threatUUID, uuid, sfrUUID } = action.payload
+            let objectiveUUID = action.payload.objectiveUUID ? action.payload.objectiveUUID : ""; // only present for non-CC2022 PP's
+
+            if (state.hasOwnProperty(threatUUID)) {
+                let currentThreatList = state[threatUUID].terms
+                if (currentThreatList.hasOwnProperty(uuid)) {
+                    let currentThreat = currentThreatList[uuid]
+
+                    if (currentThreat.hasOwnProperty("sfrs")) {
+                        currentThreat.sfrs.map((sfr, index) => {
+                            if (objectiveUUID != "") {
+                                if (sfr.uuid === sfrUUID && sfr.objectiveUUID == objectiveUUID) {
+                                    currentThreat.sfrs.splice(index, 1)
+                                }
+                            } else {
+                                if (sfr.uuid === sfrUUID) {
+                                    currentThreat.sfrs.splice(index, 1)
+                                }
+                            }
+                        })
+                    } else {
+                        currentThreat.sfrs = []
+                    }
+                }
+            }
+        },
+        COLLAPSE_THREAT_RATIONALE_TABLE: (state, action) => {
             let threatUUID = action.payload.threatUUID;
             let uuid = action.payload.uuid;
             let originalTitle = action.payload.title;
@@ -261,20 +307,54 @@ export const threatsSlice = createSlice({
             }
         },
         DELETE_OBJECTIVE_FROM_THREAT_USING_UUID: (state, action) => {
-            let objectiveUUID = action.payload.objectiveUUID
+            const { objectiveUUID } = action.payload
             Object.values(state).map((value) => {
-                Object.values(value.terms).map((term) => {
-                    if (term.objectives && Object.entries(term.objectives).length > 0) {
-                        (term.objectives)?.map((objective, index) => {
-                            if (objective.uuid === objectiveUUID) {
-                                term.objectives.splice(index, 1)
+                let threats = value.hasOwnProperty("terms") ? value.terms : {}
+                Object.values(threats).map((threat) => {
+                    let objectives = threat.hasOwnProperty("objectives") ? threat.objectives : []
+                    if (objectives && objectives.length > 0) {
+                        objectives.map((objective, index) => {
+                            const { uuid } = objective
+                            if (uuid && (uuid === objectiveUUID)) {
+                                objectives.splice(index, 1)
                             }
                         })
                     }
                 })
             })
         },
-        sortThreatsTermsListHelper: (state) => {
+        RESET_ALL_THREAT_TERM_OBJECTIVES: (state) => {
+            Object.values(state).forEach((parent) => {
+                let { title, terms } = parent
+                if (title && title === "Threats" && terms && Object.keys(terms).length > 0) {
+                    Object.values(terms).forEach((term) => {
+                        term.objectives = []
+                    })
+                }
+            })
+        },
+        DELETE_SFR_FROM_THREAT_USING_UUID: (state, action) => {
+            const { sfrUUID } = action.payload
+
+            Object.values(state).map((value) => {
+                let threats = value.hasOwnProperty("terms") ? value.terms : {}
+
+                Object.values(threats).map((threat) => {
+                    let sfrs = threat.hasOwnProperty("sfrs") ? threat.sfrs : []
+
+                    if (sfrs && sfrs.length > 0) {
+                        sfrs.map((sfr, index) => {
+                            const { uuid } = sfr
+
+                            if (uuid && (uuid === sfrUUID)) {
+                                sfrs.splice(index, 1)
+                            }
+                        })
+                    }
+                })
+            })
+        },
+        SORT_THREATS_TERMS_LIST_HELPER: (state) => {
             Object.entries(state).map(([key, value]) => {
                 if (value.terms && Object.entries(value.terms).length > 0) {
                     let sorted = Object.entries(value.terms).sort((a, b) => {
@@ -293,7 +373,7 @@ export const threatsSlice = createSlice({
                 }
             })
         },
-        sortObjectivesFromThreatsHelper: (state, action) => {
+        SORT_OBJECTIVES_FROM_THREATS_HELPER: (state, action) => {
             let threatUUID = action.payload.threatUUID
             let uuid = action.payload.uuid
             let uuidMap = action.payload.uuidMap
@@ -311,8 +391,43 @@ export const threatsSlice = createSlice({
                 return 0;
             });
         },
+        SORT_SFR_FROM_THREATS_HELPER: (state, action) => {
+            let { threatUUID, uuid, uuidMap } = action.payload
+            const isValid = state[threatUUID] && state[threatUUID].hasOwnProperty("terms") && state[threatUUID].terms.hasOwnProperty(uuid)
+
+            if (isValid) {
+                const isSfr = state[threatUUID].terms[uuid].hasOwnProperty("sfrs")
+
+                if (isSfr) {
+                    let sfrs = state[threatUUID].terms[uuid].sfrs
+
+                    sfrs.sort((a, b) => {
+                        const nameA = uuidMap[a.uuid].toUpperCase();
+                        const nameB = uuidMap[b.uuid].toUpperCase();
+                        if (nameA < nameB) {
+                            return -1;
+                        }
+                        if (nameA > nameB) {
+                            return 1;
+                        }
+                        // names must be equal
+                        return 0;
+                    });
+                } else {
+                    state[threatUUID].terms[uuid].sfrs = []
+                }
+            }
+        },
+        SET_THREATS_INITIAL_STATE: (state, action) => {
+            try {
+                return {
+                    ...action.payload
+                }
+            } catch (e) {
+                console.log(e)
+            }
+        },
         RESET_THREATS_STATE: () => initialState,
-        // TODO: add in delete objectives on parent delete
     }
 })
 
@@ -327,16 +442,24 @@ export const {
     CREATE_THREAT_TERM,
     UPDATE_THREAT_TERM_TITLE,
     UPDATE_THREAT_TERM_DEFINITION,
+    UPDATE_THREAT_TERM_SFRS,
     DELETE_THREAT_TERM,
     DELETE_ALL_THREAT_TERMS,
     COLLAPSE_THREAT_TERM,
     ADD_THREAT_TERM_OBJECTIVE,
+    ADD_THREAT_TERM_SFR,
     UPDATE_THREAT_TERM_OBJECTIVE_RATIONALE,
+    UPDATE_THREAT_TERM_SFR_RATIONALE,
     DELETE_THREAT_TERM_OBJECTIVE,
-    COLLAPSE_THREAT_TO_OBJECTIVE_TABLE,
+    DELETE_THREAT_TERM_SFR,
+    COLLAPSE_THREAT_RATIONALE_TABLE,
     DELETE_OBJECTIVE_FROM_THREAT_USING_UUID,
-    sortThreatsTermsListHelper,
-    sortObjectivesFromThreatsHelper,
+    RESET_ALL_THREAT_TERM_OBJECTIVES,
+    DELETE_SFR_FROM_THREAT_USING_UUID,
+    SORT_THREATS_TERMS_LIST_HELPER,
+    SORT_OBJECTIVES_FROM_THREATS_HELPER,
+    SORT_SFR_FROM_THREATS_HELPER,
+    SET_THREATS_INITIAL_STATE,
     RESET_THREATS_STATE
 } = threatsSlice.actions
 

@@ -3,7 +3,7 @@ import PropTypes from "prop-types";
 import { useSelector } from "react-redux";
 import React, { useEffect, useState } from "react";
 import { FormControl, InputLabel, MenuItem, Select, TextField } from "@mui/material";
-import SecurityComponents from "../../../../../utils/securityComponents.js";
+import SecurityComponents from "../../../../../utils/securityComponents.jsx";
 import SfrSelectionGroups from "./SfrSelectionGroups.jsx";
 import TabularizeTableSection from "./TabularizeTableSection.jsx";
 import SfrRequirementCard from "./SfrRequirementCard.jsx";
@@ -23,9 +23,7 @@ function SfrRequirements(props) {
         elementUUID: PropTypes.string.isRequired,
         elementTitle: PropTypes.string.isRequired,
         requirementType: PropTypes.string.isRequired,
-        allSfrOptions: PropTypes.object.isRequired,
         rowIndex: PropTypes.number,
-        getElementMaps: PropTypes.func.isRequired,
         getSelectablesMaps: PropTypes.func.isRequired,
         getElementValuesByType: PropTypes.func.isRequired,
         getSelectionBasedArrayByType: PropTypes.func.isRequired,
@@ -38,6 +36,7 @@ function SfrRequirements(props) {
     };
 
     // Constants
+    const { handleCryptoUpdate, handleSnackbarTextUpdates, updateTabularizeUI } = SecurityComponents
     const { row, rowDefinitions, dropdownOptions, selectedColumn } = useSelector((state) => state.tabularize);
     const { requirementsStyling } = useSelector((state) => state.styling);
     const [styling, setStyling] = useState(requirementsStyling.title)
@@ -55,7 +54,7 @@ function SfrRequirements(props) {
     // Methods
     const handleColumnSelection = (event) => {
         // Update selected column
-        SecurityComponents.updateTabularizeUI({
+        updateTabularizeUI({
             selectedColumn: event.target.value
         })
     }
@@ -93,12 +92,10 @@ function SfrRequirements(props) {
                 elementUUID={props.elementUUID}
                 elementTitle={props.elementTitle}
                 requirementType={props.requirementType}
-                allSfrOptions={props.allSfrOptions}
                 cryptoColumnName={cryptoColumnName}
                 rowIndex={rowIndex}
                 updateSfrSectionElement={props.updateSfrSectionElement}
                 getSelectablesMaps={props.getSelectablesMaps}
-                getElementMaps={props.getElementMaps}
                 getElementValuesByType={props.getElementValuesByType}
                 updateManagementFunctions={props.updateManagementFunctions}
                 initializeManagementFunctions={props.initializeManagementFunctions}
@@ -167,7 +164,7 @@ function SfrRequirements(props) {
                                 value: event.target.value,
                                 definitionType:definitionType
                             }
-                            SecurityComponents.handleCryptoUpdate(updateParams)
+                            handleSnackbarTextUpdates(handleCryptoUpdate, updateParams)
                         }}
                         key={selectedColumn}
                         inputProps={{style: {fontSize: 13}}}
@@ -230,8 +227,6 @@ function SfrRequirements(props) {
                         elementUUID={props.elementUUID}
                         elementTitle={props.elementTitle}
                         updateSfrSectionElement={props.updateSfrSectionElement}
-                        getElementMaps={props.getElementMaps}
-                        allSfrOptions={props.allSfrOptions}
                         getSelectablesMaps={props.getSelectablesMaps}
                         getElementValuesByType={props.getElementValuesByType}
                         getSelectionBasedArrayByType={props.getSelectionBasedArrayByType}

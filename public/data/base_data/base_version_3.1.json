@@ -1,0 +1,434 @@
+{
+  "accordionPane": {
+    "loadedfile": {
+      "filename": "",
+      "content": "",
+      "pp": false,
+      "mod": false
+    },
+    "platformdata": {
+      "description": "",
+      "platforms": [],
+      "xml": ""
+    },
+    "metadata": {
+      "open": false,
+      "ppType": "Protection Profile",
+      "ppTemplateVersion": "Version 3.1",
+      "ppName": "",
+      "author": "",
+      "keywords": "",
+      "version": "",
+      "releaseDate": "",
+      "revisionHistory": [],
+      "xmlTagMeta": {}
+    },
+    "sections": {
+      "bfeff570-4ed9-461e-b6c4-b380a4399e01": {
+        "title": "Introduction",
+        "xmlTagMeta": {
+          "tagName": "sec:Introduction",
+          "attributes": {}
+        },
+        "open": false,
+        "formItems": [
+          {
+            "uuid": "37ef5096-4e69-4a5a-ba68-277440e24f70",
+            "contentType": "editor"
+          },
+          {
+            "uuid": "da39f7c1-78dc-4cc0-a564-4f607d511f6f",
+            "contentType": "editor",
+            "formItems": [
+              {
+                "uuid": "132a214e-ce03-4c48-abe8-5f7d460b5fdf",
+                "contentType": "terms"
+              },
+              {
+                "uuid": "2a9beedb-a7ce-4586-b374-1c22ac37c6fa",
+                "contentType": "terms"
+              }
+            ]
+          },
+          {
+            "uuid": "f98870e2-4264-4d39-8b02-a5297d0a5b3d",
+            "contentType": "editor",
+            "formItems": [
+              {
+                "uuid": "1e583a1f-0075-47f2-a757-e33d82bd68cc",
+                "contentType": "editor"
+              }
+            ]
+          },
+          {
+            "uuid": "d68577d1-5737-4074-a700-764ca6a9189f",
+            "contentType": "editor",
+            "formItems": [
+              {
+                "uuid": "4fe05e05-3d61-47a6-b4c0-ccc1fcd29391",
+                "contentType": "terms"
+              }
+            ]
+          }
+        ]
+      },
+      "1c487474-5e05-4837-a1d9-23da1530688d": {
+        "title": "Conformance Claims",
+        "open": false,
+        "xmlTagMeta": {
+          "tagName": "sec:Conformance_Claims",
+          "childTagName": "cclaims",
+          "attributes": {}
+        },
+        "formItems": [
+          {
+            "uuid": "1c487474-5e05-4837-a1d9-23da1530688d",
+            "contentType": "editor"
+          },
+          {
+            "uuid": "68244faa-e405-46b4-9df7-140246ca3463",
+            "contentType": "editor"
+          },
+          {
+            "uuid": "e3d935a4-a1e1-44be-b868-fa7eb8322e00",
+            "contentType": "editor"
+          },
+          {
+            "uuid": "37032788-a50d-442b-98e6-e8e3b92b26f7",
+            "contentType": "editor"
+          }
+        ]
+      },
+      "0f2f8c02-a71b-4fe7-9e80-da93d1ea70cd": {
+        "title": "Security Problem Definition",
+        "xmlTagMeta": {
+          "tagName": "sec:Security_Problem_Description",
+          "attributes": {}
+        },
+        "formItems": [
+          {
+            "uuid": "c0dbc61b-cf58-4db6-985b-5539ae2f7455",
+            "contentType": "threats"
+          },
+          {
+            "uuid": "3a8ef499-784b-485c-8321-a02083aafda8",
+            "contentType": "threats",
+            "xmlTagMeta": {
+              "tagName": "sec:Assumptions",
+              "childTagName": "assumptions",
+              "attributes": {}
+            }
+          }
+        ],
+        "open": false
+      },
+      "ee00eb97-a279-41d3-911f-0236fdda9567": {
+        "title": "Security Objectives",
+        "xmlTagMeta": {
+          "tagName": "sec:Security_Objectives",
+          "attributes": {}
+        },
+        "formItems": [
+          {
+            "uuid": "8ba516d2-8336-4562-a6b3-751d722232d9",
+            "contentType": "objectives"
+          },
+          {
+            "uuid": "9d813e26-364b-4149-ae05-f2459b2d76d5",
+            "contentType": "objectives"
+          }
+        ],
+        "open": false
+      },
+      "2687f815-d716-4e10-955d-1b506a99a448": {
+        "title": "Security Requirements",
+        "formItems": [
+          {
+            "uuid": "849fe5bc-7364-4448-863a-d280f63d9516",
+            "contentType": "editor",
+            "formItems": []
+          },
+          {
+            "uuid": "ceb738a9-60e1-48b7-bfe9-2e7c2de5153b",
+            "contentType": "editor",
+            "formItems": []
+          }
+        ],
+        "open": false
+      },
+      "c7cd87c6-e7c4-497e-8bed-0f7948db1e27": {
+        "title": "Appendix A - Optional Requirements",
+        "formItems": [],
+        "open": false
+      },
+      "f86fcb19-bb13-45bb-bc01-ed91256d6743": {
+        "title": "Appendix B - Selection-Based Requirements",
+        "formItems": [],
+        "open": false
+      },
+      "a0c8d239-42ee-42a5-8d4f-96b3992db4a5": {
+        "title": "Appendix C - Extended Component Definitions",
+        "formItems": [],
+        "open": false
+      },
+      "0a126d67-e945-41f8-8517-eef6786dca10": {
+        "title": "Appendix D - Validation Guidelines",
+        "formItems": [],
+        "open": false
+      },
+      "279086d8-89df-41fd-9dff-53be9f979877": {
+        "title": "Appendix E - Implicitly Satisfied Requirements",
+        "formItems": [],
+        "open": false
+      },
+      "8bb37899-24ee-405b-b33b-4da304e3d016": {
+        "title": "Appendix F - Entropy Documentation And Assessment",
+        "formItems": [],
+        "open": false
+      },
+      "5a189416-144b-491c-8a82-8fae63552d06": {
+        "title": "Appendix H - Use Case Templates",
+        "formItems": [],
+        "open": false
+      },
+      "5d13f61c-550e-4ca2-90b5-54d563c44146": {
+        "title": "Appendix I - Acronyms",
+        "formItems": [
+          {
+            "uuid": "caa5d2b5-ca76-476d-be81-69e5478547cb",
+            "contentType": "appendixI"
+          }
+        ],
+        "open": false
+      },
+      "81e06b51-407f-4daf-a805-2abfd41f2ffd": {
+        "title": "Appendix J - Bibliography",
+        "formItems": [],
+        "open": false
+      },
+      "c2c5eb25-c3a1-4c17-9595-fffdb80f655a": {
+        "title": "Appendix K - Acknowledgments",
+        "formItems": [],
+        "open": false
+      }
+    }
+  },
+  "terms": {
+    "132a214e-ce03-4c48-abe8-5f7d460b5fdf": {
+      "title": "Common Criteria Terms",
+      "open": false
+    },
+    "2a9beedb-a7ce-4586-b374-1c22ac37c6fa": {
+      "title": "Technical Terms",
+      "open": false
+    },
+    "1f3f5182-ffbf-4259-9074-2b8f8942151e": {
+      "title": "Acronyms",
+      "open": false
+    },
+    "4fe05e05-3d61-47a6-b4c0-ccc1fcd29391": {
+      "title": "Use Cases",
+      "open": false
+    }
+  },
+  "editors": {
+    "37ef5096-4e69-4a5a-ba68-277440e24f70": {
+      "title": "Objectives of Document",
+      "xmlTagMeta": {
+        "tagName": "sec:Overview",
+        "attributes": {}
+      },
+      "text": "",
+      "open": false
+    },
+    "da39f7c1-78dc-4cc0-a564-4f607d511f6f": {
+      "title": "Terms",
+      "text": "",
+      "open": false
+    },
+    "f98870e2-4264-4d39-8b02-a5297d0a5b3d": {
+      "title": "TOE Overview",
+      "xmlTagMeta": {
+        "tagName": "section",
+        "attributes": {
+          "title": "Compliant Targets of Evaluation",
+          "id": "TOEdescription"
+        }
+      },
+      "text": "",
+      "open": false
+    },
+    "d68577d1-5737-4074-a700-764ca6a9189f": {
+      "title": "TOE Usage",
+      "xmlTagMeta": {
+        "tagName": "sec:Use_Cases",
+        "attributes": {}
+      },
+      "text": "",
+      "open": false
+    },
+    "1c487474-5e05-4837-a1d9-23da1530688d": {
+      "title": "Conformance Statement",
+      "xmlTagMeta": {
+        "tagName": "cclaim",
+        "attributes": {
+          "name": "Conformance Statement"
+        }
+      },
+      "text": "",
+      "open": false
+    },
+    "68244faa-e405-46b4-9df7-140246ca3463": {
+      "title": "CC Conformance Claims",
+      "xmlTagMeta": {
+        "tagName": "cclaim",
+        "attributes": {
+          "name": "CC Conformance Claims"
+        }
+      },
+      "text": "",
+      "open": false
+    },
+    "e3d935a4-a1e1-44be-b868-fa7eb8322e00": {
+      "title": "PP Claims",
+      "xmlTagMeta": {
+        "tagName": "cclaim",
+        "attributes": {
+          "name": "PP Claim"
+        }
+      },
+      "text": "",
+      "open": false
+    },
+    "37032788-a50d-442b-98e6-e8e3b92b26f7": {
+      "title": "Package Claims",
+      "xmlTagMeta": {
+        "tagName": "cclaim",
+        "attributes": {
+          "name": "Package Claim"
+        }
+      },
+      "text": "",
+      "open": false
+    },
+    "849fe5bc-7364-4448-863a-d280f63d9516": {
+      "title": "Security Functional Requirements",
+      "text": "",
+      "open": false
+    },
+    "ceb738a9-60e1-48b7-bfe9-2e7c2de5153b": {
+      "title": "Security Assurance Requirements",
+      "text": "",
+      "open": false
+    },
+    "1e583a1f-0075-47f2-a757-e33d82bd68cc": {
+      "title": "TOE Boundary",
+      "text": "",
+      "open": false
+    }
+  },
+  "threats": {
+    "securityProblemDefinition": "",
+    "c0dbc61b-cf58-4db6-985b-5539ae2f7455": {
+      "title": "Threats",
+      "xmlTagMeta": {
+        "tagName": "sec:Threats",
+        "childTagName": "threats",
+        "attributes": {}
+      },
+      "definition": "",
+      "open": false,
+      "terms": {}
+    },
+    "3a8ef499-784b-485c-8321-a02083aafda8": {
+      "title": "Assumptions",
+      "xmlTagMeta": {
+        "tagName": "sec:Assumptions",
+        "childTagName": "assumptions",
+        "attributes": {}
+      },
+      "definition": "",
+      "open": false,
+      "terms": {}
+    }
+  },
+  "objectives": {
+    "8ba516d2-8336-4562-a6b3-751d722232d9": {
+      "title": "Security Objectives for the TOE",
+      "xmlTagMeta": {
+        "tagName": "sec:Security_Objectives_for_the_TOE",
+        "childTagName": "SOs",
+        "attributes": {}
+      },
+      "definition": "",
+      "open": false,
+      "terms": {}
+    },
+    "9d813e26-364b-4149-ae05-f2459b2d76d5": {
+      "title": "Security Objectives for the Operational Environment",
+      "xmlTagMeta": {
+        "tagName": "sec:Security_Objectives_for_the_Operational_Environment",
+        "childTagName": "SOEs",
+        "attributes": {}
+      },
+      "definition": "",
+      "open": false,
+      "terms": {}
+    }
+  },
+  "sfrs": {
+    "auditSection": "",
+    "sfrDefinition": "",
+    "sections": {}
+  },
+  "sfrSections": {},
+  "sars": {
+    "xmlTagMeta": {
+      "tagName": "section",
+      "attributes": {
+        "title": "Security Assurance Requirements",
+        "id": "SARs"
+      }
+    },
+    "sections": {},
+    "components": {},
+    "elements": {}
+  },
+  "bibliography": {
+    "cc": {},
+    "entries": []
+  },
+  "entropyAppendix": {
+    "xmlContent": "",
+    "xmlTagMeta": {}
+  },
+  "equivGuidelinesAppendix": {
+    "xmlContent": "",
+    "xmlTagMeta": {}
+  },
+  "satisfiedReqsAppendix": {
+    "xmlContent": "",
+    "xmlTagMeta": {}
+  },
+  "validationGuidelinesAppendix": {
+    "xmlContent": "",
+    "xmlTagMeta": {}
+  },
+  "vectorAppendix": {
+    "xmlContent": "",
+    "xmlTagMeta": {}
+  },
+  "acknowledgementsAppendix": {
+    "xmlContent": "",
+    "xmlTagMeta": {}
+  },
+  "includePackage": {
+    "packages": []
+  },
+  "modules": {
+    "xml": ""
+  },
+  "ppPreference": {
+    "xml": ""
+  }
+}

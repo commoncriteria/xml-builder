@@ -3,16 +3,19 @@ import PropTypes from "prop-types";
 import React, { useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import { AgGridReact } from 'ag-grid-react';
-import { Checkbox, Chip, IconButton, ListItemIcon, ListItemText, Menu, MenuItem, MenuList, Tooltip } from "@mui/material";
+import { Checkbox, Chip, IconButton, ListItemIcon, ListItemText, Menu, MenuItem, MenuList, Select, Tooltip } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
+import "ag-grid-community/styles/ag-grid.css";
+import "ag-grid-community/styles/ag-theme-quartz.css";
+import { deepCopy } from "../../utils/deepCopy.js";
+import SecurityComponents from "../../utils/securityComponents.jsx";
 import AddColumnIcon from '../../icons/AddColumnIcon.svg';
 import AddRowIcon from '../../icons/AddRowIcon.svg';
 import DeleteColumnIcon from '../../icons/DeleteColumnIcon.svg';
 import DeleteRowIcon from '../../icons/DeleteRowIcon.svg';
 import CardTemplate from "./securityComponents/CardTemplate.jsx";
+import MultiSelectDropdown from "./securityComponents/MultiSelectDropdown.jsx";
 import NewTableColumn from "../modalComponents/NewTableColumn.jsx";
-import "ag-grid-community/styles/ag-grid.css";
-import "ag-grid-community/styles/ag-theme-quartz.css";
 
 /**
  * The EditableTable component
@@ -45,14 +48,19 @@ function EditableTable(props) {
         handleCheckboxClick: PropTypes.func,
         handleCollapseInnerTableSection: PropTypes.func,
         handleEditFullRow: PropTypes.func,
+        handleDropdownMenuSelect: PropTypes.func,
+        handleMultiSelectDropdown: PropTypes.func,
         showPreview: PropTypes.func,
         bottomBorderCss: PropTypes.string,
         styling: PropTypes.object,
         requirementType: PropTypes.string,
-        tableInstructions: PropTypes.string
+        tableInstructions: PropTypes.string,
+        dropdownMenuOptions: PropTypes.array,
+        multiSelectMenuOptions: PropTypes.array
     }
 
     // Constants
+    const { handleSnackBarError, handleSnackBarSuccess, handleSnackbarTextUpdates } = SecurityComponents
     const gridRef = useRef();
     const { primary, secondary, grayText, icons, checkboxPrimaryNoPad, checkboxSecondaryNoPad } = useSelector((state) => state.styling);
     const [newColumnDialog, setNewColumnDialog] = useState(false);
@@ -130,6 +138,11 @@ function EditableTable(props) {
 
         // Add new table row
         props.handleNewTableRow()
+
+        // Update snackbar
+        if (!props.isTabularizeTable) {
+            handleSnackBarSuccess("New Row Successfully Added")
+        }
     }
     const removeSelectedRow = () => {
         const selectedNodes = gridRef.current.api.getSelectedNodes();
@@ -144,6 +157,17 @@ function EditableTable(props) {
 
         // Delete the table rows
         props.handleDeleteTableRows(newData, selectedData)
+
+        // Update snackbar
+        if (!props.isTabularizeTable) {
+            const dataLength = selectedData.length
+            const message = dataLength > 1 ?
+                `Selected ${dataLength} Rows were Successfully Removed` :
+                "Selected Row Successfully Removed"
+
+            // Update snackbar
+            handleSnackBarSuccess(message)
+        }
     }
     const addColumn = async (columnName) => {
         const field = createFieldValue(columnName)
@@ -154,6 +178,9 @@ function EditableTable(props) {
 
         // Add new table column
         props.handleAddNewTableColumn([...columnDefs, newColumn])
+
+        // Update snackbar
+        handleSnackBarSuccess(`New Column "${columnName}" Successfully Added`)
     }
     const removeLastColumn = () => {
         if (columnDefs.length > 0) {
@@ -162,13 +189,16 @@ function EditableTable(props) {
             // Check for required fields and send an alert if the last column has the required field
             if (props.requiredFields && props.requiredFields.length > 0 && props.requiredFields.includes(lastField)) {
                 const headerName = columnDefs[lastIndex].headerName;
-                alert(`Error - Cannot delete. The column "${headerName}" is required.`);
+                const errorMessage = `Error - Cannot delete. The column "${headerName}" is required.`
+
+                // Update snackbar
+                handleSnackBarError(errorMessage)
             } else {
                 // Remove last column
                 const newColumnDefs = columnDefs.slice(0, -1);
 
                 // Remove last field from rows
-                let newRowDefs = JSON.parse(JSON.stringify(rowData))
+                let newRowDefs = deepCopy(rowData)
                 newRowDefs.forEach(obj => {
                     delete obj[lastField];
                 });
@@ -178,6 +208,9 @@ function EditableTable(props) {
 
                 // Return updates
                 props.handleRemoveTableColumn(newColumnDefs, newRowDefs)
+
+                // Update snackbar
+                handleSnackBarSuccess("Last Column Successfully Removed")
             }
         }
     }
@@ -249,6 +282,7 @@ function EditableTable(props) {
                 textAlign: 'start'
             }
         }
+        let dropdownMenu = props.dropdownMenuOptions ? deepCopy(props.dropdownMenuOptions) : []
 
         // Add header tooltip if one was provided
         if (headerTooltip) {
@@ -349,7 +383,7 @@ function EditableTable(props) {
                         useFormatter: true,
                     },
                     valueFormatter: (params) => {
-                        return params.value ? new Date(params.value).toLocaleDateString() : ""
+                        return params.value ? new Date(params.value).toLocaleDateString('en-US', { timeZone: 'UTC' }) : ""
                     },
                 }
                 break;
@@ -424,6 +458,96 @@ function EditableTable(props) {
                                     }}
                                 />
                             </div>
+                        )
+                    }
+                }
+                break;
+            }
+            case "Select": {
+                additionalColumnData =  {
+                    dropdownMenu: dropdownMenu,
+                    autoHeight: true,
+                    cellRenderer: (params) => {
+                        const type = params.colDef.field;
+                        const { uuid } = params.data
+                        const rowIndex = params.node.rowIndex
+                        const color = props.styling.primaryColor === primary ? "primary" : "secondary"
+                        let selectValue = ""
+
+                        // Update select value if it is an object
+                        const paramsIsString = params.value !== undefined && typeof params.value === "string"
+                        const paramsIsObject = params.value !== undefined && typeof params.value !== "string" && params.value.hasOwnProperty("label")
+                        if (paramsIsString) {
+                            selectValue = params.value
+                        } else if (paramsIsObject) {
+                            selectValue = params.value.label
+                        }
+
+                        return (
+                            <div>
+                                <Select
+                                    fullWidth
+                                    value={selectValue}
+                                    onChange={(event) => {
+                                        event.rowIndex = rowIndex
+                                        props.handleDropdownMenuSelect(event, type, uuid)
+                                    }}
+                                    color={color}
+                                >
+                                    {dropdownMenu.map((value) => {
+                                        if (typeof value === "string") {
+                                            return (
+                                                <MenuItem
+                                                    key={value}
+                                                    value={value}
+                                                    sx={props.styling.primaryMenu}
+                                                >
+                                                    {value}
+                                                </MenuItem>
+                                            )
+                                        } else {
+                                            let { key, label, disabled } = value
+
+                                            return (
+                                                <MenuItem
+                                                    key={key}
+                                                    value={label}
+                                                    sx={props.styling.primaryMenu}
+                                                    disabled={disabled}
+                                                >
+                                                    {label}
+                                                </MenuItem>
+                                            )
+                                        }
+                                    })}
+                                </Select>
+                                );
+                            </div>
+                        )
+                    }
+                }
+                break;
+            }
+            case "Multiselect": {
+                additionalColumnData =  {
+                    autoHeight: true,
+                    cellRenderer: (params) => {
+                        const { uuid, disabled, multiselect } = params.data
+
+                        return (
+                            <span className="flex justify-stretch min-w-full pb-2">
+                                <MultiSelectDropdown
+                                    index={uuid}
+                                    selectionOptions={props.multiSelectMenuOptions}
+                                    selections={params.value !== undefined ? params.value : []}
+                                    title={""}
+                                    handleSelections={props.handleMultiSelectDropdown}
+                                    multiple={multiselect !== undefined ? multiselect : true}
+                                    required={true}
+                                    disabled={disabled}
+                                    style={props.styling === "primary" ? "secondary" : "primary"}
+                                />
+                            </span>
                         )
                     }
                 }
@@ -523,7 +647,7 @@ function EditableTable(props) {
                                             <textarea
                                                 style={{color: innerStyling.primaryColor}}
                                                 className="w-full resize-none font-bold text-[14px] mb-0 h-[25px] p-0"
-                                                onBlur={(event) => props.handleUpdateTitle(event)}
+                                                onBlur={(event) => handleSnackbarTextUpdates(props.handleUpdateTitle, event)}
                                                 defaultValue={props.title}/>
                                             :
                                             <label

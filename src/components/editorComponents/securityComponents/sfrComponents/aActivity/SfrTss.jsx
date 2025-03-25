@@ -3,7 +3,8 @@ import PropTypes from "prop-types";
 import React from "react";
 import { Tooltip } from "@mui/material";
 import CardTemplate from "../../CardTemplate.jsx";
-import TextEditor from "../../../TextEditor.jsx";
+import TipTapEditor from "../../../TipTapEditor.jsx";
+import { deepCopy } from "../../../../../utils/deepCopy.js";
 
 /**
  * The SfrTss class that displays the evaluation activity TSS
@@ -26,9 +27,9 @@ function SfrTss(props) {
         let { selected, activities, uuid, rowIndex, isManagementFunction } = props
         let tss = ""
         if (isManagementFunction) {
-            tss = activities.tss ? JSON.parse(JSON.stringify(activities.tss)) : ""
+            tss = activities.tss ? deepCopy(activities.tss) : ""
         } else if (selected && selected.length > 0 && uuid && uuid !== "" && activities && activities[uuid]) {
-            tss = activities[uuid].tss ? JSON.parse(JSON.stringify(activities[uuid].tss)) : ""
+            tss = activities[uuid].tss ? deepCopy(activities[uuid].tss) : ""
         } else {
             return null;
         }
@@ -56,7 +57,7 @@ function SfrTss(props) {
                 }
                 body={
                     <div>
-                        <TextEditor
+                        <TipTapEditor
                             className="w-full"
                             contentType={"term"}
                             title={"tss"}

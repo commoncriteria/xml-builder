@@ -9,8 +9,10 @@ import { UPDATE_EVALUATION_ACTIVITY_UI_ITEMS } from "../../../../../reducers/SFR
 import { removeTagEqualities } from "../../../../../utils/fileParser.js";
 import CardTemplate from "../../CardTemplate.jsx";
 import EditableTable from "../../../EditableTable.jsx";
-import TextEditor from "../../../TextEditor.jsx";
 import EditManagementFunctionTable from "../../../../modalComponents/EditManagementFunctionTable.jsx";
+import TipTapEditor from "../../../TipTapEditor.jsx";
+import { deepCopy } from "../../../../../utils/deepCopy.js";
+import SecurityComponents from "../../../../../utils/securityComponents.jsx";
 
 /**
  * The ManagementFunctionTable class that displays the management function table for the sfr worksheet
@@ -25,8 +27,6 @@ function ManagementFunctionTable(props) {
         component: PropTypes.object.isRequired,
         elementUUID: PropTypes.string.isRequired,
         elementTitle: PropTypes.string.isRequired,
-        getElementMaps: PropTypes.func.isRequired,
-        allSfrOptions: PropTypes.object.isRequired,
         getSelectablesMaps: PropTypes.func.isRequired,
         getElementValuesByType: PropTypes.func.isRequired,
         getSelectionBasedArrayByType: PropTypes.func.isRequired,
@@ -35,6 +35,7 @@ function ManagementFunctionTable(props) {
     };
 
     // Constants
+    const { getDeletedRowIds, handleSnackBarError, handleSnackBarSuccess } = SecurityComponents
     const dispatch = useDispatch();
     const [name, setName] = useState("");
     const { id } = props.managementFunctions;
@@ -110,7 +111,7 @@ function ManagementFunctionTable(props) {
         let newRow = Object.fromEntries(rowFields.map(key =>
             [key, key === "textArray" ? [] : ""]
         ));
-        let rows = JSON.parse(JSON.stringify(rowData))
+        let rows = deepCopy(rowData)
 
         // Add new rows
         rows.push(newRow)
@@ -124,29 +125,56 @@ function ManagementFunctionTable(props) {
         })
     }
     const handleUpdateTableRow = (event) => {
-        const { data, rowIndex } = event
-        let rows = JSON.parse(JSON.stringify(rowData))
+        try {
+            const {data, rowIndex} = event
+            let rows = deepCopy(rowData)
 
-        // Update the rows
-        rows[rowIndex] = data
-        setRowData(rows)
+            // Update the application note refIds if the id was updated
+            const oldId = deepCopy(rows[rowIndex].id)
+            const newId = data.id
 
-        // Update the management functions
-        updateManagementFunction({
-            rows: rows,
-        })
+            if (oldId && newId && oldId !== newId) {
+                updateRefIds(rows, {oldId, newId})
+            }
+
+            // Update the rows
+            rows[rowIndex] = data
+            setRowData(rows)
+
+            // Update the management functions
+            updateManagementFunction({
+                rows: rows,
+            })
+
+            // Update snackbar
+            handleSnackBarSuccess("Row Successfully Updated")
+        } catch (e) {
+            console.log(e)
+            handleSnackBarError(e)
+        }
     }
     const handleDeleteTableRows = (rows) => {
-        // Update the management functions
-        updateManagementFunction({
-            rows: rows,
-        })
+        try {
+            let originalRows = deepCopy(rowData)
+            const deletedRowIds = getDeletedRowIds(originalRows, rows)
+
+            // Update the deleted refIds from the application notes and/or evaluation activities if they were deleted
+            updateRefIds(rows, { deletedRowIds })
+
+            // Update the management functions
+            updateManagementFunction({
+                rows: rows,
+            })
+        } catch (e) {
+            console.log(e)
+            handleSnackBarError(e)
+        }
     }
     const handleAddNewTableColumn = (columns) => {
         // Update the columns
         const lastIndex = columns.length - 1;
         const { headerName, field} = columns[lastIndex]
-        let updatedColumns = JSON.parse(JSON.stringify(columnData))
+        let updatedColumns = deepCopy(columnData)
         updatedColumns[lastIndex] = {
             headerName: headerName,
             field: field,
@@ -158,7 +186,7 @@ function ManagementFunctionTable(props) {
         setColumnData(updatedColumns)
 
         // Update the rows
-        let rows = JSON.parse(JSON.stringify(rowData))
+        let rows = deepCopy(rowData)
         rows.forEach((row) => {
             row[field] = ""
         });
@@ -172,7 +200,7 @@ function ManagementFunctionTable(props) {
     }
     const handleRemoveTableColumn = (columns, rows) => {
         const lastIndex = columns.length;
-        let updatedColumns = JSON.parse(JSON.stringify(columnData))
+        let updatedColumns = deepCopy(columnData)
         updatedColumns.splice(lastIndex, 1)
 
         // Update the management functions
@@ -206,7 +234,7 @@ function ManagementFunctionTable(props) {
 
     // Helper Methods
     const updateManagementFunction = (data) => {
-        let managementFunctions = JSON.parse(JSON.stringify(props.managementFunctions))
+        let managementFunctions = deepCopy(props.managementFunctions)
 
         // Update the management functions based on the input data
         Object.entries(data).forEach(([key, value]) => {
@@ -222,6 +250,49 @@ function ManagementFunctionTable(props) {
     const getCurrentFields = () => {
         const fields = columnData.map(item => item["field"]);
         return fields ? fields : []
+    }
+    const updateRefIds = (currentRows, inputs) => {
+        // Loop through the current rows
+        currentRows?.map((row) => {
+            const { note: notes, evaluationActivity } = row
+
+            // Loop through and update the notes if there were notable changes
+            notes?.map(note => {
+                updateRefIdsHelper(note, inputs)
+            });
+
+            // Update evaluation activity refIds if there were notable changes
+            if (evaluationActivity) {
+                updateRefIdsHelper(evaluationActivity, inputs)
+            }
+        })
+    }
+    const removeIds = (idsToRemove, targetArray) => {
+        // Create a Set from idsToRemove for efficient lookup
+        const idsToRemoveSet = new Set(idsToRemove);
+
+        // Filter the targetArray to exclude any IDs present in idsToRemoveSet
+        const filteredArray = targetArray.filter(id => !idsToRemoveSet.has(id));
+
+        return filteredArray;
+    };
+    const updateRefIdsHelper = (value, inputs) => {
+        const { oldId, newId, deletedRowIds } = inputs
+        let { refIds } = value
+        const isDeletedRowIdsValid = deletedRowIds && deletedRowIds.length > 0
+        const isRefIdsValid = refIds && refIds.length > 0
+
+        // Update input refIds if the current selection contains items that were deleted
+        if (isDeletedRowIdsValid && isRefIdsValid) {
+            value.refIds = removeIds(deletedRowIds, refIds)
+        }
+        // Update the input refIds if the original id has been updated by the user
+        else if (oldId && newId) {
+            const index = value.refIds.indexOf(oldId);
+            if (index !== -1) {
+                value.refIds[index] = newId;
+            }
+        }
     }
 
     // Components
@@ -251,6 +322,7 @@ function ManagementFunctionTable(props) {
             }
         } catch (e) {
             console.log(e)
+            handleSnackBarError(e)
         }
 
         // Regular expression to escape specific tags (we want them to be represented as xml tags, which otherwise
@@ -290,16 +362,21 @@ function ManagementFunctionTable(props) {
                                 <label className="resize-none font-bold text-[14px] p-0 pr-4 text-secondary">Status Markers</label>
                             }
                             body={
-                                <TextEditor className="w-full" contentType={"term"} handleTextUpdate={handleMarkersChange} text={markers}/>
+                                <TipTapEditor
+                                    className="w-full"
+                                    contentType={"term"}
+                                    handleTextUpdate={handleMarkersChange}
+                                    text={markers}
+                                />
                             }
                         />
                     </div>
                     <EditableTable
                         title={name}
                         editable={editable}
-                        columnData={JSON.parse(JSON.stringify(columnData))}
+                        columnData={deepCopy(columnData)}
                         requiredFields={requiredFields}
-                        rowData={JSON.parse(JSON.stringify(rowData))}
+                        rowData={deepCopy(rowData)}
                         isTitleEditable={true}
                         isManagementFunction={true}
                         handleUpdateTitle={handleNameChange}
@@ -325,8 +402,6 @@ function ManagementFunctionTable(props) {
                             component={props.component}
                             elementUUID={props.elementUUID}
                             elementTitle={props.elementTitle}
-                            getElementMaps={props.getElementMaps}
-                            allSfrOptions={props.allSfrOptions}
                             getSelectablesMaps={props.getSelectablesMaps}
                             getElementValuesByType={props.getElementValuesByType}
                             getSelectionBasedArrayByType={props.getSelectionBasedArrayByType}

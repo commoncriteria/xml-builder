@@ -1,0 +1,1850 @@
+{
+  "accordionPane": {
+    "loadedfile": {
+      "filename": "",
+      "content": "",
+      "pp": false,
+      "mod": false
+    },
+    "platformdata": {
+      "description": "",
+      "platforms": [],
+      "xml": ""
+    },
+    "metadata": {
+      "open": false,
+      "ppType": "Protection Profile",
+      "ppTemplateVersion": "CC2022 Standard",
+      "ppName": "",
+      "author": "National Information Assurance Partnership",
+      "keywords": "",
+      "version": "",
+      "releaseDate": "",
+      "revisionHistory": [],
+      "xmlTagMeta": {
+        "tagName": "PP",
+        "attributes": {
+          "xmlns": "https://niap-ccevs.org/cc/v1",
+          "xmlns:h": "http://www.w3.org/1999/xhtml",
+          "xmlns:sec": "https://niap-ccevs.org/cc/v1/section",
+          "target-product": "",
+          "target-products": "",
+          "boilerplate": "yes",
+          "short": ""
+        }
+      }
+    },
+    "sections": {
+      "bfeff570-4ed9-461e-b6c4-b380a4399e01": {
+        "title": "Introduction",
+        "xmlTagMeta": {
+          "tagName": "sec:Introduction",
+          "attributes": {}
+        },
+        "open": false,
+        "formItems": [
+          {
+            "uuid": "37ef5096-4e69-4a5a-ba68-277440e24f70",
+            "contentType": "editor"
+          },
+          {
+            "uuid": "da39f7c1-78dc-4cc0-a564-4f607d511f6f",
+            "contentType": "editor",
+            "formItems": [
+              {
+                "uuid": "132a214e-ce03-4c48-abe8-5f7d460b5fdf",
+                "contentType": "terms"
+              },
+              {
+                "uuid": "2a9beedb-a7ce-4586-b374-1c22ac37c6fa",
+                "contentType": "terms"
+              }
+            ]
+          },
+          {
+            "uuid": "f98870e2-4264-4d39-8b02-a5297d0a5b3d",
+            "contentType": "editor",
+            "formItems": [
+              {
+                "uuid": "1e583a1f-0075-47f2-a757-e33d82bd68cc",
+                "contentType": "editor"
+              }
+            ]
+          },
+          {
+            "uuid": "d68577d1-5737-4074-a700-764ca6a9189f",
+            "contentType": "editor",
+            "formItems": [
+              {
+                "uuid": "4fe05e05-3d61-47a6-b4c0-ccc1fcd29391",
+                "contentType": "terms"
+              }
+            ]
+          }
+        ]
+      },
+      "1c487474-5e05-4837-a1d9-23da1530688d": {
+        "title": "Conformance Claims",
+        "open": false,
+        "xmlTagMeta": {
+          "tagName": "sec:Conformance_Claims",
+          "childTagName": "CClaimsInfo",
+          "attributes": {}
+        },
+        "formItems": [
+          {
+            "uuid": "1c487474-5e05-4837-a1d9-23da1530688d",
+            "contentType": "conformanceClaims"
+          }
+        ]
+      },
+      "0f2f8c02-a71b-4fe7-9e80-da93d1ea70cd": {
+        "title": "Security Problem Definition",
+        "xmlTagMeta": {
+          "tagName": "sec:Security_Problem_Description",
+          "attributes": {}
+        },
+        "formItems": [
+          {
+            "uuid": "c0dbc61b-cf58-4db6-985b-5539ae2f7455",
+            "contentType": "threats"
+          },
+          {
+            "uuid": "3a8ef499-784b-485c-8321-a02083aafda8",
+            "contentType": "threats",
+            "xmlTagMeta": {
+              "tagName": "sec:Assumptions",
+              "childTagName": "assumptions",
+              "attributes": {}
+            }
+          }
+        ],
+        "open": false
+      },
+      "ee00eb97-a279-41d3-911f-0236fdda9567": {
+        "title": "Security Objectives",
+        "xmlTagMeta": {
+          "tagName": "sec:Security_Objectives",
+          "attributes": {}
+        },
+        "formItems": [
+          {
+            "uuid": "8ba516d2-8336-4562-a6b3-751d722232d9",
+            "contentType": "objectives"
+          },
+          {
+            "uuid": "9d813e26-364b-4149-ae05-f2459b2d76d5",
+            "contentType": "objectives"
+          }
+        ],
+        "open": false
+      },
+      "2687f815-d716-4e10-955d-1b506a99a448": {
+        "title": "Security Requirements",
+        "formItems": [
+          {
+            "uuid": "849fe5bc-7364-4448-863a-d280f63d9516",
+            "contentType": "editor",
+            "formItems": [
+              {
+                "uuid": "ac62e2df-84a5-4ad6-8194-0bd05f9e75a7",
+                "contentType": "sfrs"
+              },
+              {
+                "uuid": "480fa93f-31c9-47ef-b70a-abc5d4f91fac",
+                "contentType": "sfrs"
+              },
+              {
+                "uuid": "2c400664-df00-4dc8-8f84-556864a1e529",
+                "contentType": "sfrs"
+              },
+              {
+                "uuid": "fb9aa090-ff62-4884-847e-7ab3d17691f9",
+                "contentType": "sfrs"
+              },
+              {
+                "uuid": "60eadf27-bfda-406c-bd48-085203220547",
+                "contentType": "sfrs"
+              },
+              {
+                "uuid": "f1de18c7-1942-448e-bccd-baa2aec84b46",
+                "contentType": "sfrs"
+              },
+              {
+                "uuid": "aa43a2c8-082a-4142-9d2a-1ae10cf72f7d",
+                "contentType": "sfrs"
+              }
+            ]
+          },
+          {
+            "uuid": "ceb738a9-60e1-48b7-bfe9-2e7c2de5153b",
+            "contentType": "editor",
+            "formItems": [
+              {
+                "uuid": "a0cf8b42-e169-4532-8503-21bc616f37f7",
+                "contentType": "sars"
+              },
+              {
+                "uuid": "98ef0157-1342-4080-ad38-dc7e80b87de3",
+                "contentType": "sars"
+              },
+              {
+                "uuid": "bb5be9c4-d340-41eb-8204-4338b5f563f7",
+                "contentType": "sars"
+              },
+              {
+                "uuid": "458718a6-8712-4f13-b203-9d8343fdc51d",
+                "contentType": "sars"
+              },
+              {
+                "uuid": "656adb48-4083-4cf4-8fb8-e46ba33d94c3",
+                "contentType": "sars"
+              },
+              {
+                "uuid": "b3c4a7d8-615e-4257-bfff-1c34c39c3f18",
+                "contentType": "sars"
+              }
+            ]
+          }
+        ],
+        "open": false
+      },
+      "c7cd87c6-e7c4-497e-8bed-0f7948db1e27": {
+        "title": "Appendix A - Optional Requirements",
+        "formItems": [],
+        "open": false
+      },
+      "f86fcb19-bb13-45bb-bc01-ed91256d6743": {
+        "title": "Appendix B - Selection-Based Requirements",
+        "formItems": [],
+        "open": false
+      },
+      "a0c8d239-42ee-42a5-8d4f-96b3992db4a5": {
+        "title": "Appendix C - Extended Component Definitions",
+        "formItems": [],
+        "open": false
+      },
+      "0a126d67-e945-41f8-8517-eef6786dca10": {
+        "title": "Appendix D - Validation Guidelines",
+        "formItems": [],
+        "open": false
+      },
+      "279086d8-89df-41fd-9dff-53be9f979877": {
+        "title": "Appendix E - Implicitly Satisfied Requirements",
+        "formItems": [],
+        "open": false
+      },
+      "8bb37899-24ee-405b-b33b-4da304e3d016": {
+        "title": "Appendix F - Entropy Documentation And Assessment",
+        "formItems": [],
+        "open": false
+      },
+      "5a189416-144b-491c-8a82-8fae63552d06": {
+        "title": "Appendix H - Use Case Templates",
+        "formItems": [],
+        "open": false
+      },
+      "5d13f61c-550e-4ca2-90b5-54d563c44146": {
+        "title": "Appendix I - Acronyms",
+        "formItems": [
+          {
+            "uuid": "caa5d2b5-ca76-476d-be81-69e5478547cb",
+            "contentType": "appendixI"
+          }
+        ],
+        "open": false
+      },
+      "81e06b51-407f-4daf-a805-2abfd41f2ffd": {
+        "title": "Appendix J - Bibliography",
+        "formItems": [],
+        "open": false
+      },
+      "c2c5eb25-c3a1-4c17-9595-fffdb80f655a": {
+        "title": "Appendix K - Acknowledgments",
+        "formItems": [],
+        "open": false
+      }
+    }
+  },
+  "terms": {
+    "132a214e-ce03-4c48-abe8-5f7d460b5fdf": {
+      "title": "Common Criteria Terms",
+      "open": false,
+      "7dd1b1a6-9d15-4754-9f25-7ade6efe7b5d": {
+        "title": "Assurance",
+        "xmlTagMeta": {
+          "tagName": "term",
+          "attributes": {}
+        },
+        "definition": "Grounds for confidence that a TOE meets the SFRs [CC].",
+        "open": false
+      },
+      "dd05d04a-6400-453d-a2ec-014cb885b05c": {
+        "title": "Base Protection Profile (Base-PP)",
+        "xmlTagMeta": {
+          "tagName": "term",
+          "attributes": {}
+        },
+        "definition": "Protection Profile used as a basis to build a PP-Configuration.",
+        "open": false
+      },
+      "ec318062-6a76-4f4d-a716-9607e535e8f8": {
+        "title": "Collaborative Protection Profile (cPP)",
+        "xmlTagMeta": {
+          "tagName": "term",
+          "attributes": {}
+        },
+        "definition": "A Protection Profile developed by international technical communities and approved by multiple schemes.",
+        "open": false
+      },
+      "3ae7d712-1a17-4141-b49a-6068c47f8095": {
+        "title": "Common Criteria (CC)",
+        "xmlTagMeta": {
+          "tagName": "term",
+          "attributes": {}
+        },
+        "definition": "Common Criteria for Information Technology Security Evaluation (International Standard ISO/IEC 15408).",
+        "open": false
+      },
+      "c5b1ddf5-45e4-42f8-bb15-f4c745788aa8": {
+        "title": "Common Criteria Testing Laboratory",
+        "xmlTagMeta": {
+          "tagName": "term",
+          "attributes": {}
+        },
+        "definition": "Within the context of the Common Criteria Evaluation and Validation Scheme (CCEVS), an IT security evaluation facility accredited by the National Voluntary Laboratory Accreditation Program (NVLAP) and approved by the NIAP Validation Body to conduct Common Criteria-based evaluations.",
+        "open": false
+      },
+      "5479f15a-5765-48ed-a6fe-345c32be70bb": {
+        "title": "Common Evaluation Methodology (CEM)",
+        "xmlTagMeta": {
+          "tagName": "term",
+          "attributes": {}
+        },
+        "definition": "Common Evaluation Methodology for Information Technology Security Evaluation.",
+        "open": false
+      },
+      "9f3bb798-30ea-46e2-80c7-ac4d20d0a85a": {
+        "title": "Distributed TOE",
+        "xmlTagMeta": {
+          "tagName": "term",
+          "attributes": {}
+        },
+        "definition": "A TOE composed of multiple components operating as a logical whole.",
+        "open": false
+      },
+      "1787ff35-2e38-4201-bb02-305431346949": {
+        "title": "Extended Package (EP)",
+        "xmlTagMeta": {
+          "tagName": "term",
+          "attributes": {}
+        },
+        "definition": "A deprecated document form for collecting SFRs that implement a particular protocol, technology, or functionality. See Functional Packages.",
+        "open": false
+      },
+      "aa934082-36fb-4867-aa16-71b11b21cec1": {
+        "title": "Functional Package (FP)",
+        "xmlTagMeta": {
+          "tagName": "term",
+          "attributes": {}
+        },
+        "definition": "A document that collects SFRs for a particular protocol, technology, or functionality.",
+        "open": false
+      },
+      "ebe08309-699b-40b9-a92a-a42ce7d507b2": {
+        "title": "Operational Environment (OE)",
+        "xmlTagMeta": {
+          "tagName": "term",
+          "attributes": {}
+        },
+        "definition": "Hardware and software that are outside the TOE boundary that support the TOE functionality and security policy.",
+        "open": false
+      },
+      "13873beb-39ce-4f2b-972d-a402d7f8d5ff": {
+        "title": "Protection Profile (PP)",
+        "xmlTagMeta": {
+          "tagName": "term",
+          "attributes": {}
+        },
+        "definition": "An implementation-independent set of security requirements for a category of products.",
+        "open": false
+      },
+      "a1c3a4f0-6251-45e2-a259-334daa77fdf2": {
+        "title": "Protection Profile Configuration (PP-Configuration)",
+        "xmlTagMeta": {
+          "tagName": "term",
+          "attributes": {}
+        },
+        "definition": "A comprehensive set of security requirements for a product type that consists of at least one Base-PP and at least one PP-Module.",
+        "open": false
+      },
+      "5edcd70c-1ba4-4da3-89bf-e431affa3eb7": {
+        "title": "Protection Profile Module (PP-Module)",
+        "xmlTagMeta": {
+          "tagName": "term",
+          "attributes": {}
+        },
+        "definition": "An implementation-independent statement of security needs for a TOE type complementary to one or more Base-PPs.",
+        "open": false
+      },
+      "e53da5ec-9229-4f43-a9f0-a19a293a5e71": {
+        "title": "Security Assurance Requirement (SAR)",
+        "xmlTagMeta": {
+          "tagName": "term",
+          "attributes": {}
+        },
+        "definition": "A requirement to assure the security of the TOE.",
+        "open": false
+      },
+      "26e9b5c0-c3b7-49b2-9bd7-384f925a8897": {
+        "title": "Security Functional Requirement (SFRs)",
+        "xmlTagMeta": {
+          "tagName": "term",
+          "attributes": {}
+        },
+        "definition": "A requirement for security enforcement by the TOE.",
+        "open": false
+      },
+      "a351f17c-89c3-4041-a7fb-dc95695e0a04": {
+        "title": "Security Target (ST)",
+        "xmlTagMeta": {
+          "tagName": "term",
+          "attributes": {}
+        },
+        "definition": "A set of implementation-dependent security requirements for a specific product.",
+        "open": false
+      },
+      "4163f61f-55d1-4549-a9d1-e48df0b71292": {
+        "title": "Target of Evaluation (TOE)",
+        "xmlTagMeta": {
+          "tagName": "term",
+          "attributes": {}
+        },
+        "definition": "The product under evaluation.",
+        "open": false
+      },
+      "0a95e3de-95fd-4d46-a27d-3ba12339c879": {
+        "title": "TOE Security Functionality (TSF)",
+        "xmlTagMeta": {
+          "tagName": "term",
+          "attributes": {}
+        },
+        "definition": "The security functionality of the product under evaluation.",
+        "open": false
+      },
+      "a45f8169-cf82-401d-998c-123cca8d5a1e": {
+        "title": "TOE Summary Specification (TSS)",
+        "xmlTagMeta": {
+          "tagName": "term",
+          "attributes": {}
+        },
+        "definition": "A definition of how a TOE satisfies the SFRs in an ST.",
+        "open": false
+      }
+    },
+    "2a9beedb-a7ce-4586-b374-1c22ac37c6fa": {
+      "title": "Technical Terms",
+      "open": false
+    },
+    "1f3f5182-ffbf-4259-9074-2b8f8942151e": {
+      "title": "Acronyms",
+      "open": false,
+      "xmlTagMeta": {
+        "tagName": "",
+        "attributes": {}
+      }
+    },
+    "4fe05e05-3d61-47a6-b4c0-ccc1fcd29391": {
+      "title": "Use Cases",
+      "open": false
+    }
+  },
+  "editors": {
+    "37ef5096-4e69-4a5a-ba68-277440e24f70": {
+      "title": "Objectives of Document",
+      "xmlTagMeta": {
+        "tagName": "sec:Overview",
+        "attributes": {}
+      },
+      "text": "",
+      "open": false
+    },
+    "da39f7c1-78dc-4cc0-a564-4f607d511f6f": {
+      "title": "Terms",
+      "text": "<p><span style=\"color: black;\">The following sections list Common Criteria and technology terms used in this document.</span></p>",
+      "open": false
+    },
+    "f98870e2-4264-4d39-8b02-a5297d0a5b3d": {
+      "title": "TOE Overview",
+      "xmlTagMeta": {
+        "tagName": "section",
+        "attributes": {
+          "title": "Compliant Targets of Evaluation",
+          "id": "TOEdescription"
+        }
+      },
+      "text": "",
+      "open": false
+    },
+    "d68577d1-5737-4074-a700-764ca6a9189f": {
+      "title": "TOE Usage",
+      "xmlTagMeta": {
+        "tagName": "sec:Use_Cases",
+        "attributes": {}
+      },
+      "text": "",
+      "open": false
+    },
+    "849fe5bc-7364-4448-863a-d280f63d9516": {
+      "title": "Security Functional Requirements",
+      "text": "",
+      "open": false
+    },
+    "ceb738a9-60e1-48b7-bfe9-2e7c2de5153b": {
+      "title": "Security Assurance Requirements",
+      "text": "",
+      "open": false
+    },
+    "1e583a1f-0075-47f2-a757-e33d82bd68cc": {
+      "title": "TOE Boundary",
+      "text": "",
+      "open": false
+    }
+  },
+  "threats": {
+    "securityProblemDefinition": "\n\t\tThe security problem is described in terms\n\t\tof the threats that the TOE is expected to address, assumptions about the\n\t\toperational environment, and any organizational security policies that the TOE\n\t\tis expected to enforce.\n\t\t\n\t",
+    "c0dbc61b-cf58-4db6-985b-5539ae2f7455": {
+      "title": "Threats",
+      "xmlTagMeta": {
+        "tagName": "sec:Threats",
+        "childTagName": "threats",
+        "attributes": {}
+      },
+      "definition": "",
+      "open": false,
+      "terms": {}
+    },
+    "3a8ef499-784b-485c-8321-a02083aafda8": {
+      "title": "Assumptions",
+      "xmlTagMeta": {
+        "tagName": "sec:Assumptions",
+        "childTagName": "assumptions",
+        "attributes": {}
+      },
+      "definition": "",
+      "open": false,
+      "terms": {}
+    }
+  },
+  "objectives": {
+    "8ba516d2-8336-4562-a6b3-751d722232d9": {
+      "title": "Security Objectives for the TOE",
+      "xmlTagMeta": {
+        "tagName": "sec:Security_Objectives_for_the_TOE",
+        "childTagName": "SOs",
+        "attributes": {}
+      },
+      "definition": "",
+      "open": false,
+      "terms": {}
+    },
+    "9d813e26-364b-4149-ae05-f2459b2d76d5": {
+      "title": "Security Objectives for the Operational Environment",
+      "xmlTagMeta": {
+        "tagName": "sec:Security_Objectives_for_the_Operational_Environment",
+        "childTagName": "SOEs",
+        "attributes": {}
+      },
+      "definition": "",
+      "open": false,
+      "terms": {}
+    }
+  },
+  "sfrs": {
+    "auditSection": "",
+    "sfrDefinition": "",
+    "sections": {
+      "ac62e2df-84a5-4ad6-8194-0bd05f9e75a7": {
+        "title": "Class: Cryptographic Support (FCS)",
+        "definition": "",
+        "extendedComponentDefinition": [],
+        "open": false
+      },
+      "480fa93f-31c9-47ef-b70a-abc5d4f91fac": {
+        "title": "Class: User Data Protection (FDP)",
+        "definition": "",
+        "extendedComponentDefinition": [],
+        "open": false
+      },
+      "2c400664-df00-4dc8-8f84-556864a1e529": {
+        "title": "Class: Identification and Authentication (FIA)",
+        "definition": "",
+        "extendedComponentDefinition": [],
+        "open": false
+      },
+      "fb9aa090-ff62-4884-847e-7ab3d17691f9": {
+        "title": "Class: Security Management (FMT)",
+        "definition": "",
+        "extendedComponentDefinition": [],
+        "open": false
+      },
+      "60eadf27-bfda-406c-bd48-085203220547": {
+        "title": "Class: Privacy (FPR)",
+        "definition": "",
+        "extendedComponentDefinition": [],
+        "open": false
+      },
+      "f1de18c7-1942-448e-bccd-baa2aec84b46": {
+        "title": "Class: Protection of the TSF (FPT)",
+        "definition": "",
+        "extendedComponentDefinition": [],
+        "open": false
+      },
+      "aa43a2c8-082a-4142-9d2a-1ae10cf72f7d": {
+        "title": "Class: Trusted Path/Channel (FTP)",
+        "definition": "",
+        "extendedComponentDefinition": [],
+        "open": false
+      }
+    }
+  },
+  "sfrSections": {},
+  "sars": {
+    "xmlTagMeta": {
+      "tagName": "section",
+      "attributes": {
+        "title": "Security Assurance Requirements",
+        "id": "SARs"
+      }
+    },
+    "sections": {
+      "a0cf8b42-e169-4532-8503-21bc616f37f7": {
+        "title": "Class ADV: Development",
+        "id": "adv",
+        "summary": "The information about the TOE\n        is contained in the guidance documentation available to the end user as\n        well as the TSS portion of the ST. The TOE developer \n        must concur with the description of the product that is contained in the TSS as it relates \n        to the functional requirements. The evaluation activities contained in \n         &lt;xref to=\"SFRs\"&gt;&lt;/xref&gt; should provide the ST authors with sufficient information to \n        determine the appropriate content for the TSS section. \n        ",
+        "open": false,
+        "componentIDs": [
+          "603b69e2-9ee5-4d34-8a1a-09bb8bcd4fd6"
+        ]
+      },
+      "98ef0157-1342-4080-ad38-dc7e80b87de3": {
+        "title": "Class AGD: Guidance Documents",
+        "id": "agd",
+        "summary": "\n\t\tThe guidance documents will be\n        provided with the ST. Guidance must include a description of how the IT personnel verifies\n        that the Operational Environment can fulfill its role for the security functionality. The\n        documentation should be in an informal style and readable by the IT personnel. Guidance must\n        be provided for every operational environment that the product supports as claimed in the\n        ST. This guidance includes instructions to successfully install the TSF in\n        that environment; and Instructions to manage the security of the TSF as a \n        product and as a component of the larger operational environment. Guidance pertaining to \n        particular security functionality is also provided; requirements on such guidance are \n        contained in the evaluation activities specified with each requirement.\n\t\t\n        ",
+        "open": false,
+        "componentIDs": [
+          "346e72c2-b13e-4253-9f5b-7db92fa20e68",
+          "3e13340d-4c62-4f0b-9b0c-a5cf719e3e00"
+        ]
+      },
+      "bb5be9c4-d340-41eb-8204-4338b5f563f7": {
+        "title": "Class ALC: Life-cycle Support",
+        "id": "alc",
+        "summary": "\n        At the assurance level provided for TOEs conformant to this PP, life-cycle support is limited\n        to end-user-visible aspects of the life-cycle, rather than an examination of the TOE vendor’s\n        development and configuration management process. This is not meant to diminish the\n        critical role that a developer’s practices play in contributing to the overall trustworthiness of a\n        product; rather, it is a reflection on the information to be made available for evaluation at this\n        assurance level.\n        ",
+        "open": false,
+        "componentIDs": [
+          "eeccfb61-e850-4fc5-b62b-aaa31057098a",
+          "755e0fa6-3d15-4806-9781-76cfddb8c71d",
+          "ee52a043-877e-44dc-b62e-d03859e06b3b",
+          "4a5ed5ca-27ad-46a6-9ff1-c1df68c88fc2",
+          "1746daf7-f55e-4a6f-819d-d66d72728b70",
+          "b83ac0a4-f8f3-4b5e-bfff-f6700154f107"
+        ]
+      },
+      "458718a6-8712-4f13-b203-9d8343fdc51d": {
+        "title": "Class ASE: ST Evaluation",
+        "id": "ase",
+        "summary": "\n\t\tAs per ASE activities defined in  &lt;xref to=\"bibCEM\"&gt;&lt;/xref&gt;.\n    ",
+        "open": false,
+        "componentIDs": [
+          "8d9b9ed1-a8e6-4bdc-8117-c46ec278a654",
+          "d0d4ef2b-b58f-4345-a10b-f93a3602cc27",
+          "473ab3a0-042a-48ca-84bc-dc3005e1b1a6",
+          "a058206f-83a7-41c3-a071-20cfefaaff06",
+          "28499595-7efb-45dc-ab20-df3ce894870b",
+          "b376e1c0-a570-4b8e-bee4-0a5fd8561f47"
+        ]
+      },
+      "656adb48-4083-4cf4-8fb8-e46ba33d94c3": {
+        "title": "Class ATE: Tests",
+        "id": "ate",
+        "summary": "\n\t\tTesting is specified for functional aspects of\n        the system as well as aspects that take advantage of design or implementation weaknesses.\n        The former is done through the ATE_IND family, while the latter is through the AVA_VAN\n        family. At the assurance level specified in this PP, testing is based on advertised\n        functionality and interfaces with dependency on the availability of design information. One\n        of the primary outputs of the evaluation process is the test report as specified in the\n        following requirements. \n        \n        ",
+        "open": false,
+        "componentIDs": [
+          "09e535e0-8024-4335-8a10-c51d4f6e1d99"
+        ]
+      },
+      "b3c4a7d8-615e-4257-bfff-1c34c39c3f18": {
+        "title": "Class AVA: Vulnerability Assessment",
+        "id": "ava",
+        "summary": "\n\t\tFor the current generation of\n        this protection profile, the evaluation lab is expected to survey open sources to discover\n        what vulnerabilities have been discovered in these types of products. In most cases, these\n        vulnerabilities will require sophistication beyond that of a basic attacker. Until\n        penetration tools are created and uniformly distributed to the evaluation labs, the\n        evaluator will not be expected to test for these vulnerabilities in the TOE. The labs will be expected to comment on the likelihood of these vulnerabilities given\n        the documentation provided by the vendor. This information will be used in the development\n        of penetration testing tools and for the development of future protection profiles.\n\t\t\n        ",
+        "open": false,
+        "componentIDs": [
+          "249f6e28-5b9e-418b-be84-3977cbe76d73"
+        ]
+      }
+    },
+    "components": {
+      "603b69e2-9ee5-4d34-8a1a-09bb8bcd4fd6": {
+        "ccID": "adv_fsp.1",
+        "name": "Basic Functional Specification (ADV_FSP.1)",
+        "optional": false,
+        "summary": "The functional specification describes the TSFIs. It is not necessary to have a formal or complete specification of these interfaces. Additionally, because TOEs conforming to this PP will necessarily have interfaces to the Operational Environment that are not directly invocable by TOE users, there is little point specifying that such interfaces be described in and of themselves since only indirect testing of such interfaces may be possible. For this PP, the activities for this family should focus on understanding the interfaces presented in the TSS in response to the functional requirements and the interfaces presented in the AGD documentation. No additional “functional specification” documentation is necessary to satisfy the evaluation activities specified. The interfaces that need to be evaluated are characterized through the information needed to perform the assurance activities listed, rather than as an independent, abstract list. ",
+        "elementIDs": [
+          "5bd40dbb-373d-43d2-a325-3a010e7595ab",
+          "b85628f5-0657-4b58-aa95-7f71b2e760a4",
+          "9a79d168-351e-4e90-a238-07819d2bfbbc",
+          "2ddd021b-5773-4e93-81d0-68aa3fa84fd8",
+          "75ecbec2-4c23-4fc9-ae90-b856f34d463d",
+          "b19350c6-d66a-488d-a73b-e85d9a11fa54",
+          "94aeef92-9420-46ff-892e-c59ef3f73d5f",
+          "f67a5b28-b654-45e6-8bb0-115445eac25d"
+        ]
+      },
+      "346e72c2-b13e-4253-9f5b-7db92fa20e68": {
+        "ccID": "agd_ope.1",
+        "name": "Operational User Guidance (AGD_OPE.1)",
+        "optional": false,
+        "summary": "",
+        "elementIDs": [
+          "d4d7b832-2587-40c5-9306-5fbec73fff86",
+          "6997739e-e5bb-4967-9733-6364487eaf61",
+          "ca365738-87e8-40eb-968e-657f832b1b2a",
+          "68d54c30-0cff-4cba-852e-8fc76703d7ce",
+          "8cfe422b-d06b-47da-a555-81a850cbc931",
+          "b6fcd0da-b7d6-4ca2-a54f-c35bd34386e8",
+          "038453a7-4f99-475c-988c-837658bf1bee",
+          "c63fb973-0141-4c0e-9efd-fff01f5d2b3a",
+          "5a682496-0787-43e0-a7e4-dc1ef72a844e"
+        ]
+      },
+      "3e13340d-4c62-4f0b-9b0c-a5cf719e3e00": {
+        "ccID": "agd_pre.1",
+        "name": "Preparative Procedures (AGD_PRE.1)",
+        "optional": false,
+        "summary": "",
+        "elementIDs": [
+          "b38cacae-bd86-4c01-8731-fd35bb81c918",
+          "de7b13a7-74f9-491f-afa9-3319028bff5c",
+          "6f2d6a13-e147-4e68-a46d-8b1d2cfc334c",
+          "55d74380-442f-4d7a-a508-dca1ab990047",
+          "68f45768-3f1c-4359-9e88-ab65242058a7"
+        ]
+      },
+      "eeccfb61-e850-4fc5-b62b-aaa31057098a": {
+        "ccID": "alc_cmc.1",
+        "name": "Labeling of the TOE (ALC_CMC.1)",
+        "optional": false,
+        "summary": "\n\t\t\tThis component is targeted at identifying the TOE such that it can be distinguished from\n\t\t\tother products or versions from the same vendor and can be easily specified when being\n\t\t\tprocured by an end user. \n            ",
+        "elementIDs": [
+          "b4bd735b-5bb8-42b9-ad11-9032ee096e1d",
+          "1bdb4e66-8f8e-45b7-9e8d-0d704648630e",
+          "5a593346-0fdc-433c-8eb2-55a7d06bf4f8"
+        ]
+      },
+      "755e0fa6-3d15-4806-9781-76cfddb8c71d": {
+        "ccID": "alc_cms.1",
+        "name": "TOE CM Coverage (ALC_CMS.1)",
+        "optional": false,
+        "summary": "",
+        "elementIDs": [
+          "5b77249f-ebea-4f54-95b1-9d4a74c3ea1f",
+          "c1e39f3e-f083-4dc8-9e15-17689d57f7a5",
+          "f3842fbe-7d8d-42ae-9d87-f56c0df1dc2a",
+          "bd13f5bc-5779-4bb5-a78c-8fdf402e0e37"
+        ]
+      },
+      "ee52a043-877e-44dc-b62e-d03859e06b3b": {
+        "ccID": "alc_flr.1",
+        "name": "Basic Flaw Remediation (ALC_FLR.1)",
+        "optional": true,
+        "summary": "",
+        "elementIDs": [
+          "88b321ae-068c-4bc7-91a5-a0ea9ba65408",
+          "2877aadd-67a5-4a77-90fe-c5813c6f97a8",
+          "abd1c8ff-0712-4f18-a2fe-98746c1377b4",
+          "9ed62a78-e50a-457a-882c-c1652727cf92",
+          "30a41736-3f5b-48b3-9989-cf6c9c3db06d",
+          "60243663-3ad7-4cf1-a8d4-7c4d6d65924b"
+        ]
+      },
+      "4a5ed5ca-27ad-46a6-9ff1-c1df68c88fc2": {
+        "ccID": "alc_flr.2",
+        "name": "Flaw Reporting Procedures (ALC_FLR.2)",
+        "optional": true,
+        "summary": "",
+        "elementIDs": [
+          "8111c6b0-27c4-45e4-834e-fa0ac9eb72d6",
+          "503dd79b-e2e3-4e14-a1ec-0267aea23969",
+          "831f3442-6f07-435d-a88f-7c9ad867145b",
+          "6c0237c3-426c-4b31-a294-1e8491053db5",
+          "8d07838b-f811-4dfa-8dc2-dc73d5e09b91",
+          "bbd99b32-f8a4-42d2-96ef-6dd0728c2dc9",
+          "0b5a20c1-9e3a-40d0-99e6-6985a0882e68",
+          "c9771138-6cc3-4648-a0e6-d8b31eed4080",
+          "9773e230-c0b4-4c5f-87a7-e93c95c1ce16",
+          "5e14a7df-9a81-44a5-80bc-58d2bcc5019d",
+          "c6cff24b-c185-4ec1-8b9b-2b091311f988",
+          "35a418fe-b5ac-41c6-b000-206b94d9f843"
+        ]
+      },
+      "1746daf7-f55e-4a6f-819d-d66d72728b70": {
+        "ccID": "alc_flr.3",
+        "name": "Systematic Flaw Remediation (ALC_FLR.3)",
+        "optional": true,
+        "summary": "",
+        "elementIDs": [
+          "0cfbaf3d-0ba3-43bf-97c6-303a6e4781ff",
+          "f7c80ccd-3236-4c7a-bd57-34f5a8942657",
+          "e8cc98c7-f58d-4ac3-85f0-4db878f3e13e",
+          "f0fb81bf-ba67-4d87-8641-fb7a679cca84",
+          "6fa3d73a-f6b8-4afb-a32f-5575523f1138",
+          "40b72ea8-b845-4c56-bc9f-fe9d3094d380",
+          "b223ec44-0881-4368-9318-4facf8ac9098",
+          "4c704920-b855-41ab-85c2-fb461ca906f5",
+          "d884703b-4bc8-4476-8d6d-4b36a20e435c",
+          "6b23dc87-f61d-4afb-b342-41a2b055b910",
+          "94a93812-da99-4ed3-b97e-4d3c9a0201c7",
+          "432c4be1-6420-453c-af74-81145aebf32c",
+          "f4edd731-38bb-41b0-8586-8212ea88947b",
+          "783baf19-e88e-46a5-87e5-e34d3108b147",
+          "552ba9ca-617e-48a9-909f-08dff38b1334"
+        ]
+      },
+      "b83ac0a4-f8f3-4b5e-bfff-f6700154f107": {
+        "ccID": "alc_tsu_ext.1",
+        "name": "Timely Security Updates",
+        "optional": true,
+        "summary": "\n\t\t\tThis component requires the TOE developer, in conjunction with any other necessary parties,\n\t\t\tto provide information as to how the end-user devices are updated to address security issues\n\t\t\tin a timely manner. The documentation describes the process of providing updates to the\n\t\t\tpublic from the time a security flaw is reported/discovered, to the time an update is released.\n\t\t\tThis description includes the parties involved (e.g., the developer, carriers(s)) and the steps\n\t\t\tthat are performed (e.g., developer testing, carrier testing), including worst case time periods,\n\t\t\tbefore an update is made available to the public.\n\t\t\t",
+        "elementIDs": [
+          "5520c4de-6cfc-4211-bc91-b9293d41876a",
+          "aa17820c-1d94-4d42-ad60-e3cb7070ff32",
+          "e4bbbcf2-59c3-4976-8d50-2222b497e326",
+          "8218896f-2da7-40a2-9af1-1ae82a668dfb",
+          "6d0b014e-9b65-4587-92fd-27ec79bc4149",
+          "da7d77ed-3fa0-470b-a4f1-cd64d43fa696"
+        ]
+      },
+      "8d9b9ed1-a8e6-4bdc-8117-c46ec278a654": {
+        "ccID": "ase_ccl.1",
+        "name": "Conformance Claims",
+        "optional": false,
+        "summary": "",
+        "elementIDs": [
+          "993da652-7015-48f7-8471-69c35cfa07dc",
+          "c6362a79-3bec-40a1-9e57-1822a3b65f46",
+          "ead78c67-4ad2-49ee-a94e-37c746cccf89",
+          "3dca8623-b24a-4909-b16c-58b4ba16a0e0",
+          "a44879c0-367b-4b2f-a01f-6c8873b1d09a",
+          "0fbc1cf9-c436-4c0b-a3ae-a8f1dbefd494",
+          "69680fe7-7e47-49da-a2a5-c1478672159f",
+          "bea42399-1b87-4bd6-9304-d3a6dd371e46",
+          "2e32426b-210d-4ac1-acfd-1d9ce0a2e0a3",
+          "b9050087-d9e9-4f44-b65f-7b5a1b6f292f",
+          "8d6b0b05-8327-4bfc-a61a-47b1697c0e0b",
+          "dd576d61-c7cf-4a01-a390-0cad613b7908",
+          "b1753b61-3507-47c6-be0d-b8490cdd7a07",
+          "fb662011-11b5-4627-93ab-bbb6b241b43d",
+          "8f982490-5d1f-44db-8835-4a8228f786f8",
+          "736f6a44-b68e-4db7-9920-3ee9bab47d3f"
+        ]
+      },
+      "d0d4ef2b-b58f-4345-a10b-f93a3602cc27": {
+        "ccID": "ase_ecd.1",
+        "name": "Extended Components Definition",
+        "optional": false,
+        "summary": "",
+        "elementIDs": [
+          "946a5492-72a3-42b0-bb0c-924568d87fc0",
+          "29dfcb77-d3e9-4a57-922c-d6e73431ac7a",
+          "afff1de3-4575-4bd1-a44d-c274a9ea65a9",
+          "e1991efc-30c0-4e62-8790-81337a4cfce2",
+          "79e75639-f6ec-472b-9458-829ecf58ae5d",
+          "0c7921de-06b6-49a9-8a1e-e91b7c15277e",
+          "9789121d-e279-40c4-8dee-259dd5fa4bd3",
+          "6f1e155d-8760-438f-b09c-dc43568da562",
+          "915f8e10-3a88-45e8-8645-cd707380b502"
+        ]
+      },
+      "473ab3a0-042a-48ca-84bc-dc3005e1b1a6": {
+        "ccID": "ase_int.1",
+        "name": "ST Introduction",
+        "optional": false,
+        "summary": "",
+        "elementIDs": [
+          "069c0823-ebf2-46c3-8b44-654da986aa48",
+          "00027c5d-c110-4c69-bd6e-ad182de16bbe",
+          "02abb315-c7bb-4222-9209-a7f324f9556b",
+          "77b33f10-2f9a-43df-b396-ac9958b55978",
+          "5613e6d2-f3ca-4acf-81f7-257312d7fc0b",
+          "29d2b8c2-3446-4b37-9ca9-25dec2015c03",
+          "92d70162-67d8-4f1e-9659-5d02c5647ed2",
+          "890f870e-964b-46ce-b997-44270962f509",
+          "9e383688-6e08-4595-aa64-cb63479ef4c7",
+          "4a06f4f3-5ca3-42a3-9a1d-3857990d87ce",
+          "636b3740-385f-4181-a44b-d804d2a78ea8",
+          "e818ee31-6256-496f-8696-bba4e65fc522"
+        ]
+      },
+      "a058206f-83a7-41c3-a071-20cfefaaff06": {
+        "ccID": "ase_obj.1",
+        "name": "ST Objectives for the Operational Environment",
+        "optional": false,
+        "summary": "",
+        "elementIDs": [
+          "a299a370-4fd9-4554-8ae4-1f9c459feba7",
+          "52805936-f547-4018-9f72-fd7680a2ff58",
+          "c1372e6a-b29f-4f9b-81b2-10ee0a91f294",
+          "1dc17b75-5408-41c4-8f77-7536f8ef3a76",
+          "84224ece-e512-450f-ae5d-bda8b75d8969",
+          "0bc283c9-3afe-453a-a0be-7baf67f5fee7"
+        ]
+      },
+      "28499595-7efb-45dc-ab20-df3ce894870b": {
+        "ccID": "ase_req.1",
+        "name": "Stated Security Requirements",
+        "optional": false,
+        "summary": "",
+        "elementIDs": [
+          "6f638343-2017-4a6e-8acf-a46ad20adf96",
+          "a0cd0e87-acbb-4ad9-98bc-3ea9223f21a0",
+          "37c7a0b8-19a0-49f9-a8e0-646f66397c49",
+          "75832874-d6fa-48c7-95c8-c22545f18fca",
+          "2e6cd88d-d798-4d22-93aa-bc003ba42f59",
+          "18888829-1014-4cb5-b448-72abf055edd2",
+          "3d696f96-57c8-4c73-bd31-9059422b5d95",
+          "d4e257d6-ed26-4b3e-b18a-1f1f135fdd4a",
+          "dcb9bfb8-f441-468d-a170-5e82346d5e19",
+          "15498df5-93e3-4bb8-a9cf-c0270eb7753e",
+          "bb5c07f3-b116-493a-9893-4e0bc52c0107",
+          "08147402-cb0c-4e67-a462-73e8803b22de",
+          "2c5528be-ad49-476b-9df2-d5df444b1ca1",
+          "e4e9800a-5fdc-432c-aca7-1dfb1e22b7dc",
+          "acb694f5-b2b4-4928-bfb0-a92bd4dc82a9"
+        ]
+      },
+      "b376e1c0-a570-4b8e-bee4-0a5fd8561f47": {
+        "ccID": "ase_tss.1",
+        "name": "TOE Summary Specification",
+        "optional": false,
+        "summary": "",
+        "elementIDs": [
+          "10780db5-4e56-486a-aded-e7cca2011557",
+          "7585b817-70a3-45aa-a71d-0721ad56ca52",
+          "d067284e-b0a7-4409-ac4b-d4f0d6aa089c",
+          "8528e76a-42b2-4637-9c03-673f25bafbf8"
+        ]
+      },
+      "09e535e0-8024-4335-8a10-c51d4f6e1d99": {
+        "ccID": "ate_ind.1",
+        "name": "Independent Testing – Conformance (ATE_IND.1)",
+        "optional": false,
+        "summary": " \n\t\t\tTesting is performed to confirm the\n\t\t\tfunctionality described in the TSS as well as the administrative\n\t\t\t(including configuration and operational) documentation provided. The focus of the testing\n\t\t\tis to confirm that the requirements specified in  &lt;xref to=\"SFRs\"&gt;&lt;/xref&gt; being met,\n\t\t\talthough some additional testing is specified for SARs in  &lt;xref to=\"SARs\"&gt;&lt;/xref&gt;. The\n\t\t\tevaluation activities identify the additional testing activities associated with these\n\t\t\tcomponents. The evaluator produces a test report documenting the plan for and results of\n\t\t\ttesting, as well as coverage arguments focused on the platform/TOE\n\t\t\tcombinations that are claiming conformance to this PP. Given the scope of the \n\t\t\tTOE and its associated evaluation evidence requirements, this \n\t\t\tcomponent’s evaluation activities are covered by the evaluation activities listed for ALC_CMC.1. \n             \n\t\t\tTesting is performed to confirm the\n\t\t\tfunctionality described in the TSS as well as the administrative\n\t\t\t(including configuration and operational) documentation provided. The focus of the testing\n\t\t\tis to confirm that the requirements specified in  &lt;xref to=\"SFRs\"&gt;&lt;/xref&gt; being met,\n\t\t\talthough some additional testing is specified for SARs in  &lt;xref to=\"SARs\"&gt;&lt;/xref&gt;. The\n\t\t\tevaluation activities identify the additional testing activities associated with these\n\t\t\tcomponents. The evaluator produces a test report documenting the plan for and results of\n\t\t\ttesting, as well as coverage arguments focused on the platform/TOE\n\t\t\tcombinations that are claiming conformance to this PP. Given the scope of the \n\t\t\tTOE and its associated evaluation evidence requirements, this \n\t\t\tcomponent’s evaluation activities are covered by the evaluation activities listed for ALC_CMC.1. \n             \n\t\t\tTesting is performed to confirm the\n\t\t\tfunctionality described in the TSS as well as the administrative\n\t\t\t(including configuration and operational) documentation provided. The focus of the testing\n\t\t\tis to confirm that the requirements specified in  &lt;xref to=\"SFRs\"&gt;&lt;/xref&gt; being met,\n\t\t\talthough some additional testing is specified for SARs in  &lt;xref to=\"SARs\"&gt;&lt;/xref&gt;. The\n\t\t\tevaluation activities identify the additional testing activities associated with these\n\t\t\tcomponents. The evaluator produces a test report documenting the plan for and results of\n\t\t\ttesting, as well as coverage arguments focused on the platform/TOE\n\t\t\tcombinations that are claiming conformance to this PP. Given the scope of the \n\t\t\tTOE and its associated evaluation evidence requirements, this \n\t\t\tcomponent’s evaluation activities are covered by the evaluation activities listed for ALC_CMC.1. \n            ",
+        "elementIDs": [
+          "38c9f417-26b1-4f1b-8f28-cf8e502a04f1",
+          "5db9853e-b8a2-4402-83c3-484aa07c9f68",
+          "c0dda7c7-5ec4-4567-a34d-c42346f2b3b6",
+          "9096f6cc-cc4c-4398-9a69-016e89b6fcb3"
+        ]
+      },
+      "249f6e28-5b9e-418b-be84-3977cbe76d73": {
+        "ccID": "ava_van.1",
+        "name": "Vulnerability Survey (AVA_VAN.1)",
+        "optional": false,
+        "summary": "",
+        "elementIDs": [
+          "fcd430d2-b5e2-4a02-990e-148b06734704",
+          "88958e14-e776-440a-bd3f-3fa1fe2195cc",
+          "51a0b38d-ef2d-4a5d-93d0-8637123024fb",
+          "4d2615a0-3231-4be5-b03c-07d1bfc70d3b",
+          "81b396e2-9f78-4a85-9890-5f10d3c5bf55"
+        ]
+      }
+    },
+    "elements": {
+      "5bd40dbb-373d-43d2-a325-3a010e7595ab": {
+        "type": "D",
+        "title": "The developer shall provide a functional specification.",
+        "note": "",
+        "aactivity": ""
+      },
+      "b85628f5-0657-4b58-aa95-7f71b2e760a4": {
+        "type": "D",
+        "title": "The developer shall provide a tracing from the functional specification to the\n\t\t\t\t\tSFRs.",
+        "note": "",
+        "aactivity": ""
+      },
+      "9a79d168-351e-4e90-a238-07819d2bfbbc": {
+        "type": "C",
+        "title": "The functional specification shall describe the purpose and method of use for\n\t\t\t\t\teach SFR-enforcing and SFR-supporting TSFI.",
+        "note": "",
+        "aactivity": ""
+      },
+      "2ddd021b-5773-4e93-81d0-68aa3fa84fd8": {
+        "type": "C",
+        "title": "The functional specification shall identify all parameters associated with each\n\t\t\t\t\tSFR-enforcing and SFR-supporting TSFI.",
+        "note": "",
+        "aactivity": ""
+      },
+      "75ecbec2-4c23-4fc9-ae90-b856f34d463d": {
+        "type": "C",
+        "title": "The functional specification shall provide rationale for the implicit\n\t\t\t\t\tcategorization of interfaces as SFR-non-interfering.",
+        "note": "",
+        "aactivity": ""
+      },
+      "b19350c6-d66a-488d-a73b-e85d9a11fa54": {
+        "type": "C",
+        "title": "The tracing shall demonstrate that the SFRs trace to TSFIs in the functional specification.",
+        "note": "",
+        "aactivity": ""
+      },
+      "94aeef92-9420-46ff-892e-c59ef3f73d5f": {
+        "type": "E",
+        "title": "The evaluator shall confirm that the information provided meets all requirements\n\t\t\t\t\tfor content and presentation of evidence.",
+        "note": "",
+        "aactivity": ""
+      },
+      "f67a5b28-b654-45e6-8bb0-115445eac25d": {
+        "type": "E",
+        "title": "The evaluator shall determine that the functional specification is an accurate\n\t\t\t\t\tand complete instantiation of the SFRs.",
+        "note": "",
+        "aactivity": ""
+      },
+      "d4d7b832-2587-40c5-9306-5fbec73fff86": {
+        "type": "D",
+        "title": "The developer shall provide operational user guidance.",
+        "note": "",
+        "aactivity": ""
+      },
+      "6997739e-e5bb-4967-9733-6364487eaf61": {
+        "type": "C",
+        "title": "The operational user guidance shall describe, for each user role, the\n\t\t\t\t\tuser-accessible functions and privileges that should be controlled in a secure\n\t\t\t\t\tprocessing environment, including appropriate warnings.",
+        "note": "",
+        "aactivity": ""
+      },
+      "ca365738-87e8-40eb-968e-657f832b1b2a": {
+        "type": "C",
+        "title": "The operational user guidance shall describe, for each user role, how to use the\n\t\t\t\t\tavailable interfaces provided by the TOE in a secure manner.",
+        "note": "",
+        "aactivity": ""
+      },
+      "68d54c30-0cff-4cba-852e-8fc76703d7ce": {
+        "type": "C",
+        "title": "The operational user guidance shall describe, for each user role, the available\n\t\t\t\t\tfunctions and interfaces, in particular all security parameters under the control of\n\t\t\t\t\tthe user, indicating secure values as appropriate.",
+        "note": "",
+        "aactivity": ""
+      },
+      "8cfe422b-d06b-47da-a555-81a850cbc931": {
+        "type": "C",
+        "title": "The operational user guidance shall, for each user role, clearly present each\n\t\t\t\t\ttype of security-relevant event relative to the user-accessible functions that need to\n\t\t\t\t\tbe performed, including changing the security characteristics of entities under the\n\t\t\t\t\tcontrol of the TSF.",
+        "note": "",
+        "aactivity": ""
+      },
+      "b6fcd0da-b7d6-4ca2-a54f-c35bd34386e8": {
+        "type": "C",
+        "title": "The operational user guidance shall identify all possible modes of operation of\n\t\t\t\t\tthe TOE (including operation following failure or operational\n\t\t\t\t\terror), their consequences, and implications for maintaining secure operation.",
+        "note": "",
+        "aactivity": ""
+      },
+      "038453a7-4f99-475c-988c-837658bf1bee": {
+        "type": "C",
+        "title": "The operational user guidance shall, for each user role, describe the security\n\t\t\t\t\tmeasures to be followed in order to fulfill the security objectives for the\n\t\t\t\t\toperational environment as described in the ST.",
+        "note": "",
+        "aactivity": ""
+      },
+      "c63fb973-0141-4c0e-9efd-fff01f5d2b3a": {
+        "type": "C",
+        "title": "The operational user guidance shall be clear and reasonable.",
+        "note": "",
+        "aactivity": ""
+      },
+      "5a682496-0787-43e0-a7e4-dc1ef72a844e": {
+        "type": "E",
+        "title": "The evaluator shall confirm that the information provided meets all requirements\n\t\t\t\t\tfor content and presentation of evidence.",
+        "note": "",
+        "aactivity": ""
+      },
+      "b38cacae-bd86-4c01-8731-fd35bb81c918": {
+        "type": "D",
+        "title": "The developer shall provide the TOE, including its preparative procedures.",
+        "note": "",
+        "aactivity": ""
+      },
+      "de7b13a7-74f9-491f-afa9-3319028bff5c": {
+        "type": "C",
+        "title": "The preparative procedures shall describe all the steps necessary for secure\n\t\t\t\t\tacceptance of the delivered TOE in accordance with the developer's\n\t\t\t\t\tdelivery procedures.",
+        "note": "",
+        "aactivity": ""
+      },
+      "6f2d6a13-e147-4e68-a46d-8b1d2cfc334c": {
+        "type": "C",
+        "title": "The preparative procedures shall describe all the steps necessary for secure\n\t\t\t\t\tinstallation of the TOE and for the secure preparation of the\n\t\t\t\t\toperational environment in accordance with the security objectives for the operational\n\t\t\t\t\tenvironment as described in the ST.",
+        "note": "",
+        "aactivity": ""
+      },
+      "55d74380-442f-4d7a-a508-dca1ab990047": {
+        "type": "E",
+        "title": "The evaluator shall confirm that the information provided meets all requirements\n\t\t\t\t\tfor content and presentation of evidence.",
+        "note": "",
+        "aactivity": ""
+      },
+      "68f45768-3f1c-4359-9e88-ab65242058a7": {
+        "type": "E",
+        "title": "The evaluator shall apply the preparative procedures to confirm that the TOE\n\t\t\t\t\tcan be prepared securely for operation.",
+        "note": "",
+        "aactivity": ""
+      },
+      "b4bd735b-5bb8-42b9-ad11-9032ee096e1d": {
+        "type": "D",
+        "title": "The developer shall provide the TOE and a reference for the TOE.",
+        "note": "",
+        "aactivity": ""
+      },
+      "1bdb4e66-8f8e-45b7-9e8d-0d704648630e": {
+        "type": "C",
+        "title": "The application shall be labeled with a unique reference.",
+        "note": "",
+        "aactivity": ""
+      },
+      "5a593346-0fdc-433c-8eb2-55a7d06bf4f8": {
+        "type": "E",
+        "title": "The evaluator shall confirm that the information provided meets all\n\t\t\t\t\trequirements for content and presentation of evidence.",
+        "note": "",
+        "aactivity": ""
+      },
+      "5b77249f-ebea-4f54-95b1-9d4a74c3ea1f": {
+        "type": "D",
+        "title": "The developer shall provide a configuration list for the TOE.",
+        "note": "",
+        "aactivity": ""
+      },
+      "c1e39f3e-f083-4dc8-9e15-17689d57f7a5": {
+        "type": "C",
+        "title": "The configuration list shall include the following: the TOE\n\t\t\t\t\titself; and the evaluation evidence required by the SARs.",
+        "note": "",
+        "aactivity": ""
+      },
+      "f3842fbe-7d8d-42ae-9d87-f56c0df1dc2a": {
+        "type": "C",
+        "title": "The configuration list shall uniquely identify the configuration items.",
+        "note": "",
+        "aactivity": ""
+      },
+      "bd13f5bc-5779-4bb5-a78c-8fdf402e0e37": {
+        "type": "E",
+        "title": "The evaluator shall confirm that the information provided meets all requirements\n\t\t\t\t\tfor content and presentation of evidence.",
+        "note": "",
+        "aactivity": ""
+      },
+      "88b321ae-068c-4bc7-91a5-a0ea9ba65408": {
+        "type": "C",
+        "title": "The flaw remediation procedures documentation shall describe the procedures used to track all reported security flaws in each release of the TOE.",
+        "note": "",
+        "aactivity": ""
+      },
+      "2877aadd-67a5-4a77-90fe-c5813c6f97a8": {
+        "type": "D",
+        "title": "The developer shall document and provide flaw remediation procedures addressed to TOE developers.",
+        "note": "",
+        "aactivity": ""
+      },
+      "abd1c8ff-0712-4f18-a2fe-98746c1377b4": {
+        "type": "E",
+        "title": "The evaluator shall confirm that the information provided meets all requirements for content and presentation of evidence.",
+        "note": "",
+        "aactivity": ""
+      },
+      "9ed62a78-e50a-457a-882c-c1652727cf92": {
+        "type": "C",
+        "title": "The flaw remediation procedures shall require that a description of the nature and effect of each security flaw be provided, as well as the status of finding a correction to that flaw.",
+        "note": "",
+        "aactivity": ""
+      },
+      "30a41736-3f5b-48b3-9989-cf6c9c3db06d": {
+        "type": "C",
+        "title": "The flaw remediation procedures shall require that corrective actions be identified for each of the security flaws.",
+        "note": "",
+        "aactivity": ""
+      },
+      "60243663-3ad7-4cf1-a8d4-7c4d6d65924b": {
+        "type": "C",
+        "title": "The flaw remediation procedures documentation shall describe the methods used to provide flaw information, corrections and guidance on corrective actions to TOE users.",
+        "note": "",
+        "aactivity": ""
+      },
+      "8111c6b0-27c4-45e4-834e-fa0ac9eb72d6": {
+        "type": "C",
+        "title": "The flaw remediation procedures documentation shall describe the procedures used to track all reported security flaws in each release of the TOE.",
+        "note": "",
+        "aactivity": ""
+      },
+      "503dd79b-e2e3-4e14-a1ec-0267aea23969": {
+        "type": "D",
+        "title": "The developer shall document and provide flaw remediation procedures addressed to TOE developers.",
+        "note": "",
+        "aactivity": ""
+      },
+      "831f3442-6f07-435d-a88f-7c9ad867145b": {
+        "type": "E",
+        "title": "The evaluator shall confirm that the information provided meets all requirements for content and presentation of evidence.",
+        "note": "",
+        "aactivity": ""
+      },
+      "6c0237c3-426c-4b31-a294-1e8491053db5": {
+        "type": "C",
+        "title": "The flaw remediation procedures shall require that a description of the nature and effect of each security flaw be provided, as well as the status of finding a correction to that flaw.",
+        "note": "",
+        "aactivity": ""
+      },
+      "8d07838b-f811-4dfa-8dc2-dc73d5e09b91": {
+        "type": "D",
+        "title": "The developer shall establish a procedure for accepting and acting upon all reports of security flaws and requests for corrections to those flaws.",
+        "note": "",
+        "aactivity": ""
+      },
+      "bbd99b32-f8a4-42d2-96ef-6dd0728c2dc9": {
+        "type": "C",
+        "title": "The flaw remediation procedures shall require that corrective actions be identified for each of the security flaws.",
+        "note": "",
+        "aactivity": ""
+      },
+      "0b5a20c1-9e3a-40d0-99e6-6985a0882e68": {
+        "type": "D",
+        "title": "The developer shall provide flaw remediation guidance addressed to TOE users.",
+        "note": "",
+        "aactivity": ""
+      },
+      "c9771138-6cc3-4648-a0e6-d8b31eed4080": {
+        "type": "C",
+        "title": "The flaw remediation procedures documentation shall describe the methods used to provide flaw information, corrections and guidance on corrective actions to TOE users.",
+        "note": "",
+        "aactivity": ""
+      },
+      "9773e230-c0b4-4c5f-87a7-e93c95c1ce16": {
+        "type": "C",
+        "title": "The flaw remediation procedures shall describe a means by which the developer receives from TOE users reports and enquiries of suspected security flaws in the TOE.",
+        "note": "",
+        "aactivity": ""
+      },
+      "5e14a7df-9a81-44a5-80bc-58d2bcc5019d": {
+        "type": "C",
+        "title": "The procedures for processing reported security flaws shall ensure that any reported flaws are remediated and the remediation procedures issued to TOE users.",
+        "note": "",
+        "aactivity": ""
+      },
+      "c6cff24b-c185-4ec1-8b9b-2b091311f988": {
+        "type": "C",
+        "title": "The procedures for processing reported security flaws shall provide safeguards that any corrections to these security flaws do not introduce any new flaws.",
+        "note": "",
+        "aactivity": ""
+      },
+      "35a418fe-b5ac-41c6-b000-206b94d9f843": {
+        "type": "C",
+        "title": "The flaw remediation guidance shall describe a means by which TOE users report to the developer any suspected security flaws in the TOE.",
+        "note": "",
+        "aactivity": ""
+      },
+      "0cfbaf3d-0ba3-43bf-97c6-303a6e4781ff": {
+        "type": "C",
+        "title": "The flaw remediation procedures documentation shall describe the procedures used to track all reported security flaws in each release of the TOE.",
+        "note": "",
+        "aactivity": ""
+      },
+      "f7c80ccd-3236-4c7a-bd57-34f5a8942657": {
+        "type": "D",
+        "title": "The developer shall document and provide flaw remediation procedures addressed to TOE developers.",
+        "note": "",
+        "aactivity": ""
+      },
+      "e8cc98c7-f58d-4ac3-85f0-4db878f3e13e": {
+        "type": "E",
+        "title": "The evaluator shall confirm that the information provided meets all requirements for content and presentation of evidence.",
+        "note": "",
+        "aactivity": ""
+      },
+      "f0fb81bf-ba67-4d87-8641-fb7a679cca84": {
+        "type": "C",
+        "title": "The flaw remediation procedures shall require that a description of the nature and effect of each security flaw be provided, as well as the status of finding a correction to that flaw.",
+        "note": "",
+        "aactivity": ""
+      },
+      "6fa3d73a-f6b8-4afb-a32f-5575523f1138": {
+        "type": "D",
+        "title": "The developer shall establish a procedure for accepting and acting upon all reports of security flaws and requests for corrections to those flaws.",
+        "note": "",
+        "aactivity": ""
+      },
+      "40b72ea8-b845-4c56-bc9f-fe9d3094d380": {
+        "type": "C",
+        "title": "The flaw remediation procedures shall require that corrective actions be identified for each of the security flaws.",
+        "note": "",
+        "aactivity": ""
+      },
+      "b223ec44-0881-4368-9318-4facf8ac9098": {
+        "type": "D",
+        "title": "The developer shall provide flaw remediation guidance addressed to TOE users.",
+        "note": "",
+        "aactivity": ""
+      },
+      "4c704920-b855-41ab-85c2-fb461ca906f5": {
+        "type": "C",
+        "title": "The flaw remediation procedures documentation shall describe the methods used to provide flaw information, corrections and guidance on corrective actions to TOE users.",
+        "note": "",
+        "aactivity": ""
+      },
+      "d884703b-4bc8-4476-8d6d-4b36a20e435c": {
+        "type": "C",
+        "title": "The flaw remediation procedures shall describe a means by which the developer receives from TOE users reports and enquiries of suspected security flaws in the TOE.",
+        "note": "",
+        "aactivity": ""
+      },
+      "6b23dc87-f61d-4afb-b342-41a2b055b910": {
+        "type": "C",
+        "title": "The flaw remediation procedures shall include a procedure requiring timely response and the automatic distribution of security flaw reports and the associated corrections to registered users who might be affected by the security flaw.",
+        "note": "",
+        "aactivity": ""
+      },
+      "94a93812-da99-4ed3-b97e-4d3c9a0201c7": {
+        "type": "C",
+        "title": "The procedures for processing reported security flaws shall ensure that any reported flaws are remediated and the remediation procedures issued to TOE users.",
+        "note": "",
+        "aactivity": ""
+      },
+      "432c4be1-6420-453c-af74-81145aebf32c": {
+        "type": "C",
+        "title": "The procedures for processing reported security flaws shall provide safeguards that any corrections to these security flaws do not introduce any new flaws.",
+        "note": "",
+        "aactivity": ""
+      },
+      "f4edd731-38bb-41b0-8586-8212ea88947b": {
+        "type": "C",
+        "title": "The flaw remediation guidance shall describe a means by which TOE users report to the developer any suspected security flaws in the TOE.",
+        "note": "",
+        "aactivity": ""
+      },
+      "783baf19-e88e-46a5-87e5-e34d3108b147": {
+        "type": "C",
+        "title": "The flaw remediation guidance shall describe a means by which TOE users may register with the developer, to be eligible to receive security flaw reports and corrections.",
+        "note": "",
+        "aactivity": ""
+      },
+      "552ba9ca-617e-48a9-909f-08dff38b1334": {
+        "type": "C",
+        "title": "The flaw remediation guidance shall identify the specific points of contact for all reports and enquiries about security issues involving the TOE.",
+        "note": "",
+        "aactivity": ""
+      },
+      "993da652-7015-48f7-8471-69c35cfa07dc": {
+        "type": "C",
+        "title": "The conformance claim shall identify the edition of the CC to which the ST and the TOE claim conformance.",
+        "note": "",
+        "aactivity": ""
+      },
+      "c6362a79-3bec-40a1-9e57-1822a3b65f46": {
+        "type": "D",
+        "title": "The developer shall provide a conformance claim.",
+        "note": "",
+        "aactivity": ""
+      },
+      "ead78c67-4ad2-49ee-a94e-37c746cccf89": {
+        "type": "E",
+        "title": "The evaluator shall confirm that the information provided meets all requirements for content and presentation of evidence.",
+        "note": "",
+        "aactivity": ""
+      },
+      "3dca8623-b24a-4909-b16c-58b4ba16a0e0": {
+        "type": "C",
+        "title": "The conformance claim shall describe the conformance of the ST to CC Part 2 as either CC Part 2 conformant or CC Part 2 extended.",
+        "note": "",
+        "aactivity": ""
+      },
+      "a44879c0-367b-4b2f-a01f-6c8873b1d09a": {
+        "type": "D",
+        "title": "The developer shall provide a conformance claim rationale.",
+        "note": "",
+        "aactivity": ""
+      },
+      "0fbc1cf9-c436-4c0b-a3ae-a8f1dbefd494": {
+        "type": "C",
+        "title": "The conformance claim shall describe the conformance of the ST as either “CC Part 3 conformant” or “CC Part 3 extended”.",
+        "note": "",
+        "aactivity": ""
+      },
+      "69680fe7-7e47-49da-a2a5-c1478672159f": {
+        "type": "C",
+        "title": "The conformance claim shall be consistent with the extended components definition.",
+        "note": "",
+        "aactivity": ""
+      },
+      "bea42399-1b87-4bd6-9304-d3a6dd371e46": {
+        "type": "C",
+        "title": "The conformance claim shall identify a PP-Configuration, or all PPs and security requirement packages to which the ST claims conformance.",
+        "note": "",
+        "aactivity": ""
+      },
+      "2e32426b-210d-4ac1-acfd-1d9ce0a2e0a3": {
+        "type": "C",
+        "title": "The conformance claim shall describe any conformance of the ST to a package as either package-conformant or package-augmented.",
+        "note": "",
+        "aactivity": ""
+      },
+      "b9050087-d9e9-4f44-b65f-7b5a1b6f292f": {
+        "type": "C",
+        "title": "The conformance claim shall describe any conformance of the ST to a PP as PP-Conformant.",
+        "note": "",
+        "aactivity": ""
+      },
+      "8d6b0b05-8327-4bfc-a61a-47b1697c0e0b": {
+        "type": "C",
+        "title": "The conformance claim rationale shall demonstrate that the TOE type is consistent with the TOE type in the PP-Configuration or PPs for which conformance is being claimed.",
+        "note": "",
+        "aactivity": ""
+      },
+      "dd576d61-c7cf-4a01-a390-0cad613b7908": {
+        "type": "C",
+        "title": "The conformance claim rationale shall demonstrate that the statement of the security problem definition is consistent with the statement of the security problem definition in the PP-Configuration, PPs and any functional packages for which conformance is being claimed.",
+        "note": "",
+        "aactivity": ""
+      },
+      "b1753b61-3507-47c6-be0d-b8490cdd7a07": {
+        "type": "C",
+        "title": "The conformance claim rationale shall demonstrate that the statement of security objectives is consistent with the statement of security objectives in the PP-Configuration, PPs, and any functional package for which conformance is being claimed.",
+        "note": "",
+        "aactivity": ""
+      },
+      "fb662011-11b5-4627-93ab-bbb6b241b43d": {
+        "type": "C",
+        "title": "The conformance claim rationale shall demonstrate that the statement of security requirements is consistent with the statement of security requirements in the PP-Configuration, PPs, and any functional packages for which conformance is being claimed.",
+        "note": "",
+        "aactivity": ""
+      },
+      "8f982490-5d1f-44db-8835-4a8228f786f8": {
+        "type": "C",
+        "title": "The conformance claim for PP(s) or a PP-Configuration shall be exact, strict, or demonstrable or a list of conformance types.",
+        "note": "",
+        "aactivity": ""
+      },
+      "736f6a44-b68e-4db7-9920-3ee9bab47d3f": {
+        "type": "C",
+        "title": "If the conformance claim identifies a set of Evaluation methods and Evaluation activities derived from CEM work units that shall be used to evaluate the TOE then this set shall include all those that are included in any package, PP, or PP-Module in a PP-Configuration  to which the ST claims conformance, and no others.",
+        "note": "",
+        "aactivity": ""
+      },
+      "946a5492-72a3-42b0-bb0c-924568d87fc0": {
+        "type": "C",
+        "title": "The statement of security requirements shall identify all extended security requirements.",
+        "note": "",
+        "aactivity": ""
+      },
+      "29dfcb77-d3e9-4a57-922c-d6e73431ac7a": {
+        "type": "D",
+        "title": "The developer shall provide a statement of security requirements.",
+        "note": "",
+        "aactivity": ""
+      },
+      "afff1de3-4575-4bd1-a44d-c274a9ea65a9": {
+        "type": "E",
+        "title": "The evaluator shall confirm that the information provided meets all requirements for content and presentation of evidence.",
+        "note": "",
+        "aactivity": ""
+      },
+      "e1991efc-30c0-4e62-8790-81337a4cfce2": {
+        "type": "C",
+        "title": "The extended components definition shall define an extended component for each extended security requirement.",
+        "note": "",
+        "aactivity": ""
+      },
+      "79e75639-f6ec-472b-9458-829ecf58ae5d": {
+        "type": "D",
+        "title": "The developer shall provide an extended components definition.",
+        "note": "",
+        "aactivity": ""
+      },
+      "0c7921de-06b6-49a9-8a1e-e91b7c15277e": {
+        "type": "E",
+        "title": "The evaluator shall confirm that no extended component may be clearly expressed using existing components.",
+        "note": "",
+        "aactivity": ""
+      },
+      "9789121d-e279-40c4-8dee-259dd5fa4bd3": {
+        "type": "C",
+        "title": "The extended components definition shall describe how each extended component is related to the existing CC components, families, and classes.",
+        "note": "",
+        "aactivity": ""
+      },
+      "6f1e155d-8760-438f-b09c-dc43568da562": {
+        "type": "C",
+        "title": "The extended components definition shall use the existing CC components, families, classes, and methodology as a model for presentation.",
+        "note": "",
+        "aactivity": ""
+      },
+      "915f8e10-3a88-45e8-8645-cd707380b502": {
+        "type": "C",
+        "title": "The extended components shall consist of measurable and objective elements such that conformance or nonconformance to these elements may be demonstrated.",
+        "note": "",
+        "aactivity": ""
+      },
+      "069c0823-ebf2-46c3-8b44-654da986aa48": {
+        "type": "C",
+        "title": "The ST introduction shall contain an ST reference, a TOE reference, a TOE overview and a TOE description.",
+        "note": "",
+        "aactivity": ""
+      },
+      "00027c5d-c110-4c69-bd6e-ad182de16bbe": {
+        "type": "D",
+        "title": "The developer shall provide an ST introduction.",
+        "note": "",
+        "aactivity": ""
+      },
+      "02abb315-c7bb-4222-9209-a7f324f9556b": {
+        "type": "E",
+        "title": "The evaluator shall confirm that the information provided meets all requirements for content and presentation of evidence.",
+        "note": "",
+        "aactivity": ""
+      },
+      "77b33f10-2f9a-43df-b396-ac9958b55978": {
+        "type": "C",
+        "title": "The ST reference shall uniquely identify the ST.",
+        "note": "",
+        "aactivity": ""
+      },
+      "5613e6d2-f3ca-4acf-81f7-257312d7fc0b": {
+        "type": "E",
+        "title": "The evaluator shall confirm that the TOE reference, the TOE overview, and the TOE description are consistent with each other.",
+        "note": "",
+        "aactivity": ""
+      },
+      "29d2b8c2-3446-4b37-9ca9-25dec2015c03": {
+        "type": "C",
+        "title": "The TOE reference shall uniquely identify the TOE.",
+        "note": "",
+        "aactivity": ""
+      },
+      "92d70162-67d8-4f1e-9659-5d02c5647ed2": {
+        "type": "C",
+        "title": "The TOE overview shall summarize the usage and major security features of the TOE.",
+        "note": "",
+        "aactivity": ""
+      },
+      "890f870e-964b-46ce-b997-44270962f509": {
+        "type": "C",
+        "title": "The TOE overview shall identify the TOE type.",
+        "note": "",
+        "aactivity": ""
+      },
+      "9e383688-6e08-4595-aa64-cb63479ef4c7": {
+        "type": "C",
+        "title": "The TOE overview shall identify any non-TOE hardware/software/firmware required by the TOE.",
+        "note": "",
+        "aactivity": ""
+      },
+      "4a06f4f3-5ca3-42a3-9a1d-3857990d87ce": {
+        "type": "C",
+        "title": "For a multi-assurance ST, the TOE overview shall describe the TSF organization in terms of the sub-TSFs defined in the PP-Configuration the ST claims conformance to.",
+        "note": "",
+        "aactivity": ""
+      },
+      "636b3740-385f-4181-a44b-d804d2a78ea8": {
+        "type": "C",
+        "title": "The TOE description shall describe the physical scope of the TOE.",
+        "note": "",
+        "aactivity": ""
+      },
+      "e818ee31-6256-496f-8696-bba4e65fc522": {
+        "type": "C",
+        "title": "The TOE description shall describe the logical scope of the TOE.",
+        "note": "",
+        "aactivity": ""
+      },
+      "a299a370-4fd9-4554-8ae4-1f9c459feba7": {
+        "type": "C",
+        "title": "The statement of security objectives shall describe the security objectives for the operational environment.",
+        "note": "",
+        "aactivity": ""
+      },
+      "52805936-f547-4018-9f72-fd7680a2ff58": {
+        "type": "D",
+        "title": "The developer shall provide a statement of security objectives for the operational environment.",
+        "note": "",
+        "aactivity": ""
+      },
+      "c1372e6a-b29f-4f9b-81b2-10ee0a91f294": {
+        "type": "E",
+        "title": "The evaluator shall confirm that the information provided meets all requirements for content and presentation of evidence.",
+        "note": "",
+        "aactivity": ""
+      },
+      "1dc17b75-5408-41c4-8f77-7536f8ef3a76": {
+        "type": "C",
+        "title": "The security objectives rationale shall trace each security objective for the operational environment back to threats countered by that security objective, OSPs enforced by that security objective, and assumptions upheld by that security objective.",
+        "note": "",
+        "aactivity": ""
+      },
+      "84224ece-e512-450f-ae5d-bda8b75d8969": {
+        "type": "D",
+        "title": "The developer shall provide a security objectives rationale for the operational environment.",
+        "note": "",
+        "aactivity": ""
+      },
+      "0bc283c9-3afe-453a-a0be-7baf67f5fee7": {
+        "type": "C",
+        "title": "The security objectives rationale shall demonstrate that the security objectives for the operational environment uphold all assumptions.",
+        "note": "",
+        "aactivity": ""
+      },
+      "6f638343-2017-4a6e-8acf-a46ad20adf96": {
+        "type": "C",
+        "title": "The statement of security requirements shall describe the SFRs and the SARs.",
+        "note": "",
+        "aactivity": ""
+      },
+      "a0cd0e87-acbb-4ad9-98bc-3ea9223f21a0": {
+        "type": "D",
+        "title": "The developer shall provide a statement of security requirements.",
+        "note": "",
+        "aactivity": ""
+      },
+      "37c7a0b8-19a0-49f9-a8e0-646f66397c49": {
+        "type": "E",
+        "title": "The evaluator shall confirm that the information provided meets all requirements for content and presentation of evidence.",
+        "note": "",
+        "aactivity": ""
+      },
+      "75832874-d6fa-48c7-95c8-c22545f18fca": {
+        "type": "C",
+        "title": "For a single-assurance ST, the statement of security requirements shall define the global set of SARs that apply to the entire TOE. The sets of SARs shall be consistent with the PPs or PP-Configuration to which the ST claims conformance.",
+        "note": "",
+        "aactivity": ""
+      },
+      "2e6cd88d-d798-4d22-93aa-bc003ba42f59": {
+        "type": "D",
+        "title": "The developer shall provide a security requirements rationale.",
+        "note": "",
+        "aactivity": ""
+      },
+      "18888829-1014-4cb5-b448-72abf055edd2": {
+        "type": "C",
+        "title": "For a multi-assurance ST, the statement of security requirements shall define the global set of SARs that apply to the entire TOE and the sets of SARs that apply to each sub-TSF. The sets of SARs shall be consistent with the multi-assurance PP-Configuration to which the ST claims conformance.",
+        "note": "",
+        "aactivity": ""
+      },
+      "3d696f96-57c8-4c73-bd31-9059422b5d95": {
+        "type": "C",
+        "title": "All subjects, objects, operations, security attributes, external entities and other terms that are used in the SFRs and the SARs shall be defined.",
+        "note": "",
+        "aactivity": ""
+      },
+      "d4e257d6-ed26-4b3e-b18a-1f1f135fdd4a": {
+        "type": "C",
+        "title": "The statement of security requirements shall identify all operations on the security requirements.",
+        "note": "",
+        "aactivity": ""
+      },
+      "dcb9bfb8-f441-468d-a170-5e82346d5e19": {
+        "type": "C",
+        "title": "All operations shall be performed correctly.",
+        "note": "",
+        "aactivity": ""
+      },
+      "15498df5-93e3-4bb8-a9cf-c0270eb7753e": {
+        "type": "C",
+        "title": "Each dependency of the security requirements shall either be satisfied, or the security requirements rationale shall justify the dependency not being satisfied.",
+        "note": "",
+        "aactivity": ""
+      },
+      "bb5c07f3-b116-493a-9893-4e0bc52c0107": {
+        "type": "C",
+        "title": "The security requirements rationale shall demonstrate that the SFRs (in conjunction with the security objectives for the environment) counter all threats for the TOE.",
+        "note": "",
+        "aactivity": ""
+      },
+      "08147402-cb0c-4e67-a462-73e8803b22de": {
+        "type": "C",
+        "title": "The security requirements rationale shall demonstrate that the SFRs (in conjunction with the security objectives for the environment) enforce all OSPs.",
+        "note": "",
+        "aactivity": ""
+      },
+      "2c5528be-ad49-476b-9df2-d5df444b1ca1": {
+        "type": "C",
+        "title": "The security requirements rationale shall explain why the SARs were chosen.",
+        "note": "",
+        "aactivity": ""
+      },
+      "e4e9800a-5fdc-432c-aca7-1dfb1e22b7dc": {
+        "type": "C",
+        "title": "The statement of security requirements shall be internally consistent.",
+        "note": "",
+        "aactivity": ""
+      },
+      "acb694f5-b2b4-4928-bfb0-a92bd4dc82a9": {
+        "type": "C",
+        "title": "If the ST defines sets of SARs that expand the sets of SARs of the PPs or PP-Configuration it claims conformance to, the security requirements rationale shall include an assurance rationale that justifies the consistency of the extension and provides a rationale for the disposition of any Evaluation methods and Evaluation activities identified in the conformance statement that are affected by the extension of the sets of SARs",
+        "note": "",
+        "aactivity": ""
+      },
+      "10780db5-4e56-486a-aded-e7cca2011557": {
+        "type": "C",
+        "title": "The TOE summary specification shall describe how the TOE meets each SFR.",
+        "note": "",
+        "aactivity": ""
+      },
+      "7585b817-70a3-45aa-a71d-0721ad56ca52": {
+        "type": "D",
+        "title": "The developer shall provide a TOE summary specification.",
+        "note": "",
+        "aactivity": ""
+      },
+      "d067284e-b0a7-4409-ac4b-d4f0d6aa089c": {
+        "type": "E",
+        "title": "The evaluator shall confirm that the information provided meets all requirements for content and presentation of evidence.",
+        "note": "",
+        "aactivity": ""
+      },
+      "8528e76a-42b2-4637-9c03-673f25bafbf8": {
+        "type": "E",
+        "title": "The evaluator shall confirm that the TOE summary specification is consistent with the TOE overview and the TOE description.",
+        "note": "",
+        "aactivity": ""
+      },
+      "5520c4de-6cfc-4211-bc91-b9293d41876a": {
+        "type": "D",
+        "title": "The developer shall provide a description in the TSS of how timely\n\t\t\t\t\tsecurity updates are made to the TOE.",
+        "note": "",
+        "aactivity": ""
+      },
+      "aa17820c-1d94-4d42-ad60-e3cb7070ff32": {
+        "type": "D",
+        "title": "\n\t\t\t\t\tThe developer shall provide a description in the TSS of how users are notified when \n\t\t\t\t\tupdates change security properties or the configuration of the product.\n\t\t\t\t",
+        "note": "",
+        "aactivity": ""
+      },
+      "e4bbbcf2-59c3-4976-8d50-2222b497e326": {
+        "type": "C",
+        "title": "The description shall include the process for creating and deploying\n\t\t\t\tsecurity updates for the TOE software.",
+        "note": "",
+        "aactivity": ""
+      },
+      "8218896f-2da7-40a2-9af1-1ae82a668dfb": {
+        "type": "C",
+        "title": "The description shall express the time window as the length of time, \n\t\t\t\t\tin days, between public disclosure of a vulnerability and the public availability\n\t\t\t\t\tof security updates to the TOE.",
+        "note": "",
+        "aactivity": ""
+      },
+      "6d0b014e-9b65-4587-92fd-27ec79bc4149": {
+        "type": "C",
+        "title": "The description shall include the mechanisms publicly available for\n\t\t\t\t\treporting security issues pertaining to the TOE.",
+        "note": "",
+        "aactivity": ""
+      },
+      "da7d77ed-3fa0-470b-a4f1-cd64d43fa696": {
+        "type": "E",
+        "title": "The evaluator shall confirm that the information provided meets all\n\t\t\t\t\trequirements for content and presentation of evidence.",
+        "note": "",
+        "aactivity": ""
+      },
+      "38c9f417-26b1-4f1b-8f28-cf8e502a04f1": {
+        "type": "D",
+        "title": "The developer shall provide the TOE for testing.",
+        "note": "",
+        "aactivity": ""
+      },
+      "5db9853e-b8a2-4402-83c3-484aa07c9f68": {
+        "type": "C",
+        "title": "The TOE shall be suitable for testing.",
+        "note": "",
+        "aactivity": ""
+      },
+      "c0dda7c7-5ec4-4567-a34d-c42346f2b3b6": {
+        "type": "E",
+        "title": "The evaluator shall confirm that the information provided meets all\n\t\t\t\t\trequirements for content and presentation of evidence.",
+        "note": "",
+        "aactivity": ""
+      },
+      "9096f6cc-cc4c-4398-9a69-016e89b6fcb3": {
+        "type": "E",
+        "title": "The evaluator shall test a subset of the TSF to confirm\n\t\t\t\t\tthat the TSF operates as specified.",
+        "note": "",
+        "aactivity": ""
+      },
+      "fcd430d2-b5e2-4a02-990e-148b06734704": {
+        "type": "D",
+        "title": "The developer shall provide the TOE for testing.",
+        "note": "",
+        "aactivity": ""
+      },
+      "88958e14-e776-440a-bd3f-3fa1fe2195cc": {
+        "type": "C",
+        "title": "The TOE shall be suitable for testing.",
+        "note": "",
+        "aactivity": ""
+      },
+      "51a0b38d-ef2d-4a5d-93d0-8637123024fb": {
+        "type": "E",
+        "title": "The evaluator shall confirm that the information provided meets all requirements\n\t\t\t\t\tfor content and presentation of evidence.",
+        "note": "",
+        "aactivity": ""
+      },
+      "4d2615a0-3231-4be5-b03c-07d1bfc70d3b": {
+        "type": "E",
+        "title": "The evaluator shall perform a search of public domain sources to identify\n\t\t\t\t\tpotential vulnerabilities in the TOE.",
+        "note": "",
+        "aactivity": ""
+      },
+      "81b396e2-9f78-4a85-9890-5f10d3c5bf55": {
+        "type": "E",
+        "title": "The evaluator shall conduct penetration testing, based on the identified\n\t\t\t\t\tpotential vulnerabilities, to determine that the TOE is resistant to\n\t\t\t\t\tattacks performed by an attacker possessing Basic attack potential.",
+        "note": "",
+        "aactivity": ""
+      }
+    }
+  },
+  "bibliography": {
+    "cc": {},
+    "entries": []
+  },
+  "entropyAppendix": {
+    "xmlContent": "",
+    "xmlTagMeta": {
+      "tagName": "appendix",
+      "attributes": {
+        "title": "Entropy Documentation and Assessment",
+        "id": "entropyappendix"
+      }
+    }
+  },
+  "equivGuidelinesAppendix": {
+    "xmlContent": "",
+    "xmlTagMeta": {
+      "tagName": "appendix",
+      "attributes": {
+        "id": "equiv",
+        "title": "Application Software Equivalency Guidelines"
+      }
+    }
+  },
+  "satisfiedReqsAppendix": {
+    "xmlContent": "",
+    "xmlTagMeta": {}
+  },
+  "validationGuidelinesAppendix": {
+    "xmlContent": "",
+    "xmlTagMeta": {}
+  },
+  "vectorAppendix": {
+    "xmlContent": "",
+    "xmlTagMeta": {}
+  },
+  "acknowledgementsAppendix": {
+    "xmlContent": "",
+    "xmlTagMeta": {}
+  },
+  "includePackage": {
+    "packages": []
+  },
+  "modules": {
+    "xml": ""
+  },
+  "ppPreference": {
+    "xml": ""
+  }
+}

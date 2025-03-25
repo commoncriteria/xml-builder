@@ -5,6 +5,7 @@ import {useDispatch, useSelector} from "react-redux";
 import {CREATE_ACCORDION} from "../../reducers/accordionPaneSlice.js";
 import Modal from "./Modal.jsx";
 import {FormControl, InputLabel, MenuItem, Select, TextField} from "@mui/material";
+import SecurityComponents from "../../utils/securityComponents.jsx";
 
 /**
  * The NewAccordion class that displays the option to add a new accordion using a modal
@@ -19,6 +20,7 @@ function NewAccordion(props) {
     };
 
     // Constants
+    const { handleSnackBarError, handleSnackBarSuccess, handleSnackbarTextUpdates } = SecurityComponents
     let [disabled, setDisabled] = React.useState(true)
     let [sectionName, setSectionName] = React.useState('')
     let [selectedSection, setSelectedSection] = React.useState('')
@@ -57,6 +59,7 @@ function NewAccordion(props) {
             }
         } catch (e) {
             console.log(e)
+            handleSnackBarError(e)
         }
     }, [accordions]);
 
@@ -77,6 +80,9 @@ function NewAccordion(props) {
             resetState()
             // Close the dialog
             props.handleOpen()
+
+            // Update snackbar
+            handleSnackBarSuccess("New Section Successfully Added")
         }
     }
     const handleSectionName = (event) => {
@@ -115,14 +121,15 @@ function NewAccordion(props) {
                        <div className="w-[350px] px-1">
                            <div className="pt-4">
                                <FormControl fullWidth >
-                                   <TextField required
-                                              id="outlined-required"
-                                              label="Section Name"
-                                              key={sectionName}
-                                              defaultValue={sectionName}
-                                              onBlur={handleSectionName}
-                                              inputProps={{style: {fontSize: 14}}}
-                                              InputLabelProps={{style: {fontSize: 14}}}
+                                   <TextField
+                                       required
+                                       id="outlined-required"
+                                       label="Section Name"
+                                       key={sectionName}
+                                       defaultValue={sectionName}
+                                       onBlur={(event) => handleSnackbarTextUpdates(handleSectionName, event)}
+                                       inputProps={{style: {fontSize: 14}}}
+                                       InputLabelProps={{style: {fontSize: 14}}}
                                    />
                                </FormControl>
                            </div>

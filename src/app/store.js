@@ -27,6 +27,9 @@ import stylingReducer from "../reducers/styling.js"
 import tabularizeReducer from '../reducers/SFRs/tabularizeUI.js'
 import progressBarReducer from "../reducers/progressSlice.js"
 import preferenceReducer from '../reducers/ppPreferenceSlice.js';
+import conformanceClaimsReducer from "../reducers/conformanceClaimsSlice.js"
+import distributedTOE from "../reducers/distributedToeSlice.js"
+import compliantTargetsOfEvaluationReducer from "../reducers/compliantTargetsOfEvaluationSlice.js"
 
 const persistConfig = {
     key: 'root',
@@ -60,7 +63,10 @@ const reducer = combineReducers({
     ppPreference: preferenceReducer,
     styling: stylingReducer,
     tabularize: tabularizeReducer,
-    progressBar: progressBarReducer
+    progressBar: progressBarReducer,
+    conformanceClaims: conformanceClaimsReducer,
+    distributedTOE: distributedTOE,
+    compliantTargetsOfEvaluation: compliantTargetsOfEvaluationReducer
 });
 
 const persistedReducer = persistReducer(persistConfig, reducer)

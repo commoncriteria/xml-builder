@@ -1,10 +1,11 @@
 // Imports
+import '../components.css';
 import PropTypes from "prop-types";
 import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Card, CardBody, CardFooter } from "@material-tailwind/react";
 import { IconButton, Tooltip } from "@mui/material";
-import { COLLAPSE_THREAT_SECTION, CREATE_THREAT_TERM, DELETE_OBJECTIVE_FROM_THREAT_USING_UUID, DELETE_THREAT_SECTION, UPDATE_THREAT_SECTION_DEFINITION, UPDATE_THREAT_SECTION_TITLE } from "../../../reducers/threatsSlice.js";
+import { COLLAPSE_THREAT_SECTION, CREATE_THREAT_TERM, DELETE_OBJECTIVE_FROM_THREAT_USING_UUID, DELETE_SFR_FROM_THREAT_USING_UUID, DELETE_THREAT_SECTION, UPDATE_THREAT_SECTION_DEFINITION, UPDATE_THREAT_SECTION_TITLE } from "../../../reducers/threatsSlice.js";
 import { DELETE_ACCORDION_FORM_ITEM } from "../../../reducers/accordionPaneSlice.js";
 import { COLLAPSE_OBJECTIVE_SECTION, CREATE_OBJECTIVE_TERM, DELETE_OBJECTIVE_SECTION, UPDATE_OBJECTIVE_SECTION_DEFINITION, UPDATE_OBJECTIVE_SECTION_TITLE } from "../../../reducers/objectivesSlice.js";
 import { COLLAPSE_SAR_SECTION, CREATE_SAR_COMPONENT, DELETE_SAR, UPDATE_SAR_SECTION_SUMMARY, UPDATE_SAR_SECTION_TITLE } from "../../../reducers/sarsSlice.js";
@@ -14,11 +15,13 @@ import AddCircleRoundedIcon from "@mui/icons-material/AddCircleRounded";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteForeverRoundedIcon from "@mui/icons-material/DeleteForeverRounded";
 import RemoveIcon from "@mui/icons-material/Remove";
+import SecurityComponents from "../../../utils/securityComponents.jsx";
+import ExtendedComponent from "./sfrComponents/extendedComponent/ExtendedComponent.jsx";
 import Definition from "./Definition.jsx";
 import SarSections from "./sarComponents/SarSections.jsx";
 import SfrSections from "./sfrComponents/SfrSections.jsx";
-import TextEditor from "../TextEditor.jsx";
-import '../components.css';
+import TipTapEditor from "../TipTapEditor.jsx";
+import DeleteConfirmation from '../../modalComponents/DeleteConfirmation.jsx';
 
 /**
  * The SecurityContent component
@@ -42,11 +45,13 @@ function SecurityContent(props) {
     }
 
     // Constants
+    const { handleSnackBarError, handleSnackBarSuccess } = SecurityComponents
     const dispatch = useDispatch()
     const { primary, secondary, icons } = useSelector((state) => state.styling);
     const sarComponents = useSelector((state) => state.sars.components);
     const [newSarComponent, setNewSarComponent] = useState("")
     const [newSfrComponent, setNewSfrComponent] = useState("")
+    const [openDeleteDialog, setDeleteDialog] = useState(false);
 
     // Methods
     const handleNewSfrComponent = (componentUUID) => {
@@ -100,61 +105,92 @@ function SecurityContent(props) {
         }
     }
     const deleteItemsList = async() => {
-        switch (props.contentType) {
-            case "threats": {
-                await dispatch(DELETE_ACCORDION_FORM_ITEM({accordionUUID: props.accordionUUID, uuid: props.uuid}))
-                await dispatch(DELETE_THREAT_SECTION({title: props.title, uuid: props.uuid}))
-                break;
+        const { contentType, accordionUUID, uuid, title } = props
+
+        try {
+            switch (contentType) {
+                case "threats": {
+                    await dispatch(DELETE_ACCORDION_FORM_ITEM({accordionUUID: accordionUUID, uuid: uuid}))
+                    await dispatch(DELETE_THREAT_SECTION({title: title, uuid: uuid}))
+                    handleSnackBarSuccess("Section Successfully Removed")
+                    break;
+                }
+                case "objectives": {
+                    const { item } = props
+                    await dispatch(DELETE_ACCORDION_FORM_ITEM({accordionUUID: accordionUUID, uuid: uuid}))
+                    Object.keys(item.terms).map(async (key) => {
+                        await dispatch(DELETE_OBJECTIVE_FROM_THREAT_USING_UUID({objectiveUUID: key}))
+                    })
+                    await dispatch(DELETE_OBJECTIVE_SECTION({title: title, uuid: uuid}))
+                    handleSnackBarSuccess("Objective Section Successfully Removed")
+                    break;
+                }
+                case "sfrs": {
+                    const { sfrList } = props
+                    await dispatch(DELETE_ACCORDION_FORM_ITEM({accordionUUID: accordionUUID, uuid: uuid}))
+                    if (sfrList && Object.entries(sfrList).length > 0) {
+                        Object.keys(sfrList).map(async (key) => {
+                            await dispatch(DELETE_SFR_FROM_THREAT_USING_UUID({sfrUUID: key}))
+                        })
+                    }
+                    await dispatch(DELETE_SFR({title: title, uuid: uuid}))
+                    await dispatch(DELETE_SFR_SECTION({sfrUUID: uuid}))
+                    handleSnackBarSuccess("SFR Section Successfully Removed")
+                    break;
+                }
+                case "sars": {
+                    await dispatch(DELETE_ACCORDION_FORM_ITEM({accordionUUID: accordionUUID, uuid: uuid}))
+                    await dispatch(DELETE_SAR({sarUUID: uuid}))
+                    handleSnackBarSuccess("SAR Section Successfully Removed")
+                    break;
+                }
+                default:
+                    handleSnackBarError("Error - Section type is not valid, nothing was removed")
+                    break;
             }
-            case "objectives": {
-                await dispatch(DELETE_ACCORDION_FORM_ITEM({accordionUUID: props.accordionUUID, uuid: props.uuid}))
-                Object.keys(props.item.terms).map(async (key) => {
-                    await dispatch(DELETE_OBJECTIVE_FROM_THREAT_USING_UUID({objectiveUUID: key}))
-                })
-                await dispatch(DELETE_OBJECTIVE_SECTION({title: props.title, uuid: props.uuid}))
-                break;
-            }
-            case "sfrs": {
-                await dispatch(DELETE_ACCORDION_FORM_ITEM({accordionUUID: props.accordionUUID, uuid: props.uuid}))
-                await dispatch(DELETE_SFR({title: props.title, uuid: props.uuid}))
-                await dispatch(DELETE_SFR_SECTION({sfrUUID: props.uuid}))
-                break;
-            }
-            case "sars": {
-                await dispatch(DELETE_ACCORDION_FORM_ITEM({accordionUUID: props.accordionUUID, uuid: props.uuid}))
-                await dispatch(DELETE_SAR({sarUUID: props.uuid}))
-                break;
-            }
-            default:
-                break;
+        } catch (e) {
+            console.log(e)
+            handleSnackBarError(e)
         }
     }
     const addHandler = async () => {
-        switch (props.contentType) {
-            case "threats": {
-                await dispatch(CREATE_THREAT_TERM({threatUUID: props.uuid}))
-                break;
-            }
-            case "objectives": {
-                await dispatch(CREATE_OBJECTIVE_TERM({objectiveUUID: props.uuid}))
-                break;
-            }
-            case "sfrs": {
-                let sfrUUID = await dispatch(CREATE_SFR_COMPONENT({sfrUUID: props.uuid})).payload
-                if (sfrUUID) {
-                    handleNewSfrComponent(sfrUUID)
+        const { contentType, uuid } = props
+
+        try {
+            switch (contentType) {
+                case "threats": {
+                    await dispatch(CREATE_THREAT_TERM({threatUUID: uuid}))
+                    handleSnackBarSuccess("Term Successfully Added")
+                    break;
                 }
-                break;
-            }
-            case "sars": {
-                let sarUUID = await dispatch(CREATE_SAR_COMPONENT({sarUUID: props.uuid})).payload
-                if (sarUUID) {
-                    handleNewSarComponent(sarUUID)
+                case "objectives": {
+                    await dispatch(CREATE_OBJECTIVE_TERM({objectiveUUID: uuid}))
+                    handleSnackBarSuccess("Objective Term Successfully Added")
+                    break;
                 }
-                break;
+                case "sfrs": {
+                    let sfrUUID = await dispatch(CREATE_SFR_COMPONENT({sfrUUID: uuid})).payload
+                    if (sfrUUID) {
+                        handleNewSfrComponent(sfrUUID)
+                    }
+                    handleSnackBarSuccess("SFR Component Successfully Added")
+                    break;
+                }
+                case "sars": {
+                    let sarUUID = await dispatch(CREATE_SAR_COMPONENT({sarUUID: uuid})).payload
+                    if (sarUUID) {
+                        handleNewSarComponent(sarUUID)
+                    }
+                    handleSnackBarSuccess("SAR Component Successfully Added")
+                    break;
+                }
+                default:
+                    handleSnackBarError("Error - Term type does not exist. No term added.")
+                    break;
             }
-            default:
-                break;
+        } catch (e) {
+            console.log(e)
+            handleSnackBarError(e)
         }
     }
     const collapseHandler = () => {
@@ -192,7 +228,7 @@ function SecurityContent(props) {
                                   value={props.title} onChange={updateItemTitle}>{props.title}</textarea>
                         <span/>
                         <span/>
-                        <IconButton sx={{marginTop: "-8px"}} onClick={deleteItemsList} variant="contained">
+                        <IconButton sx={{marginTop: "-8px"}} onClick={() => setDeleteDialog(!openDeleteDialog)} variant="contained">
                             <Tooltip title={"Delete Section"} id={props.uuid + "deleteSectionSecurityContentTooltip"}>
                                 <DeleteForeverRoundedIcon htmlColor={ primary } sx={ icons.large }/>
                             </Tooltip>
@@ -216,9 +252,19 @@ function SecurityContent(props) {
                         <CardFooter className="min-w-full m-0 p-0 rounded-b-none border-b-2 border-gray-200 mt-[-20px] rounded-lg">
                             <div className="mx-5 mt-0 mb-3 bg-gray-40" key={props.uuid + "Div"}>
                                 <div className="p-1">
-                                    <TextEditor className="w-full" uuid={props.uuid} text={props.definition}
-                                                contentType={"term"} handleTextUpdate={updateItemDefinition}/>
+                                    <TipTapEditor
+                                        className="w-full"
+                                        uuid={props.uuid}
+                                        text={props.definition}
+                                        contentType={"term"}
+                                        handleTextUpdate={updateItemDefinition}
+                                    />
                                 </div>
+                                { props.contentType === "sfrs" &&
+                                    <div className="p-1 mb-[-8px]">
+                                        <ExtendedComponent uuid={props.uuid}/>
+                                    </div>
+                                }
                                 {
                                     props.contentType !== "sfrs" && props.contentType !== "sars" ?
                                         <div className="p-0">
@@ -227,9 +273,19 @@ function SecurityContent(props) {
                                                     <div className="min-w-full m-0 p-0 ">
                                                         {Object.entries(props.item.terms).map(([key, value], index) => {
                                                             return (
-                                                                <Definition key={props.uuid + "Definition-" + key} index={index} accordionUUID={props.accordionUUID}
-                                                                            termUUID={props.uuid} uuid={key} title={value.title} open={value.open}
-                                                                            definition={value.definition} item={value} contentType={props.contentType}/>
+                                                                <Definition
+                                                                    key={props.uuid + "Definition-" + key}
+                                                                    index={index}
+                                                                    accordionUUID={props.accordionUUID}
+                                                                    accordionTitle={props.title}
+                                                                    termUUID={props.uuid}
+                                                                    uuid={key}
+                                                                    title={value.title}
+                                                                    open={value.open}
+                                                                    definition={value.definition}
+                                                                    item={value}
+                                                                    contentType={props.contentType}
+                                                                />
                                                             )
                                                         })}
                                                     </div>
@@ -296,6 +352,12 @@ function SecurityContent(props) {
                         <div className="m-0 p-0 mt-[-15px]"/>
                 }
             </Card>
+            <DeleteConfirmation
+                title={props.title}
+                open={openDeleteDialog}
+                handleOpen={() => setDeleteDialog(!openDeleteDialog)}
+                handleSubmit={deleteItemsList}
+            />
         </div>
     )
 }

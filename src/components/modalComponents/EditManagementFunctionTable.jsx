@@ -7,6 +7,8 @@ import ApplicationNote from "../editorComponents/securityComponents/sfrComponent
 import Modal from "./Modal.jsx";
 import SfrRequirements from "../editorComponents/securityComponents/sfrComponents/requirements/SfrRequirements.jsx";
 import SfrManagementEvaluationActivity from "../editorComponents/securityComponents/sfrComponents/aActivity/SfrManagementEvaluationActivity.jsx";
+import SecurityComponents from "../../utils/securityComponents.jsx";
+import { deepCopy } from "../../utils/deepCopy.js";
 
 /**
  * The EditManagementFunctionTable class that edits the management function text
@@ -25,8 +27,6 @@ function EditManagementFunctionTable(props) {
         component: PropTypes.object.isRequired,
         elementUUID: PropTypes.string.isRequired,
         elementTitle: PropTypes.string.isRequired,
-        getElementMaps: PropTypes.func.isRequired,
-        allSfrOptions: PropTypes.object.isRequired,
         getSelectablesMaps: PropTypes.func.isRequired,
         getElementValuesByType: PropTypes.func.isRequired,
         getSelectionBasedArrayByType: PropTypes.func.isRequired,
@@ -35,21 +35,25 @@ function EditManagementFunctionTable(props) {
     };
 
     // Constants
+    const { handleSnackBarSuccess } = SecurityComponents
     const dispatch = useDispatch();
 
     // Helper Methods
     const initializeManagementFunctions = (type) => {
-        let managementFunctions = JSON.parse(JSON.stringify(props.getElementValuesByType("managementFunctions")))
+        let managementFunctions = deepCopy(props.getElementValuesByType("managementFunctions"))
         let row = managementFunctions.rows[props.rowIndex]
         if (!row.hasOwnProperty(type)) {
             if (type === "evaluationActivity") {
                 row.evaluationActivity = {
+                    isNoTest: false,
+                    noTest: "",
                     introduction: "",
                     tss: "",
                     guidance: "",
                     testIntroduction: "",
                     testClosing: "",
-                    testList: []
+                    testList: [],
+                    refIds: []
                 }
             } else {
                 row[type] = []
@@ -59,39 +63,111 @@ function EditManagementFunctionTable(props) {
         return managementFunctions
     }
     const getCurrentManagementFunction = (type) => {
-        const currentManagementFunction = JSON.parse(JSON.stringify(
-            dispatch(GET_SFR_ELEMENT_VALUES_FOR_MANAGEMENT_FUNCTION({
-                sfrUUID: props.sfrUUID,
-                componentUUID: props.componentUUID,
-                elementUUID: props.elementUUID,
-                rowIndex: props.rowIndex
-            })).payload.element[type]))
-        return currentManagementFunction
-    }
+        const { sfrUUID, componentUUID, elementUUID, rowIndex } = props;
+
+        const payload = deepCopy(dispatch(GET_SFR_ELEMENT_VALUES_FOR_MANAGEMENT_FUNCTION({
+            sfrUUID,
+            componentUUID,
+            elementUUID,
+            rowIndex
+        })).payload.element);
+
+        return type ? payload[type] : payload;
+    };
     const updateManagementFunctions = (managementFunctions) => {
         let itemMap = {
             managementFunctions: managementFunctions
         }
         props.updateSfrSectionElement(props.elementUUID, props.componentUUID, itemMap)
     }
-    const updateApplicationNote = (event, title, index) => {
+    const updateApplicationNote = (event, type, index) => {
+        const { rowIndex } = props
         let managementFunctions = initializeManagementFunctions("note");
-        let note = managementFunctions.rows[props.rowIndex].note
+        let note = managementFunctions.rows[rowIndex].note
 
-        if (JSON.stringify(note[index]) !== JSON.stringify(event)) {
-            note[index] = event
+        // Update note
+        if (type === "note") {
+            if (!note[index].hasOwnProperty("note")) {
+                note[index].note = ""
+            }
+
+            if (JSON.stringify(note[index].note) !== JSON.stringify(event)) {
+                note[index].note = event
+                updateManagementFunctions(managementFunctions)
+            }
+        }
+        // Update refIds
+        else if (type === "refIds") {
+            if (!note[index].hasOwnProperty("refIds")) {
+                note[index].refIds = []
+            }
+
+            if (JSON.stringify(note[index].refIds) !== JSON.stringify(event)) {
+                note[index].refIds = event
+                updateManagementFunctions(managementFunctions)
+            }
+        }
+    }
+    const updateEaRefIds = (event) => {
+        const { rowIndex } = props
+        let managementFunctions = initializeManagementFunctions("evaluationActivity");
+        let evaluationActivity = managementFunctions.rows[rowIndex].evaluationActivity
+
+        // Update refIds
+        if (!evaluationActivity.hasOwnProperty("refIds")) {
+            evaluationActivity.refIds = []
+        }
+
+        if (JSON.stringify(evaluationActivity.refIds) !== JSON.stringify(event)) {
+            evaluationActivity.refIds = event
             updateManagementFunctions(managementFunctions)
+        }
+    }
+    const updateRefIds = (data) => {
+        const { event, index, type } = data
+        if (event && event.length > 1) {
+            event.sort((a, b) => {
+                const lowerA = a.toLowerCase();
+                const lowerB = b.toLowerCase();
+
+                // Sort with lowercase sorting
+                if (lowerA < lowerB) {
+                    return -1;
+                }
+                if (lowerA > lowerB) {
+                    return 1;
+                }
+                return 0;
+            });
+        }
+
+        // Update application note
+        if (type && type === "note") {
+            updateApplicationNote(event, "refIds", index)
+        }
+        // Update evaluation activity
+        else if (type && type === "aactivity") {
+            updateEaRefIds(event)
         }
     }
     const addApplicationNote = () => {
         let managementFunctions = initializeManagementFunctions("note");
-        managementFunctions.rows[props.rowIndex].note.push("")
+        managementFunctions.rows[props.rowIndex].note.push({
+            note: "",
+            refIds: []
+        })
         updateManagementFunctions(managementFunctions)
+
+        // Update snackbar
+        handleSnackBarSuccess("Application Note Successfully Added")
     }
     const deleteApplicationNote = (index) => {
         let managementFunctions = initializeManagementFunctions("note");
         managementFunctions.rows[props.rowIndex].note.splice(index, 1)
         updateManagementFunctions(managementFunctions)
+
+        // Update snackbar
+        handleSnackBarSuccess("Application Note Successfully Removed")
     }
 
     // Return Method
@@ -106,8 +182,6 @@ function EditManagementFunctionTable(props) {
                         component={props.component}
                         elementUUID={props.elementUUID}
                         elementTitle={props.elementTitle}
-                        getElementMaps={props.getElementMaps}
-                        allSfrOptions={props.allSfrOptions}
                         getSelectablesMaps={props.getSelectablesMaps}
                         getElementValuesByType={props.getElementValuesByType}
                         getSelectionBasedArrayByType={props.getSelectionBasedArrayByType}
@@ -122,6 +196,7 @@ function EditManagementFunctionTable(props) {
                     <ApplicationNote
                         isManagementFunction={true}
                         updateApplicationNote={updateApplicationNote}
+                        updateRefIds={updateRefIds}
                         deleteApplicationNote={deleteApplicationNote}
                         addApplicationNote={addApplicationNote}
                         getCurrentManagementFunction={getCurrentManagementFunction}
@@ -130,13 +205,14 @@ function EditManagementFunctionTable(props) {
                     <SfrManagementEvaluationActivity
                         sfrUUID={props.sfrUUID}
                         componentUUID={props.componentUUID}
+                        component={props.component}
                         elementUUID={props.elementUUID}
                         elementTitle={props.elementTitle}
                         rowIndex={props.rowIndex}
-                        getElementMaps={props.getElementMaps}
                         initializeManagementFunctions={initializeManagementFunctions}
                         getCurrentManagementFunction={getCurrentManagementFunction}
                         updateManagementFunctions={updateManagementFunctions}
+                        updateRefIds={updateRefIds}
                         getElementValuesByType={props.getElementValuesByType}
                     />
                 </div>
