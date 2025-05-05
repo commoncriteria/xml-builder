@@ -12,6 +12,7 @@ import SfrTest from "./SfrTest.jsx";
 import TipTapEditor from "../../../TipTapEditor.jsx";
 import SecurityComponents from "../../../../../utils/securityComponents.jsx";
 import { deepCopy } from "../../../../../utils/deepCopy.js";
+import { v4 as uuidv4 } from 'uuid';
 
 /**
  * The SfrTestList class that displays the evaluation activity test list for specified components/elements
@@ -34,12 +35,16 @@ function SfrTestList(props) {
         updateEvaluationActivities: PropTypes.func,
         updateManagementFunctions: PropTypes.func,
         getElementValuesByType: PropTypes.func,
+        isNested: PropTypes.bool,
+        handleNewNestedTestList: PropTypes.func.isRequired,
+        testListUUID: PropTypes.string,
+        initialIndex: PropTypes.number,
     };
 
     // Constants
     const { handleSnackBarError, handleSnackBarSuccess } = SecurityComponents
     const { primary, icons } = useSelector((state) => state.styling);
-    const [collapse, setCollapse] = useState(true)
+    const [collapse, setCollapse] = useState(false)
     const evaluationActivities = useSelector((state) => state.evaluationActivities)
 
     // Methods
@@ -54,6 +59,7 @@ function SfrTestList(props) {
                     testListItem.tests = []
                 }
                 testListItem.tests.push({
+                    uuid: uuidv4(),
                     dependencies: [],
                     objective: ""
                 })
@@ -70,6 +76,7 @@ function SfrTestList(props) {
                     testListItem.tests = []
                 }
                 testListItem.tests.push({
+                    uuid: uuidv4(),
                     dependencies: [],
                     objective: ""
                 })
@@ -85,6 +92,45 @@ function SfrTestList(props) {
             handleSnackBarError(e)
         }
     }
+    const handleNewNestedTest = () => {
+        try {
+            const { isManagementFunction, activities, uuid, testListIndex, initialIndex, rowIndex } = props;
+    
+            const newNestedTest = {
+                uuid: uuidv4(),
+                dependencies: [],
+                objective: "",
+                nestedTests: []
+            };
+    
+            if (isManagementFunction) {
+                let managementFunctions = props.getElementValuesByType("managementFunctions");
+                let parentTest = managementFunctions.rows[rowIndex].evaluationActivity.testList[testListIndex].tests[initialIndex];
+    
+                if (!Array.isArray(parentTest.nestedTests)) {
+                    parentTest.nestedTests = [];
+                }
+    
+                parentTest.nestedTests.push(newNestedTest);
+                props.updateManagementFunctions(managementFunctions);
+            } else if (activities && uuid && uuid !== "") {
+                let activitiesCopy = deepCopy(activities);
+                let parentTest = activitiesCopy[uuid].testList[testListIndex].tests[initialIndex];
+    
+                if (!Array.isArray(parentTest.nestedTests)) {
+                    parentTest.nestedTests = [];
+                }
+    
+                parentTest.nestedTests.push(newNestedTest);
+                props.updateEvaluationActivities(activitiesCopy);
+            }
+    
+            handleSnackBarSuccess("New Nested Test Successfully Added");
+        } catch (e) {
+            console.error(e);
+            handleSnackBarError("Failed to add nested test");
+        }
+    };    
     const handleTextUpdate = (event, type, index, uuid) => {
         try {
             const { activities, testListIndex } = props
@@ -108,35 +154,61 @@ function SfrTestList(props) {
             handleSnackBarError(e)
         }
     }
-    const handleDeleteTestList = (index) => {
+    const handleDeleteTestList = () => {
         try {
-            const { uuid, activities } = props
-            if (props.isManagementFunction) {
-                let managementFunctions = props.getElementValuesByType("managementFunctions")
-                let testList = managementFunctions.rows[props.rowIndex].evaluationActivity.testList
-                testList.splice(index, 1)
-
-                // Update management functions
-                props.updateManagementFunctions(managementFunctions)
-
-                // Update snackbar
-                handleSnackBarSuccess("Test List Successfully Deleted")
-            } else if (props.uuid && props.uuid !== "" && props.activities && props.activities.hasOwnProperty(props.uuid)) {
-                let activitiesCopy = deepCopy(activities)
-                let testList = activitiesCopy[uuid].testList
-                testList.splice(index, 1)
-
-                // Update evaluation activities
-                props.updateEvaluationActivities(activitiesCopy)
-
-                // Update snackbar
-                handleSnackBarSuccess("Test List Successfully Deleted")
+            const { uuid, activities, isManagementFunction, rowIndex, testListUUID } = props;
+    
+            const deleteTestListByUUID = (testListArray, targetUUID) => {
+                for (let i = 0; i < testListArray.length; i++) {
+                    const testList = testListArray[i];
+    
+                    // Top-level match = remove the testList itself
+                    if (testList.testListUUID === targetUUID) {
+                        testListArray.splice(i, 1);
+                        return true;
+                    }
+    
+                    for (const test of testList.tests) {
+                        if (test.nestedTests && test.nestedTests.length > 0) {
+                            // Check for nested testListUUID match
+                            const originalLength = test.nestedTests.length;
+                            test.nestedTests = test.nestedTests.filter(nested => nested.testListUUID !== targetUUID);
+                            if (test.nestedTests.length < originalLength) return true;
+    
+                            const found = deleteTestListByUUID([{ tests: test.nestedTests }], targetUUID);
+                            if (found) return true;
+                        }
+                    }
+                }
+                return false;
+            };
+    
+            if (isManagementFunction) {
+                let managementFunctions = props.getElementValuesByType("managementFunctions");
+                let testLists = managementFunctions.rows[rowIndex].evaluationActivity.testList;
+    
+                if (deleteTestListByUUID(testLists, testListUUID)) {
+                    props.updateManagementFunctions(managementFunctions);
+                    handleSnackBarSuccess("Test List Successfully Deleted");
+                } else {
+                    handleSnackBarError("Test List not found");
+                }
+            } else if (uuid && activities?.hasOwnProperty(uuid)) {
+                let activitiesCopy = deepCopy(activities);
+                let testLists = activitiesCopy[uuid].testList;
+    
+                if (deleteTestListByUUID(testLists, testListUUID)) {
+                    props.updateEvaluationActivities(activitiesCopy);
+                    handleSnackBarSuccess("Test List Successfully Deleted");
+                } else {
+                    handleSnackBarError("Test List not found");
+                }
             }
         } catch (e) {
-            console.log(e)
-            handleSnackBarError(e)
+            console.error(e);
+            handleSnackBarError("Failed to delete test list");
         }
-    }
+    };
     const collapseHandler = () => {
         setCollapse(!collapse)
     }
@@ -151,16 +223,16 @@ function SfrTestList(props) {
                          <span className="flex justify-stretch min-w-full">
                              <div className="flex justify-center w-full pl-4">
                                  <label className="resize-none font-bold text-[13px] p-0 m-0 text-secondary pr-1 mt-[6px]">
-                                     {`Test List ${(props.testListIndex + 1)}`}
+                                    {props.isNested ? `Test List 1`  : `Test List ${(props.testListIndex + 1)}`}
                                  </label>
                                  <IconButton
                                      variant="contained"
                                      sx={{marginTop: "-8px", margin: 0, padding: 0}}
-                                     onClick={() => {handleDeleteTestList(props.testListIndex)}}
+                                    onClick={() => {handleDeleteTestList()}}
                                  >
                                      <Tooltip
-                                         title={`Delete Test ${(props.testListIndex + 1)}`}
-                                         id={"deleteTestTooltip" + (props.testListIndex + 1)}
+                                        title={props.isNested ? `Delete Test List 1` : `Delete Test List ${props.testListIndex + 1}`}
+                                        id={props.isNested ? `deleteTestTooltip-Test-List-1` : `deleteTestTooltip-Test-List-${props.testListIndex + 1}`}
                                      >
                                          <DeleteForeverRoundedIcon htmlColor={ primary } sx={ icons.small }/>
                                      </Tooltip>
@@ -174,8 +246,8 @@ function SfrTestList(props) {
                                     onClick={collapseHandler}
                                 >
                                     <Tooltip
-                                        title={`${(collapse ? "Collapse " : "Expand ") + `Test List ${(props.testListIndex + 1)}`}`}
-                                        id={(collapse ? "collapse" : "expand") + "TestListTooltip" + (props.testListIndex + 1)}
+                                        title={props.isNested ? `${collapse ? "Collapse " : "Expand "} Test List 1` : `${collapse ? "Collapse " : "Expand "} Test List ${(props.testListIndex + 1)}`}
+                                        id={props.isNested ? `${collapse ? "collapse" : "expand"}TestListTooltip-1` : `${collapse ? "collapse" : "expand"}TestListTooltip-${props.testListIndex + 1}`}
                                     >
                                         {
                                             collapse ?
@@ -213,6 +285,7 @@ function SfrTestList(props) {
                                                     uuid={props.uuid}
                                                     test={test ? deepCopy(test) : {}}
                                                     testListIndex={props.testListIndex}
+                                                    testListUUID={props.testListUUID}
                                                     index={index}
                                                     dependencyMenuOptions={props.dependencyDropdown}
                                                     isManagementFunction={props.isManagementFunction}
@@ -220,6 +293,9 @@ function SfrTestList(props) {
                                                     updateManagementFunctions={props.updateManagementFunctions}
                                                     updateEvaluationActivities={props.updateEvaluationActivities}
                                                     getElementValuesByType={props.getElementValuesByType}
+                                                    isNested={props.isNested ? props.isNested : (test && test.nestedTests && test.nestedTests.length > 0)}
+                                                    handleNewNestedTestList={props.handleNewNestedTestList}
+                                                    testUUID={test.uuid}
                                                 />)
                                             })
                                         }
@@ -227,10 +303,11 @@ function SfrTestList(props) {
                                     :
                                     null
                                 }
+                                
                             </div>
                             <div className="border-t-2 border-gray-200 m-0 p-0 mx-[-16px] mt-[-4px]">
                                 <div className="w-full p-1 justify-items-center">
-                                    <IconButton sx={{marginBottom: "-8px"}} key={"NewTestButton"} onClick={handleNewTest} variant="contained">
+                                    <IconButton sx={{marginBottom: "-8px"}} key={"NewTestButton"} onClick={props.isNested ? handleNewNestedTest : handleNewTest} variant="contained">
                                         <Tooltip title={"Add New Test"} id={"addNewTest"}>
                                             <AddCircleRoundedIcon htmlColor={ primary } sx={ icons.medium }/>
                                         </Tooltip>

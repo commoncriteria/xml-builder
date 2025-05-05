@@ -11,6 +11,7 @@ import SfrNoTestToggle from "./SfrNoTestToggle.jsx";
 import SfrNoTest from "./SfrNoTest.jsx";
 import SecurityComponents from "../../../../../utils/securityComponents.jsx";
 import MultiSelectDropdown from "../../MultiSelectDropdown.jsx";
+import { v4 as uuidv4 } from 'uuid';
 
 /**
  * The SfrManagementEvaluationActivity class that displays the evaluation activity for mangement functions
@@ -68,6 +69,7 @@ function SfrManagementEvaluationActivity(props) {
             activity.testList.push({
                 description: "",
                 tests: [{
+                    uuid: uuidv4(),
                     dependencies: [],
                     objective: ""
                 }]
@@ -183,6 +185,7 @@ function SfrManagementEvaluationActivity(props) {
                         handleNewTestList={handleNewTestList}
                         updateManagementFunctions={props.updateManagementFunctions}
                         getElementValuesByType={props.getElementValuesByType}
+                        handleNewNestedTestList={handleNewNestedTestList}
                     />
                 </div>
             )

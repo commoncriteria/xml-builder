@@ -6,7 +6,7 @@
       "pp": false,
       "mod": false
     },
-    "platformdata": {
+    "platformData": {
       "description": "",
       "platforms": [],
       "xml": ""
@@ -90,7 +90,7 @@
       "0f2f8c02-a71b-4fe7-9e80-da93d1ea70cd": {
         "title": "Security Problem Definition",
         "xmlTagMeta": {
-          "tagName": "sec:Security_Problem_Description",
+          "tagName": "sec:Security_Problem_Definition",
           "attributes": {}
         },
         "formItems": [
@@ -209,10 +209,15 @@
   "terms": {
     "132a214e-ce03-4c48-abe8-5f7d460b5fdf": {
       "title": "Common Criteria Terms",
-      "open": false
+      "open": false,
+      "showAddButton": false
     },
     "2a9beedb-a7ce-4586-b374-1c22ac37c6fa": {
       "title": "Technical Terms",
+      "open": false
+    },
+    "78a497d4-095f-4fa5-888b-c575c53754cc": {
+      "title": "Suppressed Terms",
       "open": false
     },
     "1f3f5182-ffbf-4259-9074-2b8f8942151e": {

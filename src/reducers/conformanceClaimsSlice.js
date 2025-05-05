@@ -4,6 +4,7 @@ const initialState = {
     stConformance: "exact",
     part2Conformance: "conformant",
     part3Conformance: "conformant",
+    cc_errata: "N/A",
     ppClaims: [],
     packageClaims: [],
     evaluationMethods: [],
@@ -49,6 +50,10 @@ export const conformanceClaimsSlice = createSlice({
         UPDATE_PART_3_CONFORMANCE_DROPDOWN: (state, action) => {
             const { part3Conformance } = action.payload;
             state.part3Conformance = part3Conformance ? part3Conformance : "";
+        },
+        UPDATE_CC_ERRATA: (state, action) => {
+            const { cc_errata } = action.payload;
+            state.cc_errata = cc_errata ? cc_errata : "N/A";
         },
         UPDATE_PP_CLAIMS_INDEX_BY_KEY: (state, action) => {
             const { index, value, key } = action.payload;
@@ -108,6 +113,7 @@ export const {
     UPDATE_ST_CONFORMANCE_DROPDOWN,
     UPDATE_PART_2_CONFORMANCE_DROPDOWN,
     UPDATE_PART_3_CONFORMANCE_DROPDOWN,
+    UPDATE_CC_ERRATA,
     UPDATE_PP_CLAIMS_INDEX_BY_KEY,
     UPDATE_PACKAGE_CLAIMS_INDEX_BY_KEY,
     UPDATE_EVALUATION_METHODS_BY_INDEX,

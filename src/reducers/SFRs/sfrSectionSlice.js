@@ -78,12 +78,14 @@ export const sfrSectionSlice = createSlice({
 
             sfrSection.evaluationActivities[eAUUID].testList.forEach(testlist => {
                 testlist.tests.forEach(test => {
-                    test.dependencies.map((dependency) => {
-                        let selectionUUID = selectionMap[dependency];
-                        if (!test.dependencies.includes(selectionUUID)) {
-                            test.dependencies.push(selectionUUID)
-                        }
-                    })
+                    if (test.hasOwnProperty("dependencies")) {
+                        test.dependencies.map((dependency) => {
+                            let selectionUUID = selectionMap[dependency];
+                            if (!test.dependencies.includes(selectionUUID)) {
+                                test.dependencies.push(selectionUUID)
+                            }
+                        })
+                    }
                 });
             });
         },

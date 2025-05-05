@@ -32,9 +32,10 @@ function SfrTestListSection(props) {
         isManagementFunction: PropTypes.bool,
         handleTextUpdate: PropTypes.func.isRequired,
         handleNewTestList: PropTypes.func.isRequired,
+        handleNewNestedTestList: PropTypes.func, // TODO make required and add to MF EAs
         updateEvaluationActivities: PropTypes.func,
         updateManagementFunctions: PropTypes.func,
-        getElementValuesByType: PropTypes.func,
+        getElementValuesByType: PropTypes.func
     };
 
     // Constants
@@ -42,7 +43,7 @@ function SfrTestListSection(props) {
     const dispatch = useDispatch();
     const { secondary, icons } = useSelector((state) => state.styling);
     const sfrSections = useSelector((state) => state.sfrSections);
-    const platforms = useSelector((state) => state.accordionPane.platformdata.platforms);
+    const platforms = useSelector((state) => state.accordionPane.platformData.platforms);
     const evaluationActivities = useSelector((state) => state.evaluationActivities);
 
     // Use Effects
@@ -188,6 +189,8 @@ function SfrTestListSection(props) {
                                                     updateEvaluationActivities={props.updateEvaluationActivities}
                                                     updateManagementFunctions={props.updateManagementFunctions}
                                                     getElementValuesByType={props.getElementValuesByType}
+                                                    handleNewNestedTestList={props.handleNewNestedTestList}
+                                                    testListUUID={list.testListUUID}
                                                 />
                                             )
                                         })}
@@ -195,21 +198,18 @@ function SfrTestListSection(props) {
                                     :
                                     null
                                 }
-                                { isManagementFunction && 
-                                    <div className="mb-4">
-                                        <TipTapEditor
-                                            className="w-full"
-                                            contentType={"term"}
-                                            title={"testClosing"}
-                                            handleTextUpdate={props.handleTextUpdate}
-                                            index={rowIndex ? rowIndex : null}
-                                            text={testClosing}
-                                            uuid={uuid}
-                                            showTable
-                                        />
-                                    </div>
-                                }
-                                
+                                <div className="mb-4">
+                                    <TipTapEditor
+                                        className="w-full"
+                                        contentType={"term"}
+                                        title={"testClosing"}
+                                        handleTextUpdate={props.handleTextUpdate}
+                                        index={rowIndex ? rowIndex : null}
+                                        text={testClosing}
+                                        uuid={uuid}
+                                        showTable
+                                    />
+                                </div>
                             </div>
                             <div className="border-t-2 border-gray-200 m-0 p-0 mx-[-16px] mt-1">
                                 <div className="w-full p-1 justify-items-center">

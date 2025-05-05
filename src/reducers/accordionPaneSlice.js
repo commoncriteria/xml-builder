@@ -8,7 +8,7 @@ const initialState = {
         pp: false,
         mod: false
     },
-    platformdata: {
+    platformData: {
         description: "",
         platforms: []
     },
@@ -250,9 +250,9 @@ export const accordionPaneSlice = createSlice({
             }
         },
         updatePlatforms: (state, action) => {
-            state.platformdata.description = action.payload.description
-            state.platformdata.platforms = action.payload.platforms
-            state.platformdata.xml = action.payload.xml
+            state.platformData.description = action.payload.description
+            state.platformData.platforms = action.payload.platforms
+            state.platformData.xml = action.payload.xml
         },
         updateSnackBar: (state, action) => {
             const { open, message, severity, vertical, horizontal, autoHideDuration } = action.payload
@@ -316,11 +316,11 @@ export const accordionPaneSlice = createSlice({
             }
         },
         SET_ACCORDION_PANE_INITIAL_STATE: (state, action) => {
-            const { loadedfile, platformdata, metadata, sections } = action.payload
+            const { loadedfile, platformData, metadata, sections } = action.payload
 
             try {
                 state.loadedfile = loadedfile
-                state.platformdata = platformdata
+                state.platformData = platformData
                 state.metadata = metadata
                 state.sections = sections
             } catch (e) {

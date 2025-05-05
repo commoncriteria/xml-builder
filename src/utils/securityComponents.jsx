@@ -45,8 +45,8 @@ class SecurityComponents {
                 Evaluation Activities
             </a>
             .
-            <br/>
-            <br/>
+            <br />
+            <br />
             * Note: If this button is pressed, all previous data will be lost.
         </span>
     )
@@ -229,14 +229,14 @@ class SecurityComponents {
      * @param dispatch the dispatch method
      * @returns {Promise<void>}
      */
-    fetchTemplateData = async ({ version, base }, dispatch) => {
-        let ppType;
+    fetchTemplateData = async ({ version, type, base }, dispatch) => {
+        // let ppType;
         try {
             // Clear session storage and reset template data to its original state
             await this.clearSessionStorageExcept(["ppTemplateVersion", "ppType", "isLoading"]);
 
             // Load json template data
-            const data = await this.loadTemplateJson({ version, base });
+            const data = await this.loadTemplateJson({ version, type, base });
 
             let {
                 accordionPane,
@@ -264,9 +264,6 @@ class SecurityComponents {
                 accordionPane.metadata.ppTemplateVersion = version;
             }
 
-            // Set ppType
-            ppType = accordionPane.metadata.ppType ? accordionPane.metadata.ppType : "Protection Profile"
-
             // Set initial states
             dispatch(SET_ACCORDION_PANE_INITIAL_STATE(accordionPane));
             dispatch(SET_TERMS_INITIAL_STATE(terms));
@@ -293,10 +290,8 @@ class SecurityComponents {
         } finally {
             // Update the local storage with the current version
             sessionStorage.setItem('ppTemplateVersion', version);
+            sessionStorage.setItem('ppType', type);
 
-            if (ppType) {
-                sessionStorage.setItem('ppType', ppType);
-            }
         }
     }
     /**
@@ -305,7 +300,7 @@ class SecurityComponents {
      * @param base if the base template is required
      * @returns {Promise<any>}
      */
-    loadTemplateJson = async ({ version, base }) => {
+    loadTemplateJson = async ({ version, type, base }) => {
         const basePath = import.meta.env.BASE_URL || '/';
         const dataFolder = `${basePath}data`;
         const baseDataFolder = `${dataFolder}/base_data`;
@@ -315,17 +310,21 @@ class SecurityComponents {
         if (base) {
             switch (version) { // used for imported PPs
                 case 'CC2022 Direct Rationale':
-                    filePath = `${baseDataFolder}/base_cc2022_direct_rationale.json`
+                    if (type === "Protection Profile") {
+                        filePath = `${baseDataFolder}/base_cc2022_direct_rationale.json`;
+                    } else if (type === "Functional Package") {
+                        filePath = `${baseDataFolder}/base_cc2022_fp.json`;
+                    }
                     break;
                 case 'CC2022 Standard':
-                    filePath = `${baseDataFolder}/base_cc2022_standard.json`
+                    if (type === "Protection Profile") {
+                        filePath = `${baseDataFolder}/base_cc2022_standard.json`
+                    } else if (type === "Functional Package") {
+                        filePath = `${baseDataFolder}/base_cc2022_fp.json`;
+                    }
                     break;
                 case 'Version 3.1':
                     filePath = `${baseDataFolder}/base_version_3.1.json`;
-                    break;
-                // This may need different logic in the future
-                case `Functional Package`:
-                    filePath = `${baseDataFolder}/base_functional_package.json`;
                     break;
                 // Add more cases as needed
                 default:
@@ -335,10 +334,18 @@ class SecurityComponents {
         } else {
             switch (version) {
                 case 'CC2022 Direct Rationale':
-                    filePath = `${dataFolder}/cc2022_direct_rationale.json`;
+                    if (type === "Protection Profile") {
+                        filePath = `${dataFolder}/cc2022_direct_rationale.json`;
+                    } else if (type === "Functional Package") {
+                        filePath = `${baseDataFolder}/base_cc2022_fp.json`;
+                    }
                     break;
                 case 'CC2022 Standard':
-                    filePath = `${dataFolder}/cc2022_standard.json`;
+                    if (type === "Protection Profile") {
+                        filePath = `${dataFolder}/cc2022_standard.json`;
+                    } else if (type === "Functional Package") {
+                        filePath = `${baseDataFolder}/base_cc2022_fp.json`;
+                    }
                     break;
                 // Add more cases as needed
                 default:
@@ -587,12 +594,12 @@ class SecurityComponents {
         let formattedIterationId = ""
         let formattedCcId =
             ccID ?
-            (
-                isRequirementsFormat ?
-                    ccID.valueOf().toUpperCase() :
-                    ccID.valueOf().toLowerCase()
-            ).replace(/\s+/g, '')
-            : ""
+                (
+                    isRequirementsFormat ?
+                        ccID.valueOf().toUpperCase() :
+                        ccID.valueOf().toLowerCase()
+                ).replace(/\s+/g, '')
+                : ""
 
         // Get the iteration value
         if (iterationID && typeof iterationID === "string" && iterationID !== "") {

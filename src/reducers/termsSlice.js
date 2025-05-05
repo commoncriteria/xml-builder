@@ -45,7 +45,7 @@ export const termsSlice = createSlice({
             let open = action.payload.open
             if (state.hasOwnProperty(uuid)) {
                 if (state[uuid].title === title) {
-                    state[uuid].open = (open !== null && typeof open === "boolean") ? open : !state[uuid].open
+                    state[uuid].open = (open && typeof open === "boolean") ? open : !state[uuid].open
                     Object.keys(state[uuid]).map((key) => {
                         if (key !== "title" && key !== "open") {
                             let value = state[uuid][key]
@@ -66,7 +66,6 @@ export const termsSlice = createSlice({
         CREATE_TERM_ITEM: (state, action) => {
             let termUUID = action.payload.termUUID;
             let tagMeta = action.payload.tagMeta;
-            let metaData = action.payload.metaData;
             let uuid = uuidv4();
             if (state.hasOwnProperty(termUUID)) {
                 let currentTermList = state[termUUID]
@@ -75,8 +74,7 @@ export const termsSlice = createSlice({
                         title: action.payload.name,
                         definition: action.payload.definition,
                         open: false,
-                        xmlTagMeta: tagMeta,
-                        metaData: metaData,
+                        xmlTagMeta: tagMeta
                     }
                 }
             }

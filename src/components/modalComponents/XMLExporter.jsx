@@ -17,7 +17,9 @@ import {
     SET_PACKAGES,
     SET_MODULES,
     SET_PP_PREFERENCE,
-    SET_DISTRIBUTED_TOE
+    SET_DISTRIBUTED_TOE,
+    SET_PP_TYPE_TO_PACKAGE,
+    SET_PP_TYPE_TO_PP
 } from "../../reducers/exportSlice";
 import { create } from "xmlbuilder2";
 import CloudDownloadIcon from "@mui/icons-material/CloudDownload";
@@ -26,7 +28,6 @@ import { Card, CardBody, CardFooter } from "@material-tailwind/react";
 import XMLViewer from "react-xml-viewer";
 import { deepCopy } from "../../utils/deepCopy";
 import SecurityComponents from "../../utils/securityComponents.jsx";
-import format from 'xml-formatter';
 
 /**
  * The XML Exporter class that packages the form into an XML export file
@@ -45,6 +46,7 @@ function XMLExporter({ open, handleOpen, preview }) {
     const { primary, secondary, linkText } = useSelector((state) => state.styling);
     const stateObject = useSelector((state) => state);
     const ppTemplateVersion = useSelector((state) => state.accordionPane.metadata.ppTemplateVersion)
+    const ppType = useSelector((state) => state.accordionPane.metadata.ppType)
     const overallObject = useSelector((state) => state.exports.overallObject);
     const formattedXML = useSelector((state) => state.exports.formattedXML);
     const dispatch = useDispatch();
@@ -78,8 +80,12 @@ function XMLExporter({ open, handleOpen, preview }) {
 
         // search through object to find the relevant terms lists
         const techTerms = terms.find((group) => group.title == "Technical Terms");
-        const useCases = terms.find((group) => group.title == "Use Cases");
-        dispatch(SET_TECH_TERMS({ techTerms: techTerms }));
+        const suppressedTerms = terms.find((group) => group.title == "Suppressed Terms");
+        const acronyms = terms.find((group) => group.title == "Acronyms"); 
+        // acronyms are just tech terms without without a definition, combine upon export them here
+        dispatch(SET_TECH_TERMS({ techTerms: { ...techTerms, ...acronyms }, suppressedTerms }));
+
+        const useCases = terms.find((group) => group.title == "Use Cases");  
         dispatch(SET_USE_CASES({ useCases: useCases }));
         return useCases
     };
@@ -160,11 +166,10 @@ function XMLExporter({ open, handleOpen, preview }) {
 
     const getMetaData = () => {
         const metaData = stateObject.accordionPane.metadata;
-        dispatch(SET_META_DATA({ metaData: metaData }));
+        dispatch(SET_META_DATA({ metaData: metaData, ppType: ppType }));
     };
 
     const getSliceInfo = (uuid, contentType) => {
-
         // Use the UUID to go into the right slice to fetch our info
         const { editors, threats, objectives } = stateObject
 
@@ -210,11 +215,11 @@ function XMLExporter({ open, handleOpen, preview }) {
 
     const parseSections = (useCases) => {
         const sections = Object.values(stateObject.accordionPane.sections)
-        // TODO: change platformdata in our state to camelCase for consistency
-        const platformData = stateObject.accordionPane.platformdata
+        const platformData = stateObject.accordionPane.platformData
         const sars = stateObject.sars
         const formattedSections = {}
         const ppPreference = stateObject.ppPreference
+        const ctoes = stateObject.compliantTargetsOfEvaluation
 
         sections.forEach(section => {
             const key = section.xmlTagMeta ? section.xmlTagMeta.tagName : section.title
@@ -265,7 +270,7 @@ function XMLExporter({ open, handleOpen, preview }) {
         }
 
         // Export sections
-        dispatch(SET_INTRODUCTION({ introduction: introduction, platformData: platformData }))
+        dispatch(SET_INTRODUCTION({ introduction: introduction, platformData: platformData, compliantTargets: ctoes, ppType: ppType }))
         if (ppPreference !== "")
             dispatch(SET_PP_PREFERENCE({ ppPreference: ppPreference}))
 
@@ -275,16 +280,25 @@ function XMLExporter({ open, handleOpen, preview }) {
             dispatch(SET_CONFORMANCE_CLAIMS({ conformanceClaims: cc2022conformanceClaims, ppTemplateVersion: ppTemplateVersion }))
         }
 
-        dispatch(SET_SECURITY_REQUIREMENTS({ securityRequirements: securityRequirements, useCases: useCases, sars: sars, platforms: stateObject.accordionPane.platformdata.platforms, auditSection: stateObject.sfrs.auditSection }))
+        dispatch(SET_SECURITY_REQUIREMENTS({ securityRequirements: securityRequirements, useCases: useCases, sars: sars, platforms: stateObject.accordionPane.platformData.platforms, auditSection: stateObject.sfrs.auditSection }))
         dispatch(SET_APPENDICES({ state: stateObject }))
         dispatch(SET_BIBLIOGRAPHY({ bibliography: stateObject.bibliography }))
         dispatch(SET_PACKAGES({ packages: stateObject.includePackage.packages }))
-        dispatch(SET_MODULES({ modules: stateObject.modules }))
-        dispatch(SET_DISTRIBUTED_TOE({ state: stateObject?.distributedTOE, subSections: distributedTOE?.formItems }))
+
+        if (stateObject.modules.xml != "") {
+            dispatch(SET_MODULES({ modules: stateObject.modules }))
+        }
+        if (distributedTOE && stateObject.distributedTOE && stateObject.distributedTOE.intro.length > 0) {
+            dispatch(SET_DISTRIBUTED_TOE({ state: stateObject.distributedTOE, subSections: distributedTOE.formItems }))
+        }
     }
 
     const generateFormattedJSON = () => {
         try {
+            if (ppType == "Protection Profile")
+                dispatch(SET_PP_TYPE_TO_PP())
+            else
+                dispatch(SET_PP_TYPE_TO_PACKAGE())
             getMetaData();
             let useCases = getTerms();
             parseSections(useCases);
@@ -303,7 +317,7 @@ function XMLExporter({ open, handleOpen, preview }) {
             // xmlbuilder2 escapes all xml tags that are stored as text, so we need to "unescape" them
             let txt = document.createElement("textarea");
             txt.innerHTML = doc.end({ prettyPrint: true });
-            let xmlString =  extractQuillBetterTableWrapperContent(txt.value)
+            let xmlString = txt.value;
             xmlString = addNamespace(xmlString);
             xmlString = cleanUpXml(xmlString);
 
@@ -313,21 +327,16 @@ function XMLExporter({ open, handleOpen, preview }) {
             } else if (TESTING) {
                 console.log(xmlString)
             } else {
-                const formattedXML = format(xmlString, {
-                    indentation: ' ',
-                    collapseContent: true
-                })
-                const blob = new Blob([formattedXML], { type: 'text/xml' });
+                const blob = new Blob([xmlString], { type: 'text/xml' });
                 const href = URL.createObjectURL(blob);
                 const link = document.createElement('a');
-
+                
                 link.href = href;
                 link.download = `${fileName ? fileName : "download"}.xml`; // Name of the downloaded file
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
-
-                handleSnackBarSuccess('Exported XML Successfully')
+                handleSnackBarSuccess('Exported XML Successfully')  
             }
         } catch (e) {
             console.log(e)
@@ -346,98 +355,13 @@ function XMLExporter({ open, handleOpen, preview }) {
 
     // Utils
     const cleanUpXml = (xmlString) => {
-
         // Fixes tags that have a hanging space at the end
         const removeWhiteSpaceRegex = /<(\w+)\s+>/g;
-        const removeSecObjsFromTOERegex = /<sec:Security_Objectives_for_the_TOE[\s\S]*?<\/sec:Security_Objectives_for_the_TOE>/;
-        const removeQuillBetterTableSpanRegex = /<span class="ql-ui" contenteditable="false"><\/span>/g
 
         let cleanedXmlString = xmlString.replace(removeWhiteSpaceRegex, '<$1>');
 
-        // Removes quill-better-table span
-        cleanedXmlString = xmlString.replace(removeQuillBetterTableSpanRegex, "")
-
-        // Removes <sec:Security_Objectives_for_the_TOE> in the event of a CC2022 export
-        if (ppTemplateVersion == "CC2022 Direct Rationale")
-            cleanedXmlString = xmlString.replace(removeSecObjsFromTOERegex, ""); 
-        
         // Remove default aactivity tags
         return cleanedXmlString.replace(/<aactivity level="element"\/>\n/g, "").replace(/<aactivity level="component"\/>\n/g, "").replace(/<aactivity level="element"\/>/g, "").replace(/<aactivity level="component"\/>/g, "");
-    }
-
-    function convertQuillTables(htmlString) {
-        // Parse the HTML string
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(htmlString, 'text/html');
-
-        const rows = doc.querySelectorAll('.quill-better-table tbody tr');
-
-        // Create XML document
-        const xmlDoc = document.implementation.createDocument('', '', null);
-        const xmlTable = xmlDoc.createElement(`table`);
-        xmlDoc.appendChild(xmlTable);
-
-        const headerRow = xmlDoc.createElement(`tr`);
-        headerRow.setAttribute('class', 'header');
-        const headerCells = rows[0].querySelectorAll('td');
-        headerCells.forEach(cell => {
-            const xmlCell = xmlDoc.createElement(`td`);
-            xmlCell.textContent = cell.textContent.trim();
-            headerRow.appendChild(xmlCell);
-        });
-        xmlTable.appendChild(headerRow);
-
-        let rowspanCount = 0;
-
-        for (let i = 1; i < rows.length; i++) {
-            const row = rows[i];
-            const xmlRow = xmlDoc.createElement(`tr`);
-
-            const cells = row.querySelectorAll('td');
-            cells.forEach((cell, index) => {
-                const xmlCell = xmlDoc.createElement(`td`);
-                xmlCell.textContent = cell.textContent.trim();
-
-                if (cell.hasAttribute('rowspan')) {
-                    const rowspan = parseInt(cell.getAttribute('rowspan'), 10);
-
-                    if (rowspan > 1)
-                        xmlCell.setAttribute('rowspan', rowspan);
-                    rowspanCount = rowspan - 1;
-                } else if (rowspanCount > 0 && index === 0) {
-                    rowspanCount--;
-                    return;
-                }
-
-                xmlRow.appendChild(xmlCell);
-            });
-
-            xmlTable.appendChild(xmlRow);
-        }
-
-        const serializer = new XMLSerializer();
-        const xmlString = serializer.serializeToString(xmlDoc);
-
-        return xmlString;
-    }
-
-    // Checks for HTML that starts with a <div class=quill-better-table-wrapper">
-    function extractQuillBetterTableWrapperContent(html) {
-    
-        const regex = new RegExp(`<div class="quill-better-table-wrapper">(.*?)</div>`, 'gs');
-
-        const matches = [...html.matchAll(regex)]
-
-        if (matches.length > 0) {
-            matches.forEach(match => {
-                if (match) {
-                    const convertedTable = convertQuillTables(match[0]);
-                    html = html.replace(match[0], convertedTable);
-                }
-            });
-        }
-
-        return html
     }
 
     function addNamespace(content) {
@@ -449,7 +373,8 @@ function XMLExporter({ open, handleOpen, preview }) {
 
         // Get namespace
         let namespace = '';
-        const namespaceKey = Object.keys(overallObject["PP"]).find(key => overallObject["PP"][key] === "http://www.w3.org/1999/xhtml");
+        const ppTypeKey = ppType == "Protection Profile" ? "PP" : "Package"
+        const namespaceKey = Object.keys(overallObject[ppTypeKey]).find(key => overallObject[ppTypeKey][key] === "http://www.w3.org/1999/xhtml");
 
         // XML Cleanup
         // Temp fix to remove empty ns attr,
@@ -479,7 +404,6 @@ function XMLExporter({ open, handleOpen, preview }) {
         
             modifiedXML = modifiedXML.replaceAll("<br/>", `<${namespace}:br/>`);
     
-        
             // replace link tag names (<a href=''>); SAR's a-component and a-element make replacing a tags selectively extremely hard
             if (namespace.length != 0) {
                 modifiedXML = modifiedXML.replace(/<a href/g, `<${namespace}:a href`);

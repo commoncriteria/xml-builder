@@ -91,7 +91,7 @@ const ProgressBar = ({ isLoading }) => {
                 <div className="mt-2 w-full">
                     <Box sx={{width: '100%'}}>
                         <label>
-                            * Warning: If the dialog is closed prematurely, all data will reset to it's default state
+                            * Warning: If the dialog is closed prematurely, all data will reset to its default state
                         </label>
                         <Box>
                             <LinearProgressWithLabel value={progress}/>

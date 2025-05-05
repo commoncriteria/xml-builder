@@ -6,7 +6,7 @@
       "pp": false,
       "mod": false
     },
-    "platformdata": {
+    "platformData": {
       "description": "",
       "platforms": [],
       "xml": ""
@@ -101,7 +101,7 @@
       "0f2f8c02-a71b-4fe7-9e80-da93d1ea70cd": {
         "title": "Security Problem Definition",
         "xmlTagMeta": {
-          "tagName": "sec:Security_Problem_Description",
+          "tagName": "sec:Security_Problem_Definition",
           "attributes": {}
         },
         "formItems": [
@@ -266,180 +266,14 @@
     "132a214e-ce03-4c48-abe8-5f7d460b5fdf": {
       "title": "Common Criteria Terms",
       "open": false,
-      "7dd1b1a6-9d15-4754-9f25-7ade6efe7b5d": {
-        "title": "Assurance",
-        "xmlTagMeta": {
-          "tagName": "term",
-          "attributes": {}
-        },
-        "definition": "Grounds for confidence that a TOE meets the SFRs [CC].",
-        "open": false
-      },
-      "dd05d04a-6400-453d-a2ec-014cb885b05c": {
-        "title": "Base Protection Profile (Base-PP)",
-        "xmlTagMeta": {
-          "tagName": "term",
-          "attributes": {}
-        },
-        "definition": "Protection Profile used as a basis to build a PP-Configuration.",
-        "open": false
-      },
-      "ec318062-6a76-4f4d-a716-9607e535e8f8": {
-        "title": "Collaborative Protection Profile (cPP)",
-        "xmlTagMeta": {
-          "tagName": "term",
-          "attributes": {}
-        },
-        "definition": "A Protection Profile developed by international technical communities and approved by multiple schemes.",
-        "open": false
-      },
-      "3ae7d712-1a17-4141-b49a-6068c47f8095": {
-        "title": "Common Criteria (CC)",
-        "xmlTagMeta": {
-          "tagName": "term",
-          "attributes": {}
-        },
-        "definition": "Common Criteria for Information Technology Security Evaluation (International Standard ISO/IEC 15408).",
-        "open": false
-      },
-      "c5b1ddf5-45e4-42f8-bb15-f4c745788aa8": {
-        "title": "Common Criteria Testing Laboratory",
-        "xmlTagMeta": {
-          "tagName": "term",
-          "attributes": {}
-        },
-        "definition": "Within the context of the Common Criteria Evaluation and Validation Scheme (CCEVS), an IT security evaluation facility accredited by the National Voluntary Laboratory Accreditation Program (NVLAP) and approved by the NIAP Validation Body to conduct Common Criteria-based evaluations.",
-        "open": false
-      },
-      "5479f15a-5765-48ed-a6fe-345c32be70bb": {
-        "title": "Common Evaluation Methodology (CEM)",
-        "xmlTagMeta": {
-          "tagName": "term",
-          "attributes": {}
-        },
-        "definition": "Common Evaluation Methodology for Information Technology Security Evaluation.",
-        "open": false
-      },
-      "9f3bb798-30ea-46e2-80c7-ac4d20d0a85a": {
-        "title": "Distributed TOE",
-        "xmlTagMeta": {
-          "tagName": "term",
-          "attributes": {}
-        },
-        "definition": "A TOE composed of multiple components operating as a logical whole.",
-        "open": false
-      },
-      "1787ff35-2e38-4201-bb02-305431346949": {
-        "title": "Extended Package (EP)",
-        "xmlTagMeta": {
-          "tagName": "term",
-          "attributes": {}
-        },
-        "definition": "A deprecated document form for collecting SFRs that implement a particular protocol, technology, or functionality. See Functional Packages.",
-        "open": false
-      },
-      "aa934082-36fb-4867-aa16-71b11b21cec1": {
-        "title": "Functional Package (FP)",
-        "xmlTagMeta": {
-          "tagName": "term",
-          "attributes": {}
-        },
-        "definition": "A document that collects SFRs for a particular protocol, technology, or functionality.",
-        "open": false
-      },
-      "ebe08309-699b-40b9-a92a-a42ce7d507b2": {
-        "title": "Operational Environment (OE)",
-        "xmlTagMeta": {
-          "tagName": "term",
-          "attributes": {}
-        },
-        "definition": "Hardware and software that are outside the TOE boundary that support the TOE functionality and security policy.",
-        "open": false
-      },
-      "13873beb-39ce-4f2b-972d-a402d7f8d5ff": {
-        "title": "Protection Profile (PP)",
-        "xmlTagMeta": {
-          "tagName": "term",
-          "attributes": {}
-        },
-        "definition": "An implementation-independent set of security requirements for a category of products.",
-        "open": false
-      },
-      "a1c3a4f0-6251-45e2-a259-334daa77fdf2": {
-        "title": "Protection Profile Configuration (PP-Configuration)",
-        "xmlTagMeta": {
-          "tagName": "term",
-          "attributes": {}
-        },
-        "definition": "A comprehensive set of security requirements for a product type that consists of at least one Base-PP and at least one PP-Module.",
-        "open": false
-      },
-      "5edcd70c-1ba4-4da3-89bf-e431affa3eb7": {
-        "title": "Protection Profile Module (PP-Module)",
-        "xmlTagMeta": {
-          "tagName": "term",
-          "attributes": {}
-        },
-        "definition": "An implementation-independent statement of security needs for a TOE type complementary to one or more Base-PPs.",
-        "open": false
-      },
-      "e53da5ec-9229-4f43-a9f0-a19a293a5e71": {
-        "title": "Security Assurance Requirement (SAR)",
-        "xmlTagMeta": {
-          "tagName": "term",
-          "attributes": {}
-        },
-        "definition": "A requirement to assure the security of the TOE.",
-        "open": false
-      },
-      "26e9b5c0-c3b7-49b2-9bd7-384f925a8897": {
-        "title": "Security Functional Requirement (SFRs)",
-        "xmlTagMeta": {
-          "tagName": "term",
-          "attributes": {}
-        },
-        "definition": "A requirement for security enforcement by the TOE.",
-        "open": false
-      },
-      "a351f17c-89c3-4041-a7fb-dc95695e0a04": {
-        "title": "Security Target (ST)",
-        "xmlTagMeta": {
-          "tagName": "term",
-          "attributes": {}
-        },
-        "definition": "A set of implementation-dependent security requirements for a specific product.",
-        "open": false
-      },
-      "4163f61f-55d1-4549-a9d1-e48df0b71292": {
-        "title": "Target of Evaluation (TOE)",
-        "xmlTagMeta": {
-          "tagName": "term",
-          "attributes": {}
-        },
-        "definition": "The product under evaluation.",
-        "open": false
-      },
-      "0a95e3de-95fd-4d46-a27d-3ba12339c879": {
-        "title": "TOE Security Functionality (TSF)",
-        "xmlTagMeta": {
-          "tagName": "term",
-          "attributes": {}
-        },
-        "definition": "The security functionality of the product under evaluation.",
-        "open": false
-      },
-      "a45f8169-cf82-401d-998c-123cca8d5a1e": {
-        "title": "TOE Summary Specification (TSS)",
-        "xmlTagMeta": {
-          "tagName": "term",
-          "attributes": {}
-        },
-        "definition": "A definition of how a TOE satisfies the SFRs in an ST.",
-        "open": false
-      }
+      "showAddButton": false
     },
     "2a9beedb-a7ce-4586-b374-1c22ac37c6fa": {
       "title": "Technical Terms",
+      "open": false
+    },
+    "78a497d4-095f-4fa5-888b-c575c53754cc": {
+      "title": "Suppressed Terms",
       "open": false
     },
     "1f3f5182-ffbf-4259-9074-2b8f8942151e": {
@@ -924,7 +758,7 @@
         "ccID": "ate_ind.1",
         "name": "Independent Testing – Conformance (ATE_IND.1)",
         "optional": false,
-        "summary": " \n\t\t\tTesting is performed to confirm the\n\t\t\tfunctionality described in the TSS as well as the administrative\n\t\t\t(including configuration and operational) documentation provided. The focus of the testing\n\t\t\tis to confirm that the requirements specified in  &lt;xref to=\"SFRs\"&gt;&lt;/xref&gt; being met,\n\t\t\talthough some additional testing is specified for SARs in  &lt;xref to=\"SARs\"&gt;&lt;/xref&gt;. The\n\t\t\tevaluation activities identify the additional testing activities associated with these\n\t\t\tcomponents. The evaluator produces a test report documenting the plan for and results of\n\t\t\ttesting, as well as coverage arguments focused on the platform/TOE\n\t\t\tcombinations that are claiming conformance to this PP. Given the scope of the \n\t\t\tTOE and its associated evaluation evidence requirements, this \n\t\t\tcomponent’s evaluation activities are covered by the evaluation activities listed for ALC_CMC.1. \n             \n\t\t\tTesting is performed to confirm the\n\t\t\tfunctionality described in the TSS as well as the administrative\n\t\t\t(including configuration and operational) documentation provided. The focus of the testing\n\t\t\tis to confirm that the requirements specified in  &lt;xref to=\"SFRs\"&gt;&lt;/xref&gt; being met,\n\t\t\talthough some additional testing is specified for SARs in  &lt;xref to=\"SARs\"&gt;&lt;/xref&gt;. The\n\t\t\tevaluation activities identify the additional testing activities associated with these\n\t\t\tcomponents. The evaluator produces a test report documenting the plan for and results of\n\t\t\ttesting, as well as coverage arguments focused on the platform/TOE\n\t\t\tcombinations that are claiming conformance to this PP. Given the scope of the \n\t\t\tTOE and its associated evaluation evidence requirements, this \n\t\t\tcomponent’s evaluation activities are covered by the evaluation activities listed for ALC_CMC.1. \n             \n\t\t\tTesting is performed to confirm the\n\t\t\tfunctionality described in the TSS as well as the administrative\n\t\t\t(including configuration and operational) documentation provided. The focus of the testing\n\t\t\tis to confirm that the requirements specified in  &lt;xref to=\"SFRs\"&gt;&lt;/xref&gt; being met,\n\t\t\talthough some additional testing is specified for SARs in  &lt;xref to=\"SARs\"&gt;&lt;/xref&gt;. The\n\t\t\tevaluation activities identify the additional testing activities associated with these\n\t\t\tcomponents. The evaluator produces a test report documenting the plan for and results of\n\t\t\ttesting, as well as coverage arguments focused on the platform/TOE\n\t\t\tcombinations that are claiming conformance to this PP. Given the scope of the \n\t\t\tTOE and its associated evaluation evidence requirements, this \n\t\t\tcomponent’s evaluation activities are covered by the evaluation activities listed for ALC_CMC.1. \n            ",
+        "summary": " \n\t\t\tTesting is performed to confirm the\n\t\t\tfunctionality described in the TSS as well as the administrative\n\t\t\t(including configuration and operational) documentation provided. The focus of the testing\n\t\t\tis to confirm that the requirements specified in  &lt;xref to=\"SFRs\"&gt;&lt;/xref&gt; being met,\n\t\t\talthough some additional testing is specified for SARs in  &lt;xref to=\"SARs\"&gt;&lt;/xref&gt;. The\n\t\t\tevaluation activities identify the additional testing activities associated with these\n\t\t\tcomponents. The evaluator produces a test report documenting the plan for and results of\n\t\t\ttesting, as well as coverage arguments focused on the platform/TOE\n\t\t\tcombinations that are claiming conformance to this PP. Given the scope of the \n\t\t\tTOE and its associated evaluation evidence requirements, this \n\t\t\tcomponent’s evaluation activities are covered by the evaluation activities listed for ALC_CMC.1.",
         "elementIDs": [
           "38c9f417-26b1-4f1b-8f28-cf8e502a04f1",
           "5db9853e-b8a2-4402-83c3-484aa07c9f68",

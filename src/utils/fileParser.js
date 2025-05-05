@@ -3,7 +3,7 @@ import { select } from 'xpath';
 import parse from "html-react-parser";
 
 // Constants
-const raw_xml_tags = ["xref", "rule", "figure", "ctr", "snip", "if-opt-app", "also", "_"];
+const raw_xml_tags = ["xref", "rule", "figure", "ctr", "snip", "if-opt-app", "also", "_", "no-link"];
 const style_tags = ["p", "s", "i", "strike", "h3", "span", "u", "ol", "ul", "li", "sup", "sub", "pre", "code", "table"];
 export const escapedTagsRegex = /<(\/?)(xref|rule|figure|ctr|snip|if-opt-app|also|_)\b([^>]*)>/g;
 
@@ -209,18 +209,24 @@ export const getPlatforms = (domNode) => {
     return { platformRawXML, platformObj };
 }
 
-export const getPPMetadata = (domNode) => {
-    let pp = findAllByTagName('PP', domNode);
+export const getPPMetadata = (domNode, ppType) => {
+    let section = null;
     let xmlTagMeta = {
-        tagName: "PP",
+        tagName: "",
         attributes: {}
     };
 
-    if (pp.length !== 0) {
-        pp = pp[0];
+    if (ppType == "Functional Package") {
+        section = findAllByTagName('Package', domNode)[0];
+        xmlTagMeta.tagName = "Package";
+    } else if (ppType == "Protection Profile") {
+        section = findAllByTagName('PP', domNode)[0];
+        xmlTagMeta.tagName = "PP";
+    }
+    
+    if (section) {
         let attributes = {};
-
-        pp.attributes.forEach(attr => {
+        section.attributes.forEach(attr => {
             attributes[attr.name] = attr.value
         });
 
@@ -292,13 +298,11 @@ export const getPPReference = (domNode) => {
 
 export const getSecurityProblemDefinition = (domNode) => {
     let spd = '';
+    let spdSection = findAllByTagName('Security_Problem_Definition', domNode)[0] || findAllByTagName('Security_Problem_Description', domNode)[0] || findAllByTagName('spd', domNode)[0];
+    
+    if (spdSection) {
+        spd = parseRichTextChildren(spdSection)
 
-    if (findAllByTagName('Security_Problem_Description', domNode).length !== 0) {
-        spd = parseRichTextChildren(findAllByTagName('Security_Problem_Description', domNode)[0]);
-    }
-
-    if (findAllByTagName('spd', domNode).length !== 0) {
-        spd = parseRichTextChildren(findAllByTagName('spd', domNode)[0]);
     }
 
     return spd;
@@ -326,6 +330,7 @@ export const getAllThreats = (domNode) => {
             let description = "";
             let sfrs = [];
             let lastSfrName = "";
+            let sfrType = ""; // some are marked selection-based/objective
 
             threat.childNodes.forEach(threatChild => {
                 if (threatChild.nodeType == Node.ELEMENT_NODE) {
@@ -352,10 +357,14 @@ export const getAllThreats = (domNode) => {
                             }
                         });
                     } else if (threatChild.nodeName.toLowerCase() == "addressed-by") { // for Direct Rationale
-                        lastSfrName = threatChild.textContent.replace(/["']/g, '').split("(")[0].trim();
+                        // regex to remove quotes
+                        const sfrNameArr = threatChild.textContent.replace(/["']/g, '').split("(");
+                        lastSfrName = sfrNameArr[0].trim();
+                        sfrType = sfrNameArr.length != 1 ? sfrNameArr[1] : "";
                     } else if (threatChild.nodeName.toLowerCase() == "rationale") { // for Direct Rationale
                         sfrs.push({
                             name: lastSfrName,
+                            type: sfrType,
                             rationale: threatChild.textContent,
                             xmlTagMeta: {
                                 tagName: "addressed-by",
@@ -528,28 +537,37 @@ export const getAllSecurityObjectivesTOE = (domNode) => {
 }
 
 export const getAllSecurityObjectivesOE = (domNode) => {
-    let securityobjective_tags = findAllByTagName('SOE', domNode);
-    let security_objectives = new Array();
+    let securityObjectives = new Array();
+    let intro = '';
 
-    securityobjective_tags.forEach((security_objective) => {
-        if (security_objective.nodeType == Node.ELEMENT_NODE && security_objective.tagName == "SOE") {
-            let description = findAllByTagName('description', security_objective);
-            description = description.length !== 0 ? description[0].textContent : "";
-            let name = security_objective.getAttribute("name");
-            security_objectives.push({
-                name: name,
-                definition: description,
-                xmlTagMeta: {
-                    tagName: "SOE",
-                    attributes: {
-                        name: name
-                    }
-                },
-            });
-        }
-    });
+    let securityObjectiveSection =  findAllByTagName('Security_Objectives_for_the_Operational_Environment', domNode)[0] || findAllByAttribute("title", "Security Objectives for the Operational Environment", domNode)[0];
 
-    return security_objectives;
+    if (securityObjectiveSection) {
+        securityObjectiveSection.childNodes.forEach(subsection => {
+            if (subsection.nodeType == Node.TEXT_NODE) {
+                intro = subsection.textContent
+            }
+            if (subsection.nodeType == Node.ELEMENT_NODE && subsection.tagName == "SOEs") {
+                subsection.childNodes.forEach((soeSection) => {
+                    let description = findAllByTagName('description', soeSection);
+                    description = description.length !== 0 ? description[0].textContent : "";
+                    let name = soeSection.getAttribute("name");
+                    securityObjectives.push({
+                        name: name,
+                        definition: description,
+                        xmlTagMeta: {
+                            tagName: "SOE",
+                            attributes: {
+                                name: name
+                            }
+                        },
+                    });
+                })
+            }
+        });
+    }
+
+    return { intro: intro, securityObjectives: securityObjectives };
 }
 
 /**
@@ -560,45 +578,58 @@ export const getAllTechTerms = (domNode) => {
     let techTerms = findAllMultipleTagNames(['tech-terms'], domNode);
     let termsArray = new Array();
     let acronymsArray = new Array();
+    let suppressedTermsArray = new Array();
 
     if (techTerms.length !== 0) {
         techTerms = techTerms[0];
 
         for (let term of techTerms.childNodes) {
-            if (term.nodeType == Node.ELEMENT_NODE && term.tagName == "term") {
-                // Check if abbr attribute exists and is not empty
-                const abbr = term.getAttribute("abbr");
-                const name = abbr ? term.getAttribute("full").concat(' (', abbr, ')') : term.getAttribute("full");
+            if (term.nodeType == Node.ELEMENT_NODE) {
+                if (term.tagName == "term") {
 
-                if (term.textContent !== null && term.textContent.length !== 0) {
-                    termsArray.push({
-                        name: name,
-                        definition: term.textContent,
-                        xmlTagMeta: {
-                            tagName: term.tagName,
-                            attributes: {
-                                abbr: term.getAttribute("abbr") ? term.getAttribute("abbr") : "",
-                                full: term.getAttribute("full") ? term.getAttribute("full") : ""
+                    // Check if abbr attribute exists and is not empty
+                    const abbr = term.getAttribute("abbr");
+                    const name = abbr ? term.getAttribute("full").concat(' (', abbr, ')') : term.getAttribute("full");
+
+                    if (term.textContent !== null && term.textContent.length !== 0) {
+                        termsArray.push({
+                            name: name,
+                            definition: term.textContent,
+                            xmlTagMeta: {
+                                tagName: term.tagName,
+                                attributes: {
+                                    abbr: term.getAttribute("abbr") ? term.getAttribute("abbr") : "",
+                                    full: term.getAttribute("full") ? term.getAttribute("full") : ""
+                                }
                             }
-                        }
-                    });
-                } else { // AKA if it is an acronym
-                    acronymsArray.push({
-                        name: name,
+                        });
+                    } else { // AKA if it is an acronym
+                        acronymsArray.push({
+                            name: name,
+                            definition: "",
+                            xmlTagMeta: {
+                                tagName: term.tagName,
+                                attributes: {
+                                    abbr: term.getAttribute("abbr") ? term.getAttribute("abbr") : "",
+                                    full: term.getAttribute("full") ? term.getAttribute("full") : ""
+                                }
+                            }
+                        });
+                    }
+                } else if (term.tagName == "suppress") {
+                    suppressedTermsArray.push({
+                        name: removeWhitespace(term.textContent),
                         definition: "",
                         xmlTagMeta: {
                             tagName: term.tagName,
-                            attributes: {
-                                abbr: term.getAttribute("abbr") ? term.getAttribute("abbr") : "",
-                                full: term.getAttribute("full") ? term.getAttribute("full") : ""
-                            }
+                            attributes: {}
                         }
-                    });
+                    })
                 }
             }
         }
 
-        return { termsArray, acronymsArray };
+        return { termsArray, acronymsArray, suppressedTermsArray };
     }
 }
 
@@ -622,15 +653,7 @@ export const getDocumentObjectives = (domNode) => {
     }
 
     if (findAllByTagName("Overview", domNode).length !== 0) {
-        findAllByTagName("Overview", domNode)[0].childNodes.forEach(child => {
-            if (child.nodeType == Node.TEXT_NODE) {
-                doc_objectives += child.textContent;
-            } else if (child.nodeType == Node.ELEMENT_NODE) {
-                if (child.tagName.toLowerCase() == "xref") {
-                    doc_objectives += ` ${escapeXmlTags(getNodeContent(child))}`;
-                }
-            }
-        });
+        doc_objectives = parseRichTextChildren(findAllByTagName("Overview", domNode)[0]);
 
         tagName = findAllByTagName("Overview", domNode)[0].tagName;
     }
@@ -681,57 +704,99 @@ export const getDistributedTOE = (domNode) => {
     return { intro, registration, allocation, security }
 }
 
-/**
- * @param {*} domNode
- */
-export const getCompliantTOE = (domNode) => {
-    // tag structure varies from xml to xml...
-    let toeSection = null;
-    let toe_overview = '';
-    let toe_boundary = '';
-    let toe_platform = '';
 
-    // All variations of TOE overview tags
-    if (findAllByAttribute("id", "TOEdescription", domNode).length !== 0) {
-        toeSection = findAllByAttribute("id", "TOEdescription", domNode)[0];
-    }
+function getNodeAttributes(node) {
+    let attributes = "";
 
-    if (findAllByAttribute("id", "toeov", domNode).length !== 0) {
-        toeSection = findAllByAttribute("id", "toeov", domNode)[0];
-    }
-
-    if (findAllByAttribute("id", "s-complianttargets", domNode).length !== 0) {
-        toeSection = findAllByAttribute("id", "s-complianttargets", domNode)[0];
-    }
-
-
-    if (findAllByAttribute("title", "TOE Overview", domNode).length !== 0) {
-        toeSection = findAllByAttribute("title", "TOE Overview", domNode)[0];
-    }
-
-    if (findAllByAttribute("title", "Compliant Targets of Evaluation", domNode).length !== 0) {
-        toeSection = findAllByAttribute("title", "Compliant Targets of Evaluation", domNode)[0];
-    }
-
-    if (findAllByTagName("Compliant_Targets_of_Evaluation", domNode).length !== 0) {
-        toeSection = findAllByTagName("Compliant_Targets_of_Evaluation", domNode)[0];
-    }
-
-    if (toeSection !== null) {
-        toe_overview = parseRichTextChildren(toeSection);
-
-        toeSection.childNodes.forEach(subsection => {
-            if (subsection.nodeType == Node.ELEMENT_NODE) {
-                if (subsection.getAttribute("title") === "TOE Boundary" || subsection.tagName.toLowerCase() == "sec:toe_boundary") {
-                    toe_boundary = parseRichTextChildren(subsection);
-                } else if (subsection.tagName.toLowerCase() == "sec:toe_platform") {
-                    toe_platform = parseRichTextChildren(subsection);
-                }
-            }
+    if (node.attributes && node.attributes.length > 0) {
+        Array.from(node.attributes).forEach(attr => {
+            attributes += ` ${attr.name}="${attr.value}"`;
         });
     }
 
-    return { toe_overview, toe_boundary, toe_platform };
+    return attributes;
+}
+
+
+/**
+ * 
+ * @param {*} domNode 
+ * @param {*} ppType FP or PP
+ * @returns 
+ */
+export const getCompliantTOE = (domNode, ppType) => {
+    // tag structure varies from xml to xml...
+    let toe_overview = '';
+    let toe_boundary = '';
+    let toe_platform = '';
+    let components = [];
+    let additionalText = '';
+
+    // All variations of TOE overview tags
+    let toeSection = findAllByAttribute("id", "TOEdescription", domNode)[0] || findAllByAttribute("id", "toeov", domNode)[0] ||
+    findAllByAttribute("id", "s-complianttargets", domNode)[0] || findAllByAttribute("title", "TOE Overview", domNode)[0] ||
+    findAllByAttribute("title", "Compliant Targets of Evaluation", domNode)[0] || findAllByTagName("Compliant_Targets_of_Evaluation", domNode)[0];
+
+    if (toeSection) {
+        if (ppType == "Functional Package") {
+            let finishedComponents = false;
+            toeSection.childNodes.forEach(toeChild => {
+                if (toeChild.nodeType === Node.ELEMENT_NODE) {
+                    const tagName = toeChild.localName.toLowerCase();
+
+                    if (tagName == "componentsneeded") {
+                        toeChild.childNodes.forEach(component => {
+                            if (component.nodeType == Node.ELEMENT_NODE && component.localName.toLowerCase() == "componentneeded") {
+                                let comp = {};
+
+                                component.childNodes.forEach(componentChild => {
+                                    if (componentChild.nodeType == Node.ELEMENT_NODE) {
+                                        const childTag = componentChild.localName.toLowerCase();
+
+                                        if (childTag == "componentid") {
+                                            comp["compID"] = componentChild.textContent;
+                                        } else if (childTag == "notes") {
+                                            comp["notes"] = removeWhitespace(componentChild.textContent);
+                                        }
+                                    }
+                                });
+                                components.push(comp);
+                            }
+                        });
+                        finishedComponents = true;
+                    } else if (style_tags.includes(tagName) || raw_xml_tags.includes(tagName)) {
+                        const content = parseRichTextChildren(toeChild);
+
+                        if (!finishedComponents) {
+                            toe_overview += content + "<br/><br/>";
+                        } else {
+                            additionalText += content;
+                        }
+                    }
+                } else if (toeChild.nodeType === Node.TEXT_NODE) {
+                    if (!finishedComponents) {
+                        toe_overview += toeChild.textContent + "<br/><br/>";
+                    } else {
+                        additionalText += toeChild.textContent;
+                    }
+                }
+            });
+        } else if (ppType == "Protection Profile") {
+            toe_overview = parseRichTextChildren(toeSection);
+
+            toeSection.childNodes.forEach(subsection => {
+                if (subsection.nodeType == Node.ELEMENT_NODE) {
+                    if (subsection.getAttribute("title") === "TOE Boundary" || subsection.tagName.toLowerCase() == "sec:toe_boundary") {
+                        toe_boundary = parseRichTextChildren(subsection);
+                    } else if (subsection.tagName.toLowerCase() == "sec:toe_platform") {
+                        toe_platform = parseRichTextChildren(subsection);
+                    }
+                }
+            });
+        }
+    }
+
+    return { toe_overview, toe_boundary, toe_platform, components, additionalText };
 }
 
 /**
@@ -741,17 +806,11 @@ export const getCompliantTOE = (domNode) => {
  */
 export const getUseCaseDescription = (domNode) => {
     let use_case_description = '';
+    let use_case_section = findAllByTagName("Use_Cases", domNode)[0] || findAllByTagName("TOE_Usage", domNode)[0] ||
+        findAllByAttribute("title", "Use Cases", domNode)[0];
 
-    if (findAllByTagName("Use_Cases", domNode).length !== 0) {
-        use_case_description = parseRichTextChildren(findAllByTagName("Use_Cases", domNode)[0]);
-    }
-
-    if (findAllByTagName("TOE_Usage", domNode).length !== 0) {
-        use_case_description = parseRichTextChildren(findAllByTagName("TOE_Usage", domNode)[0]);
-    }
-
-    if (findAllByAttribute("title", "Use Cases", domNode).length !== 0) {
-        use_case_description = parseRichTextChildren(findAllByAttribute("title", "Use Cases", domNode)[0]);
+    if (use_case_section) {
+        use_case_description = parseRichTextChildren(use_case_section);
     }
 
     return use_case_description;
@@ -856,6 +915,44 @@ export const getPpTemplateVersion = (domNode) => {
 }
 
 /**
+ * Gets the pp type
+ * Types: PP, Functional Package, Assurance Package
+ * @param domNode the xml domNode
+ */
+export const getPpType = (domNode) => {
+    const isFP = findAllByTagName("Package", domNode) || [];
+    let ppType = "Protection Profile"; // Default to PP
+
+    if (isFP.length !== 0) {
+        ppType = "Functional Package";
+    }
+
+    return ppType
+}
+
+/**
+ * Gets the attributes from the CClaimsInfo tag
+ * @param {*} domNode 
+ */
+export const getCClaimsAttributes = (domNode) => {
+    let cclaims = findAllByTagName('CClaimsInfo', domNode) || [];
+    if (cclaims.length === 0) {
+        return null
+    }
+    cclaims = cclaims[0];
+
+    let cClaimsInfo = {};
+    cClaimsInfo["cc-version"] = cclaims.getAttribute("cc-version") || "";
+    cClaimsInfo["cc-approach"] = cclaims.getAttribute("cc-approach") || "";
+
+    // The only allowable values for cc-errata are v1.0 and v1.1. N/A will remove the attribute upon export
+    const ccErrataAttr = cclaims.getAttribute("cc-errata");
+    cClaimsInfo["cc-errata"] = (ccErrataAttr === "v1.0" || ccErrataAttr === "v1.1") ? ccErrataAttr : "N/A";
+
+    return cClaimsInfo
+}
+
+/**
  * 
  * @param {*} domNode 
  */
@@ -888,14 +985,10 @@ export const getCClaims = (domNode, ppVersion) => {
             }
         }
     } else {
-        let cClaimsInfo = {};
         cclaims = findAllByTagName('CClaimsInfo', domNode) || [];
 
         if (cclaims.length !== 0) {
             cclaims = cclaims[0];
-
-            cClaimsInfo["cc-version"] = cclaims.getAttribute("cc-version") || "";
-            cClaimsInfo["cc-approach"] = cclaims.getAttribute("cc-approach") || "";
 
             let conformanceTypes = ["cc-st-conf", "cc-pt2-conf", "cc-pt3-conf"];
             cclaimArray.push({
@@ -1122,7 +1215,7 @@ export const getSARs = (domNode) => {
                                 component.summary += parseRichTextChildren(componentChild);  // Content of the component
                             }
                         } else { // Content of the component
-                            component.summary += parseRichTextChildren(sectionChild);
+                            component.summary = parseRichTextChildren(sectionChild);
                         }
                     });
 
@@ -1258,10 +1351,6 @@ export const getSFRs = (domNode, extCompDefMap) => {
     const platformObject = getPlatforms(domNode).platformObj;
     const platformMap = platformObject.platformMap;
 
-
-    const ppReference = getPPReference(domNode);
-    const ppName = ppReference.PPTitle;
-
     // Implement sections (if exists)
     const implementObject = getImplementations(domNode)
 
@@ -1328,22 +1417,22 @@ export const getSFRs = (domNode, extCompDefMap) => {
                 // Extended Component Definition
                 const ecd_comp_lev_section = findAllByTagName('comp-lev', component);
                 if (ecd_comp_lev_section.length !== 0) {
-                    extendedComponentDefinition.componentLeveling += ecd_comp_lev_section[0].textContent;
+                    extendedComponentDefinition.componentLeveling = parseRichTextChildren(ecd_comp_lev_section[0]);
                     extendedComponentDefinition.toggle = true;
                 }
                 const ecd_management_section = findAllByTagName('management', component);
                 if (ecd_management_section.length !== 0) {
-                    extendedComponentDefinition.managementFunction += ecd_management_section[0].textContent;
+                    extendedComponentDefinition.managementFunction = parseRichTextChildren(ecd_management_section[0]);
                     extendedComponentDefinition.toggle = true;
                 }
                 const ecd_audit = findAllByTagName('audit', component);
                 if (ecd_audit.length !== 0) {
-                    extendedComponentDefinition.audit += ecd_audit[0].textContent;
+                    extendedComponentDefinition.audit = parseRichTextChildren(ecd_audit[0]);
                     extendedComponentDefinition.toggle = true;
                 }
                 const ecd_dependencies = findAllByTagName('dependencies', component);
                 if (ecd_dependencies.length !== 0) {
-                    extendedComponentDefinition.dependencies += ecd_dependencies[0].textContent;
+                    extendedComponentDefinition.dependencies = parseRichTextChildren(ecd_dependencies[0]);
                     extendedComponentDefinition.toggle = true;
                 }
 
@@ -1489,6 +1578,15 @@ export const getSFRs = (domNode, extCompDefMap) => {
 
                     };
 
+
+                    // Put raw XML into ext-comp-def-title tag
+                    const extCompDefTitleTag = findAllByTagName('ext-comp-def-title', element)[0];
+                    let extCompDefTitleTagTitle
+                    if(extCompDefTitleTag) {
+                        extCompDefTitleTagTitle = findAllByTagName('title', extCompDefTitleTag)[0];
+                        sfrElementMeta["extCompDefTitle"] = escapeXmlTags(getNodeContent(extCompDefTitleTagTitle));
+                    }
+
                     // Parse through title tag
                     const titleTag = findAllByTagName('title', element)[0];
 
@@ -1604,7 +1702,7 @@ export const getSFRs = (domNode, extCompDefMap) => {
                                             sfrContent.push({ 'description': `</${tagName}>` });
                                         }
                                     } else if (raw_xml_tags.includes(child.localName)) {
-                                        sfrContent.push({ 'description': `${escapeXmlTags(getNodeContent(child))}` });
+                                        sfrContent.push({ 'description': ` ${escapeXmlTags(getNodeContent(child))}` });
                                     } else if (titleChildTag == "management-function-set") {
                                         isManagementFunction = true;
 
@@ -1706,28 +1804,16 @@ export const getSFRs = (domNode, extCompDefMap) => {
                                                                 });
                                                             } else if (nodeName.toLowerCase() == "aactivity") {
                                                                 mfChild.childNodes.forEach(aactivityChild => {
-                                                                    if (aactivityChild.nodeName.toLowerCase() == "tss") {
+                                                                    const aactivityChildName = aactivityChild.nodeName.toLowerCase();
+
+                                                                    if (aactivityChildName == "tss") {
                                                                         rowDef.evaluationActivity.tss = parseRichTextChildren(aactivityChild).trim();
-                                                                    } else if (aactivityChild.nodeName.toLowerCase() == "guidance") {
+                                                                    } else if (aactivityChildName == "guidance") {
                                                                         rowDef.evaluationActivity.guidance = parseRichTextChildren(aactivityChild).trim();
-                                                                    } else if (aactivityChild.nodeName.toLowerCase() == "tests" && aactivityChild.childNodes) {
-                                                                        const contents = parseRichTextChildren(aactivityChild, "", [], {}, rowDef.evaluationActivity);
-
-                                                                        // For instances without testlist, just add it
-                                                                        let lastElement = rowDef.evaluationActivity.testList.slice(-1)[0];
-                                                                        if (lastElement && lastElement.hasOwnProperty("objective") && lastElement["objective"].length == 0) {
-                                                                            rowDef.evaluationActivity.testList.push({
-                                                                                description: "",
-                                                                                dependencies: [],
-                                                                                objective: contents
-                                                                            });
-                                                                        }
-
-                                                                        if (rowDef.evaluationActivity.testList.length == 0) {
-                                                                            rowDef.evaluationActivity.testIntroduction = contents;
-
-                                                                            rowDef.evaluationActivity.testClosing = contents;
-                                                                        }
+                                                                    } else if (aactivityChildName == "tests" && aactivityChild.childNodes) {
+                                                                        parseTests(aactivityChild, rowDef.evaluationActivity);
+                                                                    } else if (raw_xml_tags.includes(aactivityChildName)) {
+                                                                        rowDef.evaluationActivity.introduction = escapeXmlTags(getNodeContent(aactivityChild)); // pull in raw xml
                                                                     } else {
                                                                         // Get the evaluation activity also tags, if they exist
                                                                         let additionalText = parseRichTextChildren(mfChild)
@@ -1843,6 +1929,7 @@ export const getSFRs = (domNode, extCompDefMap) => {
                             let eActivityLevel = "";
                             let eA = {
                                 "tss": "",
+                                "introduction": "",
                                 "guidance": "",
                                 "testIntroduction": "",
                                 "testClosing": "",
@@ -1857,7 +1944,7 @@ export const getSFRs = (domNode, extCompDefMap) => {
 
                             activity.childNodes.forEach(c => {
                                 if (c.nodeType == Node.TEXT_NODE) {
-                                    eA.testIntroduction = parseRichTextChildren(activity);
+                                    eA.introduction = parseRichTextChildren(activity);
                                 } else if (c.nodeType == Node.ELEMENT_NODE) {
                                     const aactivityChildTag = c.tagName.toLowerCase();
 
@@ -1870,20 +1957,12 @@ export const getSFRs = (domNode, extCompDefMap) => {
                                             eA.guidance = parseRichTextChildren(c);
                                         }
                                     } else if (aactivityChildTag == "tests" && c.childNodes) {
-                                        const contents = parseRichTextChildren(c, "", [], {}, eA);
-
-                                        // For instances without testlist, just add it
-                                        let lastElement = eA.testList.slice(-1)[0];
-                                        if (lastElement && lastElement.hasOwnProperty("objective") && lastElement["objective"].length == 0) {
-                                            eA.testList.push({ description: "", dependencies: [], objective: contents });
-                                        }
-
-                                        if (eA.testList.length == 0) {
-                                            eA.testIntroduction = contents;
-                                        }
+                                        parseTests(c, eA);
                                     } else if (aactivityChildTag == "no-tests") {
                                         eA.noTest = parseRichTextChildren(c);
                                         eA.isNoTest = true;
+                                    } else {
+                                        eA.introduction = parseRichTextChildren(c); // likely rich text
                                     }
                                 }
                             });
@@ -2074,9 +2153,7 @@ export const getSectionExtendedComponentDefinitionMap = (domNode) => {
 function parseManagementFunction(parent, selectableMeta, contents = "", rowDef = {}) {
     parent.childNodes.forEach(c => {
         if (c.nodeType == Node.TEXT_NODE) {
-            // Escape '<' signs, and pad with surrounding whitespace so that it is not converted to < on export, as transforms will complain since it appears like an unclosed tag
-            const pattern = /(?<=\S)\s*<\s*(?=\S)|(?<=\S)<(?=\s)|(?<=\s)<(?=\S)/g;
-            contents += c.textContent.replace(pattern, ' &lt; ');
+            contents += removeWhitespace(escapeLTSign(c.textContent));
         } else if (c.nodeType == Node.ELEMENT_NODE) {
             if (c.localName.toLowerCase() == "b" || c.localName.toLowerCase() == "refinement") {
                 // TODO: separate refinement tag into own condition after creating blot in quill
@@ -2154,25 +2231,20 @@ function parseManagementFunction(parent, selectableMeta, contents = "", rowDef =
 
 /**
  * Retain styling for child elements of a node (non-selectable node -> selectable nodes have their own processing in processSelectables)
+ * @param {*} parent XML node we are interested in flattening out
+ * @param {*} contents String builder for SFR requirements
+ * @param {*} sfrContent Array of the elements that the SFR requirement consists of
+ * @param {*} selectableMeta Metadata for selectables
+ * @returns 
  */
-function parseRichTextChildren(parent, contents = "", sfrContent = [], selectableMeta = {}, eA = {}) {
-    // let prevTextNodeContent = '';
-
+function parseRichTextChildren(parent, contents = "", sfrContent = [], selectableMeta = {}) {
     // Reset flag so that when function is returned, text content can be pushed if it comes at the end of a selctable (which triggers is_content_pushed=true)
     selectableMeta.is_content_pushed = false;
 
     parent.childNodes.forEach(c => {
         if (c.nodeType == Node.TEXT_NODE) {
             // Escape '<' signs, and pad with surrounding whitespace so that it is not converted to < on export, as transforms will complain since it appears like an unclosed tag
-            const pattern = /(?<=\S)\s*<\s*(?=\S)|(?<=\S)<(?=\s)|(?<=\s)<(?=\S)/g;
-            // prevTextNodeContent = c.textContent;
-
-            // For tests, set the last piece of text (if it follows a testlist) as the testClosing text, else add to the contents string builder
-            if (c.parentNode.nodeName.toLowerCase() == "tests" && c.parentElement.childNodes[c.parentElement.childNodes.length - 1].textContent == c.textContent && (c.previousSibling && c.previousSibling.nodeType == Node.ELEMENT_NODE && c.previousSibling.tagName.toLowerCase() == "testlist")) {
-                eA.testClosing = c.textContent.replace(pattern, ' &lt; ');
-            } else {
-                contents += c.textContent.replace(pattern, ' &lt; ');
-            }
+            contents +=  removeWhitespace(escapeLTSign(c.textContent));
         } else if (c.nodeType == Node.ELEMENT_NODE) {
             if (c.localName.toLowerCase() == "b" || c.localName.toLowerCase() == "refinement") {
                 // TODO: separate refinement tag into own condition after creating blot in quill
@@ -2191,51 +2263,26 @@ function parseRichTextChildren(parent, contents = "", sfrContent = [], selectabl
             } else if (c.localName.toLowerCase() == 'br') {
                 contents += '<br/>'
             } else if (style_tags.includes(c.localName.toLowerCase())) {
-                let attributes = "";
-                if (c.attributes.length != 0) {
-                    c.attributes.forEach(attr => {
-                        attributes += ` ${attr.name}="${attr.value}"`
-                    });
-                }
-
-                contents += `<${c.localName}${attributes}>`;
+                contents += ` <${c.localName}${getNodeAttributes(c)}>`;
                 contents = parseRichTextChildren(c, contents, sfrContent, selectableMeta);
-                contents += `</${c.localName}>`;
+                contents += `</${c.localName}> `;
             } else if (c.localName.toLowerCase() == "tr" || c.localName.toLowerCase() == "td") { // handle tables
-                let attributeString = "";
                 // get any attributes - most importantly colpsan and rowspan
-                c.attributes.forEach(attr => {
-                    attributeString += `${attr.name}="${attr.value}"`
-                });
-
-                contents += `<${c.localName} ${attributeString}>`;
+                contents += `<${c.localName}${getNodeAttributes(c)}>`;
                 contents = parseRichTextChildren(c, contents, sfrContent, selectableMeta);
                 contents += `</${c.localName}>`;
             } else if (c.localName.toLowerCase() == "div") {
-                if (parent.tagName.toLowerCase() == "tests") { // platforms or selections (selectable)
-                    // Set the Tests description
-                    eA.testIntroduction = contents;
-
-                    const depends = findAllByTagName("depends", c);
-                    let dependency = '';
-
-                    if (depends.length !== 0) { // for dependency related tests
-                        if (depends[0].hasAttribute("ref")) { // if its a platform
-                            dependency = eA.platformMap[depends[0].getAttribute("ref")];
-                            eA.testList.push({ description: "", tests: [{ dependencies: [dependency], objective: parseRichTextChildren(c) }] });
-
-                        } else { // should be a selection
-                            dependency = depends[0].getAttribute("on") ? depends[0].getAttribute("on") : "";
-
-                            eA.testList.push({ description: "", tests: [{ dependencies: [dependency], objective: parseRichTextChildren(c) }] });
-                        }
-                    } else { // treat it as a regular test without a dependency
-                        eA.testList.push({ description: "", tests: [{ dependencies: [], objective: parseRichTextChildren(c) }] });
-                    }
+                if (!hasAncestorTag(c, "tests")) {
+                    // pull in raw xml for div taqg (normally has been seen to be platform dependencies in other sections - outside of Tests)
+                    contents += ` ${escapeXmlTags(getNodeContent(c))}`;
                 } else {
-                    contents += "<div>";
-                    contents = parseRichTextChildren(c, contents, sfrContent, selectableMeta);
-                    contents += "</div>";
+                    // platform tests are handled in the parseTests
+                    // treat this as normal text
+                    if (!hasDescendantTag(c, "depends")) { 
+                        contents += `<div${getNodeAttributes(c)}>`;
+                        contents = parseRichTextChildren(c, contents, sfrContent, selectableMeta);
+                        contents += "</div>";
+                    }
                 }
             } else if (c.tagName.toLowerCase() == "selectables") { // these are nested selectables
                 const lastElement = sfrContent.slice(-1)[0];
@@ -2312,54 +2359,239 @@ function parseRichTextChildren(parent, contents = "", sfrContent = [], selectabl
 
                 // Add the assignment
                 sfrContent.push({ 'assignment': uuid });
-            } else if (c.tagName.toLowerCase() == "testlist") {
-                // TODO: In phase 2, need to nail down tests, as source XML is extremely unorganized
-                if (c.parentNode.localName.toLowerCase() == "p" || c.parentNode.localName.toLowerCase() == "div") { // Nested testlist - just throw in xml for now
-                    contents += `<br/> ${escapeXmlTags(getNodeContent(c))}`;
-                } else { // Normal testlist, not nested
-                    // Set the Tests description only if it hasn't been set (don't want to overwrite with additional text that may exist
-                    // in later nodes - in the case of multiple testlist)
-                    // if (eA.testIntroduction && eA.testIntroduction.length == 0) {
-                    //     // Hacky way of doing this right now since there is no tag around test list titles, so the title of the testlist
-                    //     // gets appended with this recursive function, so we want to essentially remove it before setting the intro test text
-                    //     // TODO: revisit later, can't rely on last text preceding the testlist (eg. FCS_CKM_EXT.4 in MDF)
-                    //     // eA.testIntroduction = contents.replace(prevTextNodeContent, "");
-                    //     // eA.testIntroduction = contents;
-                    //     // contents = ""; // Reset buffer
-                    // }
-
-                    if (eA.testList == undefined) {
-                        eA.testList = [];
-                    }
-
-                    // Check if the preceding element is a text node, set it as the description(title) of the Testlist
-                    let precedingText = '';
-
-                    const children = c.parentElement.childNodes;
-                    for (let i = 0; i < children.length; i++) {
-                        if (children[i] == c && i > 0) {
-                            if (children[i - 1].nodeType == Node.TEXT_NODE) {
-                                precedingText = children[i - 1].textContent;
-                                break;
-                            }
-                        }
-                    }
-
-                    let tests = [];
-                    c.childNodes.forEach(test => {
-                        if (test.nodeType == Node.ELEMENT_NODE && test.tagName == "test") {
-                            let testContent = parseRichTextChildren(test, "", sfrContent, selectableMeta);
-                            tests.push({ dependencies: [], objective: testContent });
-                        }
-                    });
-                    eA.testList.push({ description: precedingText, tests: tests });
-                }
             }
         }
     });
 
     return contents;
 }
+
+/**
+ * Checks for tagname as a child (even nested)
+ * @param {*} node 
+ * @param {*} tagName 
+ * @returns 
+ */
+function hasDescendantTag(node, tagName) {
+    tagName = tagName.toLowerCase();
+
+    for (let child of node.childNodes) {
+        if (child.nodeType === Node.ELEMENT_NODE) {
+            if (child.localName.toLowerCase() === tagName) {
+                return true;
+            }
+
+            // check the child's children
+            if (hasDescendantTag(child, tagName)) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+
+/**
+ * Checks for certain tagname upwards in the parent hierarchy
+ * @param {*} node 
+ * @param {*} tagName 
+ * @returns 
+ */
+function hasAncestorTag(node, tagName) {
+    let current = node.parentNode;
+    tagName = tagName.toLowerCase();
+
+    while (current) {
+        if (current.nodeType === Node.ELEMENT_NODE && current.tagName.toLowerCase() === tagName) {
+            return true;
+        }
+        current = current.parentNode;
+    }
+    return false;
+}
+
+/**
+ * 
+ * @param {*} testsNode <Tests> tag in aactivity
+ * @param {*} eA Object containing evaluation activity data
+ * @returns 
+ */
+function parseTests(testsNode, eA) {
+    const testIntro = [];
+    const testClosing = [];
+
+    let blockState = "intro"; // "intro" | "list" | "closing"
+
+    // This object is only used for converting conditional tests that use a div tag to a testlist
+    const testListUUID = uuidv4();
+    let testList = {
+        uuid: testListUUID,
+        description: "",  // this will never be updated since there is not testlist construct, its using a div
+        tests: []
+    };
+
+    const testSectionChildren = Array.from(testsNode.childNodes);
+    // Used to determine closing text for the Tests section
+    const hasMoreTestContent = (startIndex) => {
+        for (let i = startIndex + 1; i < testSectionChildren.length; i++) {
+            const node = testSectionChildren[i];
+            if (node.nodeType === Node.ELEMENT_NODE) {
+                const tag = node.localName.toLowerCase();
+                if (tag === "testlist" || tag === "div") return true;
+            }
+        }
+        return false;
+    };
+
+    for (let i = 0; i < testSectionChildren.length; i++) {
+        const node = testSectionChildren[i];
+        if (node.nodeType === Node.ELEMENT_NODE) {
+            const tag = node.localName.toLowerCase();
+
+            if (tag === "testlist") {
+                blockState = "list";
+                // "nested teslists" - testlist whose parent tag is not a <Tests> tag
+                // eg. in GPOS: FCS_COP.1/Hash, FDP_ACF_EXT.1, FPT_SBOP_EXT.1, FPT_TST_EXT.1
+                // TBD: Address later
+                if (node.parentNode.localName.toLowerCase() == "p" || node.parentNode.localName.toLowerCase() == "div") { // Nested testlist - just throw in xml for now
+                    // contents += `<br/> ${escapeXmlTags(getNodeContent(tag))}`;
+                }
+
+                eA.testList.push(parseTestList(eA, node));
+            } else if (tag === "div") { // for conditional tests
+                blockState = "list";
+
+                const test = {
+                    id: "", // id's have not been seen to exist for these conditional tests
+                    uuid: uuidv4(),
+                    testListUUID: testListUUID,
+                    dependencies: [],
+                    objective: "",
+                    nestedTests: [] // nested testlists have not been seen in div tags
+                };
+
+                node.childNodes.forEach(divChild => {
+                    if (divChild.nodeType == Node.ELEMENT_NODE && divChild.tagName.toLowerCase() === "depends") {
+                        test.dependencies.push(
+                            eA.platformMap[divChild.getAttribute("ref")] || divChild.getAttribute("on") || ""
+                        );
+                    } else {
+                        test.objective = parseRichTextChildren(node);
+                    }
+                });
+
+                testList.tests.push(test);
+            } else { // general rich text
+                const textContent = ` <${node.localName}${getNodeAttributes(node)}>${parseRichTextChildren(node)}</${node.localName}>`;
+
+                if (blockState === "intro") {
+                    testIntro.push(textContent);
+                } else if (blockState === "list") {
+                    if (hasMoreTestContent(i)) {
+                        testIntro.push(textContent);
+                    } else {
+                        blockState = "closing";
+                        testClosing.push(textContent);
+                    }
+                } else if (blockState === "closing") {
+                    testClosing.push(textContent);
+                }
+            }
+        } else if (node.nodeType === Node.TEXT_NODE) {
+            const text = node.textContent.trim();
+            if (text) {
+                if (blockState === "intro") {
+                    testIntro.push(text);
+                } else if (blockState === "list") {
+                    if (hasMoreTestContent(i)) {
+                        testIntro.push(text);
+                    } else {
+                        blockState = "closing";
+                        testClosing.push(text);
+                    }
+                } else if (blockState === "closing") {
+                    testClosing.push(text);
+                }
+            }
+        }
+    }
+
+    if (testList.tests.length > 0) {
+        eA.testList.push(testList);
+    }
+
+    eA.testIntroduction = testIntro.join("");
+    eA.testClosing = testClosing.join("");
+}
+
+/**
+ * Recursive function to parse through a <testlist>
+ * @param {*} testlist <testlist> node
+ * @param {*} parentTest tag of parent of the <testlist> (for nested)
+ * @returns 
+ */
+function parseTestList(eA, testlist, parentTest = null) {
+    const testListUUID = uuidv4();
+    let testList = {
+        testListUUID: testListUUID,
+        description: "",
+        tests: []
+    };
+
+    testlist.childNodes.forEach((testListChild, idx) => {
+        if (testListChild.nodeType === Node.ELEMENT_NODE) {
+            if (testListChild.tagName.toLowerCase() == "test") {
+                let test = {
+                    id: "",
+                    uuid: uuidv4(),
+                    testListUUID: testListUUID,
+                    dependencies: [],
+                    objective: "",
+                    nestedTests: []
+                }
+
+                test.id = testListChild.getAttribute("id") || "";
+                test.objective = parseRichTextChildren(testListChild);
+
+                testListChild.childNodes.forEach(testChild => {
+                    if (testChild.nodeType == Node.ELEMENT_NODE) {
+                        // Handle multi layered nested testlists
+                        if (testChild.tagName.toLowerCase() == "testlist") {
+                            const nested = parseTestList(eA, testChild, test);
+                            if (nested.tests.length > 0) {
+                                test.nestedTests.push(...nested.tests);
+                            }
+                        } else if (testChild.tagName.toLowerCase() == "depends") {
+                            test.dependencies.push(eA.platformMap[testChild.getAttribute("ref")] || testChild.getAttribute("on") || "");
+                        }
+                    }
+                });
+
+                // If this is the top level testlist ie. not nested, add to top level testList, else add to testList of the test it is nested in 
+                if (parentTest === null) {
+                    testList.tests.push(test);
+                } else {
+                    parentTest.nestedTests.push(test);
+                }
+            } else { // likely rich text/the name of the test
+                testList.description += ` <${testListChild.localName}${getNodeAttributes(testListChild)}>${parseRichTextChildren(testListChild)}</${testListChild.localName}> `;
+            }
+        } else if (testListChild.nodeType === Node.TEXT_NODE) {
+            const textContent = removeWhitespace(testListChild.textContent);
+
+            if (textContent) {
+                if (idx === 0) {
+                    testList.description += textContent;
+                } else {
+                    testList.tests.push({ text: textContent });
+                }
+            }
+        }
+    });
+
+    return testList;
+}
+
 
 // Create groups for complex selecatable
 function checkNestedGroups(currentGroup, selectableGroups, subgroup = 0) {
@@ -2399,6 +2631,9 @@ function checkNestedGroups(currentGroup, selectableGroups, subgroup = 0) {
                     selectableGroups[subgroupName].description.push({ 'text': removeWhitespace(selectable.description) })
                 }
 
+                // Count total assignables
+                // const totalAssignables = selectable.nestedGroups.filter(group => group.type === "assignable").length;
+
                 selectable.nestedGroups.forEach(group => {
                     /*
                     Nested group structure
@@ -2410,7 +2645,7 @@ function checkNestedGroups(currentGroup, selectableGroups, subgroup = 0) {
                     */
 
                     if (group.type == "assignable") {
-                        if (selectable.description.length !== 0) {
+                        if (selectable.description.length !== 0 || selectable.nestedGroups.length != 1) {
                             // Create a complex selectable only if there is more than just an assignment as part of the selectable
                             selectableGroups[subgroupName].description.push({ 'groups': [group.uuid] });
                         } else {
@@ -2426,7 +2661,6 @@ function checkNestedGroups(currentGroup, selectableGroups, subgroup = 0) {
                             let previousText = '';
 
                             previousText = lastElement["text"];
-
 
                             selectableGroups[subgroupName].description.pop(); // remove entry
                             selectableGroups[subgroupName].description.push({ 'text': `${previousText} ${text}` });
@@ -2588,7 +2822,6 @@ function processSelectables(node, selectable_id, selectableGroupCounter, compone
                     context.nestedGroups.push({ type: 'text', content: context.contents });
                 }
             }
-
 
             // Prepare the selectable entry with its description and nested groups
             let selectableEntry = {
@@ -3041,7 +3274,24 @@ function removeWhitespace(content) {
     return content.replace(/\s+/g, " ").trim();
 }
 
-// Parse through selectable to get lowest layer child
+/**
+ * Escape standalone '<' signs, and pad with surrounding whitespace so that it is not converted to < on export, as transforms will complain since it appears like an unclosed tag
+ * @param {*} content 
+ * @returns 
+ */
+function escapeLTSign(content) {
+    const pattern = /(?<=\S)\s*<\s*(?=\S)|(?<=\S)<(?=\s)|(?<=\s)<(?=\S)/g;
+    return content.replace(pattern, ' &lt; ');
+}
+
+
+/**
+ * Parse through selectable to get lowest layer child
+ * @param {*} selectable 
+ * @param {*} allSelectables 
+ * @param {*} id 
+ * @returns 
+ */
 function flattenSelectable(selectable, allSelectables, id) {
     let lastSelectableId = id;
 
@@ -3090,9 +3340,11 @@ function getDirectTextContent(node) {
     node.childNodes.forEach((child) => {
         if (child.nodeType == Node.TEXT_NODE) {
             textContent += child.textContent + " ";
+        } else if (child.nodeType === Node.ELEMENT_NODE) {
+            textContent += getDirectTextContent(child);
         }
     });
-    return textContent;
+    return textContent.trim();
 }
 
 // Get component and element IDs for a given selectable ID (used for selection dependent components)

@@ -62,7 +62,7 @@ function MetadataSection() {
     useEffect(() => {
         // Check if the ppTemplateVersion has changed
         try {
-            convertTemplateData(ppTemplateVersion, dispatch);
+            convertTemplateData(ppTemplateVersion, ppType, dispatch);
         } catch (e) {
             console.error('Error:', e);
             handleSnackBarError(e);
@@ -192,7 +192,7 @@ function MetadataSection() {
     }
     const getPPTypeFilteredMenuOptions = (ppType) => {
         const ppTypeOptions = [
-            { label: "Functional Package", disabled: true },
+            { label: "Functional Package", disabled: false },
             { label: "Protection Profile", disabled: false },
         ]
 
@@ -203,7 +203,7 @@ function MetadataSection() {
 
         return ppTypeOptions
     }
-    const convertTemplateData = (ppTemplateVersion, dispatch) => {
+    const convertTemplateData = (ppTemplateVersion, ppType, dispatch) => {
         // Retrieve the last known version from local storage
         const storedVersion = sessionStorage.getItem('ppTemplateVersion');
 
@@ -218,12 +218,13 @@ function MetadataSection() {
                         break;
                     case "Version 3.1":
                         if (ppTemplateVersion === "CC2022 Direct Rationale" || ppTemplateVersion === "CC2022 Standard") {
-                            convertFromVersion3_1(ppTemplateVersion);
+                            convertFromVersion3_1(ppTemplateVersion, ppType);
                         }
                         break;
                     default:
                         fetchTemplateData({
                             version: ppTemplateVersion,
+                            type: ppType,
                             base: false
                         }, dispatch).then()
                         break;
@@ -234,10 +235,11 @@ function MetadataSection() {
             }
         }
     }
-    const convertFromVersion3_1 = (ppTemplateVersion) => {
+    const convertFromVersion3_1 = (ppTemplateVersion, ppType) => {
         try {
             loadTemplateJson({
                 version: ppTemplateVersion,
+                type: ppType,
                 base: false
             }).then((data) => {
                 let originalAccordionPane = deepCopy(currentAccordionPane)

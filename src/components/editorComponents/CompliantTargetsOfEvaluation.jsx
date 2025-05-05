@@ -23,6 +23,7 @@ import RemoveIcon from "@mui/icons-material/Remove";
 import AddIcon from "@mui/icons-material/Add";
 import TipTapEditor from "./TipTapEditor.jsx";
 import EditableTable from "./EditableTable.jsx";
+import sfrComponents from "../../../public/data/sfr_components.json";
 
 /**
  * The CompliantTargetsOfEvaluation component
@@ -59,14 +60,22 @@ function CompliantTargetsOfEvaluation(props) {
     const [collapseAdditionalTextEditor, setCollapseAdditionalTextEditor] = useState(false);
     const headerTextColor = "text-accent"
     const collapseIconColor = secondary
+    // const dropdownMenuOptions = sfrComponents.map(label => ({
+    //     label,
+    //     key: uuidv4(),
+    //     disabled: false,
+    //   }));
 
     // Use Effects
     useEffect(() => {
         // Update dropdown menu options
-        dispatch(UPDATE_DROPDOWN_MENU_OPTIONS({
-            sfrMaps: deepCopy(props.sfrMaps)
-        }))
+        // dispatch(UPDATE_DROPDOWN_MENU_OPTIONS({
+        //     // sfrMaps: deepCopy(props.sfrMaps)
+        // }))
+
+        dispatch(UPDATE_DROPDOWN_MENU_OPTIONS({sfrComponents}))
     }, [props.sfrMaps, rowData])
+    // }, [])
 
     // Methods
     /**
@@ -118,13 +127,15 @@ function CompliantTargetsOfEvaluation(props) {
     const handleDropdownMenuSelect = (event) => {
         const { rowIndex, target } = event
         const { value } = target
-        const sfrMaps = deepCopy(props.sfrMaps)
 
-        // Update row componentID
+        dispatch(UPDATE_DROPDOWN_MENU_OPTIONS({
+            sfrComponents: sfrComponents
+        }))
+
         dispatch(UPDATE_ROW_DATA_COMPONENT_ID_BY_INDEX({
             index: rowIndex,
             value: value,
-            sfrMaps: sfrMaps
+            dropdownMenuOptions: dropdownMenuOptions
         }))
     }
     /**

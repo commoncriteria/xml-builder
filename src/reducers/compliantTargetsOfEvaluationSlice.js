@@ -1,4 +1,5 @@
 import { createSlice } from '@reduxjs/toolkit'
+import { v4 as uuidv4 } from 'uuid';
 
 const initialState = {
     title: "TOE Overview",
@@ -11,7 +12,7 @@ const initialState = {
     introText: "",
     columnData: [
         { headerName: "Component", field: "componentID", editable: true, resizable: true, type: "Select", flex: 0.5 },
-        { headerName: "Explanation", field: "notes", editable: true, resizable: true, type: "Editor", flex: 1 },
+        { headerName: "Explanation", field: "notes", editable: true, resizable: true, type: "Large Editor", flex: 1 },
     ],
     rowData: [],
     dropdownMenuOptions: [],
@@ -23,6 +24,12 @@ export const compliantTargetsOfEvaluationSlice = createSlice({
     name: 'compliantTargetsOfEvaluation',
     initialState,
     reducers: {
+        SET_COMPLIANT_TARGETS_OF_EVALUATION_INTRO: (state, action) => {
+            state.introText = action.payload.text;
+        },
+        SET_COMPLIANT_TARGETS_OF_EVALUATION_ADDITIONAL_TEXT: (state, action) => {
+            state.additionalText = action.payload.text;
+        },
         SET_COMPLIANT_TARGETS_OF_EVALUATION_INITIAL_STATE: (state, action) => {
             try {
                 return {
@@ -34,7 +41,7 @@ export const compliantTargetsOfEvaluationSlice = createSlice({
         },
         ADD_NEW_TABLE_ROW: (state) => {
             let newRow = {
-                componentID: [],
+                componentID: "",
                 notes: ""
             }
             state.rowData.push(newRow)
@@ -42,19 +49,21 @@ export const compliantTargetsOfEvaluationSlice = createSlice({
             // Sort row data
             sortByLabel(state.rowData, true)
         },
+        LOAD_TABLE_ROWS: (state, action) => {
+            action.payload.components.forEach(component => {
+                state.rowData.push({ componentID: component.compID, notes: component.notes });
+            });
+
+            // Sort row data
+            sortByLabel(state.rowData, true)
+        },
         UPDATE_ROW_DATA_COMPONENT_ID_BY_INDEX: (state, action) => {
-            const { index, value, sfrMaps } = action.payload;
-            const { sfrNameMap } = sfrMaps
+            const { index, value } = action.payload;
 
             // Update component id
             const rowIndexIsValid = state.rowData[index] && state.rowData[index].hasOwnProperty("componentID")
-            const includesSfrName = sfrMaps && sfrNameMap.hasOwnProperty(value)
-            if (rowIndexIsValid && includesSfrName) {
-                const uuid = sfrNameMap[value]
-                state.rowData[index].componentID = {
-                    label: value,
-                    key: uuid
-                }
+            if (rowIndexIsValid) {
+                state.rowData[index].componentID = value;
             }
 
             // Sort Row Data
@@ -80,72 +89,27 @@ export const compliantTargetsOfEvaluationSlice = createSlice({
             }
         },
         UPDATE_DROPDOWN_MENU_OPTIONS: (state, action) => {
-            const { sfrMaps } = action.payload;
-            let dropdownMenuOptions = []
+            let dropdownMenuOptions = [];
 
-            // Update dropdown menu options
-            if (sfrMaps) {
-                const { sfrUUIDMap } = sfrMaps
+            // Get selected componentIDs from current rowData
+            const selectedLabels = state.rowData.map(row => typeof row.componentID === "string" ? row.componentID : "");
 
-                // Generate dropdown menu
-                if (sfrUUIDMap) {
-                    // Update the rowData if the component has changed
-                    state.rowData.map((row, index) => {
-                        let { componentID } = row
-
-                        // Update the row data if the componentID has the expected values
-                        if (componentID && componentID.hasOwnProperty("label") && componentID.hasOwnProperty("key")) {
-                            let { label, key: uuid } = componentID
-
-                            // Check if the sfrUUIDMap has the uuid
-                            if (sfrUUIDMap[uuid]) {
-                                // Update the name of the component if it has changed
-                                if (sfrUUIDMap[uuid] !== label) {
-                                    state.rowData[index].componentID.label = sfrUUIDMap[uuid]
-                                }
-                            }
-
-                            // Delete rowData entry if the sfrUUIDMap no longer has the selected uuid
-                            else {
-                                state.rowData.splice(index, 1);
-                            }
-                        }
-                    })
-
-                    // Get updated selected row data
-                    const selected = state.rowData
-                        .filter(item => item.hasOwnProperty("componentID") && item.componentID.hasOwnProperty("key"))
-                        .map(item => item.componentID.key);
-
-                    // Update the dropdown values
-                    Object.entries(sfrUUIDMap).forEach(([key, value]) => {
-                        // Set disabled if the option has already been selected
-                        const disabled = selected.includes(key) ? true : false
-
-                        // Create the menu option
-                        const option = {
-                            disabled: disabled,
-                            key: key,
-                            label: value
-                        }
-
-                        // Add to drop down menu
-                        if (!dropdownMenuOptions.includes(option)) {
-                            dropdownMenuOptions.push(option)
-                        }
-                    })
-                }
-            }
+            // Build dropdown options
+            dropdownMenuOptions = action.payload.sfrComponents.map(label => ({
+                label,
+                key: uuidv4(),
+                disabled: selectedLabels.includes(label),
+            }));
 
             // Sort dropdown menu
-            dropdownMenuOptions = sortByLabel(dropdownMenuOptions, false)
+            dropdownMenuOptions = sortByLabel(dropdownMenuOptions, false);
 
-            // Update the state
+            // Only update state if it actually changed
             if (JSON.stringify(state.dropdownMenuOptions) !== JSON.stringify(dropdownMenuOptions)) {
-                state.dropdownMenuOptions = dropdownMenuOptions
+                state.dropdownMenuOptions = dropdownMenuOptions;
             }
         },
-        RESET_COMPLIANT_TARGETS_OF_EVALUATION_STATE: () => ({...initialState}),
+        RESET_COMPLIANT_TARGETS_OF_EVALUATION_STATE: () => initialState,
     },
 })
 
@@ -184,12 +148,15 @@ const sortByLabel = (inputArray, componentID) => {
 
 // Action creators are generated for each case reducer function
 export const {
+    SET_COMPLIANT_TARGETS_OF_EVALUATION_INTRO,
+    SET_COMPLIANT_TARGETS_OF_EVALUATION_ADDITIONAL_TEXT,
     SET_COMPLIANT_TARGETS_OF_EVALUATION_INITIAL_STATE,
     UPDATE_ROW_DATA_COMPONENT_ID_BY_INDEX,
     UPDATE_ROW_DATA_NOTES_BY_INDEX,
     UPDATE_COMPLIANT_TARGETS_OF_EVALUATION_BY_KEY,
     UPDATE_DROPDOWN_MENU_OPTIONS,
     ADD_NEW_TABLE_ROW,
+    LOAD_TABLE_ROWS,
     RESET_COMPLIANT_TARGETS_OF_EVALUATION_STATE
 } = compliantTargetsOfEvaluationSlice.actions
 

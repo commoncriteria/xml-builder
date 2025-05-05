@@ -2,354 +2,70 @@
 import { current, createSlice } from "@reduxjs/toolkit";
 import validator from 'validator';
 import { deepCopy } from "../utils/deepCopy";
-import SecurityComponents from "../utils/securityComponents.jsx";
+import basePPExport from '../../public/data/base_data/base_export_pp_fp.json'
+import SecurityComponents from "../utils/securityComponents";
 
-const initialState = {
-	overallObject: {
-		"?1": 'xml-stylesheet type="text/xsl" href="..\transformspp2html.xsl"',
-		"?2": 'xml-model href="https://raw.githubusercontent.com/commoncriteria/transforms/master/schemas/CCProtectionProfile.rng" type="application/xml" schematypens="http://relaxng.org/ns/structure/1.0"',
-		PP: {
-			PPReference: {
-				ReferenceTable: {
-					PPTitle: "Protection Profile for QQQQ",
-					PPVersion: "#.#",
-					PPAuthor: "National Information Assurance Partnership",
-					PPPubDate: "YYYY-MM-DD",
-					Keywords: "QQQQ; QQQQ",
-				},
-			},
-			RevisionHistory: {
-				entry: {
-					"!": " Repeatable ",
-					version: "v #.#",
-					date: "YYYY-MM-DD",
-					subject: {
-						"#1": "QQQQ\n        ",
-						"h:br": {},
-						"#2": "QQQQ ",
-						"!": " Repeatable ",
-					},
-				},
-			},
-			"include-pkg": {},
-			modules: {},
-			"pp-preferences": {},
-			"sec:Introduction": {
-				"#": [
-					{
-						"!": " 1.1 Overview ",
-					},
-					{
-						"sec:Overview": "QQQQ\n    ",
-					},
-					{
-						"!": [
-							" 1.2 Terms ",
-							" 1.2.1 Common Criteria Terms ",
-							" 1.2.2 Technical Terms ",
-						],
-					},
-					{
-						"tech-terms": {
-							term: {
-								"@full": "QQQQ",
-								"@abbr": "QQQQ",
-								"#": "\n            QQQQ\n        ",
-							},
-						},
-					},
-					{
-						"!": " 1.3 Compliant Targets of Evaluation ",
-					},
-					{
-						section: {
-							"@title": "Compliant Targets of Evaluation",
-							"@id": "TOEdescription",
-							"#": "\n\n    QQQQ\n\n    ",
-							"!": " 1.3.1 TOE Boundary ",
-							"sec:TOE_Boundary": {
-								"#": "\n\n    QQQQ \n    ",
-								figure: {
-									"@entity": "images/QQQQ.png",
-									"@title": "QQQQ",
-									"@id": "QQQQ",
-								},
-								"!": " Repeatable ",
-							},
-						},
-					},
-					{
-						"!": [" 1.3 Compliant Targets of Evaluation ", " 1.4 Use Cases "],
-					},
-					{
-						"sec:Use_Cases": {
-							"#": "\n    QQQQ\n    ",
-							usecases: {
-								usecase: {
-									"@title": "QQQQ",
-									"@id": "QQQQ",
-									description: "QQQQ\n        ",
-								},
-							},
-						},
-					},
-					{
-						"!": " 1.5 Supported Platforms ",
-					},
-					{
-						section: {
-							"@title": "Platforms with Specific EAs",
-							"@id": "sec-platforms",
-							choice: {
-								"@prefix": "Platforms:",
-								"#": "\n        QQQQ",
-								"h:p": {},
-								selectables: {
-									"@linebreak": "yes",
-									selectable: {
-										"@id": "QQQQ",
-										"h:b": {
-											snip: "QQQQ",
-										},
-										"#": ": ",
-										"h:i": "QQQQ",
-									},
-									"!": " Repeatable ",
-								},
-							},
-						},
-					},
-				],
-			},
-			"sec:Conformance_Claims": {},
-			"section": {},
-			"!1": " 3.0 Security Problem Definition",
-			"sec:Security_Problem_Definition": {
-				"#": "\n    The security problem is described in terms\n    of the threats that the TOE is expected to address, assumptions about the\n    operational environment, and any organizational security policies that the TOE\n    is expected to enforce.\n    \n",
-				"!1": " 3.1 Threats ",
-				"sec:Threats": {
-					threats: {
-						threat: {
-							"@name": "T.QQQQ",
-							"!": " Repeatable ",
-							description: "QQQQ",
-							"objective-refer": {
-								"@ref": "O.QQQQ",
-								"!": " Repeatable ",
-								rationale: "QQQQ",
-							},
-						},
-					},
-				},
-				"!2": " 3.2 Assumptions ",
-				"sec:Assumptions": {
-					assumptions: {
-						assumption: {
-							"@name": "A.QQQQ",
-							"!": " Repeatable ",
-							description: "QQQQ",
-							"objective-refer": {
-								"@ref": "OE.QQQQ",
-								"!": " Repeatable ",
-								rationale: "QQQQ",
-							},
-						},
-					},
-				},
-				"!3": " 3.3 Organizational Security Policies ",
-				"sec:Organizational_Security_Policies": {
-					OSPs: {},
-					"!": '     <OSP id="P.QQQQ"> \n        <description>QQQQ</description>\n        <objective-refer ref="O.QQQQ">\n            <rationale>QQQQ</rationale>\n        </objective-refer>\n    </OSP>\n    </OSPs> ',
-				},
-			},
-			"!2": " 4.0 Security Objectives ",
-			"sec:Security_Objectives": {
-				"!1": " 4.1 Security Objectives for the TOE ",
-				"sec:Security_Objectives_for_the_TOE": {
-					SOs: {
-						SO: {
-							"@name": "O.QQQQ",
-							"!1": " Repeatable ",
-							description: "QQQQ",
-							"addressed-by": "QQQQ.#/QQQQ",
-							rationale: "QQQQ",
-							"!2": " Repeatable ",
-						},
-					},
-				},
-				"!2": " 4.2 Security Objctives for the Operational Environment ",
-				"sec:Security_Objectives_for_the_Operational_Environment": {
-					"#": "\n    QQQQ\n    ",
-					SOEs: {
-						SOE: {
-							"@name": "OE.QQQQ",
-							"!": " Repeatable ",
-							description: "QQQQ",
-						},
-					},
-				},
-				"!3": " 4.3 Security Objectives Rationale ",
-				"sec:Security_Objectives_Rationale": {},
-			},
-			"!3": " 5.0 Security Requirements ",
-			"sec:req": {
-				"@title": "Security Requirements",
-				"!1": " 5.1 Security Functional Requirements ",
-				"sec:SFRs": {
-					"@title": "Security Functional Requirements",
-					"sec:Auditable_Events_for_Mandatory_SFRs": {
-						"audit-table": [
-							{
-								"@table": "mandatory",
-								"@id": "t-audit-mandatory",
-							},
-							{
-								"@table": "additional",
-								"@id": "t-audit-additional",
-								"@title": "Additional Audit Events",
-							},
-						],
-					},
-					"!1": " 5.1.1 First SFR Family Section - Alphabetical ",
-					section: {
-						"@title": "QQQ",
-						"@id": "qqq",
-						"!1": " Repeatable ",
-						"!2": " FCS_CKM.1 ",
-						"f-component": {
-							"@cc-id": "QQQ_QQQ_EXT.1",
-							"@id": "qqqq",
-							"@iteration": "QQQQ",
-							"@name": "QQQQ",
-							"@status": "sel-based/optional",
-							"!": " Repeatable ",
-							depends: {
-								"@on": "qqqq",
-								"@and": "qqqq",
-							},
-							"f-element": {
-								"@id": "QQQQ",
-								"!": " Repeatable ",
-								title: {
-									assignable: "QQQQ",
-									"#1": " QQQQ ",
-									selectables: {
-										"@linebreak": "yes",
-										"!1": " Repeatable ",
-										selectable: {
-											"@exclusive": "yes",
-											"@id": "qqqq",
-											assignable: "QQQQ",
-											"#": " QQQQ ",
-										},
-										"!2": " Repeatable ",
-									},
-									"#2": ".\n\t\t\t\t",
-								},
-								note: {
-									"@role": "application",
-									"#": "QQQQ\n\t\t\t\t",
-								},
-								aactivity: {
-									"@level": "element",
-									"!": " Repeatable ",
-									TSS: "\n\t\t\t\t\t\tQQQQ\n\t\t\t\t\t",
-									Guidance: "QQQQ",
-									Tests: {
-										testlist: {
-											test: {
-												"h:div": {
-													depends: {
-														"@ref": "qqqq",
-													},
-													"#": "\n                                        QQQQ\n                                ",
-												},
-											},
-										},
-									},
-								},
-							},
-						},
-					},
-					"!2": " First SFR Family Section - Alphabetical ",
-					"!3": " 5.1.7 TOE Security Functional Requirements Rationale ",
-					"!4": " auto generated ",
-				},
-				"!2": " 5.1 Security Functional Requirements ",
-				"!3": " 5.2 Security Assurance Requirements ",
-				section: {
-					"@title": "Security Assurance Requirements",
-					"@id": "SARs",
-				},
-				"!4": " Security Assurance Requirements ",
-			},
-			appendix: {},
-			bibliography: {
-				"cc-entry": {},
-				entry: {}
-			},
-		},
-	},
-	techTerms: {},
-	useCases: {},
-	reference: {},
-	revisionHistory: {},
-	fileType: ""
-};
+const initialPPState = basePPExport
 
 // Populated normally, and then run XML export serialization
 // TODO: look at making the abbr to a dedicated field
 // TODO: Refactor terms so that we don't repeat code here
 export const exportSlice = createSlice({
 	name: "export",
-	initialState,
+	initialState: initialPPState,
 	reducers: {
+		SET_PP_TYPE_TO_PACKAGE: (state, action) => {
+			if (state.overallObject["PP"]) {
+				state.overallObject["Package"] = state.overallObject.PP;
+				delete state.overallObject.PP;
+			}
+		},
+		SET_PP_TYPE_TO_PP: (state, action) => {
+			if (state.overallObject["Package"]) {
+				state.overallObject.PP = state.overallObject["Package"]
+				delete state.overallObject["Package"];
+			}
+		},
 		SET_TECH_TERMS: (state, action) => {
-			const reformatted = Object.entries(action.payload.techTerms).map(([key, value]) => {
-				const abbreviation = getAbbreviation(action.payload.techTerms.title)
+			const suppressArray = [];
 
-				// Only parse if its a UUID (signifying an actual term)
-				if (validator.isUUID(key)) {
-					const term = action.payload.techTerms[key]
-					return {
-						"@full": getTitle(term.title),
-						"#": [
-							(abbreviation && abbreviation !== "null") ? { "@abbr": abbreviation } : "",
-							removeEnclosingPTag(term.definition)
-						]
-					};
-				}
-			});
 			if (action.payload.hasOwnProperty("techTerms")) {
 				const reformatted = Object.entries(action.payload.techTerms).map(
 					([key, value]) => {
-						const abbreviation = getAbbreviation(action.payload.techTerms.title)
-
 						// Only parse if its a UUID (signifying an actual term)
 						if (validator.isUUID(key)) {
 							const term = action.payload.techTerms[key]
 							return {
 								"@full": getTitle(term.title),
-								"#": [
-									(abbreviation && abbreviation !== "null") ? { "@abbr": abbreviation } : "",
-									removeEnclosingPTag(term.definition)
-								]
+                                ...(term.xmlTagMeta.attributes.abbr && { "@abbr": term.xmlTagMeta.attributes.abbr }),
+								"#": removeEnclosingPTag(term.definition)
 							};
 						}
 					}
-				);
+				).filter(Boolean); // Remove undefined values
+
+				// Add suppressed terms (if any)
+				if (action.payload.hasOwnProperty("suppressedTerms")) {
+					Object.entries(action.payload.suppressedTerms).forEach(([key, value]) => {
+						if (validator.isUUID(key)) {
+							suppressArray.push(getTitle(value.title));
+						}
+					});
+				}
 
 				// Format tech-term by file type
 				switch (state.fileType) {
 					case "Mobile Device": {
 						state.techTerms = {
 							"cc:term": reformatted,
+							"cc:suppress": suppressArray,
 						};
 						break;
 					}
 					default: {
 						state.techTerms = {
 							term: reformatted,
+							suppress: suppressArray,
 						};
 						break;
 					}
@@ -364,7 +80,6 @@ export const exportSlice = createSlice({
 
 					// Ignore if not an object (Use Case slice has title and open keys which are string and bool)
 					if (term && definition && term.xmlTagMeta) {
-
 						if (title.length != 0) {
 							return {
 								"@title": title,
@@ -382,10 +97,13 @@ export const exportSlice = createSlice({
 				}
 
 			}).filter(notUndefined => notUndefined !== undefined);
-			let jsonReformatted = {
-				usecase: reformatted,
-			};
-			state.useCases = jsonReformatted;
+
+			if (reformatted.length != 0) {
+				state.useCases = {
+					usecase: reformatted,
+				};
+			}
+			
 		},
 		SET_SECURITY_PROBLEM_DEFINITION_SECTION: (state, action) => {
 			const {
@@ -397,10 +115,11 @@ export const exportSlice = createSlice({
 				ppTemplateVersion,
 			} = action.payload;
 
-			// Set the security problem definition section
+			const docType = state.overallObject["PP"] ? "PP" : "Package"
 
+			// Set the security problem definition section
 			let reformattedThreats
-			if (ppTemplateVersion === 'CC2022 Direct Rationale') {
+			if (ppTemplateVersion === 'CC2022 Direct Rationale' && threats) {
 				reformattedThreats = constructDirectRationaleThreats(threats)
 			} else {
 				reformattedThreats = getThreatsAndAssumptionsHelper(
@@ -420,48 +139,71 @@ export const exportSlice = createSlice({
 				objectiveTerms,
 				"OSPs"
 			);
-			state.overallObject.PP["sec:Security_Problem_Definition"] = {
-				"#": removeEnclosingPTag(securityProblemDefinition),
-				"!1": " 3.1 Threats ",
-				"sec:Threats": reformattedThreats,
-				"!2": " 3.2 Assumptions ",
-				"sec:Assumptions": reformattedAssumptions,
-				"!3": " 3.3 Organizational Security Policies ",
-				"sec:Organizational_Security_Policies": reformattedOSPs,
-			};
+
+			// If all the sections are empty, remove the Security Problem Definition Section
+			if (Object.keys(reformattedThreats).length === 0 && Object.keys(reformattedAssumptions).length === 0 && Object.keys(reformattedOSPs).length === 0) {
+				delete state.overallObject[docType]["sec:Security_Problem_Definition"];
+			} else {
+				// Organizational Security Policies section is needed for PPs
+				if (docType == "PP") {
+					reformattedOSPs = {
+						OSPs: {}
+					}
+				}
+				
+				state.overallObject[docType]["sec:Security_Problem_Definition"] = {
+					"#": removeEnclosingPTag(securityProblemDefinition),
+					"!1": " 3.1 Threats ",
+					"sec:Threats": reformattedThreats,
+					"!2": " 3.2 Assumptions ",
+					"sec:Assumptions": reformattedAssumptions,
+					"!3": " 3.3 Organizational Security Policies ",
+					"sec:Organizational_Security_Policies": reformattedOSPs,
+				};
+			}
 		},
 		SET_SECURITY_OBJECTIVES_SECTION: (state, action) => {
 			const { toe, operationalEnvironment, objectivesToSFRs } = action.payload;
+			const docType = state.overallObject["PP"] ? "PP" : "Package"
+
+			// Remove section if there is no content
+			if (!(toe || operationalEnvironment) && Object.keys(objectivesToSFRs).length === 0) {
+				delete state.overallObject[docType]["sec:Security_Objectives"];
+				return
+			}
 
 			// Get Security_Objectives_for_the_TOE
 			if (toe) {
 				const reformattedTOE = getSecurityObjectives(toe.terms, objectivesToSFRs);
-				state.overallObject.PP["sec:Security_Objectives"][
-					"sec:Security_Objectives_for_the_TOE"
-				] = {
+				state.overallObject[docType]["sec:Security_Objectives"]["sec:Security_Objectives_for_the_TOE"] = {
 					"#": toe.definition,
 					SOs: {
 						SO: reformattedTOE,
 					},
 				};
+			} else {
+				delete state.overallObject[docType]["sec:Security_Objectives"]["sec:Security_Objectives_for_the_TOE"];
 			}
 
 			// Get Security_Objectives_for_the_Operational_Environment
-			const reformattedOperationalEnvironment = getSecurityObjectives(
-				operationalEnvironment.terms,
-				objectivesToSFRs
-			);
-			state.overallObject.PP["sec:Security_Objectives"][
-				"sec:Security_Objectives_for_the_Operational_Environment"
-			] = {
-				"#": operationalEnvironment.definition,
-				SOEs: {
-					SOE: reformattedOperationalEnvironment,
-				},
-			};
+			if (operationalEnvironment) {
+				const reformattedOperationalEnvironment = getSecurityObjectives(
+					operationalEnvironment.terms,
+					objectivesToSFRs
+				);
+				state.overallObject[docType]["sec:Security_Objectives"]["sec:Security_Objectives_for_the_Operational_Environment"] = {
+					"#": operationalEnvironment.definition,
+					SOEs: {
+						SOE: reformattedOperationalEnvironment,
+					},
+				};
+			} else {
+				delete(state.overallObject[docType][["sec:Security_Objectives"]["sec:Security_Objectives_for_the_Operational_Environment"]])
+			}
 		},
 		SET_META_DATA: (state, action) => {
 			const { ppName, author, keywords, releaseDate, version, revisionHistory, xmlTagMeta } = action.payload.metaData;
+			const ppType = action.payload.ppType
 
 			// Reformat the revision history
 			const fileType = xmlTagMeta.hasOwnProperty("attributes") && xmlTagMeta.attributes.hasOwnProperty("target-product") ? xmlTagMeta.attributes["target-product"] : ""
@@ -495,50 +237,55 @@ export const exportSlice = createSlice({
 				},
 			};
 
-			// TODO: Revision history clipping off a number on import
-			state.revisionHistory = reformattedRevisionHistory;
-			state.reference = reformattedReference;
-			state.overallObject.PP.PPReference = reformattedReference;
-			state.overallObject.PP.RevisionHistory = reformattedRevisionHistory;
+			const docType = ppType == "Protection Profile" ? "PP" : "Package"
 
-			// Set initial main PP tags
+			// TODO: Revision history clipping off a number on import
+			state.overallObject[docType].PPReference = reformattedReference;
+			state.overallObject[docType].RevisionHistory = reformattedRevisionHistory;
+
+			// Set initial main PP or Functional Package tags
 			if (xmlTagMeta.hasOwnProperty("attributes")) {
 				const { attributes } = xmlTagMeta;
+				if (attributes.hasOwnProperty("name")) {
+					state.overallObject[docType]["@name"] = attributes["name"]
+				}
 				if (attributes.hasOwnProperty("boilerplate")) {
-					state.overallObject.PP["@boilerplate"] = attributes["boilerplate"]
+					state.overallObject[docType]["@boilerplate"] = attributes["boilerplate"]
 				}
 				if (attributes.hasOwnProperty("target-product")) {
-					state.overallObject.PP["@target-product"] = attributes["target-product"]
+					state.overallObject[docType]["@target-product"] = attributes["target-product"]
 				}
 				if (attributes.hasOwnProperty("target-products")) {
-					state.overallObject.PP["@target-products"] = attributes["target-products"]
+					state.overallObject[docType]["@target-products"] = attributes["target-products"]
 				}
 				if (attributes.hasOwnProperty("xmlns")) {
-					state.overallObject.PP["@xmlns"] = attributes["xmlns"]
+					state.overallObject[docType]["@xmlns"] = attributes["xmlns"]
 				}
 				if (attributes.hasOwnProperty("xmlns:h")) {
-					state.overallObject.PP["@xmlns:h"] = attributes["xmlns:h"]
+					state.overallObject[docType]["@xmlns:h"] = attributes["xmlns:h"]
 				}
 				if (attributes.hasOwnProperty("xmlns:cc")) {
-					state.overallObject.PP["@xmlns:cc"] = attributes["xmlns:cc"]
+					state.overallObject[docType]["@xmlns:cc"] = attributes["xmlns:cc"]
 				}
 				if (attributes.hasOwnProperty("xmlns:sec")) {
-					state.overallObject.PP["@xmlns:sec"] = attributes["xmlns:sec"]
+					state.overallObject[docType]["@xmlns:sec"] = attributes["xmlns:sec"]
 				}
 				if (attributes.hasOwnProperty("xmlns:htm")) {
-					state.overallObject.PP["@xmlns:htm"] = attributes["xmlns:htm"]
+					state.overallObject[docType]["@xmlns:htm"] = attributes["xmlns:htm"]
 				}
 				if (attributes.hasOwnProperty("short")) {
-					state.overallObject.PP["@short"] = attributes["short"]
+					state.overallObject[docType]["@short"] = attributes["short"]
 				}
+
 			}
 		},
 		SET_PACKAGES: (state, action) => {
 			const packages = action.payload.packages;
 			let packageArr = [];
+			const docType = state.overallObject["PP"] ? "PP" : "Package"
 
 			if (packages.length == 0) {
-				delete state.overallObject.PP["include-pkg"];
+				delete state.overallObject[docType]["include-pkg"];
 				return
 			}
 
@@ -568,25 +315,29 @@ export const exportSlice = createSlice({
 				packageArr.push(singlePackage);
 			});
 
-			state.overallObject.PP["include-pkg"] = packageArr;
+			state.overallObject[docType]["include-pkg"] = packageArr;
 		},
 		SET_MODULES: (state, action) => {
 			const modules = action.payload.modules.xml;
 
 			// TODO: Complete, need to parse in modules by field, instead of full xml
 			if (typeof (modules) === "object" && modules.length != 0) {
-				state.overallObject.PP.modules = modules.payload.modules;
+				const docType = state.overallObject["PP"] ? "PP" : "Package"
+				state.overallObject[docType]["modules"] = modules.payload.modules;
 			}
 		},
 		SET_PP_PREFERENCE: (state, action) => {
 			const ppPreference = action.payload.ppPreference
 
 			if (ppPreference.hasOwnProperty("xml") && ppPreference.xml.hasOwnProperty("payload") && ppPreference.xml.payload.hasOwnProperty("preference")) {
-				state.overallObject.PP["pp-preferences"] = ppPreference.xml.payload.preference;
+				const docType = state.overallObject["PP"] ? "PP" : "Package"
+
+				state.overallObject[docType]["pp-preferences"] = ppPreference.xml.payload.preference;
 			}
 		},
 		SET_INTRODUCTION: (state, action) => {
 			const intro = action.payload.introduction.formItems;
+			const ctoeData = action.payload.compliantTargets
 			const { xml: platformXML } = action.payload.platformData;
 			const sec_overview_section = intro.find(
 				(formItem) => formItem.title == "Objectives of Document"
@@ -594,6 +345,7 @@ export const exportSlice = createSlice({
 			const sec_overview_text = removeEnclosingPTag(intro.find(
 				(formItem) => formItem.title == "Objectives of Document"
 			).text);
+			const ppType = action.payload.ppType;
 			const createToe = (title, intro, subTitle = "") => {
 				let formItem = intro.find((item) => item.title == title);
 
@@ -607,7 +359,6 @@ export const exportSlice = createSlice({
 									name = "sec:TOE_Boundary"
 								} else if (subTitle == "TOE Platform") {
 									name = "sec:TOE_Platform"
-
 								}
 
 								let toeOverview = intro.find((item) => item.title == "TOE Overview");
@@ -635,21 +386,33 @@ export const exportSlice = createSlice({
 				}
 			}
 
-			const toe_overview = createToe("TOE Overview", intro);
-			const toe_boundary = createToe("TOE Overview", intro, "TOE Boundary");
-			const toe_platform = createToe("TOE Overview", intro, "TOE Platform");
-			const toe_list = [toe_overview, toe_boundary, toe_platform];
-
-			const toe_usage = createToe("TOE Usage", intro);
-
-
 			let sections = [];
-			// Add TOE Overview
-			sections.push({
-				"@title": "Compliant Targets of Evaluation",
-				"@id": "TOEdescription",
-				"#": toe_list,
-			})
+			let CTOE = {};
+			const toe_usage = createToe("TOE Usage", intro);
+			
+			if (ppType == "Protection Profile") {
+				const toe_overview = createToe("TOE Overview", intro);
+				const toe_boundary = createToe("TOE Overview", intro, "TOE Boundary");
+				const toe_platform = createToe("TOE Overview", intro, "TOE Platform");
+				const toe_list = [toe_overview, toe_boundary, toe_platform];
+			
+				// Add TOE Overview
+				sections.push({
+					"@title": "Compliant Targets of Evaluation",
+					"@id": "TOEdescription",
+					"#": toe_list,
+				})
+			} else {
+				CTOE = {
+					"componentsneeded": {
+						"componentneeded": ctoeData.rowData.map(row => {
+							const {componentID, notes} = row;
+							return { componentid: componentID, notes: notes} }
+							
+						)
+					}
+				}
+			}
 
 			// TODO: Phase 2, once platforms are in UI, change to check if platform slice has content
 			if (platformXML && platformXML.length != 0) {
@@ -683,6 +446,12 @@ export const exportSlice = createSlice({
 				// Search the form items for duplicate tags, and if there are, use an array
 				[sec_overview_section]: sec_overview_text,
 				"#": techTerms,
+				// Conditionally add CTOE section
+				...(ppType === "Functional Package" && {
+					"sec:Compliant_Targets_of_Evaluation": {
+						"#": [ctoeData.introText, CTOE, ctoeData.additionalText]
+					}
+				}),
 				section: sections,
 				"sec:Use_Cases": {
 					"#": [
@@ -692,21 +461,28 @@ export const exportSlice = createSlice({
 				}
 			};
 
-			state.overallObject.PP["sec:Introduction"] = formattedIntroduction;
+			// Delete use case section if it is an empty object
+			if (Object.keys(useCaseState).length === 0) {
+				delete formattedIntroduction["sec:Use_Cases"];
+			}
+
+			state.overallObject[state.overallObject.PP ? "PP" : "Package"]["sec:Introduction"] = formattedIntroduction
 		},
 		SET_CONFORMANCE_CLAIMS: (state, action) => {
-			const { conformanceClaims, ppTemplateVersion } = action.payload;
+			const { conformanceClaims } = action.payload;
+			const docType = state.overallObject["PP"] ? "PP" : "Package"
 
-			if (ppTemplateVersion == "Version 3.1") {
+
+			if (action.payload.ppTemplateVersion == "Version 3.1") {
 				const emptyConformanceSection = Object.values(conformanceClaims).every(editor => editor.text.trim() === "");
 
 				if (emptyConformanceSection) {
-					state.overallObject.PP["sec:Conformance_Claims"] = {};
+					state.overallObject[docType]["sec:Conformance_Claims"] = {};
 				} else {
-					state.overallObject.PP["sec:Conformance_Claims"] = setConformanceClaimsTo3_1(state.fileType, conformanceClaims);
+					state.overallObject[docType]["sec:Conformance_Claims"] = setConformanceClaimsTo3_1(state.fileType, conformanceClaims);
 				}
 			} else {
-				state.overallObject.PP["sec:Conformance_Claims"] = setConformanceClaimsToCC2022(conformanceClaims, ppTemplateVersion);
+				state.overallObject[docType]["sec:Conformance_Claims"] = setConformanceClaimsToCC2022(action.payload.conformanceClaims, action.payload.ppTemplateVersion);
 			}
 		},
 		SET_SECURITY_REQUIREMENTS: (state, action) => {
@@ -719,6 +495,8 @@ export const exportSlice = createSlice({
 
 			const { sars, platforms, auditSection } = action.payload
 			const { title, definition, formItems } = sfrSections;
+			const docType = state.overallObject["PP"] ? "PP" : "Package"
+
 
 			try {
 				// Get selectable ids from uuid
@@ -745,12 +523,9 @@ export const exportSlice = createSlice({
 											if (cc_id !== undefined) {
 												return cc_id.toLowerCase();
 											}
-										}
-										)
-										:
-										[]
+										}) : []
 								);
-								auditTableExists = ccIds.includes("fau_gen.1")
+								auditTableExists = ccIds.includes("fau_gen.1") || docType == "Package";
 
 								// Get section values
 								innerSections = formItems.map((section, sfrSectionIndex) => {
@@ -843,34 +618,54 @@ export const exportSlice = createSlice({
 
 				// Format security requirements by file type
 				if (state.fileType === "General-Purpose Computing Platforms") {
-					delete state.overallObject.PP["sec:req"];
+					delete state.overallObject[docType]["sec:req"];
 				}
 
-				state.overallObject.PP[state.fileType === "General-Purpose Computing Platforms" ? "sec:Security_Requirements" : "sec:req"] = {
-					"@title": title,
-					"#": definition ? definition : "",
-					"!1": " 5.1 Security Functional Requirements",
-					"sec:SFRs": {
-						"#": [
-							auditTableExists ? auditSection : "",
-							sfrSections.find(section => section["@title"] == "Security Functional Requirements")
-						]
-					},
-					"!2": "5.2 Security Assurance Requirements",
-					[sars.xmlTagMeta.tagName]: {
-						"@title": sars.xmlTagMeta.attributes.hasOwnProperty("title") ? sars.xmlTagMeta.attributes.title : "Security Assurance Requirements",
-						"#": [sfrSections.find(section => section["@title"] == "Security Assurance Requirements")],
-						// Conditionally add id if there is one (not setting a default as transforms doesn't expect the attribute for all PPs)
-						...(sars.xmlTagMeta.attributes.hasOwnProperty("id") && { "@id": sars.xmlTagMeta.attributes.id }),
-					}
-				};
+				if (sfrSections.find(section => section["@title"] == "Security Assurance Requirements")) {
+					state.overallObject[docType][state.fileType === "General-Purpose Computing Platforms" ? "sec:Security_Requirements" : "sec:req"] = {
+						"@title": title,
+						"#": definition ? definition : "",
+						"!1": " 5.1 Security Functional Requirements",
+						"sec:SFRs": {
+							"#": [
+								auditTableExists ? auditSection : "",
+								sfrSections.find(section => section["@title"] == "Security Functional Requirements")
+							]
+						},
+						"!2": "5.2 Security Assurance Requirements",
+						[sars.xmlTagMeta.tagName]: {
+							"@title": sars.xmlTagMeta.attributes.hasOwnProperty("title") ? sars.xmlTagMeta.attributes.title : "Security Assurance Requirements",
+							"#": [sfrSections.find(section => section["@title"] == "Security Assurance Requirements")],
+							// Conditionally add id if there is one (not setting a default as transforms doesn't expect the attribute for all PPs)
+							...(sars.xmlTagMeta.attributes.hasOwnProperty("id") && { "@id": sars.xmlTagMeta.attributes.id }),
+						}
+					};
+				} else { // Packages normally won't have SARs, and will not have a parent <sec:req>, but solely the <sec:Security_Functional_Requirements>
+					// Creating a new object to replace overallObject with, since we need to preserve order and replace the sec:req key with sec:Security_Functional_Requirements
+					const originalPackage = state.overallObject[docType];
+					const newPackage = {};
+
+					Object.keys(originalPackage).forEach(key => {
+						if (key === "sec:req") {
+							const sfrSection = sfrSections.find(section => section["@title"] === "Security Functional Requirements");
+							const { ["@title"]: _, ...cleanedSfrSection } = sfrSection; // Remove @title
+							
+							newPackage["sec:Security_Functional_Requirements"] = {
+								"#": [
+									auditTableExists ? auditSection : "",
+									cleanedSfrSection
+								]
+							}
+						} else {
+							newPackage[key] = originalPackage[key];
+						}
+					});
+
+					state.overallObject[docType] = newPackage;
+				}
 			} catch (e) {
 				console.log(e);
 			}
-		},
-		SET_OVERALL_STATE: (state) => {
-			state.overallObject.PP.PPReference = current(state.reference);
-			state.overallObject.PP.RevisionHistory = current(state.revisionHistory);
 		},
 		SET_FORMATTED_XML: (state, action) => {
 			try {
@@ -886,6 +681,7 @@ export const exportSlice = createSlice({
 		},
 		SET_BIBLIOGRAPHY: (state, action) => {
 			const bibliography = action.payload.bibliography;
+			const docType = state.overallObject["PP"] ? "PP" : "Package"
 
 			let entries = [];
 			for (const [key, value] of Object.entries(bibliography)) {
@@ -912,45 +708,48 @@ export const exportSlice = createSlice({
 
 			// Delete bibliography and move to the end of the object for gpcp
 			if (state.fileType === "General-Purpose Computing Platforms") {
-				delete state.overallObject.PP.bibliography;
-				state.overallObject.PP = { ...state.overallObject.PP, ["bibliography"]: formattedBibliography };
+				delete state.overallObject[docType].bibliography;
+				state.overallObject[docType] = { ...state.overallObject[docType], ["bibliography"]: formattedBibliography };
 			} else {
-				state.overallObject.PP.bibliography = formattedBibliography;
+				state.overallObject[docType].bibliography = formattedBibliography;
 			}
 		},
-        SET_DISTRIBUTED_TOE: (state, action) => {
-            if (action.payload.state.intro.length === 0) {
+		SET_DISTRIBUTED_TOE: (state, action) => {
+			if (action.payload.state.intro.length === 0) {
                 delete state.overallObject.PP.section
                 return
-            }
-            const attributes = action.payload.state.xmlTagMeta.attributes
-            const subSections = action.payload.subSections
-            let formattedSubsections = []
+			}
+			
+			const attributes = action.payload.state.xmlTagMeta.attributes
+			const subSections = action.payload.subSections
+			let formattedSubsections = []
+			const docType = state.overallObject["PP"] ? "PP" : "Package"
 
-            subSections.forEach((section) => {
-                let formattedSection = {
-                    "@title": section.title,
-                    ...(section.xmlTagMeta.attributes.hasOwnProperty("id") && section.xmlTagMeta.attributes.id ? { "@id": section.xmlTagMeta.attributes.id } : {}),
-                    "#": section.text
-                }
-                formattedSubsections.push(formattedSection)
-            })
-            
-            const introFormatted = {
-                "@title": attributes.hasOwnProperty("title") ? attributes.title : 'Introduction to Distributed TOEs',
-                ...(attributes.hasOwnProperty("id") && attributes.id ? { "@id": attributes.id } : {}),
-                "#": action.payload.state.intro
-            };
-            
-            state.overallObject.PP.section = {
-                "#": introFormatted,
-                "section": [...formattedSubsections]
-            };
-            
-        },
+			if (subSections) {
+				subSections.forEach((section) => {
+					let formattedSection = {
+						"@title": section.title,
+						...(section.xmlTagMeta.attributes.hasOwnProperty("id") && section.xmlTagMeta.attributes.id ? { "@id": section.xmlTagMeta.attributes.id } : {}),
+						"#": section.text
+					}
+					formattedSubsections.push(formattedSection)
+				})
+			}
+
+			const introFormatted = {
+				"@title": attributes.hasOwnProperty("title") ? attributes.title : 'Introduction to Distributed TOEs',
+				...(attributes.hasOwnProperty("id") && attributes.id ? { "@id": attributes.id } : {}),
+				"#": action.payload.state.intro
+			};
+
+			state.overallObject[docType].section = {
+				"#": introFormatted,
+				"section": [...formattedSubsections]
+			};
+		},
 		SET_APPENDICES: (state, action) => {
 			let appendices = [];
-
+			const docType = state.overallObject["PP"] ? "PP" : "Package"
 			const valGuideAppendix = action.payload.state.validationGuidelinesAppendix.xmlContent;
 			if (valGuideAppendix) {
 				const valGuideAppendixFormatted = {
@@ -1015,13 +814,13 @@ export const exportSlice = createSlice({
 
 			// Delete appendix and move to the end of the object for gpcp
 			if (state.fileType === "General-Purpose Computing Platforms") {
-				delete state.overallObject.PP.appendix;
-				state.overallObject.PP = { ...state.overallObject.PP, ["appendix"]: formattedAppendix };
+				delete state.overallObject[docType].appendix;
+				state.overallObject[docType] = { ...state.overallObject[docType], ["appendix"]: formattedAppendix };
 			} else {
-				state.overallObject.PP.appendix = formattedAppendix;
+				state.overallObject[docType].appendix = formattedAppendix;
 			}
 		},
-		RESET_EXPORT: () => initialState
+		RESET_EXPORT: () => initialPPState
 	},
 });
 
@@ -1070,7 +869,7 @@ const constructDirectRationaleThreats = (threats) => {
 		output += `<!-- New mapping to build updated threat mapping table. -->`
 		// iterate through each term's sfrs
 		terms[key].sfrs.forEach((sfr) => {
-			output += `<addressed-by>${sfr.name}</addressed-by>`
+			output += sfr.type != "" ? `<addressed-by>${sfr.name} (${sfr.type}</addressed-by>` : `<addressed-by>${sfr.name}</addressed-by>`
 			output += `<rationale>${sfr.rationale}</rationale>`
 		})
 		output += `</threat>`
@@ -1127,10 +926,6 @@ const getThreatsAndAssumptionsHelper = (input, objectiveTerms, type) => {
 				};
 			}
 			return finalSectionJson;
-		} else if (type === "OSPs") {
-			return {
-				OSPs: {},
-			};
 		} else {
 			return {}
 		}
@@ -1371,6 +1166,11 @@ const getSfrElements = (
 									{
 										title: parseElement(element),
 									},
+                                    element.extCompDefTitle
+                                    ? {
+                                        "ext-comp-def-title": element.extCompDefTitle,
+                                      }
+                                    : null,
 									note ? { note: getNote(note) } : "",
 									formattedEvaluationActivities,
 								],
@@ -1414,17 +1214,21 @@ const parseElement = (element) => {
 			const assignmentEdgeCase = item.groups && item.groups.length == 1 && selectables[item.groups[0]] && selectables[item.groups[0]].assignment
 
 			if (item.text) {
+                if (item.text === "." && result.endsWith(" ")) {
+                    // if last thing in result is a space, remove it before adding period
+                    result = result.trimEnd()
+                }
 				result += item.text;
 			} else if (item.description) {
 				result += item.description;
 			} else if (item.assignment) {
-				result += `<assignable>${selectables[item.assignment].description}</assignable>`;
+				result += ` <assignable>${selectables[item.assignment].description}</assignable> `;
 			} else if (item.selections) {
 				const group = selectableGroups[item.selections]
 				const onlyone = group.onlyOne ? ` onlyone="yes"` : "";
 				const linebreak = group.linebreak ? ` linebreak="yes"` : "";
 
-				const formattedSelectables = `<selectables${onlyone}${linebreak}>${parseSelections(item.selections)} </selectables>`
+				const formattedSelectables = ` <selectables${onlyone}${linebreak}>${parseSelections(item.selections)} </selectables> `
 				result += formattedSelectables;
 			} else if (assignmentEdgeCase) {
 				const validKey = item.groups[0]
@@ -1433,17 +1237,20 @@ const parseElement = (element) => {
 
 				const { description } = selectables[validKey]
 
-				result += `<assignable>${description}</assignable>`
+				result += ` <assignable>${description}</assignable> `
 
 			} else if (item.tabularize) {
 				result += parseTabularize(tabularize)
 			}
 			else {
-				result += "<selectables>"
+                const group = selectableGroups[item.groups]
+                const onlyone = group?.onlyOne ? ` onlyone="yes"` : "";
+				const linebreak = group?.linebreak ? ` linebreak="yes"` : "";
+				result += ` <selectables${onlyone}${linebreak}>`
 				item.groups.forEach(groupKey => {
 					result += parseSelections(groupKey)
 				})
-				result += "</selectables>"
+				result += "</selectables> "
 			}
 		})
 		return result;
@@ -1662,7 +1469,7 @@ const parseElement = (element) => {
 		}
 		return result;
 	}
-
+	
 	// Creates the ref-id tags
 	function createRefIdTags(refIds) {
 		let refIdTags = '';
@@ -1780,16 +1587,16 @@ const getComponentSelections = (
 					}
 
 					// Get selections
-					if (Object.keys(selections.selections).length > 0) {
-						Object.values(selections.selections).forEach((selection) => {
-							if (selectableUUIDtoID.hasOwnProperty(selection)) {
-								const formattedID = { "@on-sel": selectableUUIDtoID[selection] };
-								if (!fComponent["depends"].includes(formattedID)) {
-									fComponent["depends"].push(formattedID);
-								}
-							}
-						});
-					}
+					selections.selections.forEach((selection) => {
+						// if the dependency ID doesn't map back to a selectable, it could be a complex selectable, so
+						// just retain the name
+						const id = selectableUUIDtoID[selection] ? selectableUUIDtoID[selection] : selection;
+
+						const formattedID = { "@on-sel": id };
+						if (!fComponent["depends"].includes(formattedID)) {
+							fComponent["depends"].push(formattedID);
+						}
+					});
 				}
 			}
 		}
@@ -1917,7 +1724,7 @@ const getSfrEvaluationActivities = (
 			},
 		};
 		if (evaluationActivity) {
-			const { introduction, tss, guidance, testIntroduction, testList, isNoTest, noTest } = evaluationActivity;
+			const { introduction, tss, guidance, testIntroduction, testClosing, testList, isNoTest, noTest } = evaluationActivity;
 
 			if (isNoTest) {
 				formattedEvaluationActivity.aactivity["no-tests"] = noTest;
@@ -1955,7 +1762,7 @@ const getSfrEvaluationActivities = (
 										let formattedTests = [];
 										if (tests && tests.length) {
 											tests.forEach((test) => {
-												const { dependencies, objective } = test;
+												const { id, dependencies, objective, nestedTests } = test;
 												if (
 													(objective && objective !== "") ||
 													(dependencies && dependencies.length > 0)
@@ -1988,14 +1795,25 @@ const getSfrEvaluationActivities = (
 															}
 														});
 													}
-													let formattedTest = {
-														test: {
+
+													const formatTest = (test) => {
+														return {
+															...(test.id && { "@id": test.id }),
 															"#": [
-																formattedDependencies,
-																objective ? objective : "",
-															],
-														},
+																test.dependencies || [],
+																test.objective || "",
+																...(Array.isArray(test.nestedTests) && test.nestedTests.length > 0
+																	? [{ testlist: { test: test.nestedTests.map(formatTest) } }]
+																	: []
+																)
+															]
+														};
+													}
+
+													const formattedTest = {
+														test: formatTest({ id, dependencies: formattedDependencies, objective, nestedTests })
 													};
+
 													if (!formattedTests.includes(formattedTest)) {
 														formattedTests.push(formattedTest);
 													}
@@ -2014,14 +1832,14 @@ const getSfrEvaluationActivities = (
 								});
 							}
 							formattedEvaluationActivity.aactivity.Tests = {
-								"#": [intro, formattedTestLists],
+								"#": [intro, formattedTestLists, testClosing],
 							};
 						}
 					} else {
 						// Ensure an empty <Tests/> tag is added when missing
 						formattedEvaluationActivity.aactivity.Tests = "";
 					}
-				}  else {
+				} else {
 					// Ensure empty tags if no evaluation activities exists
 					formattedEvaluationActivity.aactivity.TSS = "";
 					formattedEvaluationActivity.aactivity.Guidance = "";
@@ -2044,7 +1862,6 @@ const getSelectableMap = (formItems) => {
 
 	try {
 		formItems.forEach((sfr) => {
-			// if (sfr.title = "Security Functional Requirements") { // Only want to do this for the SFRs, not SARs
 			const { nestedFormItems } = sfr;
 			if (nestedFormItems) {
 				const { formItems } = nestedFormItems;
@@ -2194,7 +2011,7 @@ const setConformanceClaimsTo3_1 = (fileType, formItems) => {
 	}
 	return formattedConformance
 }
-const setConformanceClaimsToCC2022 = ( conformanceClaims, ppTemplateVersion) => {
+const setConformanceClaimsToCC2022 = (conformanceClaims, ppTemplateVersion) => {
 	let formattedConformance = {
 		"@boilerplate": "no",
 	};
@@ -2204,6 +2021,7 @@ const setConformanceClaimsToCC2022 = ( conformanceClaims, ppTemplateVersion) => 
         stConformance,
         part2Conformance,
         part3Conformance,
+        cc_errata,
         ppClaims,
         packageClaims,
         evaluationMethods,
@@ -2233,6 +2051,7 @@ const setConformanceClaimsToCC2022 = ( conformanceClaims, ppTemplateVersion) => 
     formattedConformance["CClaimsInfo"] = {
         "@cc-version": "cc-2022r1",
         "@cc-approach": ppTemplateVersion === "CC2022 Standard" ? "standard" : "direct-rationale",
+        ...(cc_errata !== "N/A" && { "@cc-errata": cc_errata }),
         "cc-st-conf": stConformance,
         "cc-pt2-conf": part2Conformance,
         "cc-pt3-conf": part3Conformance,
@@ -2254,15 +2073,14 @@ const setConformanceClaimsToCC2022 = ( conformanceClaims, ppTemplateVersion) => 
                 }
             })
         },
-        "cc-eval-methods": "",
     }
-    if (typeof additionalInformation !== 'undefined') {
-        formattedConformance["CClaimsInfo"]["cc-claims-addnl-info"] = removeEnclosingPTag(additionalInformation)
-    }
-    if (typeof evaluationMethods !== 'undefined') {
+    if (evaluationMethods.length > 0) {
         formattedConformance["CClaimsInfo"]["cc-eval-methods"] = {
             "EM-cc-ref": evaluationMethods
         };
+    }
+    if (additionalInformation) {
+        formattedConformance["CClaimsInfo"]["cc-claims-addnl-info"] = removeEnclosingPTag(additionalInformation)
     }
 
 	return formattedConformance
@@ -2283,7 +2101,7 @@ const getSARElements = (
 						"@type": type,
 						"#": [
 							{ title: title },
-							note ? { note: note } : "",
+							note ? { note: getNote(note) } : "",
 							{ aactivity: aactivity }
 						],
 					},
@@ -2302,11 +2120,6 @@ const getSARElements = (
 	return elements;
 };
 
-const getAbbreviation = (input) => {
-	const regex = /\([^)]*\)/i;
-	return String(regex.exec(input)).replace(/[()]/g, "");
-};
-
 const getTitle = (input) => {
 	return String(input)
 		.replace(/\([^)]*\)/, "")
@@ -2323,6 +2136,8 @@ const removeEnclosingPTag = (text) => {
 }
 
 export const {
+	SET_PP_TYPE_TO_PACKAGE,
+	SET_PP_TYPE_TO_PP,
 	SET_CONFORMANCE_CLAIMS,
 	SET_TECH_TERMS,
 	SET_USE_CASES,
@@ -2340,7 +2155,7 @@ export const {
 	SET_BIBLIOGRAPHY,
 	SET_APPENDICES,
 	RESET_EXPORT,
-    SET_DISTRIBUTED_TOE
+	SET_DISTRIBUTED_TOE
 } = exportSlice.actions;
 
 export default exportSlice.reducer;

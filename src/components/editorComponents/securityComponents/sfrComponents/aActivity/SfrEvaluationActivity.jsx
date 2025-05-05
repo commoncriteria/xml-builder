@@ -17,6 +17,7 @@ import { deepCopy } from "../../../../../utils/deepCopy.js";
 import SfrNoTestToggle from "./SfrNoTestToggle.jsx";
 import SfrNoTest from "./SfrNoTest.jsx";
 import SecurityComponents from "../../../../../utils/securityComponents.jsx";
+import { v4 as uuidv4 } from 'uuid';
 
 /**
  * The SfrEvaluationActivity class that displays the evaluation activities for specified components/elements
@@ -32,7 +33,7 @@ function SfrEvaluationActivity(props) {
     };
 
     // Constants
-    const { handleSnackBarSuccess } = SecurityComponents
+    const { handleSnackBarSuccess, handleSnackBarError } = SecurityComponents
     const { primary, secondary, icons } = useSelector((state) => state.styling);
     const dispatch = useDispatch();
     const sfrSections = useSelector((state) => state.sfrSections);
@@ -196,6 +197,7 @@ function SfrEvaluationActivity(props) {
                 activities[uuid].testList = []
             }
             activities[uuid].testList.push({
+                testListUUID: uuidv4(),
                 description: "",
                 tests: [{ dependencies: [], objective: "" }]
             })
@@ -204,6 +206,52 @@ function SfrEvaluationActivity(props) {
             // Update snackbar
             handleSnackBarSuccess("New Test List Successfully Added")
         }
+    }
+    const handleNewNestedTestList = (activities, uuid, parentTestUUID) => {
+        if (!activities || !uuid || uuid === "" || !parentTestUUID) {
+            console.error("Missing required parameters.");
+            return;
+        }
+    
+        const findTestByUUID = (tests) => {
+            for (const test of tests) {
+                if (test.uuid === parentTestUUID) {
+                    return test;
+                }
+                if (Array.isArray(test.nestedTests)) {
+                    const found = findTestByUUID(test.nestedTests);
+                    if (found) return found;
+                }
+            }
+            return null;
+        };
+    
+        const testList = activities[uuid]?.testList;
+        if (!Array.isArray(testList)) {
+            console.error("Test list not found for the given UUID.");
+            return;
+        }
+    
+        for (const list of testList) {
+            const parentTest = findTestByUUID(list.tests || []);
+            if (parentTest) {
+                if (!Array.isArray(parentTest.nestedTests)) {
+                    parentTest.nestedTests = [];
+                }
+                parentTest.nestedTests.push({
+                    testListUUID: uuidv4(),
+                    dependencies: [],
+                    objective: "",
+                    nestedTests: []
+                });
+                updateEvaluationActivities(activities);
+                handleSnackBarSuccess("New Nested Test List Successfully Added");
+                return;
+            }
+        }
+    
+        console.error("Parent test not found for the given UUID.");
+        handleSnackBarError("Failed to add nested test list.");
     }
     const handleNoTestToggle = (isNoTest, uuid) => {
         let activities = getEvaluationActivitiesList()
@@ -256,6 +304,7 @@ function SfrEvaluationActivity(props) {
         let activities = getEvaluationActivitiesList()
         let uuid = evaluationActivities.selectedUUID
         let testIntroduction = activities[uuid].hasOwnProperty("testIntroduction") ? deepCopy(activities[uuid].testIntroduction) : ""
+        let testClosing = activities[uuid].hasOwnProperty("testClosing") ? deepCopy(activities[uuid].testClosing) : ""
         let testList = activities[uuid].hasOwnProperty("testList") ? deepCopy(activities[uuid].testList) : []
         let isNoTest = activities.hasOwnProperty(uuid) && activities[uuid].hasOwnProperty("isNoTest") ? activities[uuid].isNoTest : false
 
@@ -298,12 +347,14 @@ function SfrEvaluationActivity(props) {
                         componentUUID={props.componentUUID}
                         uuid={uuid}
                         testIntroduction={testIntroduction}
+                        testClosing={testClosing}
                         testList={testList}
                         elementMaps={props.elementMaps}
                         handleTextUpdate={handleTextUpdate}
                         handleNewTestList={handleNewTestList}
                         updateEvaluationActivities={updateEvaluationActivities}
                         updateEvaluationActivitiesUI={updateEvaluationActivitiesUI}
+                        handleNewNestedTestList={handleNewNestedTestList}
                     />
                 </div>
             )

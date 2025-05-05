@@ -91,7 +91,7 @@ function EditableTable(props) {
         if (styling) {
             const { requirementType } = props
             const { primaryColor, secondaryColor } = styling
-            const isNotTile =  requirementType !== undefined && (requirementType === "crypto" || requirementType === "managementFunctions")
+            const isNotTile = requirementType !== undefined && (requirementType === "crypto" || requirementType === "managementFunctions")
             const checkbox = isNotTile ? checkboxSecondaryNoPad : checkboxPrimaryNoPad
 
             // Update new styling value
@@ -254,7 +254,7 @@ function EditableTable(props) {
                 <ListItemIcon>
                     <img
                         src={icon}
-                        style={{...iconSize, ...iconColor}}
+                        style={{ ...iconSize, ...iconColor }}
                     />
                 </ListItemIcon>
                 <ListItemText>
@@ -344,7 +344,7 @@ function EditableTable(props) {
                     },
                     cellStyle: {
                         ...columnData.cellStyle,
-                        fontSize: type === "Title" || isTitleButton  ? '13px' : '14px',
+                        fontSize: type === "Title" || isTitleButton ? '13px' : '14px',
                         color: type === "Title" || isTitleButton ? primary : 'black',
                         fontWeight: type === "Title" || isTitleButton ? 'bold' : 'normal'
                     },
@@ -360,23 +360,23 @@ function EditableTable(props) {
                 break;
             }
             case "Large Editor": {
-               additionalColumnData =  {
+                additionalColumnData = {
                     cellEditor: 'agLargeTextCellEditor',
                     cellEditorPopup: true,
                     cellEditorParams: {
                         maxLength: 500
                     },
-                   cellRenderer: (params) => {
-                       const { value } = params;
+                    cellRenderer: (params) => {
+                        const { value } = params;
                         return (
-                            <div style={{whiteSpace: 'pre-wrap'}} dangerouslySetInnerHTML={{__html: value}}/>
+                            <div style={{ whiteSpace: 'pre-wrap' }} dangerouslySetInnerHTML={{ __html: value }} />
                         )
-                   }
-               }
+                    }
+                }
                 break;
             }
             case "Date": {
-                additionalColumnData =  {
+                additionalColumnData = {
                     cellEditor: 'agDateStringCellEditor',
                     cellDataType: 'dateString',
                     cellEditorParams: {
@@ -417,21 +417,21 @@ function EditableTable(props) {
                     cellRenderer: (params) => {
                         const { value } = params;
                         return (
-                            <div style={{whiteSpace: 'pre-wrap'}} dangerouslySetInnerHTML={{__html: value}}/>
+                            <div style={{ whiteSpace: 'pre-wrap' }} dangerouslySetInnerHTML={{ __html: value }} />
                         );
                     }
                 }
                 break;
             }
             case "Chips": {
-                additionalColumnData =  {
+                additionalColumnData = {
                     autoHeight: true,
                     cellRenderer: (params) => {
                         return (
-                            <div style={{whiteSpace: 'pre-wrap'}}>
+                            <div style={{ whiteSpace: 'pre-wrap' }}>
                                 {params.value.map((chip, index) => (
                                     <Tooltip key={index} title={chip}>
-                                        <Chip label={chip} style={{margin: 2}}/>
+                                        <Chip label={chip} style={{ margin: 2 }} />
                                     </Tooltip>
                                 ))}
                             </div>
@@ -441,7 +441,7 @@ function EditableTable(props) {
                 break;
             }
             case "Checkbox": {
-                additionalColumnData =  {
+                additionalColumnData = {
                     autoHeight: true,
                     cellRenderer: (params) => {
                         const type = params.colDef.field;
@@ -464,7 +464,7 @@ function EditableTable(props) {
                 break;
             }
             case "Select": {
-                additionalColumnData =  {
+                additionalColumnData = {
                     dropdownMenu: dropdownMenu,
                     autoHeight: true,
                     cellRenderer: (params) => {
@@ -529,7 +529,7 @@ function EditableTable(props) {
                 break;
             }
             case "Multiselect": {
-                additionalColumnData =  {
+                additionalColumnData = {
                     autoHeight: true,
                     cellRenderer: (params) => {
                         const { uuid, disabled, multiselect } = params.data
@@ -569,7 +569,7 @@ function EditableTable(props) {
                 )
             } else if (type === "Editor") {
                 return (
-                    <div style={{whiteSpace: 'normal', lineHeight: "1.5", margin: 0, padding: 0}}>
+                    <div style={{ whiteSpace: 'normal', lineHeight: "1.5", margin: 0, padding: 0 }}>
                         {value}
                     </div>
                 )
@@ -587,7 +587,7 @@ function EditableTable(props) {
             )
         } else {
             return (
-                <div style={{whiteSpace: 'pre-wrap'}} dangerouslySetInnerHTML={{__html: value}}/>
+                <div style={{ whiteSpace: 'pre-wrap' }} dangerouslySetInnerHTML={{ __html: value }} />
             )
         }
     }
@@ -595,7 +595,7 @@ function EditableTable(props) {
         const maxHeight = props.disableCard === true ? '400px' : '500px';
         return (
             <div
-                style={{width: '100%', maxHeight: maxHeight, overflowY: 'auto', overflowX: 'auto', '--ag-header-foreground-color': innerStyling.secondaryColor}}
+                style={{ width: '100%', maxHeight: maxHeight, overflowY: 'auto', overflowX: 'auto', '--ag-header-foreground-color': innerStyling.secondaryColor }}
                 className={`ag-theme-quartz`}
             >
                 <AgGridReact
@@ -608,13 +608,15 @@ function EditableTable(props) {
                     enableBrowserToolips={true}
                     tooltipShowDelay={200}
                     suppressNoRowsOverlay={true}
-                    defaultColDef={{editable: true}}
+                    defaultColDef={{ editable: true }}
                     popupParent={document.querySelector('body') || undefined}
                     onCellValueChanged={(event) => {
+                        console.log("Row text")
                         props.handleUpdateTableRow(event)
                     }}
                     onRowDoubleClicked={onRowDoubleClicked}
                     editType={props.editFullRow ? "fullRow" : ""}
+                    stopEditingWhenCellsLoseFocus={true}
                 />
             </div>
         )
@@ -623,9 +625,9 @@ function EditableTable(props) {
     // Return Method
     return (
         <div className="ag-theme-quartz">
-            { props.disableCard ?
+            {props.disableCard ?
                 <div>
-                    { getAgGrid() }
+                    {getAgGrid()}
                 </div>
                 :
                 <div>
@@ -643,40 +645,40 @@ function EditableTable(props) {
                             <div className="w-full p-0 m-0">
                                 <span className="flex justify-between min-w-full">
                                     <div className="flex justify-start w-full">
-                                        { props.isTitleEditable ?
+                                        {props.isTitleEditable ?
                                             <textarea
-                                                style={{color: innerStyling.primaryColor}}
+                                                style={{ color: innerStyling.primaryColor }}
                                                 className="w-full resize-none font-bold text-[14px] mb-0 h-[25px] p-0"
                                                 onBlur={(event) => handleSnackbarTextUpdates(props.handleUpdateTitle, event)}
-                                                defaultValue={props.title}/>
+                                                defaultValue={props.title} />
                                             :
                                             <label
-                                                style={{color: innerStyling.primaryColor}}
+                                                style={{ color: innerStyling.primaryColor }}
                                                 className="font-bold text-[14px] p-0 pr-4 text-secondary"
                                             >
                                                 {props.title}
                                             </label>
                                         }
                                     </div>
-                                     <div className="flex justify-end pr-4 w-full">
-                                          <IconButton
-                                              sx={{marginTop: "-8px", display: !collapseTable || !editable ? 'none' : null}}
-                                              variant="contained"
-                                              aria-controls={openMenu ? 'basic-menu' : undefined}
-                                              aria-haspopup="true"
-                                              aria-expanded={openMenu ? 'true' : undefined}
-                                              onClick={handleMenuClick}
-                                          >
-                                              <Tooltip
-                                                  title={`Edit Table`}
-                                                  id={"editTableButton"}
-                                              >
-                                                  <MenuIcon
-                                                      htmlColor={ innerStyling.primaryColor }
-                                                      sx={ icons.large }
-                                                  />
-                                              </Tooltip>
-                                          </IconButton>
+                                    <div className="flex justify-end pr-4 w-full">
+                                        <IconButton
+                                            sx={{ marginTop: "-8px", display: !collapseTable || !editable ? 'none' : null }}
+                                            variant="contained"
+                                            aria-controls={openMenu ? 'basic-menu' : undefined}
+                                            aria-haspopup="true"
+                                            aria-expanded={openMenu ? 'true' : undefined}
+                                            onClick={handleMenuClick}
+                                        >
+                                            <Tooltip
+                                                title={`Edit Table`}
+                                                id={"editTableButton"}
+                                            >
+                                                <MenuIcon
+                                                    htmlColor={innerStyling.primaryColor}
+                                                    sx={icons.large}
+                                                />
+                                            </Tooltip>
+                                        </IconButton>
                                     </div>
                                 </span>
                             </div>
@@ -695,22 +697,22 @@ function EditableTable(props) {
                                     }}
                                 >
                                     <MenuList className="m-0 p-0">
-                                        { props.editable.addColumn ?
+                                        {props.editable.addColumn ?
                                             getMenuItem(handleOpenNewColumnDialog, "Add Column", AddColumnIcon, icons.medium)
                                             :
                                             null
                                         }
-                                        { props.editable.addRow ?
+                                        {props.editable.addRow ?
                                             getMenuItem(addRow, "Add Row", AddRowIcon, icons.medium)
                                             :
                                             null
                                         }
-                                        { props.editable.removeColumn ?
+                                        {props.editable.removeColumn ?
                                             getMenuItem(removeLastColumn, "Remove Last Column", DeleteColumnIcon, icons.large)
                                             :
                                             null
                                         }
-                                        { props.editable.removeRow ?
+                                        {props.editable.removeRow ?
                                             getMenuItem(removeSelectedRow, "Remove Selected Row", DeleteRowIcon, icons.extraLarge)
                                             :
                                             null
@@ -719,13 +721,13 @@ function EditableTable(props) {
                                 </Menu>
                                 {
                                     props.tableInstructions ?
-                                        <div className="pb-4 break-words text-left" style={{color: grayText}}>
+                                        <div className="pb-4 break-words text-left" style={{ color: grayText }}>
                                             {props.tableInstructions}
                                         </div>
                                         :
                                         null
                                 }
-                                { getAgGrid() }
+                                {getAgGrid()}
                             </div>
                         }
                         bottomBorderCss={props.bottomBorderCss ? props.bottomBorderCss : ""}

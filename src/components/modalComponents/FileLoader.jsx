@@ -13,7 +13,7 @@ import { SET_XMLTAGMETA, DELETE_ALL_SAR_SECTIONS, RESET_SAR_STATE, CREATE_SAR_SE
 import * as fileParser from "../../utils/fileParser.js";
 import { CREATE_TERM_ITEM, DELETE_ALL_SECTION_TERMS, RESET_TERMS_STATE } from "../../reducers/termsSlice.js";
 import { CREATE_THREAT_TERM, UPDATE_THREAT_TERM_SFRS, DELETE_ALL_THREAT_TERMS, RESET_THREATS_STATE, UPDATE_THREAT_SECTION_DEFINITION, UPDATE_MAIN_SECURITY_PROBLEM_DEFINITION } from "../../reducers/threatsSlice.js";
-import { CREATE_OBJECTIVE_TERM, DELETE_ALL_OBJECTIVE_TERMS, RESET_OBJECTIVES_STATE } from "../../reducers/objectivesSlice.js";
+import { CREATE_OBJECTIVE_TERM, DELETE_ALL_OBJECTIVE_TERMS, RESET_OBJECTIVES_STATE, UPDATE_OBJECTIVE_SECTION_DEFINITION } from "../../reducers/objectivesSlice.js";
 import { CREATE_EDITOR, UPDATE_EDITOR_TEXT, RESET_EDITOR_STATE, UPDATE_EDITOR_METADATA } from "../../reducers/editorSlice.js";
 import { DELETE_ALL_SFR_SECTION_ELEMENTS, RESET_SFR_SECTION_STATE, CREATE_SFR_COMPONENT, UPDATE_SFR_COMPONENT_ITEMS, UPDATE_SFR_COMPONENT_TEST_DEPENDENCIES } from "../../reducers/SFRs/sfrSectionSlice.js";
 import { DELETE_ALL_SFR_SECTIONS, UPDATE_MAIN_SFR_DEFINITION, UPDATE_AUDIT_SECTION, RESET_SFR_STATE, CREATE_SFR_SECTION } from "../../reducers/SFRs/sfrSlice.js";
@@ -24,20 +24,20 @@ import { SET_EQUIV_GUIDELINES_XML, RESET_EQUIVALENCY_APPENDIX_STATE } from "../.
 import { ADD_PACKAGE, RESET_PACKAGE_STATE } from "../../reducers/includePackageSlice.js";
 import { SET_MODULES_XML, RESET_MODULES_STATE } from "../../reducers/moduleSlice.js";
 import validator from 'validator';
-import _ from 'lodash';
 import { SET_SATISFIED_REQS_XML, RESET_SATISFIED_REQS_APPENDIX_STATE } from "../../reducers/satisfiedReqsAppendix.js";
 import { SET_VALIDATION_GUIDELINES_XML, RESET_VALIDATION_GUIDELINES_APPENDIX_STATE } from "../../reducers/validationGuidelinesAppendix.js";
 import { RESET_VECTOR_APPENDIX_STATE, SET_VECTOR_XML } from "../../reducers/vectorAppendix.js";
 import { RESET_ACKNOWLEDGEMENTS_APPENDIX_STATE, SET_ACKNOWLEDGEMENTS_XML } from "../../reducers/acknowledgementsAppendix.js";
 import { RESET_PROGRESS, setProgress } from "../../reducers/progressSlice.js";
 import { SET_PREFERENCE_XML, RESET_PREFERENCE_STATE } from "../../reducers/ppPreferenceSlice.js";
-import { UPDATE_ST_CONFORMANCE_DROPDOWN, UPDATE_PART_2_CONFORMANCE_DROPDOWN, UPDATE_PART_3_CONFORMANCE_DROPDOWN, CREATE_NEW_PP_CLAIM, CREATE_NEW_PACKAGE_CLAIM, CREATE_NEW_EVALUATION_METHOD, UPDATE_ADDITIONAL_INFORMATION_TEXT, RESET_CONFORMANCE_CLAIMS_STATE } from "../../reducers/conformanceClaimsSlice.js";
+import { UPDATE_ST_CONFORMANCE_DROPDOWN, UPDATE_PART_2_CONFORMANCE_DROPDOWN, UPDATE_PART_3_CONFORMANCE_DROPDOWN, UPDATE_CC_ERRATA, CREATE_NEW_PP_CLAIM, CREATE_NEW_PACKAGE_CLAIM, CREATE_NEW_EVALUATION_METHOD, UPDATE_ADDITIONAL_INFORMATION_TEXT, RESET_CONFORMANCE_CLAIMS_STATE } from "../../reducers/conformanceClaimsSlice.js";
 import ProgressBar from "../ProgressBar.jsx";
 import SecurityComponents from "../../utils/securityComponents.jsx";
 import { deepCopy } from "../../utils/deepCopy.js";
-import { getPpTemplateVersion } from "../../utils/fileParser.js";
-import { UPDATE_DISTRIBUTED_TOE_INTRO } from "../../reducers/distributedToeSlice.js"
+import { getPpTemplateVersion, getPpType } from "../../utils/fileParser.js";
+import { UPDATE_DISTRIBUTED_TOE_INTRO, RESET_DISTRIBUTED_TOE_STATE } from "../../reducers/distributedToeSlice.js"
 import { CREATE_ACCORDION } from "../../reducers/accordionPaneSlice.js";
+import { SET_COMPLIANT_TARGETS_OF_EVALUATION_INTRO, SET_COMPLIANT_TARGETS_OF_EVALUATION_ADDITIONAL_TEXT, LOAD_TABLE_ROWS, RESET_COMPLIANT_TARGETS_OF_EVALUATION_STATE } from "../../reducers/compliantTargetsOfEvaluationSlice.js"
 
 /**
  * The FileLoader class that gives various options for file loading
@@ -58,8 +58,6 @@ function FileLoader(props) {
     const state = useSelector((state) => state);
     const stateRef = useRef(state);
     const { filename } = state.accordionPane.loadedfile;
-    const stateSfrSections = state.sfrSections;
-    const previousSfrSectionsRef = useRef(_.cloneDeep(stateSfrSections));
     const { clearSessionStorageExcept, fetchTemplateData } = SecurityComponents
 
     // Use Effects
@@ -67,126 +65,6 @@ function FileLoader(props) {
         stateRef.current = state;
         // console.log(state);
     }, [state]);
-    useEffect(() => {
-        // Post-processing to convert selection dependent selections/elements/components IDs + test dependency IDs to UUID
-        // Need to put this code in useEffect, or else it doesn't get latest state value for sfrSections and UUIDs
-        // for families is all wrong
-
-        // Use a deep comparison to determine if the state has changed -- need this or else infinite re-render happens (due to evaluation activity dropdown changing state)
-        const previousSfrSections = previousSfrSectionsRef.current;
-
-        if (props.open && !_.isEqual(previousSfrSections.current, stateSfrSections)) {
-            // Update the ref to the current state
-            previousSfrSections.current = stateSfrSections;
-
-            for (const familiyUUID in stateSfrSections) {
-                const family = stateSfrSections[familiyUUID];
-
-                for (const componentUUID in family) {
-                    const component = family[componentUUID];
-
-                    // Set the test dependencies
-                    let dependencyMap = {}; // Maps selectable id to UUID (value remains same for complex selectable simce there is no UUID)
-                    let eAUUID = ';'
-
-                    if (component.evaluationActivities) {
-                        // Iterate through tests in Evaluation Activities for component
-                        for (const [uuid, eADetails] of Object.entries(component.evaluationActivities)) {
-                            eAUUID = uuid;
-                            if (eADetails.testList.length != 0) {
-                                eADetails.testList.forEach(testlist => {
-                                    testlist["tests"].forEach(test => {
-                                        if (test.hasOwnProperty("dependencies") && test["dependencies"].length != 0) {
-                                            test["dependencies"].forEach(dep => {
-                                                // Get the UUID for the selectable
-                                                let selectionUUID = fileParser.getUUID(stateSfrSections, dep, "selectable");
-
-                                                // If there is no UUID found, it is likely a complex selectable
-                                                if (selectionUUID != null) {
-                                                    dependencyMap[dep] = selectionUUID;
-                                                } else {
-                                                    dependencyMap[dep] = dep;
-                                                }
-                                            });
-                                        }
-                                    });
-                                });
-                            }
-                        }
-
-                        // Set the updated test dependencies in the state
-                        if (Object.keys(dependencyMap).length != 0) {
-                            dispatch(UPDATE_SFR_COMPONENT_TEST_DEPENDENCIES({ sfrUUID: familiyUUID, uuid: componentUUID, eAUUID: eAUUID, selectionMap: dependencyMap }));
-
-                        }
-                    }
-
-                    // Set the selection dependencies
-                    if (component.selections.hasOwnProperty("selections") && component.selections.hasOwnProperty("elements") && component.selections.hasOwnProperty("components")) {
-                        if (component.selections.selections.length != 0 || component.selections.components.length != 0 || component.selections.elements.length != 0) {
-                            let selection_obj = {
-                                components: [],
-                                elements: [],
-                                selections: [],
-                            }
-
-                            let selections = [];
-                            component.selections.selections.forEach(selectionID => {
-                                if (!validator.isUUID(selectionID)) {
-                                    let selectionUUID = fileParser.getUUID(stateSfrSections, selectionID, "selectable");
-                                    if (selectionUUID != null) {
-                                        selections.push(selectionUUID);
-                                    }
-                                } else {
-                                    // If selection dependency is already a UUID, just keep it
-                                    selections.push(selectionID);
-                                }
-
-                            });
-                            selection_obj.selections = selections;
-
-
-                            let components = [];
-                            component.selections.components.forEach(componentID => {
-                                if (componentID != null) {
-                                    if (!validator.isUUID(componentID)) {
-                                        let componentUUID = fileParser.getUUID(stateSfrSections, componentID, "component");
-                                        if (componentUUID != null) {
-                                            components.push(componentUUID);
-                                        }
-                                    } else {
-                                        // If selection dependency is already a UUID, just keep it
-                                        components.push(componentID);
-                                    }
-                                }
-                            });
-                            selection_obj.components = components;
-
-
-                            let elements = [];
-                            component.selections.elements.forEach(elementID => {
-                                if (elementID != null) {
-                                    if (!validator.isUUID(elementID)) {
-                                        let elementUUID = fileParser.getUUID(stateSfrSections, elementID, "element");
-                                        if (elementUUID != null) {
-                                            elements.push(elementUUID);
-                                        }
-                                    } else {
-                                        // If selection dependency is already a UUID, just keep it
-                                        elements.push(elementID);
-                                    }
-                                }
-                            });
-                            selection_obj.elements = elements;
-
-                            // Update the selection dependent IDs in the slice
-                            dispatch(UPDATE_SFR_COMPONENT_ITEMS({ sfrUUID: familiyUUID, uuid: componentUUID, itemMap: { 'selections': selection_obj } }));
-                        }
-                    }
-                }
-            }
-        }
-    }, [stateSfrSections]);
 
     // Methods
     /**
@@ -247,10 +125,13 @@ function FileLoader(props) {
     const loadPPXML = (xml) => {
         let useCaseMap = {}
         let ppTemplateVersion = "CC2022 Standard"
+        let ppType = "Protection Profile";
 
         // Create accordions, editors and terms
         try {
-            ppTemplateVersion = createDefaultSlices(xml)
+            let ppMeta = createDefaultSlices(xml)
+            ppTemplateVersion = ppMeta.ppTemplateVersion
+            ppType = ppMeta.ppType
         } catch (e) {
             console.log(e)
             handleSnackBarError(e)
@@ -261,9 +142,9 @@ function FileLoader(props) {
                 loadPackages(xml)
                 loadModules(xml)
                 loadPlatforms(xml)
-                loadPPReference(xml)
+                loadPPReference(xml, ppType);
                 loadOverview(xml);
-                loadTOEOverview(xml);
+                loadTOEOverview(xml, ppType);
                 loadDistributedTOE(xml);
                 loadPreferences(xml);
 
@@ -324,7 +205,9 @@ function FileLoader(props) {
                 const { sfrsMap } = loadSFRs(xml, sfrToObjectivesMap, useCaseMap);
 
                 // Add SFR data to the threats
-                updateUUIDDirectRationale(sfrsMap, threatWithSFR);
+                if (ppTemplateVersion != "Version 3.1") {
+                    updateUUIDDirectRationale(sfrsMap, threatWithSFR);
+                }
 
                 loadSARs(xml);
             }, 500);
@@ -355,6 +238,9 @@ function FileLoader(props) {
                     "Appendices": true
                 }
                 handleProgressBar(currentProgress, currentSteps)
+                
+                // Update selection dependencies with their UUIDs (for component and simple selectables)
+                convertSelDepToUUIDs()
             }, 500)
         }
     }
@@ -493,6 +379,7 @@ function FileLoader(props) {
             dispatch(RESET_TERMS_STATE());
             dispatch(RESET_THREATS_STATE());
             dispatch(RESET_OBJECTIVES_STATE());
+            dispatch(RESET_COMPLIANT_TARGETS_OF_EVALUATION_STATE());
             dispatch(RESET_EDITOR_STATE());
             dispatch(RESET_SFR_SECTION_STATE());
             dispatch(RESET_SFR_STATE());
@@ -510,17 +397,19 @@ function FileLoader(props) {
             dispatch(RESET_PROGRESS());
             dispatch(RESET_PREFERENCE_STATE());
             dispatch(RESET_CONFORMANCE_CLAIMS_STATE());
+            dispatch(RESET_DISTRIBUTED_TOE_STATE());
         }, 300)
     }
 
     /**
      * Loads in the PP Reference
      * @param xml the xml
+     * @param ppType PP, Module, Functional Package
      */
-    const loadPPReference = (xml) => {
+    const loadPPReference = (xml, ppType) => {
         try {
             const ppReference = fileParser.getPPReference(xml);
-            const ppMeta = fileParser.getPPMetadata(xml);
+            const ppMeta = fileParser.getPPMetadata(xml, ppType);
 
             dispatch(updateMetaDataItem({ type: 'xmlTagMeta', item: ppMeta }));
             dispatch(updateMetaDataItem({ type: 'ppName', item: ppReference.PPTitle }));
@@ -642,8 +531,8 @@ function FileLoader(props) {
             if (!distributedTOE) return
 
             // create TOE accordion section and update intro
-            const accordionUUID = dispatch(CREATE_ACCORDION({title: 'Distributed TOE', selected_section: "Conformance Claims"})).payload.uuid;
-            dispatch(UPDATE_DISTRIBUTED_TOE_INTRO({newIntro: distributedTOE.intro.xml, xmlTagMeta: distributedTOE.intro.xmlTagMeta}));
+            const accordionUUID = dispatch(CREATE_ACCORDION({ title: 'Distributed TOE', selected_section: "Conformance Claims" })).payload.uuid;
+            dispatch(UPDATE_DISTRIBUTED_TOE_INTRO({ newIntro: distributedTOE.intro.xml, xmlTagMeta: distributedTOE.intro.xmlTagMeta }));
 
             // create sub-sections
             for (let key of Object.keys(distributedTOE)) {
@@ -671,7 +560,7 @@ function FileLoader(props) {
      * Loads the TOE overview
      * @param xml the xml
      */
-    const loadTOEOverview = (xml) => {
+    const loadTOEOverview = (xml, ppType) => {
         try {
             const {
                 accordionPane: stateAccordionPane,
@@ -679,31 +568,40 @@ function FileLoader(props) {
             } = stateRef.current
             const introductionUUID = getUUIDByTitle(stateAccordionPane.sections, "Introduction");
             const TOEoverviewUUID = getUUIDByTitle(stateEditors, "TOE Overview");
-            const compliantTOE = fileParser.getCompliantTOE(xml);
+            const compliantTOE = fileParser.getCompliantTOE(xml, ppType);
 
             if (compliantTOE) {
                 const toeOverview = compliantTOE.toe_overview;
-                const toeBoundary = compliantTOE.toe_boundary;
-                const toePlatform = compliantTOE.toe_platform;
 
-                // Load TOE Overview (if exists)
-                dispatch(UPDATE_EDITOR_TEXT({ uuid: TOEoverviewUUID, newText: toeOverview }));
+                if (ppType == "Functional Package") {
+                    dispatch(SET_COMPLIANT_TARGETS_OF_EVALUATION_INTRO({ text: toeOverview }));
+                    dispatch(SET_COMPLIANT_TARGETS_OF_EVALUATION_ADDITIONAL_TEXT({ text: compliantTOE.additionalText }));
 
-                // Create the editor if there is content in the xml for TOE Boundary
-                if (toeBoundary.length != 0) {
-                    const editorUUID = getUUIDByTitle(stateEditors, "TOE Boundary");
-                    dispatch(UPDATE_EDITOR_TEXT({ uuid: editorUUID, newText: toeBoundary }));
-                }
+                    const components = compliantTOE.components;
+                    dispatch(LOAD_TABLE_ROWS({ components: components }));
+                } else {
+                    const toeBoundary = compliantTOE.toe_boundary;
+                    const toePlatform = compliantTOE.toe_platform;
 
-                // Create the editor if there is content in the xml for TOE Platform
-                if (toePlatform.length != 0) {
-                    let editorUUID = dispatch(CREATE_EDITOR({ title: "TOE Platform" })).payload;
+                    // Load TOE Overview (if exists)
+                    dispatch(UPDATE_EDITOR_TEXT({ uuid: TOEoverviewUUID, newText: toeOverview }));
 
-                    dispatch(UPDATE_EDITOR_TEXT({ uuid: editorUUID, newText: toePlatform }));
+                    // Create the editor if there is content in the xml for TOE Boundary
+                    if (toeBoundary.length != 0) {
+                        const editorUUID = getUUIDByTitle(stateEditors, "TOE Boundary");
+                        dispatch(UPDATE_EDITOR_TEXT({ uuid: editorUUID, newText: toeBoundary }));
+                    }
 
-                    if (editorUUID) {
-                        // Add the editor to the TOE Overview as a subsection
-                        dispatch(CREATE_ACCORDION_SUB_FORM_ITEM({ accordionUUID: introductionUUID, uuid: editorUUID, formUUID: TOEoverviewUUID, contentType: "editor" }));
+                    // Create the editor if there is content in the xml for TOE Platform
+                    if (toePlatform.length != 0) {
+                        let editorUUID = dispatch(CREATE_EDITOR({ title: "TOE Platform" })).payload;
+
+                        dispatch(UPDATE_EDITOR_TEXT({ uuid: editorUUID, newText: toePlatform }));
+
+                        if (editorUUID) {
+                            // Add the editor to the TOE Overview as a subsection
+                            dispatch(CREATE_ACCORDION_SUB_FORM_ITEM({ accordionUUID: introductionUUID, uuid: editorUUID, formUUID: TOEoverviewUUID, contentType: "editor" }));
+                        }
                     }
                 }
             }
@@ -790,22 +688,27 @@ function FileLoader(props) {
             const { terms: stateTerms } = stateRef.current
             const termUUID = getUUIDByTitle(stateTerms, "Technical Terms");
             const acronymUUID = getUUIDByTitle(stateTerms, "Acronyms");
+            const suppressedUUID = getUUIDByTitle(stateTerms, "Suppressed Terms");
 
             // Get all the Tech Terms
             const terms = fileParser.getAllTechTerms(xml);
             if (terms) {
-                const techTerms = terms.termsArray;
-                const acronyms = terms.acronymsArray;
+                const { termsArray, acronymsArray, suppressedTermsArray } = terms;
 
-                // Populate tech terms
-                Object.values(techTerms).map((term) => {
-                    dispatch(CREATE_TERM_ITEM({ termUUID: termUUID, name: term.name, definition: term.definition, tagMeta: term.xmlTagMeta }));
-                });
+                const dispatchTerms = (array, uuid) => {
+                    Object.values(array).forEach(term => {
+                        dispatch(CREATE_TERM_ITEM({
+                            termUUID: uuid,
+                            name: term.name,
+                            definition: term.definition,
+                            tagMeta: term.xmlTagMeta
+                        }));
+                    });
+                };
 
-                // Populate acronym terms
-                Object.values(acronyms).map((term) => {
-                    dispatch(CREATE_TERM_ITEM({ termUUID: acronymUUID, name: term.name, definition: term.definition, tagMeta: term.xmlTagMeta }));
-                });
+                dispatchTerms(termsArray, termUUID);
+                dispatchTerms(acronymsArray, acronymUUID);
+                dispatchTerms(suppressedTermsArray, suppressedUUID);
             }
 
         } catch (err) {
@@ -880,6 +783,11 @@ function FileLoader(props) {
             const ppClaimUUID = getUUIDByTitle(stateEditors, "PP Claims");
             const packageClaimUUID = getUUIDByTitle(stateEditors, "Package Claims");
             const allCClaims = fileParser.getCClaims(xml, ppTemplateVersion);
+            const cClaimsAttributes = fileParser.getCClaimsAttributes(xml)
+
+            if (cClaimsAttributes) {
+                dispatch(UPDATE_CC_ERRATA({ cc_errata: cClaimsAttributes["cc-errata"]}))
+            }
 
             if (allCClaims.length != 0) {
                 Object.values(allCClaims).map((claim) => {
@@ -1020,8 +928,9 @@ function FileLoader(props) {
         try {
             const { objectives: stateObjectives } = stateRef.current
             const oeUUID = getUUIDByTitle(stateObjectives, "Security Objectives for the Operational Environment");
-            const OEs = fileParser.getAllSecurityObjectivesOE(xml);
-            Object.values(OEs).map((objective) => {
+            const { intro, securityObjectives } = fileParser.getAllSecurityObjectivesOE(xml);
+            dispatch(UPDATE_OBJECTIVE_SECTION_DEFINITION({uuid: oeUUID, title: "Security Objectives for the Operational Environment", newDefinition: intro}))
+            Object.values(securityObjectives).map((objective) => {
                 const name = objective.name;
                 const definition = objective.definition;
                 const sfrs = objective.sfrs;
@@ -1029,7 +938,7 @@ function FileLoader(props) {
                 objectivesMap[name] = result.payload.id;
             })
         } catch (err) {
-            const errorMessage = `Failed to load Operational Objectives of the Environment Data: ${err}`
+            const errorMessage = `Failed to load Security Objectives of the Operational Environment Data: ${err}`
             console.log(errorMessage);
             handleSnackBarError(errorMessage)
         }
@@ -1114,6 +1023,24 @@ function FileLoader(props) {
     }
 
     /**
+     * 
+     * @param {*} sfrsMap 
+     */
+    const updateTOEComponents = (sfrsMap) => {
+        // console.log(stateRef.current);
+        // const { compliantTargetsOfEvaluation: stateCompliantTOE } = stateRef.current
+
+        // console.log(stateCompliantTOE)
+        // console.log(sfrsMap)
+
+
+        // const updatedCompliantTOE = stateCompliantTOE.map(entry => ({
+        //     ...entry,
+        //     uuid: sfrsMap[entry.componentID]
+        //   }));          
+    }
+
+    /**
      * Add the UUID for the SFRs in the threat -> SFR relationship for v3.1 to CC2022 DR conversion
      * @param {*} sfrsMap
      * @param {*} threatWithSFR 
@@ -1125,25 +1052,25 @@ function FileLoader(props) {
 
         Object.values(threatWithSFR).forEach((threat) => {
             const sfrMap = new Map();
-        
+
             threat.sfrs.forEach((sfr) => {
                 const sfrName = sfr.name;
                 const sfrUUID = sfrsMap[sfrName];
                 const rationale = sfr.rationale;
-                const xmlTagMeta = sfr.xmlTagMeta;
         
                 if (!sfrMap.has(sfrUUID)) {
                     sfrMap.set(sfrUUID, {
                         name: sfrName,
+                        type: sfr.type,
                         uuid: sfrUUID,
                         rationale: rationale,
-                        xmlTagMeta: xmlTagMeta,
+                        xmlTagMeta: sfr.xmlTagMeta,
                     });
                 } else {
                     sfrMap.get(sfrUUID).rationale += `\n\n${rationale}`; // concatenate SFR rationale for objectives tied to same SFR
                 }
             });
-        
+
             const sfrsWithGroupedRationale = Array.from(sfrMap.values());
             dispatch(
                 UPDATE_THREAT_TERM_SFRS({
@@ -1153,6 +1080,118 @@ function FileLoader(props) {
                 })
             );
         });
+    }
+
+    /**
+     * Convert simple selectables and component dependencies to UUIDs
+     */
+    const convertSelDepToUUIDs = () => {
+        const { sfrSections: stateSfrSections } = stateRef.current
+
+        for (const familiyUUID in stateSfrSections) {
+            const family = stateSfrSections[familiyUUID];
+
+            for (const componentUUID in family) {
+                const component = family[componentUUID];
+
+                // Set the test dependencies
+                let dependencyMap = {}; // Maps selectable id to UUID (value remains same for complex selectable simce there is no UUID)
+                let eAUUID = ';'
+
+                if (component.evaluationActivities) {
+                    // Iterate through tests in Evaluation Activities for component
+                    for (const [uuid, eADetails] of Object.entries(component.evaluationActivities)) {
+                        eAUUID = uuid;
+                        if (eADetails.testList.length != 0) {
+                            eADetails.testList.forEach(testlist => {
+                                testlist["tests"].forEach(test => {
+                                    if (test.hasOwnProperty("dependencies") && test["dependencies"].length != 0) {
+                                        test["dependencies"].forEach(dep => {
+                                            // Get the UUID for the selectable
+                                            let selectionUUID = fileParser.getUUID(stateSfrSections, dep, "selectable");
+
+                                            // If there is no UUID found, it is likely a complex selectable
+                                            if (selectionUUID != null) {
+                                                dependencyMap[dep] = selectionUUID;
+                                            } else {
+                                                dependencyMap[dep] = dep;
+                                            }
+                                        });
+                                    }
+                                });
+                            });
+                        }
+                    }
+
+                    // Set the updated test dependencies in the state
+                    if (Object.keys(dependencyMap).length != 0) {
+                        dispatch(UPDATE_SFR_COMPONENT_TEST_DEPENDENCIES({ sfrUUID: familiyUUID, uuid: componentUUID, eAUUID: eAUUID, selectionMap: dependencyMap }));
+
+                    }
+                }
+
+                // Set the selection dependencies
+                if (component.selections.hasOwnProperty("selections") && component.selections.hasOwnProperty("elements") && component.selections.hasOwnProperty("components")) {
+                    if (component.selections.selections.length != 0 || component.selections.components.length != 0 || component.selections.elements.length != 0) {
+                        let selection_obj = {
+                            components: [],
+                            elements: [],
+                            selections: [],
+                        }
+
+                        let selections = [];
+                        component.selections.selections.forEach(selectionID => {
+                            if (!validator.isUUID(selectionID)) {
+                                let selectionUUID = fileParser.getUUID(stateSfrSections, selectionID, "selectable");
+                                // If id is a complex selectable, leave it
+                                selectionUUID ? selections.push(selectionUUID) : selections.push(selectionID)
+                            } else {
+                                // If selection dependency is already a UUID, just keep it
+                                selections.push(selectionID);
+                            }
+
+                        });
+                        selection_obj.selections = selections;
+
+                        let components = [];
+                        component.selections.components.forEach(componentID => {
+                            if (componentID != null) {
+                                if (!validator.isUUID(componentID)) {
+                                    let componentUUID = fileParser.getUUID(stateSfrSections, componentID, "component");
+                                    if (componentUUID != null) {
+                                        components.push(componentUUID);
+                                    }
+                                } else {
+                                    // If selection dependency is already a UUID, just keep it
+                                    components.push(componentID);
+                                }
+                            }
+                        });
+                        selection_obj.components = components;
+
+                        let elements = [];
+                        component.selections.elements.forEach(elementID => {
+                            if (elementID != null) {
+                                if (!validator.isUUID(elementID)) {
+                                    let elementUUID = fileParser.getUUID(stateSfrSections, elementID, "element");
+                                    if (elementUUID != null) {
+                                        elements.push(elementUUID);
+                                    }
+                                } else {
+                                    // If selection dependency is already a UUID, just keep it
+                                    elements.push(elementID);
+                                }
+                            }
+                        });
+                        selection_obj.elements = elements;
+
+                        // Update the selection dependent IDs in the slice
+                        dispatch(UPDATE_SFR_COMPONENT_ITEMS({ sfrUUID: familiyUUID, uuid: componentUUID, itemMap: { 'selections': selection_obj } }));
+                    }
+                }
+            }
+        }
+
     }
 
     /**
@@ -1570,19 +1609,23 @@ function FileLoader(props) {
      */
     const createDefaultSlices = (xml) => {
         const ppTemplateVersion = getPpTemplateVersion(xml)
+        const ppType = getPpType(xml)
         fetchTemplateData({
             version: ppTemplateVersion,
+            type: ppType,
             base: true
         }, dispatch).then()
-        return ppTemplateVersion
+        return { ppTemplateVersion, ppType }
     }
     const resetTemplateData = async () => {
         const ppTemplateVersion = sessionStorage.getItem('ppTemplateVersion');
+        const ppType = sessionStorage.getItem('ppType');
         const version = ppTemplateVersion === "Version 3.1" ? "CC2022 Standard" : ppTemplateVersion
 
         // Reset the state and load in the template by version
         await fetchTemplateData({
             version: version,
+            type: ppType,
             base: false
         }, dispatch)
 

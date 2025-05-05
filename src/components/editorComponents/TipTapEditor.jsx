@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import PropTypes from "prop-types";
 import { useDispatch, useSelector } from 'react-redux'
 import { FormControl, IconButton, TextField, Tooltip } from "@mui/material";
 import { BubbleMenu, EditorContent, useEditor } from '@tiptap/react';
-import { FaBold, FaItalic, FaUnderline, FaStrikethrough, FaSuperscript, FaSubscript, FaListUl, FaAlignCenter, FaAlignRight, FaAlignJustify, FaAlignLeft, FaListOl } from 'react-icons/fa';
+import { FaBold, FaItalic, FaUnderline, FaStrikethrough, FaSuperscript, FaSubscript, FaLink, FaListUl, FaAlignCenter, FaAlignRight, FaAlignJustify, FaAlignLeft, FaListOl } from 'react-icons/fa';
 import { LuHeading1, LuHeading2 } from "react-icons/lu";
 import { RiDeleteColumn, RiDeleteRow, RiInsertColumnLeft, RiInsertColumnRight } from "react-icons/ri";
 import { GrTableAdd } from "react-icons/gr";
@@ -35,6 +35,7 @@ import "../../../index.css"
 import SecurityComponents from "../../utils/securityComponents.jsx";
 import { deepCopy } from '../../utils/deepCopy.js';
 import DeleteConfirmation from '../modalComponents/DeleteConfirmation.jsx';
+import Link from '@tiptap/extension-link'
 
 /**
 * The TipTapEditor rich text editor
@@ -74,6 +75,7 @@ const TipTapEditor = (props) => {
     const [openSfrConfirmationDialog, setOpenSfrConfirmationDialog] = useState(false)
     const [openSarConfirmationDialog, setOpenSarConfirmationDialog] = useState(false)
     const [openDeleteDialog, setDeleteDialog] = useState(false);
+    const blurTimeout = useRef(null);
     const editor = useEditor({
         extensions: [
             StarterKit,
@@ -95,11 +97,29 @@ const TipTapEditor = (props) => {
             Placeholder.configure({
                 placeholder: 'Enter your text here',
             }),
+            Link.configure({
+                openOnClick: true,
+                autolink: true,
+                linkOnPaste: true,
+                HTMLAttributes: {
+                    class: 'text-blue-600 underline hover:text-blue-800',
+                    target: '_blank',
+                },
+            }),
         ],
         content: props.text ? props.text : '',
         onBlur({ editor }) {
             handleSnackbarTextUpdates(getEditorContent, editor);
+            blurTimeout.current = setTimeout(() => {
+                handleSnackbarTextUpdates(getEditorContent, editor);
+            }, 200);
         },
+        onFocus() {
+            if (blurTimeout.current) {
+                // Cancel the blur update if focus is regained
+                clearTimeout(blurTimeout.current);
+            }
+        }
     });
 
     // Use Effects
@@ -120,12 +140,17 @@ const TipTapEditor = (props) => {
             editor.setEditable(false)
         }
 
-        // Update text
         if (editor) {
             editor.commands.setContent(text ? text : "");
-        }
+          }
     }, [props]);
 
+    // Update text only if there are actual changes - so we don't re-render on every prop change
+    useEffect(() => {
+        if (editor && props.text !== editor.getHTML()) {
+            editor.commands.setContent(props.text || "");
+        }
+    }, [props.text]);
 
     // Methods
     const updateEditorTitle = (event) => {
@@ -486,6 +511,25 @@ const MenuBar = ({ editor, showTable, icons }) => {
                         className={editor.isActive('subscript') ? 'is-active' : ''}>
                     <FaSubscript style={textEditor}/>
                 </button>
+            </Tooltip>
+            <Tooltip title={"Insert/Edit Link"}>
+            <button
+                onClick={() => {
+                    const previousUrl = editor.getAttributes('link').href;
+                    const url = window.prompt('Enter URL', previousUrl);
+                    if (url === null) return;
+
+                    if (url === '') {
+                        editor.chain().focus().extendMarkRange('link').unsetLink().run();
+                        return;
+                    }
+
+                    editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
+                }}
+                className={editor.isActive('link') ? 'is-active' : ''}
+            >
+                <FaLink style={textEditor} />
+            </button>
             </Tooltip>
             <Tooltip title={"Left"}>
                 <button onClick={() => editor.chain().focus().setTextAlign('left').run()}

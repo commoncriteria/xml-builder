@@ -15,6 +15,7 @@ import {
     UPDATE_PACKAGE_CLAIMS_INDEX_BY_KEY,
     UPDATE_PART_2_CONFORMANCE_DROPDOWN,
     UPDATE_PART_3_CONFORMANCE_DROPDOWN,
+    UPDATE_CC_ERRATA,
     UPDATE_PP_CLAIMS_INDEX_BY_KEY,
     UPDATE_ST_CONFORMANCE_DROPDOWN
 } from "../../reducers/conformanceClaimsSlice.js";
@@ -32,13 +33,14 @@ import SecurityComponents from "../../utils/securityComponents.jsx";
  */
 function ConformanceClaims() {
     // Constants
-    const { getCardTemplate } = SecurityComponents
+    const { getCardTemplate, handleSnackBarSuccess, handleSnackBarError } = SecurityComponents
     const dispatch = useDispatch();
     const { requirementsStyling, secondaryColor } = useSelector((state) => state.styling);
     const {
         stConformance,
         part2Conformance,
         part3Conformance,
+        cc_errata,
         ppClaims,
         packageClaims,
         evaluationMethods,
@@ -50,6 +52,7 @@ function ConformanceClaims() {
     const conformanceOptions = ["conformant", "extended"]
     const packageClaimOptions = ["augmented", "conformant", "tailored"]
     const statusOptions = ["Configuration", "Conformance"]
+    const ccErrataOptions = ["N/A", "v1.0", "v1.1"]
 
     // Methods
     /**
@@ -132,8 +135,11 @@ function ConformanceClaims() {
                 index: index,
                 value: value
             }))
+
+            handleSnackBarSuccess("Text Updated Successfully");
         } catch (e) {
             console.log(e)
+            handleSnackBarError("Error updating text.");
         }
     }
     /**
@@ -218,6 +224,9 @@ function ConformanceClaims() {
                 break;
             } case "conf": {
                 updatePackageClaim(index, value, type)
+                break;
+            } case "cc_errata": {
+                dispatch(UPDATE_CC_ERRATA({ cc_errata: value}))
                 break;
             } default: {
                 break;
@@ -361,11 +370,16 @@ function ConformanceClaims() {
     const getConformanceSection = () => {
         const header = "Conformance Claims"
         const body = (
-            <span className="flex justify-stretch min-w-full p-4 pr-1 pb-0">
-                {getDropdownByType(stConformance, "Select ST Conformance", "stConformance", stConformanceOptions, true)}
-                {getDropdownByType(part2Conformance, "Select Part 2 Conformance", "part2Conformance", conformanceOptions, false)}
-                {getDropdownByType(part3Conformance, "Select Part 3 Conformance", "part3Conformance", conformanceOptions, false)}
-            </span>
+            <div className="min-w-full p-4 pr-1 pb-0">
+                <div className="flex justify-stretch">
+                    {getDropdownByType(stConformance, "Select ST Conformance", "stConformance", stConformanceOptions, true)}
+                    {getDropdownByType(part2Conformance, "Select Part 2 Conformance", "part2Conformance", conformanceOptions, false)}
+                    {getDropdownByType(part3Conformance, "Select Part 3 Conformance", "part3Conformance", conformanceOptions, false)}
+                </div>
+                <div className="flex mt-4">
+                    {getDropdownByType(cc_errata, "Select cc-errata", "cc_errata", ccErrataOptions, false)}
+                </div>
+            </div>
         );
         const tooltip = `The Conformance Claim is mainly boilerplate. The two sub-elements are used to specify the 
         Part 2 and 3 conformance for the document. If the current document is a Functional Package, the Part 3 claim is 
