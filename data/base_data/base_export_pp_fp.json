@@ -1,0 +1,291 @@
+{
+	"overallObject": {
+		"?1": "xml-stylesheet type=\"text/xsl\" href=\"..\\transformspp2html.xsl\"",
+		"?2": "xml-model href=\"https://raw.githubusercontent.com/commoncriteria/transforms/master/schemas/CCProtectionProfile.rng\" type=\"application/xml\" schematypens=\"http://relaxng.org/ns/structure/1.0\"",
+		"PP": {
+			"PPReference": {
+				"ReferenceTable": {
+					"PPTitle": "Protection Profile for QQQQ",
+					"PPVersion": "#.#",
+					"PPAuthor": "National Information Assurance Partnership",
+					"PPPubDate": "YYYY-MM-DD",
+					"Keywords": "QQQQ; QQQQ"
+				}
+			},
+			"RevisionHistory": {
+				"entry": {
+					"!": " Repeatable ",
+					"version": "v #.#",
+					"date": "YYYY-MM-DD",
+					"subject": {
+						"#1": "QQQQ\n        ",
+						"h:br": {},
+						"#2": "QQQQ ",
+						"!": " Repeatable "
+					}
+				}
+			},
+			"include-pkg": {},
+			"pp-preferences": {},
+			"sec:Introduction": {
+				"#": [
+					{
+						"!": " 1.1 Overview "
+					},
+					{
+						"sec:Overview": "QQQQ\n    "
+					},
+					{
+						"!": [
+							" 1.2 Terms ",
+							" 1.2.1 Common Criteria Terms ",
+							" 1.2.2 Technical Terms "
+						]
+					},
+					{
+						"tech-terms": {
+							"term": {
+								"@full": "QQQQ",
+								"@abbr": "QQQQ",
+								"#": "\n            QQQQ\n        "
+							}
+						}
+					},
+					{
+						"!": " 1.3 Compliant Targets of Evaluation "
+					},
+					{
+						"section": {
+							"@title": "Compliant Targets of Evaluation",
+							"@id": "TOEdescription",
+							"#": "\n\n    QQQQ\n\n    ",
+							"!": " 1.3.1 TOE Boundary ",
+							"sec:TOE_Boundary": {
+								"#": "\n\n    QQQQ \n    ",
+								"figure": {
+									"@entity": "images/QQQQ.png",
+									"@title": "QQQQ",
+									"@id": "QQQQ"
+								},
+								"!": " Repeatable "
+							}
+						}
+					},
+					{
+						"!": [
+							" 1.3 Compliant Targets of Evaluation ",
+							" 1.4 Use Cases "
+						]
+					},
+					{
+						"sec:Use_Cases": {
+							"#": "\n    QQQQ\n    ",
+							"usecases": {
+								"usecase": {
+									"@title": "QQQQ",
+									"@id": "QQQQ",
+									"description": "QQQQ\n        "
+								}
+							}
+						}
+					},
+					{
+						"!": " 1.5 Supported Platforms "
+					},
+					{
+						"section": {
+							"@title": "Platforms with Specific EAs",
+							"@id": "sec-platforms",
+							"choice": {
+								"@prefix": "Platforms:",
+								"#": "\n        QQQQ",
+								"h:p": {},
+								"selectables": {
+									"@linebreak": "yes",
+									"selectable": {
+										"@id": "QQQQ",
+										"h:b": {
+											"snip": "QQQQ"
+										},
+										"#": ": ",
+										"h:i": "QQQQ"
+									},
+									"!": " Repeatable "
+								}
+							}
+						}
+					}
+				]
+			},
+			"sec:Conformance_Claims": {},
+			"!1": " 3.0 Security Problem Definition",
+			"sec:Security_Problem_Definition": {
+				"#": "\n    The security problem is described in terms\n    of the threats that the TOE is expected to address, assumptions about the\n    operational environment, and any organizational security policies that the TOE\n    is expected to enforce.\n    \n",
+				"!1": " 3.1 Threats ",
+				"sec:Threats": {
+					"threats": {
+						"threat": {
+							"@name": "T.QQQQ",
+							"!": " Repeatable ",
+							"description": "QQQQ",
+							"objective-refer": {
+								"@ref": "O.QQQQ",
+								"!": " Repeatable ",
+								"rationale": "QQQQ"
+							}
+						}
+					}
+				},
+				"!2": " 3.2 Assumptions ",
+				"sec:Assumptions": {
+					"assumptions": {
+						"assumption": {
+							"@name": "A.QQQQ",
+							"!": " Repeatable ",
+							"description": "QQQQ",
+							"objective-refer": {
+								"@ref": "OE.QQQQ",
+								"!": " Repeatable ",
+								"rationale": "QQQQ"
+							}
+						}
+					}
+				},
+				"!3": " 3.3 Organizational Security Policies ",
+				"sec:Organizational_Security_Policies": {
+					"OSPs": {},
+					"!": "     <OSP id=\"P.QQQQ\"> \n        <description>QQQQ</description>\n        <objective-refer ref=\"O.QQQQ\">\n            <rationale>QQQQ</rationale>\n        </objective-refer>\n    </OSP>\n    </OSPs> "
+				}
+			},
+			"!2": " 4.0 Security Objectives ",
+			"sec:Security_Objectives": {
+				"!1": " 4.1 Security Objectives for the TOE ",
+				"sec:Security_Objectives_for_the_TOE": {
+					"SOs": {
+						"SO": {
+							"@name": "O.QQQQ",
+							"!1": " Repeatable ",
+							"description": "QQQQ",
+							"addressed-by": "QQQQ.#/QQQQ",
+							"rationale": "QQQQ",
+							"!2": " Repeatable "
+						}
+					}
+				},
+				"!2": " 4.2 Security Objctives for the Operational Environment ",
+				"sec:Security_Objectives_for_the_Operational_Environment": {
+					"#": "\n    QQQQ\n    ",
+					"SOEs": {
+						"SOE": {
+							"@name": "OE.QQQQ",
+							"!": " Repeatable ",
+							"description": "QQQQ"
+						}
+					}
+				},
+				"!3": " 4.3 Security Objectives Rationale ",
+				"sec:Security_Objectives_Rationale": {}
+			},
+			"!3": " 5.0 Security Requirements ",
+			"sec:req": {
+				"@title": "Security Requirements",
+				"!1": " 5.1 Security Functional Requirements ",
+				"sec:SFRs": {
+					"@title": "Security Functional Requirements",
+					"sec:Auditable_Events_for_Mandatory_SFRs": {
+						"audit-table": [
+							{
+								"@table": "mandatory",
+								"@id": "t-audit-mandatory"
+							},
+							{
+								"@table": "additional",
+								"@id": "t-audit-additional",
+								"@title": "Additional Audit Events"
+							}
+						]
+					},
+					"!1": " 5.1.1 First SFR Family Section - Alphabetical ",
+					"section": {
+						"@title": "QQQ",
+						"@id": "qqq",
+						"!1": " Repeatable ",
+						"!2": " FCS_CKM.1 ",
+						"f-component": {
+							"@cc-id": "QQQ_QQQ_EXT.1",
+							"@id": "qqqq",
+							"@iteration": "QQQQ",
+							"@name": "QQQQ",
+							"@status": "sel-based/optional",
+							"!": " Repeatable ",
+							"depends": {
+								"@on": "qqqq",
+								"@and": "qqqq"
+							},
+							"f-element": {
+								"@id": "QQQQ",
+								"!": " Repeatable ",
+								"title": {
+									"assignable": "QQQQ",
+									"#1": " QQQQ ",
+									"selectables": {
+										"@linebreak": "yes",
+										"!1": " Repeatable ",
+										"selectable": {
+											"@exclusive": "yes",
+											"@id": "qqqq",
+											"assignable": "QQQQ",
+											"#": " QQQQ "
+										},
+										"!2": " Repeatable "
+									},
+									"#2": ".\n\t\t\t\t"
+								},
+								"note": {
+									"@role": "application",
+									"#": "QQQQ\n\t\t\t\t"
+								},
+								"aactivity": {
+									"@level": "element",
+									"!": " Repeatable ",
+									"TSS": "\n\t\t\t\t\t\tQQQQ\n\t\t\t\t\t",
+									"Guidance": "QQQQ",
+									"Tests": {
+										"testlist": {
+											"test": {
+												"h:div": {
+													"depends": {
+														"@ref": "qqqq"
+													},
+													"#": "\n                                        QQQQ\n                                "
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					},
+					"!2": " First SFR Family Section - Alphabetical ",
+					"!3": " 5.1.7 TOE Security Functional Requirements Rationale ",
+					"!4": " auto generated "
+				},
+				"!2": " 5.1 Security Functional Requirements ",
+				"!3": " 5.2 Security Assurance Requirements ",
+				"section": {
+					"@title": "Security Assurance Requirements",
+					"@id": "SARs"
+				},
+				"!4": " Security Assurance Requirements "
+			},
+			"appendix": {},
+			"bibliography": {
+				"cc-entry": {},
+				"entry": {}
+			}
+		}
+	},
+	"techTerms": {},
+	"useCases": {},
+	"fileType": ""
+}

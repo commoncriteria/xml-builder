@@ -13,8 +13,8 @@
     },
     "metadata": {
       "open": false,
-      "ppType": "Protection Profile",
-      "ppTemplateVersion": "Version 3.1",
+      "ppType": "Functional Package",
+      "ppTemplateVersion": "",
       "ppName": "",
       "author": "",
       "keywords": "",
@@ -52,7 +52,7 @@
           },
           {
             "uuid": "f98870e2-4264-4d39-8b02-a5297d0a5b3d",
-            "contentType": "editor",
+            "contentType": "compliantTargetsOfEvaluation",
             "formItems": [
               {
                 "uuid": "1e583a1f-0075-47f2-a757-e33d82bd68cc",
@@ -77,25 +77,13 @@
         "open": false,
         "xmlTagMeta": {
           "tagName": "sec:Conformance_Claims",
-          "childTagName": "cclaims",
+          "childTagName": "CClaimsInfo",
           "attributes": {}
         },
         "formItems": [
           {
-            "uuid": "1c487474-5e05-4837-a1d9-23da1530688d",
-            "contentType": "editor"
-          },
-          {
-            "uuid": "68244faa-e405-46b4-9df7-140246ca3463",
-            "contentType": "editor"
-          },
-          {
-            "uuid": "e3d935a4-a1e1-44be-b868-fa7eb8322e00",
-            "contentType": "editor"
-          },
-          {
-            "uuid": "37032788-a50d-442b-98e6-e8e3b92b26f7",
-            "contentType": "editor"
+            "uuid": "216739c1-adb3-46bb-8ad6-950df127734a",
+            "contentType": "conformanceClaims"
           }
         ]
       },
@@ -105,21 +93,7 @@
           "tagName": "sec:Security_Problem_Definition",
           "attributes": {}
         },
-        "formItems": [
-          {
-            "uuid": "c0dbc61b-cf58-4db6-985b-5539ae2f7455",
-            "contentType": "threats"
-          },
-          {
-            "uuid": "3a8ef499-784b-485c-8321-a02083aafda8",
-            "contentType": "threats",
-            "xmlTagMeta": {
-              "tagName": "sec:Assumptions",
-              "childTagName": "assumptions",
-              "attributes": {}
-            }
-          }
-        ],
+        "formItems": [],
         "open": false
       },
       "ee00eb97-a279-41d3-911f-0236fdda9567": {
@@ -128,16 +102,7 @@
           "tagName": "sec:Security_Objectives",
           "attributes": {}
         },
-        "formItems": [
-          {
-            "uuid": "8ba516d2-8336-4562-a6b3-751d722232d9",
-            "contentType": "objectives"
-          },
-          {
-            "uuid": "9d813e26-364b-4149-ae05-f2459b2d76d5",
-            "contentType": "objectives"
-          }
-        ],
+        "formItems": [],
         "open": false
       },
       "2687f815-d716-4e10-955d-1b506a99a448": {
@@ -145,11 +110,6 @@
         "formItems": [
           {
             "uuid": "849fe5bc-7364-4448-863a-d280f63d9516",
-            "contentType": "editor",
-            "formItems": []
-          },
-          {
-            "uuid": "ceb738a9-60e1-48b7-bfe9-2e7c2de5153b",
             "contentType": "editor",
             "formItems": []
           }
@@ -248,19 +208,7 @@
     },
     "da39f7c1-78dc-4cc0-a564-4f607d511f6f": {
       "title": "Terms",
-      "text": "",
-      "open": false
-    },
-    "f98870e2-4264-4d39-8b02-a5297d0a5b3d": {
-      "title": "TOE Overview",
-      "xmlTagMeta": {
-        "tagName": "section",
-        "attributes": {
-          "title": "Compliant Targets of Evaluation",
-          "id": "TOEdescription"
-        }
-      },
-      "text": "",
+      "text": "<p><span style=\"color: black;\">The following sections list Common Criteria and technology terms used in this document.</span></p>",
       "open": false
     },
     "d68577d1-5737-4074-a700-764ca6a9189f": {
@@ -272,57 +220,8 @@
       "text": "",
       "open": false
     },
-    "1c487474-5e05-4837-a1d9-23da1530688d": {
-      "title": "Conformance Statement",
-      "xmlTagMeta": {
-        "tagName": "cclaim",
-        "attributes": {
-          "name": "Conformance Statement"
-        }
-      },
-      "text": "",
-      "open": false
-    },
-    "68244faa-e405-46b4-9df7-140246ca3463": {
-      "title": "CC Conformance Claims",
-      "xmlTagMeta": {
-        "tagName": "cclaim",
-        "attributes": {
-          "name": "CC Conformance Claims"
-        }
-      },
-      "text": "",
-      "open": false
-    },
-    "e3d935a4-a1e1-44be-b868-fa7eb8322e00": {
-      "title": "PP Claims",
-      "xmlTagMeta": {
-        "tagName": "cclaim",
-        "attributes": {
-          "name": "PP Claim"
-        }
-      },
-      "text": "",
-      "open": false
-    },
-    "37032788-a50d-442b-98e6-e8e3b92b26f7": {
-      "title": "Package Claims",
-      "xmlTagMeta": {
-        "tagName": "cclaim",
-        "attributes": {
-          "name": "Package Claim"
-        }
-      },
-      "text": "",
-      "open": false
-    },
     "849fe5bc-7364-4448-863a-d280f63d9516": {
       "title": "Security Functional Requirements",
-      "text": "",
-      "open": false
-    },
-    "ceb738a9-60e1-48b7-bfe9-2e7c2de5153b": {
-      "title": "Security Assurance Requirements",
       "text": "",
       "open": false
     },
@@ -333,54 +232,9 @@
     }
   },
   "threats": {
-    "securityProblemDefinition": "",
-    "c0dbc61b-cf58-4db6-985b-5539ae2f7455": {
-      "title": "Threats",
-      "xmlTagMeta": {
-        "tagName": "sec:Threats",
-        "childTagName": "threats",
-        "attributes": {}
-      },
-      "definition": "",
-      "open": false,
-      "terms": {}
-    },
-    "3a8ef499-784b-485c-8321-a02083aafda8": {
-      "title": "Assumptions",
-      "xmlTagMeta": {
-        "tagName": "sec:Assumptions",
-        "childTagName": "assumptions",
-        "attributes": {}
-      },
-      "definition": "",
-      "open": false,
-      "terms": {}
-    }
+    "securityProblemDefinition": ""
   },
-  "objectives": {
-    "8ba516d2-8336-4562-a6b3-751d722232d9": {
-      "title": "Security Objectives for the TOE",
-      "xmlTagMeta": {
-        "tagName": "sec:Security_Objectives_for_the_TOE",
-        "childTagName": "SOs",
-        "attributes": {}
-      },
-      "definition": "",
-      "open": false,
-      "terms": {}
-    },
-    "9d813e26-364b-4149-ae05-f2459b2d76d5": {
-      "title": "Security Objectives for the Operational Environment",
-      "xmlTagMeta": {
-        "tagName": "sec:Security_Objectives_for_the_Operational_Environment",
-        "childTagName": "SOEs",
-        "attributes": {}
-      },
-      "definition": "",
-      "open": false,
-      "terms": {}
-    }
-  },
+  "objectives": {},
   "sfrs": {
     "auditSection": "",
     "sfrDefinition": "",
@@ -390,10 +244,7 @@
   "sars": {
     "xmlTagMeta": {
       "tagName": "section",
-      "attributes": {
-        "title": "Security Assurance Requirements",
-        "id": "SARs"
-      }
+      "attributes": {}
     },
     "sections": {},
     "components": {},
