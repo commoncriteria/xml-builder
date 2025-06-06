@@ -26,6 +26,7 @@
 				}
 			},
 			"include-pkg": {},
+			"modules": {},
 			"pp-preferences": {},
 			"sec:Introduction": {
 				"#": [
@@ -282,7 +283,8 @@
 			"bibliography": {
 				"cc-entry": {},
 				"entry": {}
-			}
+			},
+			"extra-css": ""
 		}
 	},
 	"techTerms": {},
