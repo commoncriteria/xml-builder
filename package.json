@@ -10,7 +10,8 @@
     "dev": "vite --open",
     "build": "vite build",
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
-    "preview": "vite preview"
+    "format": "prettier --write \"src/**/*.{js,jsx,ts,tsx,css,md}\" --config ./.prettierrc.json",
+    "preview": "vite preview --open"
   },
   "dependencies": {
     "@emotion/react": "^11.11.1",
@@ -67,22 +68,23 @@
     "use-constant": "^1.1.1",
     "uuid": "^9.0.1",
     "validator": "^13.11.0",
-    "xmlbuilder2": "^3.1.1",
-    "xmldom": "^0.6.0",
-    "xpath": "^0.0.34",
-    "xsd2jsonschema": "^0.3.7"
+    "xmlbuilder2": "^3.1.1"
   },
   "devDependencies": {
+    "@eslint/js": "^9.21.0",
     "@types/react": "^18.2.15",
     "@types/react-dom": "^18.2.7",
-    "@vitejs/plugin-react": "^4.2.0",
+    "@vitejs/plugin-react": "^4.3.4",
     "daisyui": "^3.7.7",
-    "eslint": "^8.45.0",
-    "eslint-plugin-react": "^7.32.2",
-    "eslint-plugin-react-hooks": "^4.6.0",
-    "eslint-plugin-react-refresh": "^0.4.3",
+    "eslint": "^9.21.0",
+    "eslint-config-prettier": "^10.1.2",
+    "eslint-plugin-prettier": "^5.2.6",
+    "eslint-plugin-react-hooks": "^5.1.0",
+    "eslint-plugin-react-refresh": "^0.4.19",
+    "globals": "^15.15.0",
     "gh-pages": "^6.0.0",
+    "prettier": "^3.5.3",
     "tailwindcss": "^3.3.3",
-    "vite": "^5.0.12"
+    "vite": "^6.3.5"
   }
 }

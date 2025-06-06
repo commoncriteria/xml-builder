@@ -384,43 +384,43 @@
     "sfrDefinition": "",
     "sections": {
       "ac62e2df-84a5-4ad6-8194-0bd05f9e75a7": {
-        "title": "Class: Cryptographic Support (FCS)",
+        "title": "Cryptographic Support (FCS)",
         "definition": "",
         "extendedComponentDefinition": [],
         "open": false
       },
       "480fa93f-31c9-47ef-b70a-abc5d4f91fac": {
-        "title": "Class: User Data Protection (FDP)",
+        "title": "User Data Protection (FDP)",
         "definition": "",
         "extendedComponentDefinition": [],
         "open": false
       },
       "2c400664-df00-4dc8-8f84-556864a1e529": {
-        "title": "Class: Identification and Authentication (FIA)",
+        "title": "Identification and Authentication (FIA)",
         "definition": "",
         "extendedComponentDefinition": [],
         "open": false
       },
       "fb9aa090-ff62-4884-847e-7ab3d17691f9": {
-        "title": "Class: Security Management (FMT)",
+        "title": "Security Management (FMT)",
         "definition": "",
         "extendedComponentDefinition": [],
         "open": false
       },
       "60eadf27-bfda-406c-bd48-085203220547": {
-        "title": "Class: Privacy (FPR)",
+        "title": "Privacy (FPR)",
         "definition": "",
         "extendedComponentDefinition": [],
         "open": false
       },
       "f1de18c7-1942-448e-bccd-baa2aec84b46": {
-        "title": "Class: Protection of the TSF (FPT)",
+        "title": "Protection of the TSF (FPT)",
         "definition": "",
         "extendedComponentDefinition": [],
         "open": false
       },
       "aa43a2c8-082a-4142-9d2a-1ae10cf72f7d": {
-        "title": "Class: Trusted Path/Channel (FTP)",
+        "title": "Trusted Path/Channel (FTP)",
         "definition": "",
         "extendedComponentDefinition": [],
         "open": false

@@ -1,14 +1,14 @@
-import { createSlice } from '@reduxjs/toolkit'
+import { createSlice } from "@reduxjs/toolkit";
 
-const initialState = { }
+const initialState = {};
 
 export const contentPaneSlice = createSlice({
-    name: 'contentPane',
-    initialState,
-    reducers: { },
-})
+  name: "contentPane",
+  initialState,
+  reducers: {},
+});
 
 // Action creators are generated for each case reducer function
-export const { } = contentPaneSlice.actions
+export const {} = contentPaneSlice.actions;
 
-export default contentPaneSlice.reducer
+export default contentPaneSlice.reducer;

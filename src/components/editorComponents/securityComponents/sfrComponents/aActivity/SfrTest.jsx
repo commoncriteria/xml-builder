@@ -1,407 +1,467 @@
 // Imports
 import PropTypes from "prop-types";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import { IconButton, Tooltip } from "@mui/material";
-import DeleteForeverRoundedIcon from "@mui/icons-material/DeleteForeverRounded.js";
-import MultiSelectDropdown from "../../MultiSelectDropdown.jsx";
-import CardTemplate from "../../CardTemplate.jsx";
-import TipTapEditor from "../../../TipTapEditor.jsx";
-import SecurityComponents from "../../../../../utils/securityComponents.jsx";
+import AddCircleRoundedIcon from "@mui/icons-material/AddCircleRounded";
+import DeleteForeverRoundedIcon from "@mui/icons-material/DeleteForeverRounded";
+import store from "../../../../../app/store.js";
 import { deepCopy } from "../../../../../utils/deepCopy.js";
+import {
+  handleSnackBarError,
+  handleSnackBarSuccess,
+  updateEvaluationActivities,
+  updateManagementFunctionItems,
+} from "../../../../../utils/securityComponents.jsx";
+import CardTemplate from "../../CardTemplate.jsx";
+import MultiSelectDropdown from "../../MultiSelectDropdown.jsx";
 import SfrTestList from "./SfrTestList.jsx";
-import AddCircleRoundedIcon from "@mui/icons-material/AddCircleRounded.js";
+import TipTapEditor from "../../../TipTapEditor.jsx";
 
 /**
  * The SfrTest class that displays the evaluation activity test for specified components/elements
- * @returns {JSX.Element}   the generic modal content
- * @constructor             passes in props to the class
+ * @returns {JSX.Element} the content
+ * @constructor passes in props to the class
  */
 function SfrTest(props) {
-    // Prop Validation
-    SfrTest.propTypes = {
-        activities: PropTypes.object.isRequired,
-        sfrUUID: PropTypes.string.isRequired,
-        componentUUID: PropTypes.string.isRequired,
-        uuid: PropTypes.string.isRequired,
-        test: PropTypes.object.isRequired,
-        testListIndex: PropTypes.number.isRequired,
-        testListUUID: PropTypes.string.isRequired,
-        index: PropTypes.number.isRequired,
-        initialIndex: PropTypes.number,
-        nestedIndex: PropTypes.number,
-        dependencyMenuOptions: PropTypes.object.isRequired,
-        handleNewNestedTestList: PropTypes.func,
-        isManagementFunction: PropTypes.bool,
-        rowIndex: PropTypes.number,
-        updateEvaluationActivities: PropTypes.func,
-        updateManagementFunctions: PropTypes.func,
-        getElementValuesByType: PropTypes.func,
-        isNested: PropTypes.bool,
-        testUUID: PropTypes.string.isRequired,
+  // Prop Validation
+  SfrTest.propTypes = {
+    test: PropTypes.object.isRequired,
+    dependencyMenuOptions: PropTypes.object.isRequired,
+    isManagementFunction: PropTypes.bool,
+    testUUID: PropTypes.string.isRequired,
+    handleNewTestList: PropTypes.func.isRequired,
+    testListUUID: PropTypes.string,
+  };
+
+  // Constants
+  const { elementUUID, element, activities, evaluationActivitiesUI, managementFunctionUI } = useSelector((state) => state.sfrWorksheetUI);
+  const { managementFunctions } = element;
+  const { rowIndex } = managementFunctionUI;
+  const { dependencyMap, selectedUUID } = evaluationActivitiesUI;
+  const { secondary, icons } = useSelector((state) => state.styling);
+  const [selected, setSelected] = useState([]);
+  const uuid = props.isManagementFunction ? elementUUID : selectedUUID;
+  const activityData = props.isManagementFunction ? managementFunctionUI.activity : activities[selectedUUID];
+
+  // Use Effects
+  useEffect(() => {
+    updateDependencyDropdown(selected);
+  }, [selected, props]);
+
+  // Methods
+  /**
+   * Handles the text update
+   * @param event the text from the textbox
+   */
+  const handleTextUpdate = (event) => {
+    try {
+      const { isManagementFunction, testUUID } = props;
+
+      if (isManagementFunction) {
+        // Pull latest activity state from store - to avoid conflicting updates to the state
+        const latestActivity = store.getState().sfrWorksheetUI.managementFunctionUI.activity;
+        let activityCopy = deepCopy(latestActivity);
+
+        let testItem = activityCopy.tests[testUUID];
+
+        if (JSON.stringify(testItem.objective) !== JSON.stringify(event)) {
+          testItem.objective = event;
+
+          // Update management functions
+          updateManagementFunctionItems(
+            {
+              value: activityCopy,
+              rowIndex,
+              type: "evaluationActivity",
+            },
+            managementFunctions,
+            true
+          );
+        }
+      }
+
+      if (uuid && activities?.hasOwnProperty(uuid)) {
+        // Pull latest activity state from store - to avoid conflicting updates to the state
+        const latestActivities = store.getState().sfrWorksheetUI.activities;
+        let activitiesCopy = deepCopy(latestActivities);
+
+        if (activitiesCopy[uuid].tests?.[testUUID]) {
+          activitiesCopy[uuid].tests[testUUID].objective = event;
+          updateEvaluationActivities(activitiesCopy);
+        } else {
+          handleSnackBarError(`Test UUID ${testUUID} not found`);
+        }
+      }
+    } catch (e) {
+      console.error(e);
+      handleSnackBarError(e);
+    }
+  };
+  /**
+   * Handles the selection dependency dropdown
+   * @param title throwaway variable
+   * @param selections the selections
+   */
+  const handleSelect = (title, selections) => {
+    try {
+      const { isManagementFunction, testUUID, dependencyMenuOptions } = props;
+
+      const isValid = selections && activities?.hasOwnProperty(uuid) && dependencyMenuOptions;
+
+      if ((isManagementFunction && dependencyMenuOptions) || isValid) {
+        let validSelections = [];
+        const menuProperties = ["Platforms", "Selectables", "ComplexSelectablesEA"];
+
+        selections?.forEach((selection) => {
+          menuProperties.forEach((menuProperty) => {
+            if (
+              dependencyMenuOptions.hasOwnProperty(menuProperty) &&
+              dependencyMenuOptions[menuProperty].includes(selection) &&
+              !validSelections.includes(selection)
+            ) {
+              validSelections.push(selection);
+            }
+          });
+        });
+
+        const newSelections = [...new Set(convertDependenciesToUUID(validSelections))];
+        let dependencies = deepCopy(props.test.dependencies);
+
+        if (JSON.stringify(dependencies) !== JSON.stringify(newSelections)) {
+          if (isManagementFunction) {
+            // Pull latest activity state from store - to avoid conflicting updates to the state
+            const latestActivity = store.getState().sfrWorksheetUI.managementFunctionUI.activity;
+            let activityCopy = deepCopy(latestActivity);
+
+            let testItem = activityCopy.tests[testUUID];
+
+            if (testItem && JSON.stringify(testItem.dependencies) !== JSON.stringify(newSelections)) {
+              testItem.dependencies = newSelections;
+
+              updateManagementFunctionItems(
+                {
+                  value: activityCopy,
+                  rowIndex,
+                  type: "evaluationActivity",
+                },
+                managementFunctions,
+                true
+              );
+            }
+          } else {
+            // Pull latest activity state from store - to avoid conflicting updates to the state
+            const latestActivities = store.getState().sfrWorksheetUI.activities;
+            let activitiesCopy = deepCopy(latestActivities);
+
+            const testObj = activitiesCopy[uuid]?.tests?.[testUUID];
+            if (testObj) {
+              testObj.dependencies = newSelections;
+
+              updateEvaluationActivities(activitiesCopy);
+            } else {
+              console.error(`Test with UUID ${testUUID} not found.`);
+            }
+          }
+          setSelected(selections);
+        }
+      }
+    } catch (e) {
+      console.error(e);
+      handleSnackBarError(e);
+    }
+  };
+  /**
+   * Handles deleting a test
+   */
+  const handleDeleteTest = () => {
+    try {
+      const { isManagementFunction, testUUID, testListUUID } = props;
+
+      if (isManagementFunction) {
+        // Pull latest activity state from store - to avoid conflicting updates to the state
+        const latestActivity = store.getState().sfrWorksheetUI.managementFunctionUI.activity;
+        let activityCopy = deepCopy(latestActivity);
+
+        // Delete the test from the tests dictionary
+        if (activityCopy.tests[testUUID]) {
+          delete activityCopy.tests[testUUID];
+        }
+
+        // Remove the testUUID from its parent testList's testUUIDs array
+        const testList = activityCopy.testLists[testListUUID];
+        if (testList) {
+          testList.testUUIDs = testList.testUUIDs.filter((uuid) => uuid !== testUUID);
+        }
+
+        // Update management functions
+        updateManagementFunctionItems(
+          {
+            value: activityCopy,
+            rowIndex,
+            type: "evaluationActivity",
+          },
+          managementFunctions,
+          true
+        );
+      } else {
+        if (!selectedUUID || !activities?.hasOwnProperty(uuid)) return;
+
+        let activitiesCopy = deepCopy(activities);
+
+        // Remove test from dictionary
+        delete activitiesCopy[selectedUUID].tests[testUUID];
+
+        // Also remove the UUID from the test list's testUUIDs array
+        const testList = activitiesCopy[selectedUUID].testLists?.[testListUUID];
+        if (testList) {
+          testList.testUUIDs = testList.testUUIDs.filter((uuid) => uuid !== testUUID);
+        }
+
+        updateEvaluationActivities(activitiesCopy);
+      }
+
+      handleSnackBarSuccess("Test Successfully Removed");
+    } catch (e) {
+      console.error(e);
+      handleSnackBarError("Failed to delete test");
+    }
+  };
+
+  // Helper Methods
+  /**
+   * Gets the test index
+   * @returns {number}
+   */
+  const getTestIndex = () => {
+    const testList = props.isManagementFunction
+      ? store.getState().sfrWorksheetUI.managementFunctionUI.activity.testLists?.[props.testListUUID]
+      : activities?.[selectedUUID]?.testLists?.[props.testListUUID];
+
+    if (!testList || !testList.testUUIDs) {
+      console.error(`Test UUID ${props.testUUID} not found in test list ${props.testListUUID}`);
+    }
+
+    return testList.testUUIDs.indexOf(props.testUUID);
+  };
+  /**
+   * Updates the dependency dropdown
+   * @param selected the selected
+   */
+  const updateDependencyDropdown = (selected) => {
+    const { dependencyMenuOptions, test } = props;
+
+    if (test && test.hasOwnProperty("dependencies")) {
+      let newSelectables = [...new Set(convertDependenciesFromUUID(test.dependencies))];
+      let validSelections = [];
+
+      newSelectables?.forEach((selection) => {
+        const isNewSelection = !validSelections.includes(selection);
+        const isValidPlatform = dependencyMenuOptions.hasOwnProperty("Platforms") && dependencyMenuOptions.Platforms.includes(selection) && isNewSelection;
+        const isValidSelectables =
+          dependencyMenuOptions.hasOwnProperty("Selectables") && dependencyMenuOptions.Selectables.includes(selection) && isNewSelection;
+        const isValidComplexSelectablesEA =
+          dependencyMenuOptions.hasOwnProperty("ComplexSelectablesEA") && dependencyMenuOptions.ComplexSelectablesEA.includes(selection) && isNewSelection;
+
+        // Add new valid selections
+        if (isValidPlatform) {
+          validSelections.push(selection);
+        }
+        if (isValidSelectables) {
+          validSelections.push(selection);
+        }
+        if (isValidComplexSelectablesEA) {
+          validSelections.push(selection);
+        }
+      });
+
+      if (JSON.stringify(validSelections) !== JSON.stringify(selected)) {
+        setSelected(validSelections);
+      }
+    }
+  };
+  /**
+   * Converts the dependencies to uuid
+   * @param dependencies the dependencies
+   * @returns {*[]}
+   */
+  const convertDependenciesToUUID = (dependencies) => {
+    let convertedDependencies = [];
+    try {
+      if (dependencies && dependencies.length > 0) {
+        dependencies.forEach((dependency) => {
+          if (dependencyMap && dependencyMap.hasOwnProperty("selectablesToUUID")) {
+            let newDependency = dependency;
+
+            if (dependencyMap.selectablesToUUID.hasOwnProperty(dependency)) {
+              newDependency = dependencyMap.selectablesToUUID[dependency];
+            }
+            if (!convertedDependencies.includes(newDependency)) {
+              convertedDependencies.push(newDependency);
+            }
+          }
+        });
+      }
+    } catch (e) {
+      console.log(e);
+      handleSnackBarError(e);
+    }
+    return convertedDependencies;
+  };
+  /**
+   * Converts the dependencies from uuid
+   * @param dependencies the dependencies
+   * @returns {*[]}
+   */
+  const convertDependenciesFromUUID = (dependencies) => {
+    let convertedDependencies = [];
+
+    try {
+      if (dependencies && dependencies.length > 0) {
+        dependencies.forEach((dependency) => {
+          if (dependencyMap && dependencyMap.hasOwnProperty("uuidToSelectables")) {
+            let newDependency = dependency.valueOf();
+
+            if (dependencyMap.uuidToSelectables.hasOwnProperty(dependency)) {
+              newDependency = dependencyMap.uuidToSelectables[dependency];
+            }
+            if (!convertedDependencies.includes(newDependency)) {
+              convertedDependencies.push(newDependency);
+            }
+          }
+        });
+      }
+    } catch (e) {
+      console.log(e);
+      handleSnackBarError(e);
+    }
+
+    return convertedDependencies;
+  };
+  /**
+   * Gets the nested test lists
+   * @type {[string, unknown][]}
+   */
+  const nestedTestLists = Object.entries(activityData?.testLists).filter(([, list]) => list.parentTestUUID === props.testUUID);
+
+  // Use Memos
+  /**
+   * The TestIndex value
+   */
+  const TestIndex = useMemo(() => getTestIndex(), [props.testListUUID, props.testUUID, JSON.stringify(activityData)]);
+
+  /**
+   * The TestEditor component
+   */
+  const TestEditor = useMemo(() => {
+    /**
+     * Track nested test list depth in order to prevent user from adding infinite nested test lists
+     * @param {*} testUUID
+     * @returns Depth (number) from root test list
+     */
+    const getNestingDepth = (testUUID) => {
+      let currentTestUUID = testUUID;
+      let depth = 1;
+
+      while (true) {
+        // Find the test list that this test belongs to
+        const testList = Object.values(activityData?.testLists).find((list) => list.testUUIDs?.includes(currentTestUUID));
+
+        if (!testList || !testList.parentTestUUID) {
+          break; // No parent means this is the root
+        }
+
+        currentTestUUID = testList.parentTestUUID;
+        depth += 1;
+      }
+
+      return depth;
     };
+    const nestingDepth = getNestingDepth(props.testUUID);
+    const disableNestedTestList = nestingDepth > 3; // limit nested testlists to 3 levels
 
-    // Constants
-    const { handleSnackBarError, handleSnackBarSuccess } = SecurityComponents
-    const evaluationActivities = useSelector((state) => state.evaluationActivities)
-    const { secondary, icons } = useSelector((state) => state.styling);
-    const [selected, setSelected] = useState([]);
-
-    // Use Effect
-    useEffect(() => {
-        updateDependencyDropdown(selected)
-    }, [selected, props])
-
-    // Methods
-    const updateDependencyDropdown = (selected) => {
-        if (props.test && props.test.hasOwnProperty("dependencies")) {
-            let newSelectables = [...new Set(convertDependenciesFromUUID(props.test.dependencies))]
-            let validSelections = []
-            newSelectables?.forEach((selection) => {
-                if (props.dependencyMenuOptions.hasOwnProperty("Platforms") &&
-                    props.dependencyMenuOptions.Platforms.includes(selection) &&
-                    !validSelections.includes(selection)) {
-                    validSelections.push(selection)
-                }
-                if (props.dependencyMenuOptions.hasOwnProperty("Selectables") &&
-                    props.dependencyMenuOptions.Selectables.includes(selection) &&
-                    !validSelections.includes(selection)) {
-                    validSelections.push(selection)
-                }
-                if (props.dependencyMenuOptions.hasOwnProperty("ComplexSelectablesEA") &&
-                    props.dependencyMenuOptions.ComplexSelectablesEA.includes(selection) &&
-                    !validSelections.includes(selection)) {
-                    validSelections.push(selection)
-                }
-            })
-            if (JSON.stringify(validSelections) !== JSON.stringify(selected)) {
-                setSelected(validSelections)
-            }
-        }
-    }
-    const handleTextUpdate = (event, type, index) => {
-        try {
-            const { activities, testListIndex, initialIndex, testListUUID, isNested, testUUID, uuid } = props
-            if (props.isManagementFunction) {
-                let managementFunctions = props.getElementValuesByType("managementFunctions")
-                let tests = managementFunctions.rows[props.rowIndex].evaluationActivity.testList[testListUUID].tests[testUUID]
-
-                if (JSON.stringify(tests.objective) !== JSON.stringify(event)) {
-                    tests.objective = event
-
-                    // Update management functions
-                    props.updateManagementFunctions(managementFunctions)
-                }
-            } else if (uuid && uuid !== "" && activities && activities.hasOwnProperty(uuid)) {
-                let activitiesCopy = deepCopy(activities)
-                
-                // if (isNested)
-                //     activitiesCopy[uuid].testList[testListUUID].tests[testUUID].nestedTests[testUUID].objective = event
-                // else
-                //     activitiesCopy[uuid].testList[testListUUID].tests[testUUID].objective = event
-                if (!editTestRecursively(activitiesCopy, uuid, testUUID, event))
-                    throw new Error(`Target UUID: ${testUUID} was not found!`)
-
-                // Update evaluation activities
-                props.updateEvaluationActivities(activitiesCopy)
-            }
-        } catch (e) {
-            console.log(e)
-            handleSnackBarError(e)
-        }
-    }
-
-  
-      const editTestRecursively = (activity, uuid, targetTestUUID, event) => {
-        for (let i = 0; i < activity[uuid].testList.length; i++) {
-            const testListItem = activity[uuid].testList[i];
-    
-            // Base case
-            if (Array.isArray(testListItem.tests)) {
-                for (let test of testListItem.tests) {
-                    if (test.uuid === targetTestUUID) {
-                        test.objective = event; 
-                        return true; 
-                    }
-    
-                    // recurse into nestedTestList
-                    if (Array.isArray(test.nestedTests)) {
-                        const found = editTestRecursively({     testList: test.nestedTests }, 
-                            "testList", targetTestUUID, event);
-                        if (found) 
-                            return true;
-                    }
-                }
-            }
-        }
-        return false;
-    };
-
-    const handleSelect = (title, selections) => {
-        try {            
-            const { isManagementFunction, activities, uuid, testUUID, rowIndex, test, dependencyMenuOptions } = props;
-
-            const findTest = (tests) => {
-                for (const test of tests) {
-                    if (test.uuid === testUUID) return test;
-                    if (Array.isArray(test.nestedTests)) {
-                        const found = findTest(test.nestedTests);
-                        if (found) return found;
-                    }
-                }
-                return null;
-            };
-    
-            const isValid = selections && activities?.hasOwnProperty(uuid) && dependencyMenuOptions;
-            if (!((isManagementFunction && dependencyMenuOptions) || isValid)) return;
-
-            let validSelections = [];
-            const menuProperties = ["Platforms", "Selectables", "ComplexSelectablesEA"];
-    
-            selections?.forEach((selection) => {
-                menuProperties.forEach((menuProperty) => {
-                    if (dependencyMenuOptions[menuProperty]?.includes(selection)) {
-                        if (!validSelections.includes(selection)) {
-                            validSelections.push(selection);
-                        }
-                    }
-                });
-            });
-    
-            const newSelections = [...new Set(convertDependenciesToUUID(validSelections))];
-            let dependencies = deepCopy(test.dependencies)
-
-            let testItem = null;
-            let obj = null;
-            let testLists = [];
-            if (JSON.stringify(dependencies) !== JSON.stringify(newSelections)) {
-                if (isManagementFunction) {
-                    obj = props.getElementValuesByType("managementFunctions");
-                    testLists = obj.rows[rowIndex].evaluationActivity.testList;
-                    
-                } else if (uuid && activities?.hasOwnProperty(uuid)) {
-                    obj = deepCopy(activities);
-                    testLists = obj[uuid].testList;
-                }
-    
-                for (const list of testLists) {
-                    testItem = findTest(list.tests || []);
-                    console.log(testItem)
-                    if (testItem) break;
-                }
-    
-                testItem.dependencies = newSelections;
-    
-                if (isManagementFunction) {
-                    props.updateManagementFunctions(obj);
-                } else {
-                    props.updateEvaluationActivities(obj);
-                }
-    
-                setSelected(selections);
-            }
-
-        } catch (e) {
-            console.error(e);
-            handleSnackBarError(e);
-        }
-    }    
-    const handleDeleteTestByUUID = (targetTestUUID) => {
-        try {
-            const { uuid, activities, isManagementFunction, rowIndex } = props;
-    
-            const deleteTestRecursively = (testArray) => {
-                for (let i = 0; i < testArray.length; i++) {
-                    const test = testArray[i];
-    
-                    // Base case: test matches UUID
-                    if (test.uuid === targetTestUUID) {
-                        testArray.splice(i, 1);
-                        return true;
-                    }
-    
-                    // Recurse into nestedTests
-                    if (Array.isArray(test.nestedTests)) {
-                        const found = deleteTestRecursively(test.nestedTests);
-                        if (found) return true;
-                    }
-                }
-                return false;
-            };
-    
-            const deleteTestFromTestLists = (testLists) => {
-                for (const testList of testLists) {
-                    if (deleteTestRecursively(testList.tests)) return true;
-                }
-                return false;
-            };
-    
-            if (isManagementFunction) {
-                let managementFunctions = props.getElementValuesByType("managementFunctions");
-                let testLists = managementFunctions.rows[rowIndex].evaluationActivity.testList;
-    
-                if (deleteTestFromTestLists(testLists)) {
-                    props.updateManagementFunctions(managementFunctions);
-                    handleSnackBarSuccess("Test successfully deleted");
-                } else {
-                    handleSnackBarError("Test not found");
-                }
-    
-            } else if (uuid && activities?.hasOwnProperty(uuid)) {
-                let activitiesCopy = deepCopy(activities);
-                let testLists = activitiesCopy[uuid].testList;
-
-                if (deleteTestFromTestLists(testLists)) {
-                    props.updateEvaluationActivities(activitiesCopy);
-                    handleSnackBarSuccess("Test successfully deleted");
-                } else {
-                    handleSnackBarError("Test not found");
-
-                }
-            }
-        } catch (e) {
-            console.error(e);
-            handleSnackBarError("Failed to delete test.");
-        }
-    };
-    
-    // Helper Methods
-    const convertDependenciesToUUID = (dependencies) => {
-        let convertedDependencies = []
-        try {
-            if (dependencies && dependencies.length > 0) {
-                dependencies.forEach((dependency) => {
-                    if (evaluationActivities && evaluationActivities.hasOwnProperty("dependencyMap") &&
-                        evaluationActivities.dependencyMap.hasOwnProperty("selectablesToUUID")) {
-                        let newDependency = dependency
-                        if (evaluationActivities.dependencyMap.selectablesToUUID.hasOwnProperty(dependency)) {
-                            newDependency = evaluationActivities.dependencyMap.selectablesToUUID[dependency]
-                        }
-                        if (!convertedDependencies.includes(newDependency)) {
-                            convertedDependencies.push(newDependency)
-                        }
-                    }
-                })
-            }
-        } catch (e) {
-            console.log(e)
-            handleSnackBarError(e)
-        }
-        return convertedDependencies
-    }
-    const convertDependenciesFromUUID = (dependencies) => {
-        let convertedDependencies = []
-        try {
-            if (dependencies && dependencies.length > 0) {
-                dependencies.forEach((dependency) => {
-                    if (evaluationActivities && evaluationActivities.hasOwnProperty("dependencyMap") &&
-                        evaluationActivities.dependencyMap.hasOwnProperty("uuidToSelectables")) {
-                        let newDependency = dependency.valueOf()
-                        if (evaluationActivities.dependencyMap.uuidToSelectables.hasOwnProperty(dependency)) {
-                            newDependency = evaluationActivities.dependencyMap.uuidToSelectables[dependency]
-                        }
-                        if (!convertedDependencies.includes(newDependency)) {
-                            convertedDependencies.push(newDependency)
-                        }
-                    }
-                })
-            }
-        } catch (e) {
-            console.log(e)
-            handleSnackBarError(e)
-        }
-        return convertedDependencies
-    }
-
-    // Return Method
     return (
-        <CardTemplate
-            type={"section"}
-            header={
-                <div className="w-full p-0 m-0 my-[-6px]">
-                    <span className="flex justify-stretch min-w-full">
-                        <div className="flex justify-center w-full pl-4">
-                            <label className="resize-none font-bold text-[13px] p-0 m-0 text-accent pr-1 mt-[6px]">{`Test ${(props.index + 1)}`}</label>
-                            <IconButton
-                                variant="contained"
-                                sx={{ marginTop: "-8px", margin: 0, padding: 0 }}
-                                onClick={() => handleDeleteTestByUUID(props.testUUID)}
-                            >
-                                <Tooltip
-                                    title={`Delete Test ${(props.index + 1)}`}
-                                    id={"deleteTestTooltip" + (props.index + 1)}
-                                >
-                                    <DeleteForeverRoundedIcon htmlColor={secondary} sx={icons.small} />
-                                </Tooltip>
-                            </IconButton>
-                        </div>
-                    </span>
-                </div>
-            }
-            body={
-                <div className="w-full p-0 m-0 mt-[-8px] mb-[2px]">
-                    <div className="w-full pb-4 pt-2">
-                        <MultiSelectDropdown
-                            selectionOptions={props.dependencyMenuOptions}
-                            selections={selected}
-                            title={"Dependencies"}
-                            index={props.index}
-                            handleSelections={handleSelect}
-                            style={"primary"}
-                        />
-                    </div>
-
-                    <TipTapEditor
-                        className="w-full"
-                        contentType={"term"}
-                        title={"objective"}
-                        index={props.index}
-                        uuid={props.uuid}
-                        text={props.test.objective ? props.test.objective : ""}
-                        handleTextUpdate={handleTextUpdate}
-                    />
-
-                    <div className="mt-2">
-                        {props.test?.nestedTests && props.test?.nestedTests.length > 0 ? (
-                            <SfrTestList
-                                    activities={props.activities}
-                                    sfrUUID={props.sfrUUID}
-                                    componentUUID={props.componentUUID}
-                                    uuid={props.uuid}
-                                    testListIndex={props.testListIndex}
-                                    testListDescription={""}
-                                    tests={props.test?.nestedTests}
-                                    initialIndex={props.index}
-                                    isManagementFunction={props.isManagementFunction}
-                                    rowIndex={props.rowIndex}
-                                    dependencyDropdown={props.dependencyMenuOptions}
-                                    updateEvaluationActivities={props.updateEvaluationActivities}
-                                    updateManagementFunctions={props.updateManagementFunctions}
-                                    getElementValuesByType={props.getElementValuesByType}
-                                    isNested={true}
-                                    handleNewNestedTestList={props.handleNewNestedTestList}
-                                    testListUUID={props.test.nestedTests[0].testListUUID}
-                                />
-                            ) : (
-                            <IconButton
-                                sx={{marginBottom: "-8px"}}
-                                key={"NewTestButton"}
-                                variant="contained"
-                                onClick={() => props.handleNewNestedTestList(props.activities, props.uuid, props.testUUID)}
-                            >
-                                <Tooltip
-                                    title={"Add New Test List"}
-                                    id={props.uuid + "AddNewTestListTooltip"}
-                                >
-                                    <AddCircleRoundedIcon htmlColor={ secondary } sx={ icons.medium }/>
-                                </Tooltip>
-                            </IconButton>
-                        )}
-                    </div>
-                </div>
-            }
+      <div>
+        <TipTapEditor
+          className='w-full'
+          contentType={"term"}
+          title={"objective"}
+          index={TestIndex}
+          uuid={uuid}
+          text={props.test.objective || ""}
+          handleTextUpdate={handleTextUpdate}
         />
-    )
+        <div className='mt-2 mb-[-8px]'>
+          {nestedTestLists.length > 0 ? (
+            nestedTestLists.map(([testListUUID, testList]) => (
+              <SfrTestList
+                key={"TestListSection_" + testListUUID}
+                testListDescription={testList.description || ""}
+                testListConclusion={testList.conclusion }
+                testUUIDs={testList.testUUIDs}
+                dependencyDropdown={props.dependencyMenuOptions}
+                isManagementFunction={props.isManagementFunction}
+                testListUUID={testListUUID}
+                handleNewTestList={props.handleNewTestList}
+              />
+            ))
+          ) : !disableNestedTestList ? (
+            <div className='border-t-2 border-gray-200 m-0 p-0 mx-[-16px] mt-4'>
+              <div className='w-full p-1 justify-items-center mb-2'>
+                <IconButton sx={{ marginBottom: "-8px" }} key={"NewTestButton"} variant='contained' onClick={() => props.handleNewTestList(props.testUUID)}>
+                  <Tooltip
+                    title={
+                      "Add New Test List (Note: Only one nested Test List can be created per Test, and a maximum of 3 levels of nested Test List's can be created)"
+                    }
+                    id={uuid + "AddNewTestListTooltip"}>
+                    <AddCircleRoundedIcon htmlColor={secondary} sx={icons.medium} />
+                  </Tooltip>
+                </IconButton>
+              </div>
+            </div>
+          ) : (
+            <div className='mb-4' />
+          )}
+        </div>
+      </div>
+    );
+  }, [props.test.objective, props.testUUID, JSON.stringify(activityData)]);
+
+  // Return Method
+  return (
+    <CardTemplate
+      type={"section"}
+      header={
+        <div className='w-full p-0 m-0 my-[-6px]'>
+          <span className='flex justify-stretch min-w-full'>
+            <div className='flex justify-center w-full pl-4'>
+              <label className='resize-none font-bold text-[13px] p-0 m-0 text-accent pr-1 mt-[6px]'>{`Test ${TestIndex + 1}`}</label>
+              <IconButton variant='contained' sx={{ marginTop: "-8px", margin: 0, padding: 0 }} onClick={() => handleDeleteTest()}>
+                <Tooltip title={`Delete Test ${TestIndex + 1}`} id={"deleteTestTooltip" + (TestIndex + 1)}>
+                  <DeleteForeverRoundedIcon htmlColor={secondary} sx={icons.small} />
+                </Tooltip>
+              </IconButton>
+            </div>
+          </span>
+        </div>
+      }
+      body={
+        <div className='w-full p-0 m-0 mt-[-8px] mb-[2px]'>
+          <div className='w-full pb-4 pt-2'>
+            <MultiSelectDropdown
+              selectionOptions={props.dependencyMenuOptions}
+              selections={selected}
+              title={"Dependencies"}
+              index={TestIndex}
+              handleSelections={handleSelect}
+              style={"primary"}
+            />
+          </div>
+          {TestEditor}
+        </div>
+      }
+    />
+  );
 }
 
 // Export SfrTest.jsx

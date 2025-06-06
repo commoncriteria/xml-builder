@@ -79,7 +79,6 @@
     padding-left: 1em;
 }
 
-
 .ProseMirror ol ol li {
     list-style-type: lower-alpha;
 }
@@ -212,7 +211,7 @@
     display: flex;
     gap: 10px;
     background: #FFFFFF;
-    padding: 15px 15px 15px;
+    padding: 10px 15px 10px;
 }
 
 .menu-bar button {
