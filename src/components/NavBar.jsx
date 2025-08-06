@@ -78,7 +78,7 @@ function NavBar() {
       />
       <div className='navbar-start font-title flex font-bold lg:text-3xl md:text-2xl sm:text-xl xs:text-xl text-teal-400 pl-5 lg:py-2'>
         XML Builder&nbsp;
-        <div className='text-teal-600'>{`(${ppTemplateVersion} ${shortenedPP})`}</div>
+        <div className='text-teal-600' data-testid='pp_version'>{`(${ppTemplateVersion} ${shortenedPP})`}</div>
       </div>
       <div className='navbar-end mr-4'>
         <ToggleSwitch

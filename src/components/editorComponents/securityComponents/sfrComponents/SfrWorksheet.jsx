@@ -100,6 +100,7 @@ function SfrWorksheet(props) {
         open={openSfrWorksheet && isSfrWorksheetValid}
         handleOpen={props.handleOpen}
         hideSubmit={true}
+        closeButtonId={"sfr-worksheet-close-button"}
       />
       <ResetDataConfirmation
         title={"Reset Management Functions Data Confirmation"}

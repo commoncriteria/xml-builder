@@ -4,6 +4,23 @@ import { deepCopy } from "../../utils/deepCopy.js";
 
 // Constants
 export const defaultTipTapValues = { text: "", open: true };
+export const defaultAudit = {
+  isAudit: true,
+  section: {
+    id: "",
+    title: "",
+    description: "",
+    open: false,
+  },
+  auditTable: {
+    id: "",
+    table: "",
+    title: "",
+    open: false,
+  },
+  eventsTableOpen: false,
+  open: true,
+};
 export const defaultBasePP = {
   declarationAndRef: {
     id: "",
@@ -21,25 +38,13 @@ export const defaultBasePP = {
     open: false,
   },
   modifiedSfrs: {
+    introduction: "",
+    sfrSections: {},
     open: false,
   },
   additionalSfrs: {
     introduction: "",
-    audit: {
-      isAudit: true,
-      section: {
-        id: "",
-        title: "",
-        open: false,
-      },
-      auditTable: {
-        id: "",
-        table: "",
-        title: "",
-        open: false,
-      },
-      open: true,
-    },
+    audit: deepCopy(defaultAudit),
     sfrSections: {},
     open: false,
   },
@@ -67,7 +72,7 @@ export const sfrBasePPsSlice = createSlice({
   reducers: {
     CREATE_SFR_BASE_PP_SECTION: (state, action) => {
       let newId = uuidv4();
-      const { declarationAndRef, modifiedSfrs, additionalSfrs, consistencyRationale } = action.payload;
+      const { declarationAndRef, modifiedSfrs, additionalSfrs, consistencyRationale, name } = action.payload;
 
       if (!state.hasOwnProperty(newId)) {
         state[newId] = {
@@ -77,17 +82,28 @@ export const sfrBasePPsSlice = createSlice({
           consistencyRationale: consistencyRationale ? consistencyRationale : deepCopy(defaultBasePP.consistencyRationale),
           open: false,
         };
+
+        // Add name for cases of adding a new base pp section from the ui
+        if (name) {
+          state[newId].declarationAndRef.name = name;
+        }
+
+        // Return the new id
         action.payload = newId;
       } else {
         action.payload = null;
       }
     },
-    CREATE_ADDITIONAL_SFR_SECTION_SLICE: (state, action) => {
-      const { parentUUID, title } = action.payload;
+    CREATE_BASE_PP_SFR_SECTION_SLICE: (state, action) => {
+      const { parentUUID, title, parentKey } = action.payload;
       const sfrUUID = uuidv4();
       const isParentValid = state.hasOwnProperty(parentUUID);
-      const parentKey = "additionalSfrs";
       const key = "sfrSections";
+      let sfrSection = {
+        title: title || "",
+        definition: "",
+        open: true,
+      };
 
       // Check for parent uuid and create new additional sfr section
       if (isParentValid) {
@@ -96,22 +112,24 @@ export const sfrBasePPsSlice = createSlice({
           state[parentUUID][parentKey] = deepCopy(defaultBasePP[parentKey]);
         }
 
-        // Update additional sfrs
-        let additionalSfrs = state[parentUUID][parentKey];
+        // Update sfrs
+        let sfrs = state[parentUUID][parentKey];
 
         // Set sfrSections if it is not present
-        if (!additionalSfrs.hasOwnProperty(key)) {
-          additionalSfrs[key] = {};
+        if (!sfrs.hasOwnProperty(key)) {
+          sfrs[key] = {};
         }
 
-        // Add default value for sfr section
-        additionalSfrs[key][sfrUUID] = {
-          title: title ? title : "",
-          definition: "",
-          extendedComponentDefinition: [],
-          extendedComponentOpen: false,
-          open: false,
-        };
+        // Add to sfr section based on parentKey
+        if (parentKey === "additionalSfrs") {
+          sfrSection.extendedComponentDefinition = [];
+          sfrSection.extendedComponentOpen = false;
+        } else {
+          sfrSection.id = "";
+        }
+
+        // Generate sfr
+        sfrs[key][sfrUUID] = sfrSection;
 
         // Return sfrUUID
         action.payload.sfrUUID = sfrUUID;
@@ -139,6 +157,13 @@ export const sfrBasePPsSlice = createSlice({
       const parentKey = "additionalSfrs";
 
       // Updates the additional sfrs value by key
+      updateValueByKey(state, uuid, parentKey, key, value);
+    },
+    UPDATE_MODIFIED_SFRS: (state, action) => {
+      const { uuid, key, value } = action.payload;
+      const parentKey = "modifiedSfrs";
+
+      // Updates the modified sfrs value by key
       updateValueByKey(state, uuid, parentKey, key, value);
     },
     UPDATE_CONSISTENCY_RATIONALE: (state, action) => {
@@ -178,17 +203,18 @@ export const sfrBasePPsSlice = createSlice({
         delete state[uuid];
       }
     },
-    DELETE_ADDITIONAL_SFR_SECTION: (state, action) => {
-      const { sfrUUID, uuid } = action.payload;
-      const isAdditionalSfr = state.hasOwnProperty(sfrUUID) && state[sfrUUID].hasOwnProperty("additionalSfrs");
+    DELETE_BASE_PP_SFR_SECTION: (state, action) => {
+      const { sfrUUID, uuid, parentKey } = action.payload;
+      const isSfrTypeValid = state.hasOwnProperty(sfrUUID) && state[sfrUUID].hasOwnProperty(parentKey);
 
-      if (isAdditionalSfr) {
-        let additionalSfrs = isAdditionalSfr ? state[sfrUUID].additionalSfrs : {};
-        const isSectionValid = additionalSfrs.hasOwnProperty("sfrSections") && additionalSfrs.sfrSections.hasOwnProperty(uuid);
+      // Check if the sfr type is valid
+      if (isSfrTypeValid) {
+        let sfrSection = isSfrTypeValid ? state[sfrUUID][parentKey] : {};
+        const isSectionValid = sfrSection.hasOwnProperty("sfrSections") && sfrSection.sfrSections.hasOwnProperty(uuid);
 
         // Delete section
         if (isSectionValid) {
-          delete state[sfrUUID].additionalSfrs.sfrSections[uuid];
+          delete state[sfrUUID][parentKey].sfrSections[uuid];
         }
       }
     },
@@ -225,17 +251,18 @@ const updateValueByKey = (state, uuid, parentKey, key, value) => {
 // Action creators are generated for each case reducer function
 export const {
   CREATE_SFR_BASE_PP_SECTION,
-  CREATE_ADDITIONAL_SFR_SECTION_SLICE,
+  CREATE_BASE_PP_SFR_SECTION_SLICE,
   UPDATE_MAIN_SFR_BASE_PP_DEFINITION,
   UPDATE_SFR_BASE_PP_SECTION_NAME,
   UPDATE_DECLARATION_AND_REFERENCE,
   UPDATE_ADDITIONAL_SFRS,
+  UPDATE_MODIFIED_SFRS,
   UPDATE_CONSISTENCY_RATIONALE,
   COLLAPSE_SFR_BASE_PP_SECTION,
   COLLAPSE_SFR_BASE_PP_INNER_SECTION,
   SET_SFR_BASE_PP_INITIAL_STATE,
   DELETE_SFR_BASE_PP,
-  DELETE_ADDITIONAL_SFR_SECTION,
+  DELETE_BASE_PP_SFR_SECTION,
   RESET_SFR_BASE_PP_STATE,
 } = sfrBasePPsSlice.actions;
 

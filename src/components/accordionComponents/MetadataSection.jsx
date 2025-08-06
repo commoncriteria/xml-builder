@@ -837,6 +837,7 @@ function MetadataSection() {
         <MultiSelectDropdown
           selectionOptions={filteredOptions}
           selections={ppTemplateVersion}
+          selectId='pp_template_version'
           title={"Select PP Template Version"}
           handleSelections={handlePPTemplateSelect}
           multiple={false}
@@ -919,7 +920,7 @@ function MetadataSection() {
                           label={"PP Name"}
                           key={metadataSection.ppName}
                           defaultValue={metadataSection.ppName}
-                          inputProps={{ style: { fontSize: 13 } }}
+                          inputProps={{ style: { fontSize: 13 }, "data-testid": "pp_name" }}
                           InputLabelProps={{ style: { fontSize: 13 } }}
                           onBlur={(event) => {
                             handleSnackbarTextUpdates(handleUpdates, "ppName", event);

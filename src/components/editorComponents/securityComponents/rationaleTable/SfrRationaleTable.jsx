@@ -113,6 +113,7 @@ function SfrRationaleTable({ termUUID, index, uuid, title, sfrs, open, sfrMaps }
             rationale: "",
             sfrUUID,
             sfrUUIDMap: sfrMaps.sfrUUIDMap,
+            sfrName: selectedSfr,
           })
         );
 
@@ -234,12 +235,7 @@ function SfrRationaleTable({ termUUID, index, uuid, title, sfrs, open, sfrMaps }
                       </Select>
                     </FormControl>
                     <span />
-                    <IconButton
-                      key={uuid + "-AddSfr"}
-                      style={{ marginTop: "4px" }}
-                      onClick={handleNewSelection}
-                      disabled={disabled}
-                      variant='contained'>
+                    <IconButton key={uuid + "-AddSfr"} style={{ marginTop: "4px" }} onClick={handleNewSelection} disabled={disabled} variant='contained'>
                       <Tooltip title={"Add SFR"} id={"addSfrTooltip"}>
                         <AddCircleRoundedIcon htmlColor={secondary} sx={icons.large} />
                       </Tooltip>

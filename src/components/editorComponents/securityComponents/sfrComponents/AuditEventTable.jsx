@@ -1,35 +1,39 @@
 // Imports
 import PropTypes from "prop-types";
-import { useEffect, useMemo, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useEffect, useState } from "react";
+import { useSelector } from "react-redux";
 import { Tooltip } from "@mui/material";
-import { RESET_SFR_WORKSHEET_UI } from "../../../../reducers/SFRs/sfrWorksheetUI.js";
+import { sfrTypeMap } from "../../../../reducers/SFRs/sfrSlice.js";
 import { deepCopy } from "../../../../utils/deepCopy.js";
-import { getComponentXmlID, setSfrWorksheetUIItems, updateSfrWorksheetComponent } from "../../../../utils/securityComponents.jsx";
+import { getComponentXmlID, setSfrWorksheetUIItems } from "../../../../utils/securityComponents.jsx";
 import EditableTable from "../../EditableTable.jsx";
-import SfrWorksheet from "./SfrWorksheet.jsx";
 
 /**
  * The AuditEventTable component
  * @param baseSfrUUID the baseSfrUUID
  * @param sfrType the sfr type
+ * @param collapse the value of the collapse/expand for the audit events table
+ * @param handleCollapse updates the collapse/expand value (if it is passed in)
  * @returns {JSX.Element}
  * @constructor
  */
-function AuditEventTable({ baseSfrUUID, sfrType }) {
+function AuditEventTable({ baseSfrUUID, sfrType, collapse, handleCollapse }) {
   // Prop Validation
   AuditEventTable.propTypes = {
     baseSfrUUID: PropTypes.string,
     sfrType: PropTypes.string,
+    collapse: PropTypes.bool,
+    handleCollapse: PropTypes.func,
   };
 
   // Constants
-  const dispatch = useDispatch();
+  const { sections: sfrs } = useSelector((state) => state.sfrs);
   const sfrBasePPs = useSelector((state) => state.sfrBasePPs);
   const sfrSections = useSelector((state) => state.sfrSections);
   const terms = useSelector((state) => state.terms);
   const { primary, secondary, requirementsStyling } = useSelector((state) => state.styling);
   const isBasePP = baseSfrUUID !== undefined && sfrType !== undefined;
+  const isBasePPToeSfr = baseSfrUUID === undefined && sfrType !== undefined && Object.values(sfrTypeMap).includes(sfrType);
   const textColor = isBasePP ? "text-accent" : "text-secondary";
 
   // Table Constants
@@ -38,48 +42,33 @@ function AuditEventTable({ baseSfrUUID, sfrType }) {
   const columnData = [
     { headerName: "Requirement", field: "requirement", editable: false, resizable: false, type: "Button", flex: 1 },
     { headerName: "Tables", field: "tables", editable: false, resizable: false, type: "Chips", flex: 1 },
-    { headerName: "Audit Event Details", field: "details", editable: false, resizable: true, type: "Inner Table", flex: 3 },
+    {
+      headerName: "Audit Event Details",
+      field: "details",
+      editable: false,
+      resizable: true,
+      type: "Inner Table",
+      flex: 3,
+    },
   ];
   const innerColumnData = [
     { headerName: "Auditable Events", field: "events", editable: false, resizable: true, type: "Multiline" },
-    { headerName: "Additional Audit Record Contents", field: "contents", editable: false, resizable: true, type: "Multiline" },
+    {
+      headerName: "Additional Audit Record Contents",
+      field: "contents",
+      editable: false,
+      resizable: true,
+      type: "Multiline",
+    },
   ];
-
-  // Sfr Worksheet Constants
-  const { isSfrWorksheetValid, openSfrWorksheet } = useSelector((state) => state.sfrWorksheetUI);
 
   // Use Effects
   useEffect(() => {
     // Populate the audit events table
-    populateAuditEventTable(sfrSections, sfrBasePPs);
-
-    // Update component values in the sfr worksheet
-    updateSfrWorksheetComponent(sfrSections, terms);
-  }, [sfrSections, sfrBasePPs, terms]);
-  useEffect(() => {
-    // If the sfr worksheet has been closed, reset associated values
-    if (!openSfrWorksheet) {
-      dispatch(RESET_SFR_WORKSHEET_UI());
-    }
-
-    // Update component values
-    if (openSfrWorksheet) {
-      // Update sfr worksheet component values
-      updateSfrWorksheetComponent(sfrSections, terms);
-    }
-  }, [openSfrWorksheet]);
+    populateAuditEventTable(sfrSections, sfrBasePPs, sfrs);
+  }, [sfrSections, sfrBasePPs, sfrs, terms]);
 
   // Methods
-  /**
-   * Handles opening the sfr worksheet
-   */
-  const handleOpenSfrWorksheet = () => {
-    // Update sfr worksheet ui
-    setSfrWorksheetUIItems({
-      openSfrWorksheet: !openSfrWorksheet,
-      sfrSections: deepCopy(sfrSections),
-    });
-  };
   /**
    * Handles the component button click
    * @param event
@@ -106,41 +95,39 @@ function AuditEventTable({ baseSfrUUID, sfrType }) {
    * Populates the audit event table
    * @param sfrSections the sfr sections
    * @param sfrBasePPs the sfr base pps
+   * @param sfrs the sfrs
    */
-  const populateAuditEventTable = (sfrSections, sfrBasePPs) => {
+  const populateAuditEventTable = (sfrSections, sfrBasePPs, sfrs) => {
     let updatedRows = [];
-    const isTypeValid = sfrType && (sfrType === "modifiedSfrs" || sfrType === "additionalSfrs");
+    const isTypeValid = sfrType && (sfrType === "modified" || sfrType === "additional");
     const isBaseSfrUUIDValid = baseSfrUUID && sfrBasePPs?.hasOwnProperty(baseSfrUUID);
-    const isBasePP = isTypeValid && isBaseSfrUUIDValid && sfrBasePPs[baseSfrUUID].hasOwnProperty(sfrType);
+    const basePPSfrMap = {
+      additional: "additionalSfrs",
+      modified: "modifiedSfrs",
+    };
+    const isBasePP = isTypeValid && isBaseSfrUUIDValid && sfrBasePPs[baseSfrUUID].hasOwnProperty(basePPSfrMap[sfrType]);
     let basePPSections = {};
 
     // Get basePP
     if (isBasePP) {
-      let basePP = deepCopy(sfrBasePPs[baseSfrUUID][sfrType]);
+      let basePP = deepCopy(sfrBasePPs[baseSfrUUID][basePPSfrMap[sfrType]]);
       basePPSections = basePP.hasOwnProperty("sfrSections") ? basePP.sfrSections : {};
     }
 
     // Populate the audit events table
     Object.entries(sfrSections).forEach(([sectionUUID, component]) => {
+      const isValidSfrType = sfrs.hasOwnProperty(sectionUUID) && sfrs[sectionUUID].hasOwnProperty("sfrType");
+      const isSfrTypeValid = isBasePPToeSfr && isValidSfrType && sfrs[sectionUUID].sfrType === sfrType;
+
       // Check for valid components
-      if (!isBasePP || (isBasePP && basePPSections.hasOwnProperty(sectionUUID))) {
+      if ((!isBasePP && !isBasePPToeSfr) || (isBasePP && basePPSections.hasOwnProperty(sectionUUID)) || (isBasePPToeSfr && isSfrTypeValid)) {
         Object.entries(component).forEach(([componentUUID, value]) => {
           const ccID = value.cc_id ? value.cc_id : "";
           const iterationID = value.iteration_id ? value.iteration_id : "";
-          const {
-            optional,
-            objective,
-            invisible,
-            selectionBased,
-            useCaseBased,
-            implementationDependent,
-            auditEvents,
-            modifiedSfr,
-            additionalSfr,
-          } = value;
+          const { optional, objective, invisible, selectionBased, useCaseBased, implementationDependent, auditEvents, modifiedSfr, additionalSfr } = value;
           const isSfr = !isBasePP && !additionalSfr && !modifiedSfr;
-          const isModifiedSfr = sfrType === "modifiedSfrs" && modifiedSfr;
-          const isAdditionalSfr = sfrType === "additionalSfrs" && additionalSfr;
+          const isModifiedSfr = sfrType === "modified" && modifiedSfr;
+          const isAdditionalSfr = sfrType === "additional" && additionalSfr;
           const isValidBasePP = isBasePP && (isModifiedSfr || isAdditionalSfr);
 
           // Get valid sfrs based on the parent type
@@ -265,25 +252,12 @@ function AuditEventTable({ baseSfrUUID, sfrType }) {
     return `[<b>selection, choose one of</b>: <i>${value.trim()}, none</i>]`;
   };
 
-  // Use Memos
-  /**
-   * Gets the sfr worksheet component
-   */
-  const getSfrWorksheet = useMemo(() => {
-    // Open the sfr worksheet
-    if (sfrSections && isSfrWorksheetValid) {
-      return <SfrWorksheet handleOpen={handleOpenSfrWorksheet} />;
-    } else {
-      return null;
-    }
-  }, [isSfrWorksheetValid, openSfrWorksheet]);
-
   // Return Method
   return (
     <div className='mt-5 mb-[-8px]'>
       <EditableTable
         title={
-          <div style={{ color: isBasePP ? secondary : primary }} className={`font-bold text-[14px] p-0 pr-4 ${textColor}`}>
+          <div style={{ color: isBasePP || isBasePPToeSfr ? secondary : primary }} className={`font-bold text-[14px] p-0 pr-4 ${textColor}`}>
             <Tooltip title={"Note: This table can also be used for SFR Navigation"}>
               <label>{`Audit Events Table `}</label>
             </Tooltip>
@@ -297,10 +271,11 @@ function AuditEventTable({ baseSfrUUID, sfrType }) {
         buttonTooltip={"Edit SFR Worksheet"}
         handleCellButtonClick={handleComponentButtonClick}
         tableInstructions={`To view or edit a specific SFR Worksheet, single-click on the desired 'Requirement'.`}
-        isBasePP={isBasePP}
-        styling={isBasePP ? requirementsStyling.other : undefined}
+        isBasePP={isBasePP || isBasePPToeSfr}
+        styling={isBasePP || isBasePPToeSfr ? requirementsStyling.other : undefined}
+        collapse={collapse}
+        handleCollapse={handleCollapse}
       />
-      {getSfrWorksheet}
     </div>
   );
 }

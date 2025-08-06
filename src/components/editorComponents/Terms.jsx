@@ -105,7 +105,7 @@ function Terms(props) {
               {Object.entries(termSections[props.uuid]) && Object.entries(termSections[props.uuid]).length >= 1 ? (
                 <CardFooter className='min-w-full m-0 p-0 rounded-b-none border-b-2 border-gray-200 mt-[-18px]'>
                   {Object.entries(termSections[props.uuid]).map(([key, value], index) => {
-                    if (key !== "title" && key !== "open" && key !== "xmlTagMeta") {
+                    if (key !== "title" && key !== "open" && key !== "xmlTagMeta" && key !== "custom") {
                       return (
                         <Term
                           key={props.uuid + "-" + key}

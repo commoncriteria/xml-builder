@@ -5,8 +5,9 @@ import { useDispatch, useSelector } from "react-redux";
 import { UPDATE_DECLARATION_AND_REFERENCE } from "../../../../reducers/SFRs/sfrBasePPsSlice.js";
 import { deepCopy } from "../../../../utils/deepCopy.js";
 import { getCardTemplate, handleSnackBarError, handleSnackbarTextUpdates } from "../../../../utils/securityComponents.jsx";
-import TipTapEditor from "../../TipTapEditor.jsx";
 import FormTextField from "./FormTextField.jsx";
+import GitHubRepositorySection from "../../GitHubRepositorySection.jsx";
+import TipTapEditor from "../../TipTapEditor.jsx";
 
 /**
  * The DeclarationAndReference component
@@ -129,28 +130,6 @@ function DeclarationAndReference({ uuid }) {
     );
   };
 
-  // Components
-  /**
-   * The GitHubRepositorySection
-   * @constructor
-   */
-  function GitHubRepositorySection() {
-    const { url, branch, open: collapse } = git;
-    const header = "GitHub Repository";
-    const body = (
-      <div className='min-w-full p-4 pb-0'>
-        <span className='flex justify-stretch min-w-full gap-2'>
-          <FormTextField value={url} label={"URL"} tooltip={"URL of Base PP GitHub repository"} handleTextUpdate={handleTextUpdate} />
-          <FormTextField value={branch} label={"Branch"} tooltip={"GitHub branch of release version"} handleTextUpdate={handleTextUpdate} />
-        </span>
-      </div>
-    );
-    const tooltip = `Reference to GitHub repo of Base PP. If there is none, then this is omitted.`;
-
-    // Get card template
-    return getCardTemplate(header, body, tooltip, collapse, handleSectionCollapse, headerTextColor, collapseIconColor);
-  }
-
   // Use Memos
   /**
    * The SecurityFunctionRequirementsDirectionSection
@@ -180,14 +159,14 @@ function DeclarationAndReference({ uuid }) {
         <FormTextField value={version} label={"Version"} tooltip={"Base PP Version"} handleTextUpdate={handleTextUpdate} />
       </span>
       <span className='flex justify-stretch min-w-full pb-4 gap-2'>
-        <FormTextField
-          value={url}
-          label={"URL of Base PP"}
-          tooltip={"URL of Base PP on the NIAP website"}
-          handleTextUpdate={handleTextUpdate}
-        />
+        <FormTextField value={url} label={"URL of Base PP"} tooltip={"URL of Base PP on the NIAP website"} handleTextUpdate={handleTextUpdate} />
       </span>
-      {GitHubRepositorySection()}
+      <GitHubRepositorySection
+        git={git}
+        tooltip={`Reference to GitHub repo of Base PP. If there is none, then this is omitted.`}
+        handleTextUpdate={handleTextUpdate}
+        handleSectionCollapse={handleSectionCollapse}
+      />
       {SecurityFunctionRequirementsDirectionSection}
     </div>
   );

@@ -1,9 +1,9 @@
 // Imports
-import { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import PropTypes from "prop-types";
 import { useDispatch, useSelector } from "react-redux";
 import { Card, CardBody, CardFooter } from "@material-tailwind/react";
-import { FormControl, IconButton, TextField, Tooltip } from "@mui/material";
+import { FormControl, IconButton, InputLabel, MenuItem, Select, TextField, Tooltip } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
 import DeleteForeverRoundedIcon from "@mui/icons-material/DeleteForeverRounded";
@@ -17,13 +17,14 @@ import {
 } from "../../reducers/accordionPaneSlice.js";
 import { COLLAPSE_EDITOR, DELETE_EDITOR, UPDATE_EDITOR_TEXT, UPDATE_EDITOR_TITLE } from "../../reducers/editorSlice.js";
 import { CREATE_SAR_SECTION } from "../../reducers/sarsSlice.js";
-import { CREATE_SFR_SECTION } from "../../reducers/SFRs/sfrSlice.js";
+import { CREATE_SFR_SECTION, sfrTypeMap } from "../../reducers/SFRs/sfrSlice.js";
 import { CREATE_SFR_SECTION_SLICE } from "../../reducers/SFRs/sfrSectionSlice.js";
 import { handleSnackBarError, handleSnackBarSuccess, handleSnackbarTextUpdates } from "../../utils/securityComponents.jsx";
 import DeleteSarSectionConfirmation from "../modalComponents/DeleteSarSectionConfirmation.jsx";
 import DeleteSfrSectionConfirmation from "../modalComponents/DeleteSfrSectionConfirmation.jsx";
 import DeleteConfirmation from "../modalComponents/DeleteConfirmation.jsx";
 import TipTapEditor from "../editorComponents/TipTapEditor.jsx";
+import ModuleToeSfrs from "../editorComponents/securityComponents/sfrModuleComponents/sfrSections/ModuleToeSfrs.jsx";
 
 /**
  * The EditorSection component
@@ -48,8 +49,9 @@ function EditorSection({ accordionUUID, uuid, section, tooltip }) {
   const { sections: accordions, metadata } = useSelector((state) => state.accordionPane);
   const { ppType } = metadata;
   const editors = useSelector((state) => state.editors);
-  const { primary, secondary, icons } = useSelector((state) => state.styling);
+  const { grayText, primary, secondary, icons } = useSelector((state) => state.styling);
   const [isEditable, setIsTitleEditable] = useState(true);
+  const [sfrSectionId, setSfrSectionId] = useState("");
   const [sfrSectionName, setSfrSectionName] = useState("");
   const [sarSectionName, setSarSectionName] = useState("");
   const [isSfr, setIsSfr] = useState(false);
@@ -59,6 +61,9 @@ function EditorSection({ accordionUUID, uuid, section, tooltip }) {
   const [openDeleteDialog, setDeleteDialog] = useState(false);
   const [title, setTitle] = useState("");
   const [isOpen, setIsOpen] = useState(false);
+  const [selectedSfrModule, setSelectedSfrModule] = useState("");
+  const isModule = ppType && ppType === "Module";
+  const sfrModuleDropdown = ["Mandatory", "Optional", "Objective", "Selection-based", "Implementation-dependent"];
 
   // Use Effects
   useEffect(() => {
@@ -166,6 +171,13 @@ function EditorSection({ accordionUUID, uuid, section, tooltip }) {
     }
   };
   /**
+   * Handles updating the sfr section id
+   * @param event the event a DOM handler
+   */
+  const handleSfrSectionId = (event) => {
+    setSfrSectionId(event.target.value);
+  };
+  /**
    * Handles updating the sfr section name
    * @param event the event a DOM handler
    */
@@ -185,11 +197,20 @@ function EditorSection({ accordionUUID, uuid, section, tooltip }) {
    */
   const handleNewSfrSection = async () => {
     try {
-      if (isSfr && sfrSectionName && sfrSectionName !== "") {
+      const validId = sfrSectionId && sfrSectionId !== "";
+      const validName = sfrSectionName && sfrSectionName !== "";
+      const validSfrModuleType = selectedSfrModule && selectedSfrModule !== "" && sfrModuleDropdown.includes(selectedSfrModule);
+      const isSfrValid = !isModule && isSfr && validName && validId;
+      const isSfrModuleValid = isModule && isSfr && validName && validId && validSfrModuleType;
+      const selectedType = validSfrModuleType && sfrTypeMap.hasOwnProperty(selectedSfrModule) ? sfrTypeMap[selectedSfrModule] : "";
+
+      if (isSfrValid || isSfrModuleValid) {
         // Create SFR UUID
         const sfrUUID = await dispatch(
           CREATE_SFR_SECTION({
             title: sfrSectionName,
+            id: sfrSectionId,
+            sfrType: selectedType,
           })
         ).payload;
 
@@ -234,7 +255,9 @@ function EditorSection({ accordionUUID, uuid, section, tooltip }) {
       handleSnackBarError(e);
     }
 
+    setSelectedSfrModule("");
     setSfrSectionName("");
+    setSfrSectionId("");
   };
   /**
    * Handles adding a new sar section
@@ -293,6 +316,13 @@ function EditorSection({ accordionUUID, uuid, section, tooltip }) {
   const handleOpenSarConfirmationDialog = () => {
     setOpenSarConfirmationDialog(!openSarConfirmationDialog);
   };
+  /**
+   * Handles the dropdown to select the sfr module requirement type
+   * @param event the event as a domNode
+   */
+  const handleSfrModuleType = (event) => {
+    setSelectedSfrModule(event.target.value);
+  };
 
   // Helper Methods
   /**
@@ -349,6 +379,27 @@ function EditorSection({ accordionUUID, uuid, section, tooltip }) {
   const getIsOpen = (uuid) => {
     return editors.hasOwnProperty(uuid) && editors[uuid].hasOwnProperty("open") ? editors[uuid].open : false;
   };
+  /**
+   * Gets the disabled value of the button for adding a new sfr section
+   * @returns {boolean}
+   */
+  const getNewSfrSectionButtonDisabled = () => {
+    let isSectionValid = isSfr && sfrSectionName && sfrSectionId;
+    let isModuleValid = true;
+
+    if (isModule) {
+      isModuleValid = sfrModuleDropdown?.includes(selectedSfrModule);
+    }
+
+    return isSectionValid && isModuleValid ? false : true;
+  };
+  /**
+   * Gets the disabled value of the button for adding a new sar section
+   * @returns {boolean}
+   */
+  const getNewSarSectionButtonDisabled = () => {
+    return isSar && sarSectionName && sarSectionName !== "" ? false : true;
+  };
 
   // Use Memos
   /**
@@ -400,12 +451,13 @@ function EditorSection({ accordionUUID, uuid, section, tooltip }) {
             <div className='m-0 p-0 w-full border-0'>
               <div key={`${accordionUUID}-${uuid}-${section}-TipTapEditor`} className='text-left w-full overflow-x-hidden min-w-full'>
                 {TextEditor}
+                {isModule && title === "Security Functional Requirements" && <ModuleToeSfrs />}
               </div>
               {isSfr && (
                 <div className='min-w-full border-t-2 border-gray-200 mt-6 mx-[-24px]'>
                   <div className='w-full mt-6 pb-1 pl-6 pr-4'>
-                    <span className='min-w-full inline-flex items-baseline'>
-                      <div className='w-[98%]'>
+                    <span className={`min-w-full inline-flex ${isModule ? "justify-center" : "items-baseline"}`}>
+                      <div className={!isModule ? "min-w-[48%]" : "min-w-[32%]"}>
                         <FormControl fullWidth>
                           <TextField
                             color='primary'
@@ -417,14 +469,40 @@ function EditorSection({ accordionUUID, uuid, section, tooltip }) {
                           />
                         </FormControl>
                       </div>
+                      <div className={`${!isModule ? "min-w-[48%]" : "min-w-[32%]"} pl-4`}>
+                        <FormControl fullWidth required>
+                          <TextField
+                            color='primary'
+                            required
+                            key={sfrSectionId}
+                            onBlur={(event) => handleSnackbarTextUpdates(handleSfrSectionId, event)}
+                            defaultValue={sfrSectionId}
+                            label='Requirement ID'
+                          />
+                        </FormControl>
+                      </div>
+                      {isModule && (
+                        <div className='pl-4 min-w-[32%]'>
+                          <FormControl fullWidth required>
+                            <InputLabel id='demo-simple-select-label'>Type of Requirement</InputLabel>
+                            <Select value={selectedSfrModule} label='Type of Requirements' onChange={handleSfrModuleType} sx={{ textAlign: "left" }}>
+                              {sfrModuleDropdown.map((option) => (
+                                <MenuItem key={option} value={option}>
+                                  {option}
+                                </MenuItem>
+                              ))}
+                            </Select>
+                          </FormControl>
+                        </div>
+                      )}
                       <div className='pl-1'>
                         <IconButton
                           sx={{ marginBottom: "-32px" }}
                           onClick={handleNewSfrSection}
                           variant='contained'
-                          disabled={isSfr && sfrSectionName && sfrSectionName !== "" ? false : true}>
+                          disabled={getNewSfrSectionButtonDisabled()}>
                           <Tooltip title={"Add New SFR Section"} id={"addNewSfrSectionTooltip"}>
-                            <AddCircleIcon htmlColor={secondary} sx={icons.large} />
+                            <AddCircleIcon htmlColor={getNewSfrSectionButtonDisabled() ? grayText : secondary} sx={icons.large} />
                           </Tooltip>
                         </IconButton>
                       </div>
@@ -453,9 +531,9 @@ function EditorSection({ accordionUUID, uuid, section, tooltip }) {
                           sx={{ marginBottom: "-32px" }}
                           onClick={handleNewSarSection}
                           variant='contained'
-                          disabled={isSar && sarSectionName && sarSectionName !== "" ? false : true}>
+                          disabled={getNewSarSectionButtonDisabled()}>
                           <Tooltip title={"Add New SAR Section"} id={"addNewSarSectionTooltip"}>
-                            <AddCircleIcon htmlColor={secondary} sx={icons.large} />
+                            <AddCircleIcon htmlColor={getNewSarSectionButtonDisabled() ? grayText : secondary} sx={icons.large} />
                           </Tooltip>
                         </IconButton>
                       </div>

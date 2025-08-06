@@ -46,7 +46,7 @@ function CardTemplate(props) {
 
   // Return Method
   return (
-    <div>
+    <div data-testid={props.title ? `CardTemplate_${props.title.replace(/\s+/g, "_")}` : undefined}>
       {props.type === "parent" ? (
         <Card
           className={`w-full rounded-lg border-2 ${props.borderColor ? props.borderColor : "border-gray-300"} mb-4 ${props.bottomBorderCss ? props.bottomBorderCss : ""}`}>

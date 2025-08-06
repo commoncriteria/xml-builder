@@ -3,9 +3,10 @@ import React, { useEffect, useRef } from "react";
 import PropTypes from "prop-types";
 import { useDispatch, useSelector } from "react-redux";
 import { FormControl, InputLabel, MenuItem, Select, TextField } from "@mui/material";
-import { CREATE_ACCORDION } from "../../reducers/accordionPaneSlice.js";
+import { CREATE_ACCORDION, CREATE_ACCORDION_FORM_ITEM } from "../../reducers/accordionPaneSlice.js";
 import { handleSnackBarError, handleSnackBarSuccess, handleSnackbarTextUpdates } from "../../utils/securityComponents.jsx";
 import Modal from "./Modal.jsx";
+import { CREATE_EDITOR } from "../../reducers/editorSlice.js";
 
 /**
  * The NewAccordion class that displays the option to add a new accordion using a modal
@@ -27,6 +28,12 @@ function NewAccordion(props) {
   const dispatch = useDispatch();
   const accordions = useSelector((state) => state.accordionPane.sections);
   const previousAccordions = usePrevious(accordions);
+  const accordionArray = Object.entries(accordions).map(([id, data]) => ({
+    id,
+    title: data.title,
+  }));
+  const conformanceIndex = accordionArray.findIndex(({ title }) => title.toLowerCase() === "conformance claims");
+  const appendixCIndex = accordionArray.findIndex(({ title }) => title.toLowerCase().includes("appendix c"));
 
   // Use Effects
   useEffect(() => {
@@ -74,9 +81,12 @@ function NewAccordion(props) {
     // Add accordion according to type
     if (!disabled) {
       // Create the accordion
+      const insertIndex = accordionArray.findIndex(({ title }) => title === selectedSection) + 1;
+      const isAppendix = insertIndex > appendixCIndex;
       {
         {
-          await dispatch(CREATE_ACCORDION({ title: sectionName, selected_section: selectedSection }));
+          const editorUUID = await dispatch(CREATE_EDITOR({ title: sectionName })).payload;
+          await dispatch(CREATE_ACCORDION({ title: sectionName, selected_section: selectedSection, custom: editorUUID, isAppendix: isAppendix })).payload.uuid;
         }
       }
       // Reset the state to default values
@@ -94,15 +104,7 @@ function NewAccordion(props) {
   const handleSelectedSection = (event) => {
     setSelectedSection(event.target.value);
   };
-  const getAccordionTitles = () => {
-    let titles = [];
-    Object.values(accordions).map((value) => {
-      if (!value.title.toLowerCase().includes("appendix")) {
-        titles.push(value.title);
-      }
-    });
-    return titles;
-  };
+  const getAccordionTitles = () => accordionArray.map(({ title }) => title);
   const resetState = () => {
     setDisabled(true);
     setSectionName("");
@@ -148,15 +150,14 @@ function NewAccordion(props) {
                   Place Section After
                 </InputLabel>
                 <Select value={selectedSection} label='Place Section After' onChange={handleSelectedSection} sx={{ textAlign: "left", fontSize: 14 }}>
-                  {Object.keys(accordions).map((key) => {
-                    let title = accordions[key].title;
-                    if (!title.toLowerCase().includes("appendix")) {
-                      return (
-                        <MenuItem key={key} value={title}>
-                          {title}
-                        </MenuItem>
-                      );
-                    }
+                  {accordionArray.map(({ id, title }, index) => {
+                    // custom sections only allowed before Conformance Claims or after Appendix C
+                    const isValidInsertPosition = (conformanceIndex !== -1 && index < conformanceIndex) || (appendixCIndex !== -1 && index >= appendixCIndex);
+                    return isValidInsertPosition ? (
+                      <MenuItem key={id} value={title}>
+                        {title}
+                      </MenuItem>
+                    ) : null;
                   })}
                 </Select>
               </FormControl>

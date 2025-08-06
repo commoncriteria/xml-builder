@@ -14,6 +14,8 @@ export const termsSlice = createSlice({
         state[newId] = {
           title: title,
           open: false,
+          custom: action.payload.custom,
+          xmlTagMeta: action.payload?.xmlTagMeta,
         };
         action.payload = newId;
       } else {
@@ -47,7 +49,7 @@ export const termsSlice = createSlice({
         if (state[uuid].title === title) {
           state[uuid].open = open && typeof open === "boolean" ? open : !state[uuid].open;
           Object.keys(state[uuid]).map((key) => {
-            if (key !== "title" && key !== "open") {
+            if (key !== "title" && key !== "open" && key !== "custom" && key !== "xmlTagMeta") {
               let value = state[uuid][key];
               let input = {
                 payload: {
@@ -74,7 +76,7 @@ export const termsSlice = createSlice({
           currentTermList[uuid] = {
             title: name ? name : "",
             definition: definition ? definition : "",
-            open: false,
+            open: true,
             ...(tagMeta ? { xmlTagMeta: tagMeta } : {}),
           };
         }
@@ -96,11 +98,10 @@ export const termsSlice = createSlice({
     UPDATE_TERM_DEFINITION: (state, action) => {
       let termUUID = action.payload.termUUID;
       let uuid = action.payload.uuid;
-      let originalTitle = action.payload.title;
       let newDefinition = action.payload.newDefinition;
       if (state.hasOwnProperty(termUUID)) {
         let currentTermList = state[termUUID];
-        if (currentTermList.hasOwnProperty(uuid) && currentTermList[uuid].title === originalTitle) {
+        if (currentTermList.hasOwnProperty(uuid)) {
           currentTermList[uuid].definition = newDefinition;
         }
       }

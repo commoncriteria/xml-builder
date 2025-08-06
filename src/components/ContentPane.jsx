@@ -80,7 +80,7 @@ function ContentPane(props) {
                   let item = builderSections[key];
                   return (
                     <div className='min-w-full' key={item.title + key + "Accordion"} id={item.title + key + "Accordion"}>
-                      <AccordionContent title={item.title} uuid={key} index={index} open={item.open} />
+                      <AccordionContent title={item.title} uuid={key} index={index} open={item.open} custom={item.custom} />
                     </div>
                   );
                 })}

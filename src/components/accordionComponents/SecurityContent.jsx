@@ -1,9 +1,9 @@
 // Imports
 import PropTypes from "prop-types";
-import { useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Card, CardBody, CardFooter } from "@material-tailwind/react";
-import { IconButton, Tooltip } from "@mui/material";
+import { FormControl, IconButton, InputLabel, MenuItem, Select, Tooltip } from "@mui/material";
 import AddCircleRoundedIcon from "@mui/icons-material/AddCircleRounded";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteForeverRoundedIcon from "@mui/icons-material/DeleteForeverRounded";
@@ -24,14 +24,8 @@ import {
   UPDATE_OBJECTIVE_SECTION_DEFINITION,
   UPDATE_OBJECTIVE_SECTION_TITLE,
 } from "../../reducers/objectivesSlice.js";
-import {
-  COLLAPSE_SAR_SECTION,
-  CREATE_SAR_COMPONENT,
-  DELETE_SAR,
-  UPDATE_SAR_SECTION_SUMMARY,
-  UPDATE_SAR_SECTION_TITLE,
-} from "../../reducers/sarsSlice.js";
-import { COLLAPSE_SFR_SECTION, UPDATE_SFR_SECTION_DEFINITION, UPDATE_SFR_SECTION_TITLE } from "../../reducers/SFRs/sfrSlice.js";
+import { COLLAPSE_SAR_SECTION, CREATE_SAR_COMPONENT, DELETE_SAR, UPDATE_SAR_SECTION_SUMMARY, UPDATE_SAR_SECTION_TITLE } from "../../reducers/sarsSlice.js";
+import { COLLAPSE_SFR_SECTION, UPDATE_SFR_SECTION_DEFINITION, UPDATE_SFR_SECTION_ID, UPDATE_SFR_SECTION_TITLE } from "../../reducers/SFRs/sfrSlice.js";
 import { COLLAPSE_SFR_BASE_PP_SECTION, UPDATE_SFR_BASE_PP_SECTION_NAME } from "../../reducers/SFRs/sfrBasePPsSlice.js";
 import {
   addNewSfrComponent,
@@ -44,6 +38,7 @@ import {
 import Definition from "../editorComponents/securityComponents/Definition.jsx";
 import DeleteConfirmation from "../modalComponents/DeleteConfirmation.jsx";
 import ExtendedComponent from "../editorComponents/securityComponents/sfrComponents/ExtendedComponent.jsx";
+import FormTextField from "../editorComponents/securityComponents/sfrModuleComponents/FormTextField.jsx";
 import SarSections from "../editorComponents/securityComponents/sarComponents/SarSections.jsx";
 import SfrBasePP from "../editorComponents/securityComponents/sfrModuleComponents/SfrBasePP.jsx";
 import SfrSections from "../editorComponents/securityComponents/sfrComponents/SfrSections.jsx";
@@ -52,7 +47,7 @@ import "../editorComponents/components.css";
 
 /**
  * The SecurityContent component
- * @param uuid the uuid of the security content
+ * @param uuid the uuid of the security content: threats, objectives, sfrs, sars, sfrBasePPs
  * @param accordionUUID the parent accordion uuid
  * @param title the title of the security content
  * @param definition the definition of the security content
@@ -63,10 +58,12 @@ import "../editorComponents/components.css";
  * @param open the collapse value of the accordion
  * @param contentType the content type of the security content
  *        values: threats, objectives, sfrs, sars, sfrBasePPs
+ * @param id used for sfrs
+ * @param sfrType the sfr type used for toe sfr modules: mandatory, optional, objective, selectionBased, implementationDependent
  * @returns {JSX.Element}
  * @constructor
  */
-function SecurityContent({ uuid, accordionUUID, title, definition, sfrList, sarList, item, section, open, contentType }) {
+function SecurityContent({ uuid, accordionUUID, title, definition, sfrList, sarList, item, section, open, contentType, id, sfrType }) {
   // Prop Validation
   SecurityContent.propTypes = {
     uuid: PropTypes.string.isRequired,
@@ -79,14 +76,25 @@ function SecurityContent({ uuid, accordionUUID, title, definition, sfrList, sarL
     section: PropTypes.string.isRequired,
     open: PropTypes.bool.isRequired,
     contentType: PropTypes.string.isRequired,
+    id: PropTypes.string,
+    sfrType: PropTypes.string,
   };
 
   // Constants
   const dispatch = useDispatch();
   const { primary, secondary, icons } = useSelector((state) => state.styling);
   const sarComponents = useSelector((state) => state.sars.components);
+  const { ppType = "PP" } = useSelector((state) => state.accordionPane.metadata);
+  const isModule = ppType && ppType === "Module";
   const [newSarComponent, setNewSarComponent] = useState("");
   const [openDeleteDialog, setDeleteDialog] = useState(false);
+  const sfrModuleDropdown = {
+    mandatory: "Mandatory",
+    optional: "Optional",
+    objective: "Objective",
+    selectionBased: "Selection-based",
+    implementationDependent: "Implementation-dependent",
+  };
 
   // Methods
   /**
@@ -279,7 +287,16 @@ function SecurityContent({ uuid, accordionUUID, title, definition, sfrList, sarL
           break;
         }
         case "sfrs": {
-          await addNewSfrComponent(uuid);
+          let component = {};
+          const validSfrType = sfrType && sfrType !== "" && sfrType !== "mandatory" && sfrModuleDropdown.hasOwnProperty(sfrType);
+
+          // For the module type, add sfr type from parent
+          if (isModule && validSfrType) {
+            component[sfrType] = true;
+          }
+
+          // Create new sfr component
+          await addNewSfrComponent(uuid, component);
           break;
         }
         case "sars": {
@@ -339,6 +356,36 @@ function SecurityContent({ uuid, accordionUUID, title, definition, sfrList, sarL
         break;
     }
   };
+  /**
+   * The handler for updating the sfr id update for modules
+   * @param event the event as a domNode
+   */
+  const handleSfrIdUpdate = (event) => {
+    const id = event.target.value;
+
+    // Update the sfr id for modules
+    dispatch(
+      UPDATE_SFR_SECTION_ID({
+        id,
+        uuid: uuid,
+      })
+    );
+  };
+
+  // Methods
+  /**
+   * Gets the sfr type display text value
+   * @param sfrType the initial sfr type
+   * @returns {*|string}
+   */
+  const getSfrType = (sfrType) => {
+    // Get the sfr type display value
+    if (sfrType && sfrType !== "" && sfrModuleDropdown.hasOwnProperty(sfrType)) {
+      return sfrModuleDropdown[sfrType];
+    } else {
+      return "";
+    }
+  };
 
   // Use Memos
   /**
@@ -385,6 +432,36 @@ function SecurityContent({ uuid, accordionUUID, title, definition, sfrList, sarL
         {open ? (
           <CardFooter className='min-w-full m-0 p-0 rounded-b-none border-b-2 border-gray-200 mt-[-20px] rounded-lg'>
             <div className='mx-5 mt-0 mb-3 bg-gray-40' key={uuid + "Div"}>
+              {contentType === "sfrs" && (
+                <div className='p-1 pb-3 w-full'>
+                  <span className='min-w-full inline-flex items-baseline'>
+                    <div className={`${isModule ? "w-[50%] pr-4" : "w-full"}`}>
+                      <FormTextField
+                        value={id || ""}
+                        label={"Requirement ID"}
+                        handleTextUpdate={handleSfrIdUpdate}
+                        tooltip={`It's particularly important to make sure the id attributes for these sections and SFRs are 
+                           unique in the document, since there is likely to be more than one instance of each Family in
+                           the document.`}
+                      />
+                    </div>
+                    {contentType === "sfrs" && isModule && (
+                      <div className={"w-[50%]"}>
+                        <FormControl fullWidth>
+                          <InputLabel id='typeOfRequirementLabel'>Type of Requirement</InputLabel>
+                          <Select value={getSfrType(sfrType)} label='Type of Requirement' disabled fullWidth>
+                            {Object.values(sfrModuleDropdown)?.map((option) => (
+                              <MenuItem key={option} value={option}>
+                                {option}
+                              </MenuItem>
+                            ))}
+                          </Select>
+                        </FormControl>
+                      </div>
+                    )}
+                  </span>
+                </div>
+              )}
               {contentType !== "sfrBasePPs" ? (
                 <div className='p-1'>{DefinitionEditor}</div>
               ) : (
@@ -411,7 +488,9 @@ function SecurityContent({ uuid, accordionUUID, title, definition, sfrList, sarL
                             uuid={key}
                             title={value.title}
                             open={value.open}
+                            from={value.from || []}
                             definition={value.definition}
+                            consistencyRationale={value.consistencyRationale || ""}
                             item={value}
                             contentType={contentType}
                           />

@@ -5,10 +5,19 @@ import { Box, Stack, Switch, Tooltip, Typography } from "@mui/material";
 
 /**
  * The ToggleSwitch component that shows the toggle switch button and components
+ * @param isToggled the value of the toggle switch (on/off)
+ * @param isSfrWorksheetToggle determines the type of toggle used
+ * @param handleUpdateToggle the function for handling updates to the toggle
+ * @param extendedComponentDefinition the extended component definition (if present)
+ * @param tooltip the value of the tooltip
+ * @param tooltipID the id of the tooltip
+ * @param title the title associated with the toggle switch
+ * @param styling additional custom styling for the toggle switch
+ * @param addBorder adding a border to the toggle switch (only used in cases where the toggle switch is not an sfr worksheet toggle)
  * @returns {JSX.Element}
  * @constructor
  */
-const ToggleSwitch = (props) => {
+const ToggleSwitch = ({ isToggled, isSfrWorksheetToggle, handleUpdateToggle, extendedComponentDefinition, tooltip, tooltipID, title, styling, addBorder }) => {
   // Prop Validation
   ToggleSwitch.propTypes = {
     isToggled: PropTypes.bool.isRequired,
@@ -26,9 +35,13 @@ const ToggleSwitch = (props) => {
   const { primary, primaryToggleSwitch } = useSelector((state) => state.styling);
 
   // Components
+  /**
+   * The component used for the sfr worksheet component toggle
+   * @returns {JSX.Element}
+   */
   const getSfrWorksheetComponentToggle = () => {
-    const { isToggled, handleUpdateToggle, title, tooltip, tooltipID } = props;
-    const { titleStyle, toggleStyle } = getSfrWorksheetToggleStyle(props);
+    const { titleStyle, toggleStyle } = getSfrWorksheetToggleStyle();
+    const toggleColor = styling?.hasOwnProperty("primaryToggleSwitch") ? styling.primaryToggleSwitch : primaryToggleSwitch;
 
     // Get the sfr worksheet component toggle
     return (
@@ -36,9 +49,9 @@ const ToggleSwitch = (props) => {
         <Box display='flex' alignItems='center'>
           <Tooltip id={tooltipID} title={tooltip} arrow>
             <Switch
-              onChange={props.extendedComponentDefinition ? (event) => handleUpdateToggle(event, props.extendedComponentDefinition) : handleUpdateToggle}
+              onChange={extendedComponentDefinition ? (event) => handleUpdateToggle(event, extendedComponentDefinition) : handleUpdateToggle}
               checked={isToggled}
-              sx={isToggled ? primaryToggleSwitch : {}}
+              sx={isToggled ? toggleColor : {}}
               size='small'
             />
           </Tooltip>
@@ -47,11 +60,13 @@ const ToggleSwitch = (props) => {
       </div>
     );
   };
-
+  /**
+   * Gets the traditional toggle switch component
+   * @returns {JSX.Element}
+   */
   const getToggleSwitch = () => {
-    const { isToggled, title, tooltip, tooltipID, styling, handleUpdateToggle } = props;
     const { largeToggleTypography, secondaryToggleSwitch } = styling;
-    const toggleStyle = props.addBorder ? "ml-4 pl-4 pr-1 pt-2 pb-1 border-[1px] border-[#bdbdbd] rounded-[4px]" : "flex w-[0px] justify-end pr-1";
+    const toggleStyle = addBorder ? "ml-4 pl-4 pr-1 pt-2 pb-1 border-[1px] border-[#bdbdbd] rounded-[4px]" : "flex w-[0px] justify-end pr-1";
 
     return (
       <div className={toggleStyle}>
@@ -68,10 +83,13 @@ const ToggleSwitch = (props) => {
   };
 
   // Helper Methods
-  const getSfrWorksheetToggleStyle = (props) => {
-    const { isToggled, title } = props;
+  /**
+   * Generates the style used for the sfr worksheet toggle
+   * @returns {{toggleStyle: {paddingX: number, paddingBottom: string, display: string, paddingTop: string, justifyContent: (string)}, titleStyle: {}}}
+   */
+  const getSfrWorksheetToggleStyle = () => {
+    const titleColor = styling?.hasOwnProperty("titleColor") ? styling.titleColor : primary;
     let titleStyle = {};
-    let toggleStyle = {};
 
     // Get the title style
     if (title) {
@@ -85,14 +103,14 @@ const ToggleSwitch = (props) => {
         titleStyle = {
           fontSize: 13,
           fontWeight: "bold",
-          color: primary,
+          color: titleColor,
           paddingLeft: 0.5,
         };
       }
     }
 
     // Get the toggle style
-    toggleStyle = {
+    let toggleStyle = {
       paddingX: 1,
       paddingBottom: "12px",
       paddingTop: "2px",
@@ -108,7 +126,7 @@ const ToggleSwitch = (props) => {
   };
 
   // Return Method
-  return props.isSfrWorksheetToggle ? getSfrWorksheetComponentToggle() : getToggleSwitch();
+  return isSfrWorksheetToggle ? getSfrWorksheetComponentToggle() : getToggleSwitch();
 };
 
 // Export ToggleSwitch.jsx

@@ -1,5 +1,5 @@
 import PropTypes from "prop-types";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import XMLViewer from "react-xml-viewer";
 import { useDispatch, useSelector } from "react-redux";
 import { create } from "xmlbuilder2";
@@ -24,10 +24,14 @@ import {
   SET_DISTRIBUTED_TOE,
   SET_PP_TYPE_TO_PACKAGE,
   SET_PP_TYPE_TO_PP,
+  SET_PP_TYPE_TO_MODULE,
+  SET_MODULE_SECURITY_REQUIREMENTS,
+  SET_CUSTOM_SECTIONS,
 } from "../../reducers/exportSlice";
 import { deepCopy } from "../../utils/deepCopy";
-import { handleSnackBarSuccess, handleSnackBarError } from "../../utils/securityComponents.jsx";
+import { handleSnackBarSuccess, handleSnackBarError, getSfrMaps } from "../../utils/securityComponents.jsx";
 import Modal from "./Modal";
+import format from "xml-formatter";
 
 /**
  * The XML Exporter class that packages the form into an XML export file
@@ -45,7 +49,7 @@ function XMLExporter({ open, handleOpen, preview }) {
   const { primary, secondary, linkText } = useSelector((state) => state.styling);
   const stateObject = useSelector((state) => state);
   const ppTemplateVersion = useSelector((state) => state.accordionPane.metadata.ppTemplateVersion);
-  const ppType = useSelector((state) => state.accordionPane.metadata.ppType);
+  const ppType = useSelector((state) => state.accordionPane.metadata.ppType); // Ensure ppType is fetched from the Redux store
   const overallObject = useSelector((state) => state.exports.overallObject);
   const formattedXML = useSelector((state) => state.exports.formattedXML);
   const dispatch = useDispatch();
@@ -53,6 +57,11 @@ function XMLExporter({ open, handleOpen, preview }) {
   const previousStateObject = usePrevious(stateObject);
   const previousOverallObject = usePrevious(overallObject);
   const TESTING = false;
+  const editors = useSelector((state) => state.editors);
+  const allSections = useSelector((state) => state.accordionPane.sections);
+  const customSections = useMemo(() => {
+    return Object.values(allSections).filter((section) => section.custom !== undefined && !section.selectedSection?.toLowerCase().startsWith("appendix"));
+  }, [allSections]);
 
   // Use Effects
   useEffect(() => {
@@ -74,8 +83,11 @@ function XMLExporter({ open, handleOpen, preview }) {
     }, [value]);
     return ref.current;
   }
+
   const getTerms = () => {
     const terms = Object.values(stateObject.terms);
+
+    if (!terms || terms.length == 0) return;
 
     // search through object to find the relevant terms lists
     const techTerms = terms.find((group) => group.title == "Technical Terms");
@@ -94,11 +106,11 @@ function XMLExporter({ open, handleOpen, preview }) {
     const threatsSlice = Object.values(stateObject.threats);
     const objectivesSlice = Object.values(stateObject.objectives);
 
-    // Search through object to find the relevant lists
     const threats = threatsSlice.find((group) => group.title == "Threats");
     const assumptions = threatsSlice.find((group) => group.title == "Assumptions");
     const OSPs = threatsSlice.find((group) => group.title == "Organizational Security Policies");
     const objectiveTerms = getObjectiveTerms(objectivesSlice);
+
     dispatch(
       SET_SECURITY_PROBLEM_DEFINITION_SECTION({
         sfrSections: stateObject.sfrSections,
@@ -108,21 +120,26 @@ function XMLExporter({ open, handleOpen, preview }) {
         objectiveTerms: objectiveTerms,
         OSPs: OSPs,
         ppTemplateVersion: stateObject.accordionPane.metadata.ppTemplateVersion,
+        ppType: ppType,
+        sfrMaps: getSfrMaps(),
       })
     );
   };
+
   const getSecurityObjectives = () => {
     const sfrSlice = Object.values(stateObject.sfrSections);
     const objectivesSlice = Object.values(stateObject.objectives);
     const toe = objectivesSlice.find((group) => group.title == "Security Objectives for the TOE");
     const operationalEnvironment = objectivesSlice.find((group) => group.title == "Security Objectives for the Operational Environment");
     const objectivesToSFRs = getObjectivesToSFRs(sfrSlice);
+
     dispatch(
       SET_SECURITY_OBJECTIVES_SECTION({
         sfrSections: stateObject.sfrSections,
         toe: toe,
         operationalEnvironment: operationalEnvironment,
         objectivesToSFRs: objectivesToSFRs,
+        ppType: ppType, // Pass ppType as part of the payload
       })
     );
   };
@@ -176,7 +193,7 @@ function XMLExporter({ open, handleOpen, preview }) {
 
   const getSliceInfo = (uuid, contentType) => {
     // Use the UUID to go into the right slice to fetch our info
-    const { editors, threats, objectives } = stateObject;
+    const { editors, threats, objectives, terms, sfrBasePPs } = stateObject;
 
     // TODO: Make the content types more consistent in name
     // const result = stateObject[contentType + "s"][uuid]
@@ -187,19 +204,27 @@ function XMLExporter({ open, handleOpen, preview }) {
         return threats[uuid];
       case "objectives":
         return objectives[uuid];
+      case "sfrBasePPs":
+        return sfrBasePPs[uuid];
+      case "terms":
+        return terms[uuid];
       default:
     }
   };
 
-  const getNestedFormItemInfo = (uuid, contentType) => {
+  const getNestedFormItemInfo = (uuid, contentType, formItems) => {
     const { terms, sfrs, sars, sfrSections, editors } = stateObject;
+    let filledFormItem;
+
     switch (contentType) {
       case "terms":
-        return terms[uuid];
+        filledFormItem = terms[uuid];
+        break;
       case "sfrs": {
         let section = deepCopy(sfrs.sections[uuid]);
         section.components = sfrSections.hasOwnProperty(uuid) ? deepCopy(sfrSections[uuid]) : {};
-        return section;
+        filledFormItem = section;
+        break;
       }
       case "sars": {
         // Get the SAR family
@@ -207,14 +232,31 @@ function XMLExporter({ open, handleOpen, preview }) {
 
         // Get associated components of the SAR family
         const components = section.componentIDs.map((compUUID) => sars.components[compUUID]);
-        section.components = section.componentIDs.length != 0 ? components : [];
-
-        return section;
+        section.components = section.componentIDs.length !== 0 ? components : [];
+        filledFormItem = section;
+        break;
       }
       case "editor":
-        return editors[uuid];
-      default:
+        filledFormItem = editors[uuid];
         break;
+      default:
+        return null;
+    }
+
+    // If this item has nested formItems, process them recursively
+    if (formItems && Array.isArray(formItems)) {
+      return {
+        ...filledFormItem,
+        nestedFormItems: {
+          formItems: formItems.map((child) => getNestedFormItemInfo(child.uuid, child.contentType, child.formItems)),
+        },
+      };
+    } else {
+      // Ensure formItems is always an array for consistency
+      return {
+        ...filledFormItem,
+        formItems: [],
+      };
     }
   };
 
@@ -241,8 +283,8 @@ function XMLExporter({ open, handleOpen, preview }) {
           if (formItem?.formItems) {
             const nestedFormItems = {
               formItems: formItem.formItems.map((formItem) => {
-                const { uuid, contentType } = formItem;
-                return getNestedFormItemInfo(uuid, contentType);
+                const { uuid, contentType, formItems } = formItem;
+                return getNestedFormItemInfo(uuid, contentType, formItems);
               }),
             };
             return { ...filledFormItem, nestedFormItems };
@@ -256,7 +298,7 @@ function XMLExporter({ open, handleOpen, preview }) {
     const { ["sec:Introduction"]: introduction, ["Distributed TOE"]: distributedTOE } = formattedSections;
     const cc2022conformanceClaims = stateObject.conformanceClaims;
     const version3_1conformanceClaimsObject = Object.values(stateObject.accordionPane.sections).find((section) => section.title === "Conformance Claims");
-    const version3_1_conformanceEditorUUIDs = version3_1conformanceClaimsObject.formItems.map((editor) => editor.uuid);
+    const version3_1_conformanceEditorUUIDs = version3_1conformanceClaimsObject ? version3_1conformanceClaimsObject.formItems.map((editor) => editor.uuid) : [];
     const version3_1_conformanceClaimsObject = Object.fromEntries(
       Object.entries(stateObject.editors).filter(([key]) => version3_1_conformanceEditorUUIDs.includes(key))
     );
@@ -265,45 +307,107 @@ function XMLExporter({ open, handleOpen, preview }) {
     // Add in security requirements definition if it is present to Security Requirements section
     if (securityRequirements && securityRequirements.tag === "Security Requirements") {
       const { sfrDefinition } = stateObject.sfrs;
+      const { sfrBasePPDefinition } = stateObject.sfrBasePPs;
+      const definition = ppType === "Module" ? sfrBasePPDefinition : sfrDefinition;
 
-      if (sfrDefinition && sfrDefinition !== "" && sfrDefinition !== "<p><br></p>") {
-        securityRequirements.definition = sfrDefinition.valueOf();
+      if (definition && definition !== "" && definition !== "<p><br></p>") {
+        securityRequirements.definition = definition.valueOf();
       }
     }
 
     // Export sections
-    dispatch(SET_INTRODUCTION({ introduction: introduction, platformData: platformData, compliantTargets: ctoes, ppType: ppType }));
-    if (ppPreference !== "") dispatch(SET_PP_PREFERENCE({ ppPreference: ppPreference }));
-
-    if (stateObject.accordionPane.metadata.ppTemplateVersion == "Version 3.1") {
-      dispatch(SET_CONFORMANCE_CLAIMS({ conformanceClaims: version3_1_conformanceClaimsObject, ppTemplateVersion: ppTemplateVersion }));
-    } else {
-      // CC2022 Conformance
-      dispatch(SET_CONFORMANCE_CLAIMS({ conformanceClaims: cc2022conformanceClaims, ppTemplateVersion: ppTemplateVersion }));
-    }
-
     dispatch(
-      SET_SECURITY_REQUIREMENTS({
-        securityRequirements: securityRequirements,
-        useCases: useCases,
-        sars: sars,
-        platforms: stateObject.accordionPane.platformData.platforms,
-        auditSection: stateObject.sfrs.auditSection,
+      SET_INTRODUCTION({
+        introduction: introduction,
+        platformData: platformData,
+        compliantTargets: ctoes,
+        ppType: ppType,
       })
     );
-    dispatch(SET_APPENDICES({ state: stateObject }));
-    dispatch(SET_BIBLIOGRAPHY({ bibliography: stateObject.bibliography }));
-    dispatch(SET_PACKAGES({ packages: stateObject.includePackage.packages }));
-    dispatch(SET_MODULES({ modules: stateObject.modules }));
-    if (distributedTOE && stateObject.distributedTOE && stateObject.distributedTOE.intro.length > 0) {
-      dispatch(SET_DISTRIBUTED_TOE({ state: stateObject.distributedTOE, subSections: distributedTOE.formItems }));
+    if (ppPreference !== "") dispatch(SET_PP_PREFERENCE({ ppPreference: ppPreference, ppType: ppType }));
+
+    if (stateObject.accordionPane.metadata.ppTemplateVersion == "Version 3.1") {
+      dispatch(
+        SET_CONFORMANCE_CLAIMS({
+          conformanceClaims: version3_1_conformanceClaimsObject,
+          ppTemplateVersion: ppTemplateVersion,
+          ppType: ppType,
+        })
+      );
+    } else {
+      // CC2022 Conformance
+      dispatch(
+        SET_CONFORMANCE_CLAIMS({
+          conformanceClaims: cc2022conformanceClaims,
+          ppTemplateVersion: ppTemplateVersion,
+          ppType: ppType,
+        })
+      );
     }
+
+    // Set security requirements based on pp type
+    if (ppType === "Module") {
+      const { toeSfrs: toeAuditData = {} } = stateObject.sfrs || {};
+      dispatch(
+        SET_MODULE_SECURITY_REQUIREMENTS({
+          securityRequirements,
+          useCases,
+          sars,
+          toeAuditData,
+          sfrSections: deepCopy(stateObject.sfrSections),
+          platforms: stateObject.accordionPane.platformData.platforms,
+        })
+      );
+    } else {
+      dispatch(
+        SET_SECURITY_REQUIREMENTS({
+          securityRequirements,
+          useCases,
+          sars,
+          platforms: stateObject.accordionPane.platformData.platforms,
+          auditSection: stateObject.sfrs.auditSection,
+          ppType,
+        })
+      );
+    }
+    dispatch(SET_APPENDICES({ state: stateObject, ppType: ppType }));
+    dispatch(SET_BIBLIOGRAPHY({ bibliography: stateObject.bibliography, ppType: ppType }));
+    dispatch(SET_PACKAGES({ packages: stateObject.includePackage.packages, ppType: ppType }));
+    dispatch(SET_MODULES({ modules: stateObject.modules, ppType: ppType }));
+    if (distributedTOE && stateObject.distributedTOE && stateObject.distributedTOE.intro.length > 0) {
+      dispatch(
+        SET_DISTRIBUTED_TOE({
+          state: stateObject.distributedTOE,
+          subSections: distributedTOE.formItems,
+          ppType: ppType,
+        })
+      ); // Pass ppType
+    }
+    customSections.forEach((section) => {
+      dispatch(
+        SET_CUSTOM_SECTIONS({
+          text: editors[section.custom].text,
+          title: section.title,
+          selectedSection: section.selectedSection,
+        })
+      );
+    });
   };
 
   const generateFormattedJSON = () => {
     try {
-      if (ppType == "Protection Profile") dispatch(SET_PP_TYPE_TO_PP());
-      else dispatch(SET_PP_TYPE_TO_PACKAGE());
+      switch (ppType) {
+        case "Protection Profile":
+          dispatch(SET_PP_TYPE_TO_PP());
+          break;
+        case "Module":
+          dispatch(SET_PP_TYPE_TO_MODULE());
+          break;
+        case "Functional Package":
+          dispatch(SET_PP_TYPE_TO_PACKAGE());
+          break;
+      }
+
       getMetaData();
       let useCases = getTerms();
       parseSections(useCases);
@@ -326,6 +430,20 @@ function XMLExporter({ open, handleOpen, preview }) {
       xmlString = addNamespace(xmlString);
       xmlString = cleanUpXml(xmlString);
 
+      // xmlString = format(xmlString, {
+      //   indentation: "  ", // 2-space indent
+      //   collapseContent: true, // true for keeping text on same line
+      //   lineSeparator: "\n", // newline separator
+      //   stripComments: false, // keep comments if any (currently we are not importing any comments)
+      // });
+
+      // Fix new line issues - Formatter separates node types on new lines
+      // (eg. If there are quotes followed by inline rich text, then the quote is on one line
+      // and the rich text is on the next line, then extra whitespace gets introduced between
+      // quote and text when it comes to rendering the HTML)
+      xmlString = xmlString.replace(/"\s*\n\s*</g, '"<');
+      xmlString = xmlString.replace(/>\s*\n\s*"/g, '>"');
+
       // Flip this to true at top of file if we don't want file downloads
       if (preview) {
         dispatch(SET_FORMATTED_XML({ xmlString: xmlString }));
@@ -345,13 +463,13 @@ function XMLExporter({ open, handleOpen, preview }) {
       }
     } catch (e) {
       console.log(e);
-      handleSnackBarError(e);
     } finally {
       if (!preview) {
         handleOpen();
       }
     }
   };
+
   const handleSetFileName = (event) => {
     let fileName = event.target.value;
     let trimmed = fileName.replace(/[/\\?%*:|"<>]/g, "-");
@@ -407,7 +525,7 @@ function XMLExporter({ open, handleOpen, preview }) {
 
     // Get namespace
     let namespace = "";
-    const ppTypeKey = ppType == "Protection Profile" ? "PP" : "Package";
+    const ppTypeKey = ppType == "Protection Profile" ? "PP" : ppType === "Module" ? "Module" : "Package";
     const namespaceKey = Object.keys(overallObject[ppTypeKey]).find((key) => overallObject[ppTypeKey][key] === "http://www.w3.org/1999/xhtml");
 
     // XML Cleanup
@@ -493,6 +611,7 @@ function XMLExporter({ open, handleOpen, preview }) {
                 </CardBody>
                 <CardFooter>
                   <Button
+                    id={"final-export-xml-button"}
                     sx={{ fontSize: "12px" }}
                     disabled={TESTING || (fileName && fileName !== "") ? false : true}
                     component='label'

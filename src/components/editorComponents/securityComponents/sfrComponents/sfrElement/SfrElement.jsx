@@ -241,6 +241,8 @@ function SfrElement() {
                 value={selectedSfrElement}
                 label='Select Element'
                 autoWidth
+                id='sfr_element_select'
+                MenuProps={{ "data-testid": "sfr_element_select_menu" }}
                 onChange={(event) => handleSelectedElement(event.target.value)}
                 sx={{ textAlign: "left" }}>
                 {elementMaps.elementNames?.map((name, index) => {

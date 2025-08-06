@@ -1,6 +1,58 @@
+// Imports
 import { createSlice } from "@reduxjs/toolkit";
 import { v4 as uuidv4 } from "uuid";
+import { deepCopy } from "../../utils/deepCopy.js";
 
+// Constants
+const sfrComponentDefault = {
+  title: "",
+  cc_id: "",
+  iteration_id: "",
+  xml_id: "",
+  definition: "",
+  optional: false,
+  objective: false,
+  selectionBased: false,
+  selections: {},
+  useCaseBased: false,
+  useCases: [],
+  implementationDependent: false,
+  reasons: [],
+  tableOpen: false,
+  objectives: [],
+  extendedComponentDefinition: {
+    toggle: false,
+    audit: "",
+    managementFunction: "",
+    componentLeveling: "",
+    dependencies: "",
+  },
+  auditEvents: {},
+  open: false,
+  elements: {},
+  invisible: false,
+  evaluationActivities: {},
+  modifiedSfr: false,
+  additionalSfr: false,
+  consistencyRationale: "",
+  xPathDetails: {},
+};
+export const defaultModifiedSfrComponent = {
+  fromPkgData: {
+    name: "",
+    short: "",
+    version: "",
+    git: {
+      url: "",
+      branch: "",
+      open: true,
+    },
+    toggle: false,
+    open: false,
+  },
+};
+
+// Initial State
 const initialState = {};
 
 export const sfrSectionSlice = createSlice({
@@ -20,54 +72,65 @@ export const sfrSectionSlice = createSlice({
       }
     },
     CREATE_SFR_COMPONENT: (state, action) => {
-      const { sfrUUID: familyUUID, component: originalComponent, additionalSfr } = action.payload;
-      let component = originalComponent ? originalComponent : { sfrCompUUID: uuidv4() };
+      const { sfrUUID: familyUUID, component } = action.payload;
+      const defaultSfr = deepCopy(sfrComponentDefault);
+      const defaultModifiedSfr = deepCopy(defaultModifiedSfrComponent);
 
+      // Generate a unique ID for the component if not provided
+      const sfrCompUUID = component?.sfrCompUUID || uuidv4();
+
+      // Check that the family ID is valid and generate new component
       if (familyUUID) {
         if (!state.hasOwnProperty(familyUUID)) {
           state[familyUUID] = {};
         }
 
-        // Check if the component is an additional sfr
-        const isAdditionalSfr = additionalSfr !== undefined ? additionalSfr : component?.hasOwnProperty("additionalSfr") ? component.additionalSfr : false;
-
         // Create component
-        state[familyUUID][component.sfrCompUUID] = {
-          title: component?.title ? component.title : "",
-          cc_id: component?.cc_id ? component.cc_id : "",
-          iteration_id: component?.iteration_id ? component.iteration_id : "",
-          xml_id: component?.xml_id ? component.xml_id : "",
-          definition: component?.definition ? component.definition : "",
-          optional: component?.optional ? component.optional : false,
-          objective: component?.objective ? component.objective : false,
-          selectionBased: component?.selectionBased ? component.selectionBased : false,
-          selections: component?.selections ? component.selections : {},
-          useCaseBased: component?.useCaseBased ? component.useCaseBased : false,
-          useCases: component?.useCases ? component.useCases : [],
-          implementationDependent: component?.implementationDependent ? component.implementationDependent : false,
-          reasons: component?.reasons ? component.reasons : [],
-          tableOpen: component?.tableOpen ? component.tableOpen : false,
-          objectives: component?.objectives ? component.objectives : [],
-          extendedComponentDefinition: component?.extendedComponentDefinition
-            ? component.extendedComponentDefinition
-            : {
-                toggle: false,
-                audit: "",
-                managementFunction: "",
-                componentLeveling: "",
-                dependencies: "",
-              },
-          auditEvents: component?.auditEvents ? component.auditEvents : {},
-          open: component?.open ? component.open : false,
-          elements: component?.elements ? component.elements : {},
-          invisible: component?.invisible ? component.invisible : false,
-          evaluationActivities: component?.evaluationActivities ? component.evaluationActivities : {},
-          modifiedSfr: component?.hasOwnProperty("modifiedSfr") ? component.modifiedSfr : false,
-          additionalSfr: isAdditionalSfr,
-          consistencyRationale: component?.hasOwnProperty("consistencyRationale") ? component.consistencyRationale : "",
+        let newComponent = {
+          title: component?.title || defaultSfr.title,
+          cc_id: component?.cc_id || defaultSfr.cc_id,
+          iteration_id: component?.iteration_id || defaultSfr.iteration_id,
+          xml_id: component?.xml_id || defaultSfr.xml_id,
+          definition: component?.definition || defaultSfr.definition,
+          optional: component?.optional || defaultSfr.optional,
+          objective: component?.objective || defaultSfr.objective,
+          selectionBased: component?.selectionBased || defaultSfr.selectionBased,
+          selections: component?.selections || defaultSfr.selections,
+          useCaseBased: component?.useCaseBased || defaultSfr.useCaseBased,
+          useCases: component?.useCases || defaultSfr.useCases,
+          implementationDependent: component?.implementationDependent || defaultSfr.implementationDependent,
+          reasons: component?.reasons || defaultSfr.reasons,
+          tableOpen: component?.tableOpen || defaultSfr.tableOpen,
+          objectives: component?.objectives || defaultSfr.objectives,
+          extendedComponentDefinition: component?.extendedComponentDefinition || defaultSfr.extendedComponentDefinition,
+          auditEvents: component?.auditEvents || defaultSfr.auditEvents,
+          open: component?.open || defaultSfr.open,
+          elements: component?.elements || defaultSfr.elements,
+          invisible: component?.invisible || defaultSfr.invisible,
+          evaluationActivities: component?.evaluationActivities || defaultSfr.evaluationActivities,
+          modifiedSfr: component?.modifiedSfr || defaultSfr.modifiedSfr,
+          additionalSfr: component?.additionalSfr || defaultSfr.additionalSfr,
+          consistencyRationale: component?.consistencyRationale || defaultSfr.consistencyRationale,
+          notNew: component?.notNew,
+          xPathDetails: component?.xPathDetails || defaultSfr.xPathDetails,
+          classDescription: component?.classDescription,
         };
+
+        // Adjust component if it is a modified sfr
+        if (newComponent.modifiedSfr) {
+          // Add modified sfr specific objects
+          newComponent.fromPkgData = component?.fromPkgData || defaultModifiedSfr.fromPkgData;
+
+          // Remove extended component
+          delete newComponent.extendedComponentDefinition;
+        }
+
+        // Add the new component to the state
+        state[familyUUID][sfrCompUUID] = newComponent;
       }
-      action.payload.id = component.sfrCompUUID;
+
+      // Attach the generated UUID to the action payload
+      action.payload.id = sfrCompUUID;
     },
     UPDATE_SFR_COMPONENT_ITEMS: (state, action) => {
       const { sfrUUID, uuid, itemMap } = action.payload;

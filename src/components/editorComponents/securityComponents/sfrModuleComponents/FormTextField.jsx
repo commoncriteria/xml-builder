@@ -9,10 +9,11 @@ import { FormControl, TextField, Tooltip } from "@mui/material";
  * @param tag the tag
  * @param tooltip the tooltip
  * @param handleTextUpdate the handle text update function
+ * @param color the color of the text field (secondary by default)
  * @returns {JSX.Element}
  * @constructor
  */
-export default function FormTextField({ value = "", label = "", tag = "", tooltip = "", handleTextUpdate }) {
+export default function FormTextField({ value = "", label = "", tag = "", tooltip = "", handleTextUpdate, color }) {
   // Prop Validation
   FormTextField.propTypes = {
     value: PropTypes.string.isRequired,
@@ -20,6 +21,7 @@ export default function FormTextField({ value = "", label = "", tag = "", toolti
     tag: PropTypes.string,
     tooltip: PropTypes.string,
     handleTextUpdate: PropTypes.func.isRequired,
+    color: PropTypes.string,
   };
 
   // Constants
@@ -29,7 +31,7 @@ export default function FormTextField({ value = "", label = "", tag = "", toolti
   return (
     <FormControl fullWidth>
       <Tooltip arrow title={tooltip}>
-        <TextField key={value} label={label} defaultValue={value} onBlur={(event) => handleTextUpdate(event, title, tag)} />
+        <TextField color={color || "secondary"} key={value} label={label} defaultValue={value} onBlur={(event) => handleTextUpdate(event, title, tag)} />
       </Tooltip>
     </FormControl>
   );

@@ -84,10 +84,12 @@ function AccordionItemByType({ type, uuid, section, accordionUUID }) {
       sfrList: PropTypes.object,
       sarList: PropTypes.array,
       open: PropTypes.bool.isRequired,
+      id: PropTypes.string,
+      sfrType: PropTypes.string,
     };
 
     // Constants
-    const { title, definition, item, sfrList, sarList, open } = props;
+    const { title, definition, item, sfrList, sarList, open, id, sfrType } = props;
 
     // Return Method
     return (
@@ -102,6 +104,8 @@ function AccordionItemByType({ type, uuid, section, accordionUUID }) {
         sarList={sarList}
         section={section}
         open={open}
+        id={id}
+        sfrType={sfrType}
       />
     );
   };
@@ -166,9 +170,9 @@ function AccordionItemByType({ type, uuid, section, accordionUUID }) {
     if (type === "sfrs") {
       let sfr = sfrs[uuid];
       let sfrList = sfrSections[uuid];
-      const { title, definition, open } = sfr;
+      const { title, definition, open, id = "", sfrType = "" } = sfr;
 
-      return SecurityContentSection({ title, definition, sfrList, open });
+      return SecurityContentSection({ title, definition, sfrList, open, id, sfrType });
     }
   }, [accordionUUID, uuid, section, type, sfrs, sfrSections]);
   /**

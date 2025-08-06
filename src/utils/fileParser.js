@@ -1,10 +1,19 @@
 import { v4 as uuidv4 } from "uuid";
 import parse from "html-react-parser";
+import { node } from "prop-types";
+import { deepCopy } from "./deepCopy";
+import app from "../../public/data/sfr_components/app_cc2022.json";
+import mdm from "../../public/data/sfr_components/mdm.json";
+import gpcp from "../../public/data/sfr_components/gpcp_cc2022.json";
+import gpos from "../../public/data/sfr_components/gpos_cc2022.json";
+import mdf from "../../public/data/sfr_components/mdf.json";
+import tls from "../../public/data/sfr_components/tls_cc2022.json";
+import virtualization from "../../public/data/sfr_components/virtualization_cc2022.json";
 
 // Constants
-const raw_xml_tags = ["xref", "rule", "figure", "ctr", "snip", "if-opt-app", "also", "_", "no-link"];
+const raw_xml_tags = ["xref", "rule", "figure", "ctr", "snip", "if-opt-app", "also", "_", "no-link", "comment"];
 const style_tags = ["b", "p", "s", "i", "strike", "h3", "span", "u", "ol", "ul", "li", "sup", "sub", "pre", "code", "table"];
-export const escapedTagsRegex = /<(\/?)(xref|rule|figure|ctr|snip|if-opt-app|also|_|no-link)\b([^>]*)>/g;
+export const escapedTagsRegex = /<(\/?)(xref|rule|figure|ctr|snip|if-opt-app|also|_|no-link|comment)\b([^>]*)>/g;
 
 /**
  * Selector function to get UUID by title
@@ -238,7 +247,11 @@ export const getPlatforms = (domNode) => {
                 }
               });
             }
-            platformObj.platforms.push({ name: platformName, description: description, id: selectable.getAttribute("id") });
+            platformObj.platforms.push({
+              name: platformName,
+              description: description,
+              id: selectable.getAttribute("id"),
+            });
           });
         }
       }
@@ -271,6 +284,9 @@ export const getPPMetadata = (domNode, ppType) => {
   } else if (ppType == "Protection Profile") {
     section = findAllByTagName("PP", domNode)[0];
     xmlTagMeta.tagName = "PP";
+  } else if (ppType == "Module") {
+    section = findAllByTagName("Module", domNode)[0];
+    xmlTagMeta.tagName = "Module";
   }
 
   if (section) {
@@ -350,7 +366,7 @@ export const getPPReference = (domNode) => {
           } else if (revHistoryChildTag == "date") {
             revisionInstance.date = c.textContent;
           } else if (revHistoryChildTag == "subject") {
-            revisionInstance.comment = c.textContent;
+            revisionInstance.comment = parseRichTextChildren(c);
           }
         });
         ppObj.RevisionHistory.push(revisionInstance);
@@ -359,25 +375,6 @@ export const getPPReference = (domNode) => {
   }
 
   return ppObj;
-};
-
-/**
- * Parse the Security Problem Definition section
- * @param {Node} domNode
- * @returns {string}
- */
-export const getSecurityProblemDefinition = (domNode) => {
-  let spd = "";
-  let spdSection =
-    findAllByTagName("Security_Problem_Definition", domNode)[0] ||
-    findAllByTagName("Security_Problem_Description", domNode)[0] ||
-    findAllByTagName("spd", domNode)[0];
-
-  if (spdSection) {
-    spd = parseRichTextChildren(spdSection);
-  }
-
-  return spd;
 };
 
 /**
@@ -410,18 +407,12 @@ export const getSecurityProblemDefinition = (domNode) => {
  *   }>
  * }}
  */
-export const getAllThreats = (domNode) => {
+export const getAllThreats = (threat_description_section, ppType) => {
   // Get threat description (if exists)
-  const threat_description_section = findAllByAttribute("title", "Threats", domNode);
-  let threat_description = "";
+  const isModule = ppType === "Module";
+  let threat_description = parseRichTextChildren(threat_description_section);
 
-  if (threat_description_section.length !== 0) {
-    if (threat_description_section[0].tagName.toLowerCase() == "section") {
-      threat_description = getDirectTextContent(threat_description_section[0]);
-    }
-  }
-
-  let threat_tags = findAllByTagName("threat", domNode);
+  let threat_tags = findAllByTagName("threat", threat_description_section);
   let threats = new Array();
 
   threat_tags.forEach((threat) => {
@@ -432,6 +423,7 @@ export const getAllThreats = (domNode) => {
       let description = "";
       let sfrs = [];
       let lastSfrName = "";
+      let basePPs = []; // for modules
 
       threat.childNodes.forEach((threatChild) => {
         if (threatChild.nodeType == Node.ELEMENT_NODE) {
@@ -441,9 +433,9 @@ export const getAllThreats = (domNode) => {
             let objective_name = threatChild.getAttribute("ref");
             let rationale = "";
 
-            threatChild.childNodes.forEach((objReferChild) => {
-              if (objReferChild.nodeType == Node.ELEMENT_NODE && objReferChild.nodeName.toLowerCase() == "rationale") {
-                rationale = parseRichTextChildren(objReferChild);
+            threatChild.childNodes.forEach((objRefereplaceChild) => {
+              if (objRefereplaceChild.nodeType == Node.ELEMENT_NODE && objRefereplaceChild.nodeName.toLowerCase() == "rationale") {
+                rationale = parseRichTextChildren(objRefereplaceChild);
 
                 securityObjectives.push({
                   name: objective_name,
@@ -460,8 +452,8 @@ export const getAllThreats = (domNode) => {
           } else if (threatChild.nodeName.toLowerCase() == "addressed-by") {
             // for Direct Rationale
             // regex to remove quotes
-            const sfrNameArr = threatChild.textContent.replace(/["']/g, "").split("(");
-            lastSfrName = sfrNameArr[0].trim();
+            const sfrNameArr = !isModule ? threatChild.textContent.replace(/["']/g, "").split("(") : threatChild.textContent;
+            lastSfrName = !isModule ? sfrNameArr[0].trim() : sfrNameArr;
           } else if (threatChild.nodeName.toLowerCase() == "rationale") {
             // for Direct Rationale
             sfrs.push({
@@ -472,6 +464,8 @@ export const getAllThreats = (domNode) => {
               },
             });
             lastSfrName = "";
+          } else if (threatChild.nodeName.toLowerCase() == "from") {
+            basePPs.push(threatChild.getAttribute("base"));
           }
         }
       });
@@ -487,6 +481,7 @@ export const getAllThreats = (domNode) => {
             name: name,
           },
         },
+        basePPs,
       });
     }
   });
@@ -523,7 +518,7 @@ export const getAllAssumptions = (domNode) => {
 
     if (assumption.nodeType == Node.ELEMENT_NODE && assumption.tagName == "assumption") {
       let description = findAllByTagName("description", assumption);
-      description = description.length !== 0 ? description[0].textContent : "";
+      description = description.length !== 0 ? parseRichTextChildren(description[0]) : "";
       let name = assumption.getAttribute("name");
 
       let objectives = findAllByTagName("objective-refer", assumption);
@@ -531,7 +526,7 @@ export const getAllAssumptions = (domNode) => {
         let objective_name = objective.getAttribute("ref");
 
         let rationale = findAllByTagName("rationale", objective);
-        rationale = rationale.length !== 0 ? rationale[0].textContent : "";
+        rationale = rationale.length !== 0 ? parseRichTextChildren(rationale[0]) : "";
 
         securityObjectives.push({
           name: objective_name,
@@ -720,6 +715,17 @@ export const getAllSecurityObjectivesOE = (domNode) => {
     findAllByTagName("Security_Objectives_for_the_Operational_Environment", domNode)[0] ||
     findAllByAttribute("title", "Security Objectives for the Operational Environment", domNode)[0];
 
+  if (!securityObjectiveSection) return null;
+
+  const xmlTagMeta = {
+    tagName: securityObjectiveSection.tagName,
+    attributes: {},
+  };
+
+  securityObjectiveSection.attributes.forEach((attr) => {
+    xmlTagMeta.attributes[attr.name] = attr.value;
+  });
+
   if (securityObjectiveSection) {
     securityObjectiveSection.childNodes.forEach((subsection) => {
       if (subsection.nodeType == Node.TEXT_NODE) {
@@ -747,7 +753,7 @@ export const getAllSecurityObjectivesOE = (domNode) => {
     });
   }
 
-  return { intro: intro, securityObjectives: securityObjectives };
+  return { intro, securityObjectives, xmlTagMeta };
 };
 
 /**
@@ -851,41 +857,249 @@ export const getAllTechTerms = (domNode) => {
  * }}
  */
 export const getDocumentObjectives = (domNode) => {
-  // tag structure varies from xml to xml...
-  let docObjectiveSection = null;
   let doc_objectives = "";
-  let tagName = "";
+
   let xmlTagMeta = {
     tagName: "",
     attributes: {},
   };
 
-  if (findAllByAttribute("title", "Overview", domNode).length !== 0) {
-    doc_objectives = findAllByAttribute("title", "Overview", domNode)[0].textContent;
-    tagName = findAllByAttribute("title", "Overview", domNode)[0].tagName;
-  }
+  doc_objectives = parseRichTextChildren(domNode);
 
-  if (findAllByTagName("Overview", domNode).length !== 0) {
-    doc_objectives = parseRichTextChildren(findAllByTagName("Overview", domNode)[0]);
-
-    tagName = findAllByTagName("Overview", domNode)[0].tagName;
-  }
-
-  if (findAllByTagName("Objectives_of_Document", domNode).length !== 0) {
-    doc_objectives = findAllByTagName("Objectives_of_Document", domNode)[0].textContent;
-    tagName = findAllByTagName("Objectives_of_Document", domNode)[0].tagName;
-  }
-
-  if (docObjectiveSection !== null) {
-    doc_objectives = parseRichTextChildren(docObjectiveSection);
-  }
-
-  xmlTagMeta.tagName = tagName;
+  xmlTagMeta.tagName = domNode.tagName;
 
   return { doc_objectives, xmlTagMeta };
 };
 
 /**
+ *
+ * @param {*} domNode
+ */
+export const getCustomIntroSection = (introSection) => {
+  let xmlTagMeta = {
+    tagName: "section",
+    attributes: {},
+  };
+
+  // Set the attributes
+  introSection.attributes.forEach((attr) => {
+    xmlTagMeta.attributes[attr.name] = attr.value;
+  });
+
+  const title = introSection.getAttribute("title");
+  const text = parseRichTextChildren(introSection);
+
+  return { title, text, xmlTagMeta, node: introSection };
+};
+
+/**
+ * This function calls the parsing functions for all the sections and considers any extra sections as custom
+ * @param {Node} domNode
+ * @param {String} ppType Protection Profile, Functional Package, Module
+ * @param {String} ppVersion
+ * @returns
+ */
+export const getXmlData = (domNode, ppType, ppVersion) => {
+  const mainTagName = ppType === "Protection Profile" ? "PP" : ppType === "Functional Package" ? "Package" : ppType;
+  const mainNode = findAllByTagName(mainTagName, domNode)[0];
+  let masterObject = {
+    intro: [],
+    customIntro: [],
+    cClaims: {},
+    spd: {},
+    securityObjectives: {},
+    sfr: {},
+    appendices: [],
+    custom: [],
+  };
+  let platformObject;
+  const otherTopSections = ["PPReference", "RevisionHistory", "include-pkg", "pp-preferences", "extra-css", "modules", "implements"];
+
+  Array.from(mainNode.childNodes)
+    .filter((sec) => sec.nodeType === Node.ELEMENT_NODE)
+    .forEach((sec) => {
+      // 1.0 Introduction
+      if (sec.localName === "Introduction" || hasAttribute(sec, "title", "Introduction")) {
+        Array.from(sec.childNodes)
+          .filter((sec) => sec.nodeType === Node.ELEMENT_NODE)
+          .forEach((introSection) => {
+            if (
+              introSection.localName === "Overview" ||
+              introSection.localName === "Objectives_of_Document" ||
+              hasAttribute(introSection, "title", "Overview")
+            ) {
+              masterObject.intro.push({
+                overview: getDocumentObjectives(introSection),
+              });
+            } else if (introSection.localName === "tech-terms") {
+              masterObject.intro.push({
+                techTerms: getAllTechTerms(introSection),
+              });
+            } else if (
+              introSection.localName === "Compliant_Targets_of_Evaluation" ||
+              hasAttribute(introSection, "id", "TOEdescription") ||
+              hasAttribute(introSection, "id", "toeov") ||
+              hasAttribute(introSection, "id", "s-complianttargets") ||
+              hasAttribute(introSection, "title", "TOE Overview") ||
+              hasAttribute(introSection, "title", "Compliant Targets of Evaluation")
+            ) {
+              masterObject.intro.push({
+                compliantTOE: getCompliantTOE(introSection, ppType),
+              });
+            } else if (introSection.localName === "Use_Cases" || introSection.localName === "TOE_Usage" || hasAttribute(introSection, "title", "Use Cases")) {
+              masterObject.intro.push({
+                useCaseDescription: getUseCaseDescription(introSection),
+              });
+              Array.from(introSection.childNodes)
+                .filter((introSection) => introSection.nodeType === Node.ELEMENT_NODE)
+                .forEach((useCaseSection) => {
+                  if (useCaseSection.localName === "usecases") {
+                    masterObject.intro.push({
+                      useCases: getUseCases(useCaseSection),
+                    });
+                  }
+                });
+            } else if (hasAttribute(introSection, "title", "Platforms with Specific EAs") || hasAttribute(introSection, "id", "sec-platforms")) {
+              platformObject = getPlatforms(mainNode);
+              masterObject.intro.push({
+                platforms: platformObject,
+              });
+            } else if (hasAttribute(introSection, "title", "Scope of Document")) {
+              masterObject.intro.push({
+                scope: parseRichTextChildren(introSection),
+              });
+            } else if (hasAttribute(introSection, "title", "Intended Readership")) {
+              masterObject.intro.push({
+                intended: parseRichTextChildren(introSection),
+              });
+            } else {
+              // handle custom intro subsections
+              masterObject.customIntro.push(getCustomIntroSection(introSection));
+            }
+          });
+      } else if (sec.localName === "Conformance_Claims" || hasAttribute(sec, "title", "Conformance Claims")) {
+        // 2.0 Conformance Claims
+        masterObject.cClaims = {
+          cClaims: getCClaims(sec, ppVersion),
+          cClaimsAttributes: getCClaimsAttributes(sec),
+        };
+      } else if (
+        sec.localName === "Security_Problem_Definition" ||
+        sec.localName === "Security_Problem_Description" ||
+        sec.localName === "spd" ||
+        hasAttribute(sec, "title", "Security Problem Definition")
+      ) {
+        // 3.0 Security Problem Definition
+        masterObject.spd.definition = parseRichTextChildren(sec);
+        Array.from(sec.childNodes)
+          .filter((sec) => sec.nodeType === Node.ELEMENT_NODE)
+          .forEach((spdSection) => {
+            if (spdSection.localName === "Threats" || (spdSection.localName == "section" && spdSection.getAttribute("title") === "Threats")) {
+              masterObject.spd.threats = getAllThreats(spdSection, ppType);
+            } else if (spdSection.localName === "Assumptions" || hasAttribute(spdSection, "title", "Assumptions")) {
+              masterObject.spd.assumptions = getAllAssumptions(spdSection);
+            } else if (spdSection.localName === "Organizational_Security_Policies" || hasAttribute(spdSection, "title", "Organizational Security Policies")) {
+              masterObject.spd.osp = getAllOSPs(spdSection);
+            }
+          });
+      } else if (sec.localName === "Security_Objectives" || hasAttribute(sec, "title", "Security Objectives")) {
+        // 4.0 Security Objectives
+        masterObject.securityObjectives = {
+          toeObjectives: getAllSecurityObjectivesTOE(sec),
+          oeObjectives: getAllSecurityObjectivesOE(sec),
+        };
+      } else if (
+        sec.localName === "Security_Requirements" ||
+        sec.localName === "Security_Functional_Requirements" ||
+        hasAttribute(sec, "title", "Security Requirements")
+      ) {
+        // 5.0 Security Requirements
+        const extCompDefMap = getSectionExtendedComponentDefinitionMap(sec);
+        masterObject.sfr.sfrs = getSFRs(sec, extCompDefMap, platformObject);
+        masterObject.sfr.auditSection = getAuditSection(sec);
+      } else if (hasAttribute(sec, "title", "Validation Guidelines")) {
+        // Appendix D - Validation Guidelines
+        masterObject.appendices.push({
+          validation: getValidationGuidelinesAppendix(sec),
+        });
+      } else if (hasAttribute(sec, "title", "Implicitly Satisfied Requirements")) {
+        // Appendix E - Implicitly Satisfied Requirements
+        masterObject.appendices.push({
+          satisfied: getSatisfiedReqsAppendix(sec),
+        });
+      } else if (hasAttribute(sec, "title", "Entropy Documentation and Assessment")) {
+        // Appendix F - Entropy Appendix
+        masterObject.appendices.push({
+          entropy: getEntropyAppendix(sec),
+        });
+      } else if (sec.localName === "bibliography") {
+        // Appendix J - Bibliography
+        masterObject.appendices.push({
+          bibliography: getBibliography(sec),
+        });
+      } else if (hasAttribute(sec, "title", "Acknowledgments")) {
+        // Appendix K - Acknowledgements
+        masterObject.appendices.push({
+          acknowledgements: getAcknowledgementsAppendix(sec),
+        });
+      } else if (hasAttribute(sec, "title", "Equivalency Guidelines") || hasAttribute(sec, "title", "Application Software Equivalency Guidelines")) {
+        // Appendix ? - Equivalency Guidelines
+        masterObject.appendices.push({
+          equivalency: getEquivGuidelinesAppendix(sec),
+        });
+      } else if (hasAttribute(sec, "title", "Initialization Vector Requirements for NIST-Approved Cipher Modes")) {
+        // Appendix ? - Vector
+        masterObject.appendices.push({
+          vector: getVectorAppendix(sec),
+        });
+      } else if (
+        otherTopSections.includes(sec.localName) ||
+        hasAttribute(sec, "title", "Optional Requirements") ||
+        hasAttribute(sec, "title", "Selection-Based Requirements")
+      ) {
+        // skip these sections
+      } else {
+        // handle top level custom sections
+        masterObject.custom.push(getCustomSection(sec));
+      }
+    });
+
+  return masterObject;
+};
+
+/**
+ *
+ * @param {*} domNode
+ */
+export const getCustomSection = (customSection) => {
+  let xmlTagMeta = {
+    tagName: "section",
+    attributes: {},
+  };
+
+  // Set the attributes
+  customSection.attributes.forEach((attr) => {
+    xmlTagMeta.attributes[attr.name] = attr.value;
+  });
+
+  const definition = getNodeContentWithTags(customSection);
+
+  return { localName: customSection.localName, definition: definition, xmlTagMeta };
+};
+
+/**
+ * Checks if xml section's attribute array contains obj with a name/value pair. Does not recurse.
+ * @param {*} domNode
+ * @param {String} name
+ * @param {String} value
+ * @returns {Boolean}
+ */
+const hasAttribute = (section, name, value) => {
+  return section?.attributes?.some((attr) => attr.name?.toLowerCase() === name?.toLowerCase() && attr.value?.toLowerCase() === value?.toLowerCase());
+};
+
+/**
+ * @param {*} domNode
  * Parse the Distributed TOE section
  * @param {Node} domNode
  * @returns {null | {
@@ -966,22 +1180,13 @@ export const getDistributedTOE = (domNode) => {
  *   additionalText: string
  * }}
  */
-export const getCompliantTOE = (domNode, ppType) => {
+export const getCompliantTOE = (toeSection, ppType) => {
   // tag structure varies from xml to xml...
   let toe_overview = "";
   let toe_boundary = "";
   let toe_platform = "";
   let components = [];
   let additionalText = "";
-
-  // All variations of TOE overview tags
-  let toeSection =
-    findAllByAttribute("id", "TOEdescription", domNode)[0] ||
-    findAllByAttribute("id", "toeov", domNode)[0] ||
-    findAllByAttribute("id", "s-complianttargets", domNode)[0] ||
-    findAllByAttribute("title", "TOE Overview", domNode)[0] ||
-    findAllByAttribute("title", "Compliant Targets of Evaluation", domNode)[0] ||
-    findAllByTagName("Compliant_Targets_of_Evaluation", domNode)[0];
 
   if (toeSection) {
     if (ppType == "Functional Package") {
@@ -1028,7 +1233,7 @@ export const getCompliantTOE = (domNode, ppType) => {
           }
         }
       });
-    } else if (ppType == "Protection Profile") {
+    } else {
       toe_overview = parseRichTextChildren(toeSection);
 
       toeSection.childNodes.forEach((subsection) => {
@@ -1051,10 +1256,8 @@ export const getCompliantTOE = (domNode, ppType) => {
  * @param {Node} domNode
  * @returns {string}
  */
-export const getUseCaseDescription = (domNode) => {
+export const getUseCaseDescription = (use_case_section) => {
   let use_case_description = "";
-  let use_case_section =
-    findAllByTagName("Use_Cases", domNode)[0] || findAllByTagName("TOE_Usage", domNode)[0] || findAllByAttribute("title", "Use Cases", domNode)[0];
 
   if (use_case_section) {
     use_case_description = parseRichTextChildren(use_case_section);
@@ -1090,7 +1293,7 @@ export const getUseCases = (domNode) => {
   if (useCases) {
     for (let useCase of useCases.childNodes) {
       if (useCase.nodeType == Node.ELEMENT_NODE && useCase.tagName.toLowerCase() == "usecase") {
-        let description = findAllByTagName("description", useCase)[0].textContent;
+        let description = parseRichTextChildren(findAllByTagName("description", useCase)[0]);
         let name = useCase.getAttribute("title") ? useCase.getAttribute("title") : "";
         let id = useCase.getAttribute("id") ? useCase.getAttribute("id") : "";
         let config = findAllByTagName("config", useCase);
@@ -1121,36 +1324,6 @@ export const getUseCases = (domNode) => {
 };
 
 /**
- * Parse the Document Scope section (Note: this section doesn't exist in all PP's)
- * @param {Node} domNode
- * @returns {string}
- */
-export const getDocumentScope = (domNode) => {
-  let scope_of_doc = "";
-
-  if (findAllByAttribute("title", "Scope of Document", domNode).length !== 0) {
-    scope_of_doc = parseRichTextChildren(findAllByAttribute("title", "Scope of Document", domNode)[0]);
-  }
-
-  return scope_of_doc;
-};
-
-/**
- * Parse the Intended Readership section (Note: this section doesn't exist in all PP's)
- * @param {Node} domNode
- * @returns {string}
- */
-export const getIndendedReadership = (domNode) => {
-  let indended_readership = "";
-
-  if (findAllByAttribute("title", "Intended Readership", domNode).length !== 0) {
-    indended_readership = parseRichTextChildren(findAllByAttribute("title", "Intended Readership", domNode)[0]);
-  }
-
-  return indended_readership;
-};
-
-/**
  * Gets the pp template version
  * Types: Version 3.1, CC2022 Direct Rationale, CC2022 Standard
  * @param {Node} domNode
@@ -1175,16 +1348,21 @@ export const getPpTemplateVersion = (domNode) => {
 
 /**
  * Gets the pp type
- * Types: PP, Functional Package, Assurance Package
+ * Types: PP, Functional Package, Assurance Package, Module
  * @param {Node} domNode
  * @returns {string}
  */
 export const getPpType = (domNode) => {
   const isFP = findAllByTagName("Package", domNode) || [];
+  const isModule = findAllByTagName("Module", domNode) || [];
   let ppType = "Protection Profile"; // Default to PP
 
   if (isFP.length !== 0) {
     ppType = "Functional Package";
+  }
+
+  if (isModule.length !== 0) {
+    ppType = "Module";
   }
 
   return ppType;
@@ -1678,23 +1856,575 @@ export const getSecurityRequirement = (domNode) => {
 };
 
 /**
+ * get audit table sections for modules
+ * @param {Node} domNode
+ */
+export const getSfrAuditTables = (domNode) => {
+  const mandatory = findAllByTagName("man-sfrs", domNode)[0];
+  const optional = findAllByTagName("opt-sfrs", domNode)[0];
+  const selectionBased = findAllByTagName("sel-sfrs", domNode)[0];
+  const objective = findAllByTagName("obj-sfrs", domNode)[0];
+  const implementationDependent = findAllByTagName("impl-dep-sfrs", domNode)[0];
+
+  const sections = {
+    mandatory,
+    optional,
+    selectionBased,
+    objective,
+    implementationDependent,
+  };
+
+  const result = {};
+
+  // for each section, populate the defaultAudit format in sfrBasePPsSlice
+  Object.entries(sections).forEach(([key, section]) => {
+    const firstSection = findAllByTagName("section", section)[0];
+    const tableSection = findAllByTagName("audit-table", section)[0];
+    let description = "";
+    if (firstSection) {
+      description = (getNodeContentWithTags(firstSection, true) || "").replace(/<audit-table\b[^>]*\/>|<audit-table\b[^>]*>[\s\S]*?<\/audit-table>/g, "");
+
+      // Add a space after every <xref .../> if not already present
+      description = description.replace(/(<xref\b[^>]*\/>)(?! )/g, "$1 ").trim();
+    }
+
+    result[key] = {
+      isAudit: true,
+      section: {
+        id: firstSection?.getAttribute("id") || "",
+        title: firstSection?.getAttribute("title") || "",
+        description: description,
+        open: false,
+      },
+      auditTable: {
+        id: tableSection?.getAttribute("id") || "",
+        table: tableSection?.getAttribute("table") || "",
+        title: tableSection?.getAttribute("title") || "",
+        open: false,
+      },
+      eventsTableOpen: false,
+      open: true,
+    };
+  });
+
+  return result;
+};
+
+/**
+ * Parse through the <base-pp> tags (for Modules)
+ * @param {Node} domNode
+ */
+export const getBasePPs = (domNode) => {
+  const basePPs = findAllByTagName("base-pp", domNode);
+
+  /**
+   * Get text from the first tag that matches the tagName
+   * @param {string} tagName
+   * @param {Node} node
+   * @returns {}
+   */
+  const getFirstTagText = (tagName, node) => {
+    const matches = findAllByTagName(tagName, node);
+    return matches.length ? matches[0].textContent.trim() : "";
+  };
+
+  return basePPs.map((basePP) => {
+    const gitNode = findAllByTagName("git", basePP)[0] || null;
+    const gitUrl = gitNode ? getFirstTagText("url", gitNode) : "";
+    const gitBranch = gitNode ? getFirstTagText("branch", gitNode) : "";
+    const shortName = basePP.getAttribute("short") || "";
+
+    const secFuncReqDir = findAllByTagName("sec-func-req-dir", basePP)[0];
+
+    // Get additional-sfrs if it exists
+    const additionalSfrsNode = findAllByTagName("additional-sfrs", basePP)[0];
+    const hasAdditionalSfrs = additionalSfrsNode && additionalSfrsNode.childNodes.length > 0; // Only care about non-empty tags
+
+    let audit = {};
+    let additionalSFRComponents = [];
+    let modifiedSFRElements = []; // For new mod reform structure
+    let modifiedSFRComponents = []; // For old mod sfr structure
+    let introTextAdditionalSFRs = "";
+    const additionalSfrSections = {};
+
+    if (hasAdditionalSfrs) {
+      introTextAdditionalSFRs = parseRichTextChildren(additionalSfrsNode);
+
+      // Build SFR Family Metadata
+      const familyUUIDMap = new Map(); // famId -> UUID
+      const sectionNodes = findAllByTagName("section", additionalSfrsNode);
+      for (const section of sectionNodes) {
+        // Parse SFR Components
+        const fComponents = findAllByTagName("f-component", section);
+        if (fComponents.length != 0) {
+          const familyUUID = uuidv4();
+          const title = section.getAttribute("title") || "";
+          const sectionID = section.getAttribute("id");
+          const extCompDefs = findAllByTagName("ext-comp-def", section).map((ecd) => ({
+            famId: ecd.getAttribute("fam-id") || "",
+            title: ecd.getAttribute("title") || "",
+            famBehavior: getFirstTagText("fam-behavior", ecd),
+          }));
+
+          if (sectionID) {
+            familyUUIDMap.set(sectionID.toUpperCase(), familyUUID);
+          }
+
+          additionalSfrSections[familyUUID] = {
+            title,
+            id: sectionID,
+            definition: parseRichTextChildren(section),
+            extendedComponentDefinition: extCompDefs,
+            open: false,
+          };
+        }
+
+        // Parse audit table
+        const hasAuditTableNode = findAllByTagName("audit-table", section);
+        if (hasAuditTableNode.length != 0) {
+          const auditTableNode = hasAuditTableNode[0];
+          const auditSectionNode = auditTableNode.parentNode;
+          audit = {
+            isAudit: true,
+            section: auditSectionNode
+              ? {
+                  id: auditSectionNode.getAttribute("id") || "",
+                  title: auditSectionNode.getAttribute("title") || "",
+                  open: false,
+                }
+              : {},
+            auditTable: auditTableNode
+              ? {
+                  id: auditTableNode.getAttribute("id") || "",
+                  table: auditTableNode.getAttribute("table") || "",
+                  title: auditTableNode.getAttribute("title") || "",
+                  open: false,
+                }
+              : {},
+            open: false,
+          };
+        }
+      }
+
+      // Parse f-components and add additionalSfr flag
+      additionalSFRComponents = getSFRs(additionalSfrsNode, familyUUIDMap).map((comp) => ({
+        ...comp,
+        additionalSfr: true,
+      }));
+    }
+
+    // Get modified-sfrs if it exists
+    const modifiedSfrsNode = findAllByTagName("modified-sfrs", basePP)[0];
+    const hasModifiedSfrs = modifiedSfrsNode && modifiedSfrsNode.childNodes.length > 0;
+
+    let introTextModifiedSFRs = "";
+    let modifiedSfrSections = {};
+
+    if (hasModifiedSfrs) {
+      introTextModifiedSFRs = parseRichTextChildren(modifiedSfrsNode);
+
+      const dataMap = { app, gpcp, gpos, mdf, mdm, tls, virtualization };
+      modifiedSFRElements = getBaseSFRSpecs(modifiedSfrsNode, shortName, dataMap);
+
+      if (modifiedSFRElements.length != 0) {
+        for (const mod of modifiedSFRElements) {
+          modifiedSfrSections[mod.familyUUIDMap.get(mod.sectionID)] = {
+            id: mod.sectionID || "",
+            title: mod.sectionTitle || "",
+            definition: mod.description || "",
+            open: false,
+          };
+        }
+      }
+
+      // Likely the old format, and not the modified reform format
+      modifiedSFRComponents = getSFRs(modifiedSfrsNode, new Map());
+      if (modifiedSFRComponents && modifiedSFRComponents.length != 0) {
+        for (const mod of modifiedSFRComponents) {
+          modifiedSfrSections[mod.familyUUID] = {
+            title: mod.family_name || "",
+            open: false,
+          };
+        }
+      }
+    }
+
+    const getTextByTag = (tagName) => {
+      const tagNode = findAllByTagName(tagName, basePP)[0];
+      return tagNode ? tagNode.textContent.trim() : "";
+    };
+
+    const conModNodes = findAllByTagName("con-mod", basePP);
+    const conModRows = conModNodes.map((node) => ({
+      id: uuidv4(),
+      ref: node.getAttribute("ref") || "",
+      text: node.textContent.trim(),
+    }));
+
+    return {
+      declarationAndRef: {
+        id: basePP.getAttribute("id") || "",
+        name: basePP.getAttribute("name") || "",
+        product: basePP.getAttribute("product") || "",
+        short: basePP.getAttribute("short") || "",
+        version: basePP.getAttribute("version") || "",
+        url: getFirstTagText("url", basePP),
+        git: {
+          url: gitUrl,
+          branch: gitBranch,
+          open: true,
+        },
+        secFuncReqDir: {
+          text: secFuncReqDir ? secFuncReqDir.textContent.trim() : "",
+          open: true,
+        },
+        open: false,
+      },
+      modifiedSfrs: {
+        introduction: introTextModifiedSFRs,
+        sfrSections: modifiedSfrSections,
+        open: false,
+      },
+      additionalSfrs: {
+        introduction: introTextAdditionalSFRs,
+        sfrSections: additionalSfrSections,
+        audit,
+        open: false,
+      },
+      consistencyRationale: {
+        conToe: {
+          text: getTextByTag("con-toe"),
+          open: true,
+        },
+        conSecProb: {
+          text: getTextByTag("con-sec-prob"),
+          open: true,
+        },
+        conObj: {
+          text: getTextByTag("con-obj"),
+          open: true,
+        },
+        conOpEn: {
+          text: getTextByTag("con-op-en"),
+          open: true,
+        },
+        conMod: {
+          rows: conModRows,
+          open: true,
+        },
+        open: false,
+      },
+      additionalSFRComponents,
+      modifiedSFRElements,
+      modifiedSFRComponents,
+      open: false,
+    };
+  });
+};
+
+export const getBaseSFRSpecs = (domNode, shortName, dataMap) => {
+  function getCcTags(xpath) {
+    const matches = [...xpath.matchAll(/cc:([^/\[\]@]+)/g)];
+    return matches.map((match) => match[1]);
+  }
+
+  function getXpathID(xpath) {
+    const match = xpath.match(/@id=['"]([^'"]+)['"]/);
+    return match ? match[1] : null;
+  }
+
+  const baseSpecs = findAllByTagName("base-sfr-spec", domNode);
+  const results = [];
+  let selectableGroupCounter = 0;
+  const familyUUIDMap = new Map();
+
+  for (const spec of baseSpecs) {
+    let cc_id = spec.getAttribute("cc-id")?.toUpperCase() || "";
+    const title = spec.getAttribute("title") || "";
+    const xml_id = spec.getAttribute("id") || "";
+    const iteration_id = spec.getAttribute("iteration") || "";
+    if (iteration_id.length != 0) {
+      cc_id += `/${iteration_id}`;
+    }
+    // Get section info
+    let sectionTitle = "";
+    let sectionID = "";
+    let sectionDescription = "";
+
+    let parent = spec.parentNode;
+    while (parent) {
+      if (parent.tagName?.toLowerCase() === "section") {
+        sectionTitle = parent.getAttribute("title") || "";
+        sectionID = parent.getAttribute("id") || "";
+        // Build Map of id -> UUID
+        if (!familyUUIDMap.has(sectionID)) {
+          familyUUIDMap.set(sectionID, uuidv4());
+        }
+        sectionDescription = parseRichTextChildren(parent);
+        break;
+      }
+      parent = parent.parentNode;
+    }
+
+    let status = null;
+    let rationale = "";
+    let description = "";
+    let sfrContent = [];
+    let allSelectables = {};
+    let selectableGroups = {};
+    let selectable_id = 0;
+    let f_element_id = null;
+    let xPathDetails = {};
+
+    for (const child of spec.childNodes) {
+      if (child.nodeType !== Node.ELEMENT_NODE) continue;
+
+      const tag = child.tagName?.toLowerCase();
+
+      if (tag === "set-status") {
+        status = child.getAttribute("status") || null;
+      } else if (tag === "consistency-rationale") {
+        rationale = parseRichTextChildren(child);
+      } else if (tag === "description") {
+        description = parseRichTextChildren(child);
+      } else if (tag === "replace") {
+        // Look for <xpath-specified> -> <title> in children
+        let titleNode = null;
+
+        for (const replaceChild of child.childNodes) {
+          if (replaceChild.nodeType === Node.ELEMENT_NODE && replaceChild.tagName?.toLowerCase() === "xpath-specified") {
+            const xpath = replaceChild.getAttribute("xpath") || "";
+
+            xPathDetails = {
+              [tag]: {
+                xpath,
+                xPathContent: "", // populated on export
+              },
+            };
+
+            const xPathTargetTags = getCcTags(xpath);
+            // Only care about f-element title tag replacements right now
+            if (xPathTargetTags.length !== 2 || !(xPathTargetTags.includes("f-element") && xPathTargetTags.includes("title"))) {
+              break;
+            }
+
+            const xpathAttr = replaceChild.getAttribute("xpath");
+            if (xpathAttr) {
+              f_element_id = getXpathID(xpathAttr);
+            }
+
+            for (const xpathChild of replaceChild.childNodes) {
+              if (xpathChild.nodeType === Node.ELEMENT_NODE && xpathChild.tagName?.toLowerCase() === "title") {
+                titleNode = xpathChild;
+                break;
+              }
+            }
+          }
+          if (titleNode) break;
+        }
+
+        if (titleNode) {
+          for (const node of titleNode.childNodes) {
+            if (node.nodeType === Node.ELEMENT_NODE) {
+              const innerTag = node.tagName.toLowerCase();
+
+              if (innerTag === "selectables") {
+                const result = processSelectables(node, selectable_id, selectableGroupCounter, spec, cc_id);
+                selectable_id = result.selectable_id;
+                selectableGroupCounter = result.lastGroupCounter;
+                Object.assign(allSelectables, result.allSelectables);
+                selectableGroups = checkNestedGroups(result.group, selectableGroups);
+                sfrContent.push({ selections: result.group.id });
+              } else if (innerTag === "assignable") {
+                const uuid = uuidv4();
+                const id = node.getAttribute("id") || `${cc_id}_${++selectable_id}`;
+                allSelectables[uuid] = {
+                  id: id,
+                  leadingText: "",
+                  description: removeWhitespace(node.textContent),
+                  trailingText: "",
+                  assignment: true,
+                  exclusive: false,
+                  notSelectable: false,
+                };
+                sfrContent.push({ assignment: uuid });
+              } else if (style_tags.includes(node.localName) || ["refinement", "b"].includes(node.localName)) {
+                const tagName = node.localName === "refinement" ? "b" : node.localName;
+                const selectableMeta = {
+                  selectable_id,
+                  selectableGroupCounter,
+                  allSelectables,
+                  selectableGroups,
+                  component: spec,
+                  elementName: cc_id,
+                  is_content_pushed: false,
+                };
+                const content = parseRichTextChildren(node, `<${tagName}>`, sfrContent, selectableMeta);
+                selectable_id = selectableMeta.selectable_id;
+                selectableGroupCounter = selectableMeta.selectableGroupCounter;
+                allSelectables = selectableMeta.allSelectables;
+                selectableGroups = selectableMeta.selectableGroups;
+
+                if (!selectableMeta.is_content_pushed || content.length !== 0) {
+                  const last = sfrContent.slice(-1)[0];
+                  if (last && (last.text || last.description)) {
+                    const previous = last.text || last.description;
+                    sfrContent.pop();
+                    sfrContent.push({ description: `${previous} ${removeWhitespace(content)}</${tagName}>` });
+                  } else {
+                    sfrContent.push({ description: `${removeWhitespace(content)}</${tagName}>` });
+                  }
+                } else {
+                  sfrContent.push({ description: `</${tagName}>` });
+                }
+              } else if (raw_xml_tags.includes(node.localName)) {
+                sfrContent.push({ description: ` ${escapeXmlTags(getNodeContent(node))}` });
+              }
+            } else if (node.nodeType === Node.TEXT_NODE) {
+              const text = removeWhitespace(escapeLTSign(node.textContent));
+              const last = sfrContent.slice(-1)[0];
+              if (last && last.description) {
+                const previous = last.description;
+                sfrContent.pop();
+                sfrContent.push({ description: `${previous} ${text}` });
+              } else {
+                sfrContent.push({ text });
+              }
+            }
+          }
+        }
+      } else if (tag === "insert-after" || tag === "insert-before") {
+        const xpathNode = Array.from(child.childNodes).find((c) => c.nodeType === Node.ELEMENT_NODE && c.tagName?.toLowerCase() === "xpath-specified");
+
+        if (xpathNode) {
+          const xpath = xpathNode.getAttribute("xpath") || "";
+          const xPathContent = getNodeContentWithTags(xpathNode);
+          const xPathTargetTags = getCcTags(xpath);
+
+          // Only care about management function status marker additions right now
+          if (xPathTargetTags.length !== 2 || !(xPathTargetTags.includes("management-function") && xPathTargetTags.includes("text"))) {
+            break;
+          }
+
+          xPathDetails = {
+            [tag]: {
+              xpath,
+              xPathContent,
+            },
+          };
+        }
+      }
+    }
+
+    // Find the pre-existing component from the base PP
+    let matchedComponent = null;
+    if (shortName && cc_id) {
+      const sfrData = dataMap?.[shortName.toLowerCase()];
+      if (sfrData) {
+        const matchKey = Object.keys(sfrData).find((k) => k.toLowerCase().includes(cc_id.toLowerCase()));
+        if (matchKey) {
+          matchedComponent = deepCopy(sfrData[matchKey]);
+          matchedComponent.modifiedSfr = true;
+          matchedComponent.definition = description;
+          matchedComponent.xml_id = xml_id;
+          matchedComponent.consistencyRationale = rationale;
+          matchedComponent.xPathDetails = xPathDetails;
+          matchedComponent.title = title; // setting title here as it has been seen that original base PP title has differed from the one in the module
+        }
+      }
+    }
+
+    if (matchedComponent) {
+      const matchingElementUUID = Object.keys(matchedComponent.elements).find((uuid) => matchedComponent.elements[uuid].elementXMLID === f_element_id);
+
+      if (matchingElementUUID) {
+        const originalElement = matchedComponent.elements[matchingElementUUID];
+
+        matchedComponent.elements[matchingElementUUID] = {
+          ...originalElement,
+          title: sfrContent,
+          elementXMLID: f_element_id,
+          open: true,
+          selectables: allSelectables,
+          selectableGroups: selectableGroups,
+        };
+      } else {
+        // likely an insert-before/after which may not have an f-element id
+        function findManagementFunctionByID(component, targetId) {
+          const elements = component?.elements || {};
+
+          for (const elementUUID in elements) {
+            const element = elements[elementUUID];
+
+            const rows = element?.managementFunctions?.rows || [];
+            const matchedRow = rows.find((row) => row.id === targetId);
+
+            if (matchedRow) {
+              return matchedRow;
+            }
+          }
+
+          return null;
+        }
+
+        const modifiedType = Object.keys(xPathDetails)[0];
+        const managementFunction = findManagementFunctionByID(matchedComponent, getXpathID(xPathDetails[modifiedType].xpath));
+
+        // Parse MF update from string into XML node
+        const rawXML = `<root>${xPathDetails[modifiedType].xPathContent}</root>`; // wrap in <root> for valid XML
+        const parser = new DOMParser();
+        const xmlDoc = parser.parseFromString(rawXML, "application/xml");
+        const newNodes = Array.from(xmlDoc.documentElement.childNodes);
+
+        // Update the status marker
+        newNodes
+          .filter((n) => n.nodeType === Node.ELEMENT_NODE)
+          .forEach((el) => {
+            const newStatus = el.tagName;
+            const refKey = el.getAttribute("ref");
+
+            if (["I", "U", "A", "AO"].includes(refKey)) {
+              if (managementFunction.hasOwnProperty(refKey)) {
+                managementFunction[refKey] = newStatus;
+              }
+            }
+          });
+      }
+    }
+
+    results.push({
+      familyUUIDMap,
+      title,
+      status,
+      description: sectionDescription,
+      matchedComponent,
+      sectionTitle,
+      sectionID,
+    });
+  }
+
+  return results;
+};
+
+/**
  * Parse the Security Functional Requirements section
  * @param {Node} domNode
  * @returns {Array<Object>} Array of SFR Components
  */
-export const getSFRs = (domNode, extCompDefMap) => {
+export const getSFRs = (domNode, extCompDefMap, platformObject) => {
   const sfrComponents = findAllByTagName("f-component", domNode);
   let selectableGroupCounter = 0;
 
   // Platforms (if exists)
-  const platformObject = getPlatforms(domNode).platformObj;
-  const platformMap = platformObject.platformMap;
+  const platformMap = platformObject?.platformObj?.platformMap;
 
   // Implement sections (if exists)
   const implementObject = getImplementations(domNode);
 
   if (sfrComponents.length !== 0) {
     let sfrCompArr = new Array();
+    let prevFamilyID = "";
+    let familyUUID = uuidv4();
 
     // Management function status marker definiion
     const statusMarkers = {
@@ -1707,6 +2437,17 @@ export const getSFRs = (domNode, extCompDefMap) => {
     for (let component of sfrComponents) {
       const xml_id = component.getAttribute("id") ? component.getAttribute("id") : "";
 
+      const validSfrTypes = {
+        "man-sfrs": "mandatory",
+        "opt-sfrs": "optional",
+        "sel-sfrs": "selectionBased",
+        "obj-sfrs": "objective",
+        "impl-dep-sfrs": "implementationDependent",
+      };
+      const sfrType = Object.keys(validSfrTypes).includes(component?.parentNode?.parentNode?.localName)
+        ? validSfrTypes[component.parentNode.parentNode.localName]
+        : null;
+
       // need to genereate UUID here as opposed to at time of component creation in sfrSection slice since component level EA needs reference
       // to UUID in order to reference it in the state
       let sfrCompUUID = uuidv4();
@@ -1715,8 +2456,12 @@ export const getSFRs = (domNode, extCompDefMap) => {
       let family_description = "";
       let familyExtCompDef = [];
       let evaluationActivities = {};
+      let classDescription = "";
       // Selection dependency related
       let isSelBased = component.getAttribute("status") ? (component.getAttribute("status") == "sel-based" ? true : false) : false;
+      if (sfrType && sfrType === "selectionBased") {
+        isSelBased = true;
+      }
       let selections = {
         components: [],
         elements: [],
@@ -1727,6 +2472,14 @@ export const getSFRs = (domNode, extCompDefMap) => {
       let use_cases = [];
 
       let isOptional = component.getAttribute("status") ? (component.getAttribute("status") == "optional" ? true : false) : false;
+      if (sfrType && sfrType === "optional") {
+        isOptional = true;
+      }
+
+      let isObjective = component.getAttribute("status") ? (component.getAttribute("status") == "objective" ? true : false) : false;
+      if (sfrType && sfrType === "objective") {
+        isObjective = true;
+      }
 
       let extendedComponentDefinition = {
         audit: "",
@@ -1739,10 +2492,21 @@ export const getSFRs = (domNode, extCompDefMap) => {
       const isInvisible = component.getAttribute("status") ? (component.getAttribute("status") == "invisible" ? true : false) : false;
 
       let implementationDependent = component.getAttribute("status") ? (component.getAttribute("status") === "feat-based" ? true : false) : false;
+      if (sfrType && sfrType === "implementationDependent") {
+        implementationDependent = true;
+      }
       const reasons = [];
 
       // SFR Class description may just be text in between section header and <f-component> definition
       family_description = parseRichTextChildren(component.parentElement);
+
+      if (family_description.length == 0) {
+        // check <class-description>
+        const class_description_section = findAllByTagName("class-description", component.parentElement);
+        if (class_description_section.length !== 0) {
+          classDescription = parseRichTextChildren(class_description_section[0]);
+        }
+      }
 
       if (component.nodeType == Node.ELEMENT_NODE && component.tagName == "f-component") {
         // Description is in template, not necessarily exists in other PPs
@@ -1751,6 +2515,12 @@ export const getSFRs = (domNode, extCompDefMap) => {
           sfrDescription = sfrDescription[0].textContent;
         } else {
           sfrDescription = "";
+        }
+
+        let consistencyRationale = "";
+        const consistency_rationale_section = findAllByTagName("consistency-rationale", component);
+        if (consistency_rationale_section.length !== 0) {
+          consistencyRationale = parseRichTextChildren(consistency_rationale_section[0]);
         }
 
         // Extended Component Definition
@@ -1766,7 +2536,7 @@ export const getSFRs = (domNode, extCompDefMap) => {
         }
         const ecd_audit = findAllByTagName("audit", component);
         if (ecd_audit.length !== 0) {
-          extendedComponentDefinition.audit += parseRichTextChildren(ecd_audit[0]);
+          extendedComponentDefinition.audit += getNodeContentWithTags(ecd_audit[0]);
           extendedComponentDefinition.toggle = true;
         }
         const ecd_dependencies = findAllByTagName("dependencies", component);
@@ -1778,7 +2548,7 @@ export const getSFRs = (domNode, extCompDefMap) => {
         // Get selection enabling id
         if (isSelBased) {
           // Find all dependencies (attributes in xml are totally inconsistent)
-          const dependsAttributes = ["on", "and", "on-se1", "on1", "on2", "on3", "on4", "on5", "on-sel", "also", "on-incl", "on-use", "on-uc"];
+          const dependsAttributes = ["on", "and", "on-se1", "on1", "on2", "on3", "on4", "on5", "on-sel", "also", "on-incl", "on-use", "on-uc", "on-fcomp"];
           let depends = findAllByTagName("depends", component);
 
           if (depends.length !== 0) {
@@ -1789,7 +2559,7 @@ export const getSFRs = (domNode, extCompDefMap) => {
                     // Check if use case dependent
                     useCaseBased = true;
                     use_cases.push(depend.getAttribute(attributeName));
-                  } else if (attributeName.toLowerCase().includes("on-incl")) {
+                  } else if (attributeName.toLowerCase().includes("on-incl") || attributeName.toLowerCase().includes("on-fcomp")) {
                     // Check if component dependent
                     selections.components.push(depend.getAttribute(attributeName));
                   } else {
@@ -1857,6 +2627,12 @@ export const getSFRs = (domNode, extCompDefMap) => {
           familyExtCompDef = extCompDefMap.has(family_id) ? extCompDefMap.get(family_id) : [];
         }
 
+        if (family_id != prevFamilyID) {
+          familyUUID = uuidv4();
+        }
+
+        prevFamilyID = family_id;
+
         const sfrElements = findAllByTagName("f-element", component);
         let allSFRElements = {}; // contains multiple sfrElement's
 
@@ -1875,7 +2651,7 @@ export const getSFRs = (domNode, extCompDefMap) => {
           let sfrElemUUID = uuidv4();
           let isManagementFunction = false;
 
-          // Dynamincally create element name (XML has random id's)
+          // Dynamically create element name (XML has random id's)
           let elementName = `${component.getAttribute("cc-id")}.${++elem_counter}${iteration_id}`; // eg. fcs_ckm.1.1
           // XMLID is used for looking up UUID; generate one if there is none - transforms doesn't accept "." in the id
           let elementXMLID = element.getAttribute("id") ? element.getAttribute("id") : elementName.replaceAll(".", "-");
@@ -2034,9 +2810,11 @@ export const getSFRs = (domNode, extCompDefMap) => {
                         }
 
                         sfrContent.pop(); // remove entry
-                        sfrContent.push({ description: `${previousText} ${removeWhitespace(content)}</${tagName}>` });
+                        // sfrContent.push({ description: `${previousText} ${removeWhitespace(content)}</${tagName}>` });
+                        sfrContent.push({ description: `${previousText}${content}</${tagName}>` });
                       } else {
-                        sfrContent.push({ description: `${removeWhitespace(content)}</${tagName}>` });
+                        // sfrContent.push({ description: `${removeWhitespace(content)}</${tagName}>` });
+                        sfrContent.push({ description: `${content}</${tagName}>` });
                       }
                     } else {
                       sfrContent.push({ description: `</${tagName}>` });
@@ -2224,15 +3002,16 @@ export const getSFRs = (domNode, extCompDefMap) => {
               case Node.TEXT_NODE: {
                 // Check if previous entry is a rich text entry, so you can concatenate
                 const lastElement = sfrContent.slice(-1)[0];
-                const text = removeWhitespace(escapeLTSign(child.textContent));
+                const text = escapeLTSign(child.textContent);
 
                 if (lastElement && lastElement.hasOwnProperty("description")) {
                   let previousText = lastElement["description"];
                   sfrContent.pop(); // remove entry
+
                   // append as an RTE
-                  sfrContent.push({ description: `${previousText}  ${text}` });
+                  sfrContent.push({ description: `${previousText}${text}` });
                 } else {
-                  sfrContent.push({ text: text }); // simple text, remove whitespace
+                  sfrContent.push({ text: text }); // simple text
                 }
 
                 break;
@@ -2286,7 +3065,7 @@ export const getSFRs = (domNode, extCompDefMap) => {
 
               activity.childNodes.forEach((c) => {
                 if (c.nodeType == Node.TEXT_NODE) {
-                  eA.introduction = parseRichTextChildren(activity);
+                  eA.introduction += parseRichTextChildren(activity);
                 } else if (c.nodeType == Node.ELEMENT_NODE) {
                   const aactivityChildTag = c.tagName.toLowerCase();
 
@@ -2304,7 +3083,7 @@ export const getSFRs = (domNode, extCompDefMap) => {
                     eA.noTest = parseRichTextChildren(c);
                     eA.isNoTest = true;
                   } else {
-                    eA.introduction = parseRichTextChildren(c); // likely rich text
+                    eA.introduction += parseRichTextChildren(c); // likely rich text
                   }
                 }
               });
@@ -2327,13 +3106,16 @@ export const getSFRs = (domNode, extCompDefMap) => {
         const auditSections = findAllByTagName("audit-event", component);
 
         if (auditSections.length !== 0) {
-          auditSections.forEach((auditSection) => {
+          for (const auditSection of auditSections) {
             const auditUUID = uuidv4();
             let auditMeta = {};
             let auditOptional = false;
             let audit_items = [];
 
-            if (auditSection.getAttribute("type") && auditSection.getAttribute("type").toLowerCase() == "optional") {
+            if (
+              auditSection.getAttribute("type") &&
+              (auditSection.getAttribute("type").toLowerCase() == "optional" || auditSection.getAttribute("table").toLowerCase() == "optional")
+            ) {
               auditOptional = true;
             }
 
@@ -2393,7 +3175,7 @@ export const getSFRs = (domNode, extCompDefMap) => {
             auditMeta["items"] = audit_items;
             auditMeta["optional"] = auditOptional;
             audit[auditUUID] = auditMeta;
-          });
+          }
         } // End of audit sections parsing
 
         sfrCompArr.push({
@@ -2406,21 +3188,26 @@ export const getSFRs = (domNode, extCompDefMap) => {
           familyDescription: family_description,
           familyExtCompDef: familyExtCompDef,
           optional: isOptional,
-          objective: component.getAttribute("status") ? (component.getAttribute("status") == "objective" ? true : false) : false,
+          objective: isObjective,
           selectionBased: isSelBased,
           family_name: family_name ? family_name : "",
           family_id: family_id ? family_id : "",
+          familyUUID,
           elements: allSFRElements,
           evaluationActivities: evaluationActivities,
           auditEvents: audit,
           selections: selections,
           extendedComponentDefinition: extendedComponentDefinition,
+          consistencyRationale,
           tableOpen: false,
           implementationDependent: implementationDependent,
           useCaseBased: useCaseBased,
           useCases: use_cases,
           invisible: isInvisible,
           reasons: reasons,
+          sfrType: sfrType,
+          notNew: component.getAttribute("notnew"),
+          classDescription,
         });
       }
     }
@@ -2503,13 +3290,6 @@ export const getSectionExtendedComponentDefinitionMap = (domNode) => {
  */
 function parseManagementFunction(parent, selectableMeta, contents = "", rowDef = {}) {
   parent.childNodes.forEach((c) => {
-    const lastChar = contents.trim().slice(-1);
-    const nextChar = c.nextSibling?.textContent?.trim()?.charAt(0) || "";
-
-    // Configure spacing
-    const leadingSpace = lastChar && /[a-zA-Z0-9,]/.test(lastChar); // Add space before only if previous character is word-like (alphanumeric) or comma (AKA this is mid sentence)
-    const trailingSpace = nextChar && /[a-zA-Z0-9]/.test(nextChar); // Add space if it's a word-like character
-
     if (c.nodeType == Node.TEXT_NODE) {
       contents += removeWhitespace(escapeLTSign(c.textContent));
     } else if (c.nodeType == Node.ELEMENT_NODE) {
@@ -2517,21 +3297,36 @@ function parseManagementFunction(parent, selectableMeta, contents = "", rowDef =
         // TODO: Need to figure out how to convert these tags back to refinement on export
         const innerContent = parseManagementFunction(c, selectableMeta, contents, rowDef);
         const fullTagContent = `<b${getNodeAttributes(c)}>${innerContent}</b>`;
-        contents += updateContents(leadingSpace, fullTagContent, trailingSpace);
+        contents += fullTagContent;
       } else if (c.localName.toLowerCase() == "a") {
         const href = c.getAttribute("href");
         const fullTagContent = href ? `<a href="${href}">${c.textContent}</a>` : ` <a>${c.textContent}</a>`;
-        contents += updateContents(leadingSpace, fullTagContent, trailingSpace);
+        contents += fullTagContent;
       } else if (raw_xml_tags.includes(c.localName.toLowerCase())) {
         // For snip tag, omit the tag and just store text, else pull in raw xml
         const textContent = c.localName.toLowerCase() === "snip" ? c.textContent : escapeXmlTags(getNodeContent(c));
-        contents += updateContents(leadingSpace, textContent, trailingSpace);
+        contents += textContent;
       } else if (c.localName.toLowerCase() == "br") {
         contents += "<br/>";
       } else if (style_tags.includes(c.localName.toLowerCase())) {
         const innerContent = parseManagementFunction(c, selectableMeta, contents, rowDef);
-        const fullTagContent = `<${c.localName}${getNodeAttributes(c)}>${innerContent}</${c.localName}>`;
-        contents += updateContents(leadingSpace, fullTagContent, trailingSpace);
+        let fullTagContent = `<${c.localName}${getNodeAttributes(c)}>${innerContent}</${c.localName}>`;
+
+        // Include a space if the last character isn't whitespace and next node is inline;
+        // this is for sibling tags that are both rich text
+        const nextElement = c.nextSibling;
+        const needsTrailingSpace =
+          fullTagContent &&
+          !/\s$/.test(fullTagContent) && // checks whether the string does not end in whitespace
+          nextElement &&
+          nextElement.nodeType === Node.ELEMENT_NODE &&
+          style_tags.includes(nextElement.localName?.toLowerCase());
+
+        if (needsTrailingSpace) {
+          fullTagContent += " ";
+        }
+
+        contents += fullTagContent;
       } else if (c.tagName == "selectables") {
         const result = processSelectables(
           c,
@@ -2606,36 +3401,44 @@ function parseRichTextChildren(parent, contents = "", sfrContent = [], selectabl
   selectableMeta.is_content_pushed = false;
 
   parent.childNodes.forEach((c) => {
-    const lastChar = contents.trim().slice(-1);
-    const nextChar = c.nextSibling?.textContent?.trim()?.charAt(0) || "";
-
-    // Configure spacing
-    const leadingSpace = lastChar && /[a-zA-Z0-9,]/.test(lastChar); // Add space before only if previous character is word-like (alphanumeric) or comma (AKA this is mid sentence)
-    const trailingSpace = nextChar && /[a-zA-Z0-9]/.test(nextChar); // Add space if it's a word-like character
-
     if (c.nodeType == Node.TEXT_NODE) {
       // Escape '<' signs, and pad with surrounding whitespace so that it is not converted to < on export, as transforms will complain since it appears like an unclosed tag
-      contents += removeWhitespace(escapeLTSign(c.textContent));
+      contents += escapeLTSign(c.textContent);
     } else if (c.nodeType == Node.ELEMENT_NODE) {
       if (c.localName.toLowerCase() == "refinement") {
         // TODO: Need to figure out how to convert these tags back to refinement on export
         const innerContent = parseRichTextChildren(c, "", sfrContent, selectableMeta);
         const fullTagContent = `<b${getNodeAttributes(c)}>${innerContent}</b>`;
-        contents += updateContents(leadingSpace, fullTagContent, trailingSpace);
+        contents += fullTagContent;
       } else if (c.localName.toLowerCase() == "a") {
         const href = c.getAttribute("href");
         const fullTagContent = href ? `<a href="${href}">${c.textContent}</a>` : ` <a>${c.textContent}</a>`;
-        contents += updateContents(leadingSpace, fullTagContent, trailingSpace);
+        contents += fullTagContent;
       } else if (raw_xml_tags.includes(c.localName.toLowerCase())) {
         // For snip tag, omit the tag and just store text, else pull in raw xml
         const textContent = c.localName.toLowerCase() === "snip" ? c.textContent : escapeXmlTags(getNodeContent(c));
-        contents += updateContents(leadingSpace, textContent, trailingSpace);
+        contents += textContent;
       } else if (c.localName.toLowerCase() == "br") {
         contents += "<br/>";
       } else if (style_tags.includes(c.localName.toLowerCase()) || c.localName.toLowerCase() == "tr" || c.localName.toLowerCase() == "td") {
         const innerContent = parseRichTextChildren(c, "", sfrContent, selectableMeta);
-        const fullTagContent = `<${c.localName}${getNodeAttributes(c)}>${innerContent}</${c.localName}>`;
-        contents += updateContents(leadingSpace, fullTagContent, trailingSpace);
+        let fullTagContent = `<${c.localName}${getNodeAttributes(c)}>${innerContent}</${c.localName}>`;
+
+        // Include a space if the last character isn't whitespace and next node is inline;
+        // this is for sibling tags that are both rich text
+        const nextElement = c.nextSibling;
+        const needsTrailingSpace =
+          fullTagContent &&
+          !/\s$/.test(fullTagContent) && // checks whether the string does not end in whitespace
+          nextElement &&
+          nextElement.nodeType === Node.ELEMENT_NODE &&
+          style_tags.includes(nextElement.localName?.toLowerCase());
+
+        if (needsTrailingSpace) {
+          fullTagContent += " ";
+        }
+
+        contents += fullTagContent;
       } else if (c.localName.toLowerCase() == "div") {
         if (!hasAncestorTag(c, "tests")) {
           // pull in raw xml for div taqg (normally has been seen to be platform dependencies in other sections - outside of Tests)
@@ -2664,7 +3467,7 @@ function parseRichTextChildren(parent, contents = "", sfrContent = [], selectabl
           }
 
           sfrContent.pop(); // remove entry
-          sfrContent.push({ description: `${previousText}  ${removeWhitespace(contents)}` });
+          sfrContent.push({ description: `${previousText} ${removeWhitespace(contents)}` });
         } else {
           sfrContent.push({ description: removeWhitespace(contents) });
         }
@@ -2721,7 +3524,8 @@ function parseRichTextChildren(parent, contents = "", sfrContent = [], selectabl
           }
 
           sfrContent.pop(); // remove entry
-          sfrContent.push({ description: `${previousText}  ${removeWhitespace(contents)}` });
+          // sfrContent.push({ description: `${previousText}  ${removeWhitespace(contents)}` });
+          sfrContent.push({ description: `${previousText}${contents ? " " + removeWhitespace(contents) : ""}` });
         } else {
           sfrContent.push({ description: removeWhitespace(contents) });
         }
@@ -2830,7 +3634,11 @@ function parseTests(testsNode, eA) {
 
         node.childNodes.forEach((divChild) => {
           if (divChild.nodeType === Node.ELEMENT_NODE && divChild.tagName.toLowerCase() === "depends") {
-            test.dependencies.push(eA.platformMap[divChild.getAttribute("ref")] || divChild.getAttribute("on") || "");
+            if (eA?.platformMap) {
+              test.dependencies.push(eA.platformMap?.[divChild.getAttribute("ref")]);
+            } else {
+              test.dependencies.push(divChild.getAttribute("on") || "");
+            }
           }
         });
 
@@ -2876,8 +3684,8 @@ function parseTests(testsNode, eA) {
     }
   }
 
-  eA.testIntroduction = testIntro.join("");
-  eA.testClosing = testClosing.join("");
+  eA.testIntroduction = testIntro.join("").replace(/<br><\/br>/g, "<br/>");
+  eA.testClosing = testClosing.join("").replace(/<br><\/br>/g, "<br/>");
 }
 
 /**
@@ -2930,7 +3738,11 @@ function parseTestList(eA, testListFromNode, parentTestUUID = null) {
               const nestedUUID = parseTestList(eA, grandchild, testUUID);
               test.nestedTestListUUIDs = nestedUUID ? [nestedUUID] : [];
             } else if (gTag === "depends") {
-              test.dependencies.push(eA.platformMap[grandchild.getAttribute("ref")] || grandchild.getAttribute("on") || "");
+              if (eA?.platformMap) {
+                test.dependencies.push(eA.platformMap?.[grandchild.getAttribute("ref")]);
+              } else {
+                test.dependencies.push(grandchild.getAttribute("on") || "");
+              }
             }
           }
         });
@@ -3190,7 +4002,8 @@ function processSelectables(node, selectable_id, selectableGroupCounter, compone
   function parseChildren(selectable_node, context) {
     selectable_node.childNodes.forEach((childNode) => {
       if (childNode.nodeType == Node.TEXT_NODE) {
-        context.contents += removeWhitespace(escapeLTSign(childNode.textContent));
+        // context.contents += removeWhitespace(escapeLTSign(childNode.textContent));
+        context.contents += escapeLTSign(childNode.textContent);
       } else if (childNode.nodeType == Node.ELEMENT_NODE) {
         if (childNode.tagName.toLowerCase() == "selectables") {
           // Handle initial text for description or subsequent text as a separate group
@@ -3219,14 +4032,19 @@ function processSelectables(node, selectable_id, selectableGroupCounter, compone
           }
           context.contents = ""; // Reset the contents buffer
 
-          const assignableContent = removeWhitespace(getDirectTextContent(childNode));
-          context.nestedGroups.push({ type: "assignable", uuid: uuidv4(), content: assignableContent, id: `${elementName}_${++selectable_id}` });
+          const assignableContent = getDirectTextContent(childNode);
+          context.nestedGroups.push({
+            type: "assignable",
+            uuid: uuidv4(),
+            content: assignableContent,
+            id: `${elementName}_${++selectable_id}`,
+          });
         } else {
-          if (["b", "refinement"].includes(childNode.localName.toLowerCase())) {
+          if (childNode.localName.toLowerCase() === "refinement") {
             context.contents += "<b>";
             parseChildren(childNode, context);
             context.contents += "</b>";
-          } else if (["ul", "i", "li"].includes(childNode.localName.toLowerCase())) {
+          } else if (style_tags.includes(childNode.localName.toLowerCase())) {
             context.contents += `<${childNode.localName}>`;
             parseChildren(childNode, context);
             context.contents += `</${childNode.localName}>`;
@@ -3507,37 +4325,34 @@ function parseTabularize(selectablesNode, selectable_id, selectableGroupCounter,
  *   }>
  * }}
  */
-export const getBibliography = (domNode) => {
+export const getBibliography = (bibliographySection) => {
   let bibObj = {
     entries: [],
   };
 
-  if (findAllByTagName("bibliography", domNode).length !== 0) {
-    // Iterate through children
-    findAllByTagName("bibliography", domNode)[0].childNodes.forEach((child) => {
-      if (child.nodeType == Node.ELEMENT_NODE) {
-        if (child.nodeName.toLowerCase() == "cc-entry") {
-          // TODO: not sure what cc-entry tag structure is at the moment
-        } else if (child.nodeName.toLowerCase() == "entry") {
-          let entry = {};
-          entry["id"] = child.id;
+  bibliographySection.childNodes.forEach((child) => {
+    if (child.nodeType == Node.ELEMENT_NODE) {
+      if (child.nodeName.toLowerCase() == "cc-entry") {
+        // TODO: not sure what cc-entry tag structure is at the moment
+      } else if (child.nodeName.toLowerCase() == "entry") {
+        let entry = {};
+        entry["id"] = child.id;
 
-          // Iterate through entry
-          child.childNodes.forEach((entryChild) => {
-            if (entryChild.nodeType == Node.ELEMENT_NODE) {
-              if (entryChild.nodeName == "tag") {
-                entry["tag"] = entryChild.textContent;
-              } else if (entryChild.nodeName == "description") {
-                entry["description"] = parseRichTextChildren(entryChild);
-              }
+        // Iterate through entry
+        child.childNodes.forEach((entryChild) => {
+          if (entryChild.nodeType == Node.ELEMENT_NODE) {
+            if (entryChild.nodeName == "tag") {
+              entry["tag"] = entryChild.textContent;
+            } else if (entryChild.nodeName == "description") {
+              entry["description"] = parseRichTextChildren(entryChild);
             }
-          });
+          }
+        });
 
-          bibObj.entries.push(entry);
-        }
+        bibObj.entries.push(entry);
       }
-    });
-  }
+    }
+  });
 
   return bibObj;
 };
@@ -3553,20 +4368,11 @@ export const getBibliography = (domNode) => {
  *   }
  * }}
  */
-export const getEntropyAppendix = (domNode) => {
-  let entropyAppendix = null;
+export const getEntropyAppendix = (entropyAppendix) => {
   let xmlTagMeta = {
     tagName: "appendix",
     attributes: {},
   };
-
-  if (findAllByAttribute("title", "Entropy Documentation and Assessment", domNode).length !== 0) {
-    entropyAppendix = findAllByAttribute("title", "Entropy Documentation and Assessment", domNode)[0];
-  }
-
-  if (findAllByAttribute("id", "entropy", domNode).length !== 0) {
-    entropyAppendix = findAllByAttribute("id", "entropy", domNode)[0];
-  }
 
   // Set the attributes
   if (entropyAppendix) {
@@ -3591,24 +4397,11 @@ export const getEntropyAppendix = (domNode) => {
  *   }
  * }}
  */
-export const getEquivGuidelinesAppendix = (domNode) => {
-  let guidelinesAppendix = null;
+export const getEquivGuidelinesAppendix = (guidelinesAppendix) => {
   let xmlTagMeta = {
     tagName: "appendix",
     attributes: {},
   };
-
-  if (findAllByAttribute("title", "Equivalency Guidelines", domNode).length !== 0) {
-    guidelinesAppendix = findAllByAttribute("title", "Equivalency Guidelines", domNode)[0];
-  }
-
-  if (findAllByAttribute("title", "Application Software Equivalency Guidelines", domNode).length !== 0) {
-    guidelinesAppendix = findAllByAttribute("title", "Application Software Equivalency Guidelines", domNode)[0];
-  }
-
-  if (findAllByAttribute("id", "equiv", domNode).length !== 0) {
-    guidelinesAppendix = findAllByAttribute("id", "equiv", domNode)[0];
-  }
 
   // Set the attributes
   if (guidelinesAppendix) {
@@ -3633,20 +4426,11 @@ export const getEquivGuidelinesAppendix = (domNode) => {
  *   }
  * }}
  */
-export const getSatisfiedReqsAppendix = (domNode) => {
-  let satisfiedReqsAppendix = null;
+export const getSatisfiedReqsAppendix = (satisfiedReqsAppendix) => {
   let xmlTagMeta = {
     tagName: "appendix",
     attributes: {},
   };
-
-  if (findAllByAttribute("title", "Implicitly Satisfied Requirements", domNode).length !== 0) {
-    satisfiedReqsAppendix = findAllByAttribute("title", "Implicitly Satisfied Requirements", domNode)[0];
-  }
-
-  if (findAllByAttribute("id", "satisfiedreqs", domNode).length !== 0) {
-    satisfiedReqsAppendix = findAllByAttribute("id", "satisfiedreqs", domNode)[0];
-  }
 
   // Set the attributes
   if (satisfiedReqsAppendix) {
@@ -3671,16 +4455,11 @@ export const getSatisfiedReqsAppendix = (domNode) => {
  *   }
  * }}
  */
-export const getValidationGuidelinesAppendix = (domNode) => {
-  let valGuideAppendix = null;
+export const getValidationGuidelinesAppendix = (valGuideAppendix) => {
   let xmlTagMeta = {
     tagName: "appendix",
     attributes: {},
   };
-
-  if (findAllByAttribute("title", "Validation Guidelines", domNode).length !== 0) {
-    valGuideAppendix = findAllByAttribute("title", "Validation Guidelines", domNode)[0];
-  }
 
   // Set the attributes
   if (valGuideAppendix) {
@@ -3705,16 +4484,11 @@ export const getValidationGuidelinesAppendix = (domNode) => {
  *   }
  * }}
  */
-export const getVectorAppendix = (domNode) => {
-  let vectorReqsAppendix = null;
+export const getVectorAppendix = (vectorReqsAppendix) => {
   let xmlTagMeta = {
     tagName: "appendix",
     attributes: {},
   };
-
-  if (findAllByAttribute("title", "Initialization Vector Requirements for NIST-Approved Cipher Modes", domNode).length !== 0) {
-    vectorReqsAppendix = findAllByAttribute("title", "Initialization Vector Requirements for NIST-Approved Cipher Modes", domNode)[0];
-  }
 
   // Set the attributes
   if (vectorReqsAppendix) {
@@ -3739,16 +4513,11 @@ export const getVectorAppendix = (domNode) => {
  *   }
  * }}
  */
-export const getAcknowledgementsAppendix = (domNode) => {
-  let acknowledgementsReqsAppendix = null;
+export const getAcknowledgementsAppendix = (acknowledgementsReqsAppendix) => {
   let xmlTagMeta = {
     tagName: "appendix",
     attributes: {},
   };
-
-  if (findAllByAttribute("title", "Acknowledgments", domNode).length !== 0) {
-    acknowledgementsReqsAppendix = findAllByAttribute("title", "Acknowledgments", domNode)[0];
-  }
 
   // Set the attributes
   if (acknowledgementsReqsAppendix) {
@@ -4019,20 +4788,6 @@ function removeAlsoTags(inputString) {
   const resultString = inputString.replace(alsoTagRegex, "");
 
   return resultString;
-}
-
-/**
- * Adds proper spacing around text
- * @param {boolean} isLeadingSpace Determine if there should be a leading space (based on leadingSpace regex in parseRichTextChildren/parseManagementFunction)
- * @param {string} content Text/Rich text content
- * @param {boolean} isTrailingSpace Determine if there should be a leading space (based on trailingSpace regex in parseRichTextChildren/parseManagementFunction)
- * @returns
- */
-function updateContents(isLeadingSpace, content, isTrailingSpace) {
-  const leadingSpace = isLeadingSpace ? " " : "";
-  const trailingSpace = isTrailingSpace ? " " : "";
-
-  return `${leadingSpace}${content}${trailingSpace}`;
 }
 
 /**

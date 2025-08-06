@@ -5,13 +5,16 @@
     html {
         @apply text-neutral-800;
     }
+
     html.dark {
         @apply text-neutral-50;
         @apply bg-neutral-800;
     }
+
     strong {
         font-weight: bold;
     }
+
     ::-webkit-calendar-picker-indicator {
         filter: invert(1);
     }
@@ -26,6 +29,7 @@
     padding-left: 1em;
     padding-right: 1em;
 }
+
 .preview {
     word-break: break-word;
     text-align: left;
@@ -33,18 +37,22 @@
     padding-bottom: 10px;
     padding-top: 5px;
 }
+
 .preview ul, ol {
     padding-left: 1em;
 }
+
 .preview li {
     margin-left: 14px;
     list-style-type: disc;
     padding-left: 1.5em;
     text-indent: -1.3em;
 }
+
 .preview ul ul li {
     list-style-type: circle;
 }
+
 .preview ul ul ul ul li {
     list-style-type: circle;
 }
@@ -105,14 +113,17 @@
     --ag-row-border-width: 1px;
     --ag-row-border-color: #dedede;
 }
+
 .ag-center-cols-viewport {
     min-height: unset !important;
 }
+
 .ag-theme-quartz li {
     list-style-type: disc;
     padding-left: 2em;
     text-indent: -1.3em;
 }
+
 .ag-header-cell-label {
     font-weight: bold;
     white-space: normal !important;
@@ -120,6 +131,7 @@
     overflow: visible !important;
     line-height: 1.2 !important;
 }
+
 .ag-tooltip {
     white-space: pre-wrap;
     word-wrap: break-word;
@@ -134,8 +146,8 @@
 }
 
 /* This CSS is to not apply the border for the column having 'no-border' class */
-.no-border.ag-cell:focus{
-    border:none !important;
+.no-border.ag-cell:focus {
+    border: none !important;
     outline: none;
 }
 
@@ -178,8 +190,8 @@
 }
 
 .tiptap ul ul ul {
-     list-style-type: square;
-     margin-left: 20px;
+    list-style-type: square;
+    margin-left: 20px;
 }
 
 .tiptap ul ul ul ul {
@@ -274,4 +286,18 @@
 
 .tiptap strong {
     font-weight: bold;
+}
+
+.tiptap pre {
+    background-color: #282c34;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 14px;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    padding: 15px 20px;
+    margin: 0px 0px 10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    color: #ddd;
 }

@@ -31,11 +31,17 @@ function AccordionSection({ uuid, index }) {
   // Constants
   const dispatch = useDispatch();
   const { ppTemplateVersion, ppType } = useSelector((state) => state.accordionPane.metadata);
-  const { secondary, icons } = useSelector((state) => state.styling);
+  const { grayText, secondary, icons } = useSelector((state) => state.styling);
   const accordions = useSelector((state) => state.accordionPane.sections);
   let [selectedType, setSelectedType] = React.useState("");
   let [selectedName, setSelectedName] = React.useState("");
   let [disabled, setDisabled] = React.useState(true);
+  const hasTechTerms = useSelector((state) => {
+    const technicalTerms = Object.values(state.terms).find((term) => term.title === "Technical Terms");
+    if (!technicalTerms) return false;
+    const keys = Object.keys(technicalTerms);
+    return keys.some((key) => key !== "title" && key !== "open");
+  });
 
   // UseEffects
   useEffect(() => {
@@ -94,6 +100,7 @@ function AccordionSection({ uuid, index }) {
           let termUUID = dispatch(
             CREATE_TERMS_LIST({
               title: name,
+              custom: true,
             })
           ).payload;
 
@@ -119,6 +126,7 @@ function AccordionSection({ uuid, index }) {
           let editorUUID = dispatch(
             CREATE_EDITOR({
               title: name,
+              custom: true,
             })
           ).payload;
 
@@ -136,7 +144,7 @@ function AccordionSection({ uuid, index }) {
         case "Base PP": {
           let baseSfrUUID = dispatch(
             CREATE_SFR_BASE_PP_SECTION({
-              title: name,
+              name,
             })
           ).payload;
 
@@ -208,10 +216,11 @@ function AccordionSection({ uuid, index }) {
    */
   const getSelectMenuOptions = () => {
     const title = accordions.hasOwnProperty(uuid) && accordions[uuid].hasOwnProperty("title") ? accordions[uuid].title : "";
-    let selectMenuOptions = [
-      { key: "terms", value: "Terms" },
-      { key: "editor", value: "Text Editor" },
-    ];
+    let selectMenuOptions = [{ key: "editor", value: "Text Editor" }];
+
+    if (!hasTechTerms) {
+      selectMenuOptions.push({ key: "terms", value: "Terms" });
+    }
 
     // Generate select menu options
     switch (title) {
@@ -253,15 +262,11 @@ function AccordionSection({ uuid, index }) {
 
   // Helper Methods
   /**
-   * Gets is add section (boolean)
+   * Gets is add section (boolean).  Only intro section can have custom sections.
    * @returns {boolean}
    */
   const getIsAddSection = () => {
-    return (
-      !accordions[uuid].title.toString().toLowerCase().includes("appendix") &&
-      ppTemplateVersion !== "Version 3.1" &&
-      !accordions[uuid].title.toString().toLowerCase().includes("conformance claims")
-    );
+    return accordions[uuid].title.toString().toLowerCase() == "introduction";
   };
 
   // Use Memos
@@ -320,7 +325,7 @@ function AccordionSection({ uuid, index }) {
                 </FormControl>
                 <IconButton variant='contained' onClick={handleNewAccordionSection} disabled={disabled} key={uuid + "-SubmitItem"}>
                   <Tooltip title={"Add New Section"} id={"addNewAccordionSectionTooltip"}>
-                    <AddCircleRoundedIcon htmlColor={secondary} sx={{ ...icons.large, marginTop: 1 }} />
+                    <AddCircleRoundedIcon htmlColor={disabled ? grayText : secondary} sx={{ ...icons.large, marginTop: 1 }} />
                   </Tooltip>
                 </IconButton>
               </div>

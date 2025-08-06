@@ -18,11 +18,20 @@ import { SET_ACKNOWLEDGEMENTS_XML } from "../../reducers/acknowledgementsAppendi
 import { SORT_SFR_SECTIONS_HELPER } from "../../reducers/SFRs/sfrSectionSlice.js";
 import { UPDATE_DISTRIBUTED_TOE_INTRO } from "../../reducers/distributedToeSlice.js";
 import { UPDATE_MAIN_SFR_BASE_PP_DEFINITION } from "../../reducers/SFRs/sfrBasePPsSlice.js";
-import { handleSnackBarSuccess, handleSnackBarError } from "../../utils/securityComponents.jsx";
+import {
+  handleSnackBarSuccess,
+  handleSnackBarError,
+  updateSfrWorksheetComponent,
+  setSfrWorksheetUIItems,
+  resetSfrWorksheetUI,
+} from "../../utils/securityComponents.jsx";
+import { deepCopy } from "../../utils/deepCopy.js";
 import AccordionSection from "./AccordionSection.jsx";
 import AuditEventTable from "../editorComponents/securityComponents/sfrComponents/AuditEventTable.jsx";
 import DeleteConfirmation from "../modalComponents/DeleteConfirmation.jsx";
+import SfrWorksheet from "../editorComponents/securityComponents/sfrComponents/SfrWorksheet.jsx";
 import TipTapEditor from "../editorComponents/TipTapEditor.jsx";
+import { UPDATE_EDITOR_TEXT } from "../../reducers/editorSlice.js";
 
 /**
  * The Accordion class that displays the accordion
@@ -35,7 +44,7 @@ import TipTapEditor from "../editorComponents/TipTapEditor.jsx";
  * @returns {JSX.Element}
  * @constructor
  */
-function AccordionContent({ title, uuid, index, open, metadata, handleMetaDataCollapse }) {
+function AccordionContent({ title, uuid, index, open, metadata, handleMetaDataCollapse, custom }) {
   // Prop Validation
   AccordionContent.propTypes = {
     title: PropTypes.string.isRequired,
@@ -44,12 +53,18 @@ function AccordionContent({ title, uuid, index, open, metadata, handleMetaDataCo
     open: PropTypes.bool.isRequired,
     metadata: PropTypes.node,
     handleMetaDataCollapse: PropTypes.func,
+    custom: PropTypes.string,
   };
 
   // Constants
   const dispatch = useDispatch();
-  const sfrDefinition = useSelector((state) => state.sfrs.sfrDefinition);
-  const { sfrBasePPDefinition } = useSelector((state) => state.sfrBasePPs);
+  const sfrs = useSelector((state) => state.sfrs);
+  const sfrSections = useSelector((state) => state.sfrSections);
+  const sfrBasePPs = useSelector((state) => state.sfrBasePPs);
+  const terms = useSelector((state) => state.terms);
+  const { sfrDefinition } = sfrs;
+  const { sfrBasePPDefinition } = sfrBasePPs;
+  const { isSfrWorksheetValid, openSfrWorksheet } = useSelector((state) => state.sfrWorksheetUI);
   const satifisiedReqs = useSelector((state) => state.satisfiedReqsAppendix.xmlContent);
   const entropy = useSelector((state) => state.entropyAppendix.xmlContent);
   const acknowledgements = useSelector((state) => state.acknowledgementsAppendix.xmlContent);
@@ -58,6 +73,7 @@ function AccordionContent({ title, uuid, index, open, metadata, handleMetaDataCo
   const { ppType } = useSelector((state) => state.accordionPane.metadata);
   const { secondary, hoverOpen, hoverClosed, icons } = useSelector((state) => state.styling);
   const [openDeleteDialog, setDeleteDialog] = useState(false);
+  const editors = useSelector((state) => state.editors);
 
   // Use Effects
   useEffect(() => {
@@ -65,6 +81,26 @@ function AccordionContent({ title, uuid, index, open, metadata, handleMetaDataCo
     dispatch(SORT_THREATS_TERMS_LIST_HELPER());
     dispatch(SORT_OBJECTIVE_TERMS_LIST_HELPER());
   }, [title, uuid, index, open, metadata]);
+  useEffect(() => {
+    // Update component values in the sfr worksheet
+    if (title === "Security Requirements") {
+      updateSfrWorksheetComponent(sfrSections, terms);
+    }
+  }, [sfrSections, sfrs, sfrBasePPs, terms]);
+  useEffect(() => {
+    if (title === "Security Requirements") {
+      // If the sfr worksheet has been closed, reset associated values
+      if (!openSfrWorksheet) {
+        resetSfrWorksheetUI();
+      }
+
+      // Update component values
+      if (openSfrWorksheet) {
+        // Update sfr worksheet component values
+        updateSfrWorksheetComponent(sfrSections, terms);
+      }
+    }
+  }, [openSfrWorksheet]);
 
   // Methods
   /**
@@ -120,6 +156,13 @@ function AccordionContent({ title, uuid, index, open, metadata, handleMetaDataCo
         newDefinition: event,
       })
     );
+  };
+  /**
+   * Handles updating the custom section definition
+   * @param event the event as a text string
+   */
+  const handleCustomSectionDefinition = (event) => {
+    dispatch(UPDATE_EDITOR_TEXT({ uuid: custom, newText: event }));
   };
   /**
    * Handles updating the distributed toe intro
@@ -184,6 +227,16 @@ function AccordionContent({ title, uuid, index, open, metadata, handleMetaDataCo
       handleSnackBarError(e);
     }
   };
+  /**
+   * Handles opening the sfr worksheet
+   */
+  const handleOpenSfrWorksheet = () => {
+    // Update sfr worksheet ui
+    setSfrWorksheetUIItems({
+      openSfrWorksheet: !openSfrWorksheet,
+      sfrSections: deepCopy(sfrSections),
+    });
+  };
 
   // Use Memos
   /**
@@ -228,6 +281,17 @@ function AccordionContent({ title, uuid, index, open, metadata, handleMetaDataCo
     );
   }, [ppType]);
   /**
+   * The CustomSection
+   */
+  const customText = editors[custom] ? editors[custom].text : "";
+  const CustomSection = useMemo(() => {
+    return (
+      <div className='mx-4 mb-2'>
+        <TipTapEditor text={customText} contentType={"term"} handleTextUpdate={handleCustomSectionDefinition} />
+      </div>
+    );
+  }, [customText]);
+  /**
    * The AppendixESection
    */
   const AppendixESection = useMemo(() => {
@@ -257,6 +321,17 @@ function AccordionContent({ title, uuid, index, open, metadata, handleMetaDataCo
       </div>
     );
   }, [acknowledgements]);
+  /**
+   * Gets the sfr worksheet component
+   */
+  const SfrWorksheetComponent = useMemo(() => {
+    // Open the sfr worksheet
+    if (sfrSections && isSfrWorksheetValid) {
+      return <SfrWorksheet handleOpen={handleOpenSfrWorksheet} />;
+    } else {
+      return null;
+    }
+  }, [isSfrWorksheetValid, openSfrWorksheet]);
 
   // Return Method
   return (
@@ -320,6 +395,7 @@ function AccordionContent({ title, uuid, index, open, metadata, handleMetaDataCo
             {title === "Distributed TOE" && DistributedToeSection}
             {title === "Security Problem Definition" && SecurityProblemDefinitionSection}
             {title === "Security Requirements" && SecurityRequirementsSection}
+            {custom && CustomSection}
             <slot />
             {title === "Appendix E - Implicitly Satisfied Requirements" && AppendixESection}
             {title === "Appendix F - Entropy Documentation And Assessment" && AppendixFSection}
@@ -335,6 +411,7 @@ function AccordionContent({ title, uuid, index, open, metadata, handleMetaDataCo
         handleOpen={() => setDeleteDialog(!openDeleteDialog)}
         handleSubmit={handleDeleteAccordionSection}
       />
+      {title === "Security Requirements" && SfrWorksheetComponent}
     </div>
   );
 }

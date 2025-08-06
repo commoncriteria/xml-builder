@@ -1,6 +1,6 @@
 // Imports
 import { useTheme } from "@mui/material/styles";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import PropTypes from "prop-types";
 import { Box, Chip, FormControl, InputLabel, ListSubheader, MenuItem, Select } from "@mui/material";
 
@@ -20,6 +20,7 @@ function MultiSelectDropdown(props) {
   // Prop Validation
   MultiSelectDropdown.propTypes = {
     title: PropTypes.string.isRequired,
+    selectId: PropTypes.string,
     selectionOptions: PropTypes.oneOfType([PropTypes.array.isRequired, PropTypes.object.isRequired]),
     selections: PropTypes.oneOfType([PropTypes.array.isRequired, PropTypes.string.isRequired]),
     handleSelections: PropTypes.func.isRequired,
@@ -38,6 +39,9 @@ function MultiSelectDropdown(props) {
   const theme = useTheme();
   const headerStyle = { color: props.style === "primary" ? "#d926a9" : "#1FB2A6", fontSize: "13px", fontWeight: 600 };
   const [menuStyle, setMenuStyle] = useState({ fontSize: "13px", fontWeight: 500 });
+
+  const msdId = useMemo(() => (props.id || props.selectId ? [props.selectId, props.id].filter((v) => v).join("_") : undefined), [props.selectId, props.id]);
+  const msdLabelId = useMemo(() => (msdId ? `${msdId}_label` : undefined), [msdId]);
 
   // Use Effects
   useEffect(() => {
@@ -110,13 +114,19 @@ function MultiSelectDropdown(props) {
   return (
     <div key={`${props.id}-multi-select-dropdown`} className='w-full'>
       <FormControl fullWidth>
-        <InputLabel required={props.required !== undefined ? props.required : false} color={props.style === "primary" ? "secondary" : "primary"}>
+        <InputLabel
+          id={msdLabelId}
+          required={props.required !== undefined ? props.required : false}
+          color={props.style === "primary" ? "secondary" : "primary"}>
           {props.title}
         </InputLabel>
         <Select
           defaultValue={props.defaultValue !== undefined ? props.defaultValue : null}
           color={props.style === "primary" ? "secondary" : "primary"}
           key={props.id}
+          id={msdId}
+          labelId={msdLabelId}
+          MenuProps={msdId ? { "data-testid": `${msdId}_menu` } : undefined}
           label={props.title}
           multiple={props.multiple !== undefined ? props.multiple : true}
           disabled={props.disabled !== undefined ? props.disabled : false}

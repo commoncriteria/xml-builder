@@ -15,7 +15,9 @@ import {
   getObjectiveMaps,
   getSfrMaps,
   getThreatMaps,
+  handleSnackBarError,
   handleSnackBarSuccess,
+  mapObjectivesToSFRs,
   setSfrWorksheetUIItems,
 } from "../../../../utils/securityComponents.jsx";
 import DeleteConfirmation from "../../../modalComponents/DeleteConfirmation.jsx";
@@ -57,25 +59,30 @@ function SfrSections({ sfrUUID, uuid, index, value }) {
    * @returns {Promise<void>}
    */
   const handleDeleteComponent = async () => {
-    dispatch(
-      DELETE_SFR_FROM_THREAT_USING_UUID({
-        sfrUUID: uuid,
-      })
-    );
-    dispatch(
-      DELETE_SFR_COMPONENT({
-        sfrUUID,
-        uuid,
-      })
-    );
+    try {
+      dispatch(
+        DELETE_SFR_FROM_THREAT_USING_UUID({
+          sfrUUID: uuid,
+        })
+      );
+      dispatch(
+        DELETE_SFR_COMPONENT({
+          sfrUUID,
+          uuid,
+        })
+      );
 
-    // Update snackbar
-    handleSnackBarSuccess("SFR Component Successfully Removed. Reloading page...");
-
-    // Reload page
-    setTimeout(() => {
-      location.reload();
-    }, 3000);
+      // Update snackbar
+      handleSnackBarSuccess("SFR Component Successfully Removed.");
+    } catch (e) {
+      handleSnackBarError(e);
+      console.log(e);
+    } finally {
+      getObjectiveMaps();
+      mapObjectivesToSFRs();
+      getThreatMaps();
+      getSfrMaps();
+    }
   };
   /**
    * Handles collapsing the component

@@ -11,22 +11,63 @@ import {
   COLLAPSE_THREAT_TERM,
   DELETE_OBJECTIVE_FROM_THREAT_USING_UUID,
   DELETE_THREAT_TERM,
+  UPDATE_THREAT_TERM_CONSISTENCY_RATIONALE,
   UPDATE_THREAT_TERM_DEFINITION,
   UPDATE_THREAT_TERM_TITLE,
 } from "../../../reducers/threatsSlice.js";
 import {
   COLLAPSE_OBJECTIVE_TERM,
   DELETE_OBJECTIVE_TERM,
+  UPDATE_OBJECTIVE_TERM_CONSISTENCY_RATIONALE,
   UPDATE_OBJECTIVE_TERM_DEFINITION,
   UPDATE_OBJECTIVE_TERM_TITLE,
 } from "../../../reducers/objectivesSlice.js";
 import { DELETE_OBJECTIVE_FROM_SFR_USING_UUID } from "../../../reducers/SFRs/sfrSectionSlice.js";
-import { handleSnackBarError, handleSnackBarSuccess, getObjectiveMaps, getSfrMaps, getThreatMaps } from "../../../utils/securityComponents.jsx";
-import RationaleTable from "./rationaleTable/RationaleTable.jsx";
-import TipTapEditor from "../TipTapEditor.jsx";
-import SfrRationaleTable from "./rationaleTable/SfrRationaleTable.jsx";
+import {
+  handleSnackBarError,
+  handleSnackBarSuccess,
+  getObjectiveMaps,
+  getSfrMaps,
+  getThreatMaps,
+  mapObjectivesToSFRs,
+} from "../../../utils/securityComponents.jsx";
+import CardTemplate from "./CardTemplate.jsx";
 import DeleteConfirmation from "../../modalComponents/DeleteConfirmation.jsx";
+import FromBasePP from "./FromBasePP.jsx";
+import RationaleTable from "./rationaleTable/RationaleTable.jsx";
+import SfrRationaleTable from "./rationaleTable/SfrRationaleTable.jsx";
+import TipTapEditor from "../TipTapEditor.jsx";
 import "../components.css";
+
+// External Components
+/**
+ * The definition section template used for module definition/consistency rationale
+ * @param title the title of the accordion card
+ * @param body the body of the accordion card
+ * @param collapse the value of the collapse
+ * @param handleCollapse the handler for the collapse
+ * @param color the color of the collapse icon
+ * @returns {JSX.Element}
+ * @constructor
+ */
+const DefinitionSection = ({ title, body, collapse, handleCollapse, color }) => {
+  return (
+    <CardTemplate
+      type={"parent"}
+      header={
+        <label style={{ color }} className='resize-none font-bold text-[14px] p-0 pr-4'>
+          {title}
+        </label>
+      }
+      body={<div className='p-6 pb-2 w-full bg-white'>{body}</div>}
+      borderColor={"border-gray-200"}
+      tooltip={title}
+      collapse={collapse}
+      collapseHandler={handleCollapse}
+      collapseIconColor={color}
+    />
+  );
+};
 
 /**
  * The Definition component
@@ -35,14 +76,16 @@ import "../components.css";
  * @param index the index
  * @param uuid the uuid
  * @param title the title
+ * @param from the from tag used to indicate that a PP-Module inherits a threat from a Base PP
  * @param definition the definition
+ * @param consistencyRationale the consistency rationale used for threats/objectives for Modules
  * @param open the open value
  * @param item the item
  * @param contentType the content type
  * @returns {JSX.Element}
  * @constructor
  */
-function Definition({ accordionTitle, termUUID, index, uuid, title, definition, open, item, contentType }) {
+function Definition({ accordionTitle, termUUID, index, uuid, title, from = [], definition, consistencyRationale = "", open, item, contentType }) {
   // Prop Validation
   Definition.propTypes = {
     accordionTitle: PropTypes.string.isRequired,
@@ -50,7 +93,9 @@ function Definition({ accordionTitle, termUUID, index, uuid, title, definition, 
     index: PropTypes.number.isRequired,
     uuid: PropTypes.string.isRequired,
     title: PropTypes.string.isRequired,
+    from: PropTypes.array,
     definition: PropTypes.string.isRequired,
+    consistencyRationale: PropTypes.string,
     open: PropTypes.bool.isRequired,
     item: PropTypes.object.isRequired,
     contentType: PropTypes.string.isRequired,
@@ -58,11 +103,15 @@ function Definition({ accordionTitle, termUUID, index, uuid, title, definition, 
 
   // Constants
   const dispatch = useDispatch();
-  const sfrSections = useSelector((state) => state.sfrSections);
   const metadataSection = useSelector((state) => state.accordionPane.metadata);
-  const { ppTemplateVersion } = metadataSection;
+  const { ppTemplateVersion, ppType } = metadataSection;
+  const isModule = ppType && ppType === "Module";
+  const isModuleThreat = isModule && contentType === "threats";
+  const isModuleObjective = isModule && contentType === "objectives" && accordionTitle === "Security Objectives for the Operational Environment";
   const { secondary, icons } = useSelector((state) => state.styling);
   const [openDeleteDialog, setDeleteDialog] = useState(false);
+  const [consistencyRationaleCollapse, setConsistencyRationaleCollapse] = useState(true);
+  const [descriptionCollapse, setDescriptionCollapse] = useState(true);
 
   // Methods
   /**
@@ -178,12 +227,7 @@ function Definition({ accordionTitle, termUUID, index, uuid, title, definition, 
               objectiveUUID: termUUID,
             })
           );
-          handleSnackBarSuccess("Objective Term Successfully Removed. Reloading page...");
-
-          // Reload page
-          setTimeout(() => {
-            location.reload();
-          }, 3000);
+          handleSnackBarSuccess("Objective Term Successfully Removed.");
           break;
         }
         default:
@@ -193,6 +237,11 @@ function Definition({ accordionTitle, termUUID, index, uuid, title, definition, 
     } catch (e) {
       console.log(e);
       handleSnackBarError(e);
+    } finally {
+      getObjectiveMaps();
+      mapObjectivesToSFRs();
+      getThreatMaps();
+      getSfrMaps();
     }
   };
   /**
@@ -228,6 +277,36 @@ function Definition({ accordionTitle, termUUID, index, uuid, title, definition, 
         break;
     }
   };
+  /**
+   * Updates the collapse value for the description section
+   */
+  const handleDescriptionCollapse = () => {
+    setDescriptionCollapse(!descriptionCollapse);
+  };
+  /**
+   * Handles updating the consistency rationale by type (objective or threat)
+   * @param event the event as a string
+   */
+  const handleConsistencyRationaleUpdate = (event) => {
+    const updateMap = {
+      [isModuleThreat ? "threatUUID" : "objectiveUUID"]: termUUID,
+      uuid,
+      consistencyRationale: event,
+    };
+
+    // Update the consistency rationale by type
+    if (isModuleThreat) {
+      dispatch(UPDATE_THREAT_TERM_CONSISTENCY_RATIONALE(updateMap));
+    } else if (isModuleObjective) {
+      dispatch(UPDATE_OBJECTIVE_TERM_CONSISTENCY_RATIONALE(updateMap));
+    }
+  };
+  /**
+   * Updates the collapse value for the consistency rationale section
+   */
+  const handleConsistencyRationaleCollapse = () => {
+    setConsistencyRationaleCollapse(!consistencyRationaleCollapse);
+  };
 
   // Helper Methods
   /**
@@ -241,34 +320,6 @@ function Definition({ accordionTitle, termUUID, index, uuid, title, definition, 
 
     return contentType === "threats" && (isStandardThreat || isAssumption);
   };
-  /**
-   * Maps objectives to sfrs
-   * @returns {{}}
-   */
-  const mapObjectivesToSFRs = () => {
-    let objectiveToSFRsMap = {};
-
-    if (sfrSections) {
-      Object.values(sfrSections).map((sfrContent) => {
-        Object.entries(sfrContent).map(([sfrUUID, sfr]) => {
-          sfr.objectives.forEach((objective) => {
-            const objectiveUUID = objective.uuid;
-
-            // Initialize array
-            if (!objectiveToSFRsMap[objectiveUUID]) {
-              objectiveToSFRsMap[objectiveUUID] = [];
-            }
-
-            if (!Object.values(objectiveToSFRsMap[objectiveUUID]).includes(sfrUUID)) {
-              objectiveToSFRsMap[objectiveUUID].push({ sfrUUID, rationale: objective.rationale });
-            }
-          });
-        });
-      });
-    }
-
-    return objectiveToSFRsMap;
-  };
 
   // Use Memos
   /**
@@ -276,14 +327,45 @@ function Definition({ accordionTitle, termUUID, index, uuid, title, definition, 
    * @type {Element}
    */
   const DefinitionEditor = useMemo(() => {
+    const body = <TipTapEditor uuid={uuid} text={definition || ""} contentType={"term"} handleTextUpdate={handleDefinitionUpdate} />;
+
+    if (isModuleThreat || isModuleObjective) {
+      return (
+        <DefinitionSection
+          title={"Description"}
+          body={body}
+          collapse={descriptionCollapse}
+          handleCollapse={() => handleDescriptionCollapse()}
+          color={secondary}
+        />
+      );
+    } else {
+      return body;
+    }
+  }, [definition, uuid, descriptionCollapse]);
+  /**
+   * The ConsistencyRationale section
+   */
+  const ConsistencyRationale = useMemo(() => {
     return (
-      <TipTapEditor
-          uuid={uuid}
-          text={definition ? definition : ""}
-          contentType={"term"}
-          handleTextUpdate={handleDefinitionUpdate}
-      />)
-  }, [definition, uuid]);
+      <div className={`m-0 p-0 pt-2 ${isModuleThreat ? "" : "mb-[-12px]"}`} key={uuid + "consistencyRationaleDiv"}>
+        <DefinitionSection
+          title={"Consistency Rationale"}
+          body={
+            <TipTapEditor
+              text={consistencyRationale || ""}
+              title={"consistencyRationale"}
+              contentType={"term"}
+              handleTextUpdate={handleConsistencyRationaleUpdate}
+            />
+          }
+          collapse={consistencyRationaleCollapse}
+          handleCollapse={() => handleConsistencyRationaleCollapse()}
+          color={secondary}
+        />
+      </div>
+    );
+  }, [consistencyRationale, consistencyRationaleCollapse]);
 
   // Return Method
   return (
@@ -292,12 +374,12 @@ function Definition({ accordionTitle, termUUID, index, uuid, title, definition, 
         <CardBody key={uuid + "CardBody"}>
           <div className='flex' key={uuid + "CardBodyDiv"}>
             <textarea
+              key={title}
               className='w-full resize-none font-bold text-[14px] mb-0 h-[30px] p-0 text-accent'
-              onChange={handleTitleUpdate}
+              onBlur={(event) => handleTitleUpdate(event)}
               id={uuid + "Title"}
-              value={title}>
-              {title}
-            </textarea>
+              defaultValue={title}
+            />
             <span />
             <IconButton sx={{ marginTop: "-8px" }} onClick={() => setDeleteDialog(!openDeleteDialog)} variant='contained'>
               <Tooltip title={"Delete Section"} id={termUUID + "deleteDefinitionSectionToolTip"}>
@@ -313,9 +395,15 @@ function Definition({ accordionTitle, termUUID, index, uuid, title, definition, 
           </div>
           {open ? (
             <div>
+              {isModuleThreat && accordionTitle === "Threats" && (
+                <div className='m-0 p-0 pt-2 mb-[-8px]' key={uuid + "FromTagDiv"}>
+                  <FromBasePP threatUUID={termUUID} termUUID={uuid} from={from} />
+                </div>
+              )}
               <div className='m-0 p-0 pt-2' key={uuid + "TextEditorDiv"}>
                 {DefinitionEditor}
               </div>
+              {(isModuleThreat || isModuleObjective) && ConsistencyRationale}
               {isObjectiveTable() ? (
                 <div className='pt-2' key={uuid + "RationaleTableDiv"}>
                   <RationaleTable

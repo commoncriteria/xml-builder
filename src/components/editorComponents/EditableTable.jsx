@@ -259,7 +259,7 @@ function EditableTable(props) {
     setCollapseTable(!collapseTable);
 
     // Update collapse in parent
-    if (props.hasOwnProperty("collapse")) {
+    if (props.hasOwnProperty("collapse") && props.collapse !== undefined) {
       props.handleCollapse(collapseTable);
     }
 
@@ -443,6 +443,7 @@ function EditableTable(props) {
           cellEditorParams: {
             maxLength: 500,
           },
+          tooltipValueGetter: () => 'Double click to edit. \nHold "Shift + Enter" \nto add a new line.',
           cellRenderer: (params) => {
             const { value } = params;
             return <div style={{ whiteSpace: "pre-wrap" }} dangerouslySetInnerHTML={{ __html: value }} />;
@@ -706,12 +707,7 @@ function EditableTable(props) {
         <div>{getAgGrid()}</div>
       ) : (
         <div>
-          <NewTableColumn
-            open={newColumnDialog}
-            handleOpen={handleOpenNewColumnDialog}
-            handleSubmit={handleAddColumn}
-            columnDefs={columnDefs}
-          />
+          <NewTableColumn open={newColumnDialog} handleOpen={handleOpenNewColumnDialog} handleSubmit={handleAddColumn} columnDefs={columnDefs} />
           <CardTemplate
             type={"parent"}
             tooltip={"Table"}

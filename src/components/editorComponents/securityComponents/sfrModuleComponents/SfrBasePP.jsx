@@ -4,10 +4,9 @@ import { useDispatch, useSelector } from "react-redux";
 import { COLLAPSE_SFR_BASE_PP_INNER_SECTION } from "../../../../reducers/SFRs/sfrBasePPsSlice.js";
 import { deepCopy } from "../../../../utils/deepCopy.js";
 import { getCardTemplate } from "../../../../utils/securityComponents.jsx";
-import AdditionalSfrs from "./additionalSfrs/AdditionalSfrs.jsx";
 import ConsistencyRationale from "./ConsistencyRationale.jsx";
 import DeclarationAndReference from "./DeclarationAndReference.jsx";
-import ModifiedSfrs from "./ModifiedSfrs.jsx";
+import ModuleSfrSections from "./sfrSections/ModuleSfrSections.jsx";
 
 /**
  * The SfrBasePP content
@@ -91,7 +90,6 @@ function SfrBasePP({ uuid }) {
    * @constructor
    */
   function BasePPSection(props) {
-    // eslint-disable-next-line react/prop-types
     const { header, body, tooltip = "" } = props;
     const collapse = getIsOpen(header);
     const formattedBody = <div className='min-w-full p-4 pb-0'>{body}</div>;
@@ -110,13 +108,13 @@ function SfrBasePP({ uuid }) {
       />
       <BasePPSection
         header={"Modified Sfrs"}
-        body={<ModifiedSfrs uuid={uuid} />}
+        body={<ModuleSfrSections uuid={uuid} isAdditionalSfr={false} />}
         tooltip={`The Modified SFRs section contains SFRs that appear in the Base PP, but are modified when the Base 
                      PP is in a configuration with the PP-Module.`}
       />
       <BasePPSection
         header={"Additional Sfrs"}
-        body={<AdditionalSfrs uuid={uuid} />}
+        body={<ModuleSfrSections uuid={uuid} isAdditionalSfr={true} />}
         tooltip={
           <div>
             An SFR should be classified as "additional" if the requirement applies when the Base PP is in a configuration with the PP-Module, yet that exact

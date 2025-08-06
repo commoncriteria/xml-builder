@@ -4,9 +4,9 @@ import { Tooltip } from "@mui/material";
 import { DELETE_ACCORDION_FORM_ITEM, SET_ACCORDION_PANE_INITIAL_STATE, updateSnackBar } from "../reducers/accordionPaneSlice.js";
 import { SET_TERMS_INITIAL_STATE } from "../reducers/termsSlice.js";
 import { SET_EDITORS_INITIAL_STATE } from "../reducers/editorSlice.js";
-import { DELETE_SFR_FROM_THREAT_USING_UUID, SET_THREATS_INITIAL_STATE } from "../reducers/threatsSlice.js";
+import { DELETE_SFR_FROM_THREAT_USING_UUID, SET_THREATS_INITIAL_STATE, UPDATE_THREAT_TERM_FROM } from "../reducers/threatsSlice.js";
 import { SET_OBJECTIVES_INITIAL_STATE } from "../reducers/objectivesSlice.js";
-import { DELETE_SFR, SET_SFRS_INITIAL_STATE } from "../reducers/SFRs/sfrSlice.js";
+import { DELETE_SFR, SET_SFRS_INITIAL_STATE, UPDATE_TOE_SFRS } from "../reducers/SFRs/sfrSlice.js";
 import {
   CREATE_SFR_COMPONENT,
   DELETE_SFR_SECTION,
@@ -28,14 +28,16 @@ import { SET_MODULES_INITIAL_STATE } from "../reducers/moduleSlice.js";
 import { SET_PP_PREFERENCE_INITIAL_STATE } from "../reducers/ppPreferenceSlice.js";
 import { RESET_CONFORMANCE_CLAIMS_STATE } from "../reducers/conformanceClaimsSlice.js";
 import {
-  DELETE_ADDITIONAL_SFR_SECTION,
+  DELETE_BASE_PP_SFR_SECTION,
   DELETE_SFR_BASE_PP,
   RESET_SFR_BASE_PP_STATE,
   SET_SFR_BASE_PP_INITIAL_STATE,
   UPDATE_ADDITIONAL_SFRS,
+  UPDATE_MODIFIED_SFRS,
 } from "../reducers/SFRs/sfrBasePPsSlice.js";
 import {
   RESET_EVALUATION_ACTIVITY_UI,
+  RESET_SFR_WORKSHEET_UI,
   TRANSFORM_TABULARIZE_DATA,
   UPDATE_EVALUATION_ACTIVITY_UI_ITEMS,
   UPDATE_MANAGEMENT_FUNCTION_UI_ITEMS,
@@ -382,17 +384,18 @@ export const loadTemplateJson = async ({ version, type, base }) => {
           filePath = `${baseDataFolder}/base_cc2022_fp.json`;
         } else if (type === "Module") {
           // TODO: Update in issue #200
-          filePath = `${baseDataFolder}/base_module.json`;
+          filePath = `${baseDataFolder}/base_cc2022_module_direct_rationale.json`;
         }
         break;
       case "CC2022 Standard":
         if (type === "Protection Profile") {
           filePath = `${baseDataFolder}/base_cc2022_standard.json`;
         } else if (type === "Functional Package") {
-          filePath = `${baseDataFolder}/base_cc2022_fp.json`; // using same template as base since FPs normally dont have SARs
+          filePath = `${baseDataFolder}/base_cc2022_fp.json`;
         } else if (type === "Module") {
           // TODO: Update in issue #200
-          filePath = `${baseDataFolder}/base_module.json`;
+          // filePath = `${baseDataFolder}/base_cc2022_module_standard.json`; // TODO: add regular objectives?
+          filePath = `${baseDataFolder}/base_module.json`; // TODO: add regular objectives?
         }
         break;
       case "Version 3.1":
@@ -409,7 +412,7 @@ export const loadTemplateJson = async ({ version, type, base }) => {
         if (type === "Protection Profile") {
           filePath = `${dataFolder}/cc2022_direct_rationale.json`;
         } else if (type === "Functional Package") {
-          filePath = `${baseDataFolder}/base_cc2022_fp.json`;
+          filePath = `${baseDataFolder}/base_cc2022_fp.json`; // using same template as base since FPs normally dont have SARs
         } else if (type === "Module") {
           // TODO: Update in issue #200
           filePath = `${baseDataFolder}/base_module.json`;
@@ -615,28 +618,109 @@ export const getSfrMaps = () => {
   };
   try {
     const state = store.getState();
+    const ppType = state.accordionPane?.metadata?.ppType || "";
+    const sfrs = state.sfrs;
     const sfrSections = state.sfrSections;
+    const sfrBasePPs = state.sfrBasePPs;
 
-    Object.values(sfrSections).map((sfrContent) => {
-      Object.entries(sfrContent).map(([elementUUID, sfrElement]) => {
-        const { cc_id, iteration_id } = sfrElement;
-        const title = getSfrTitle(cc_id, iteration_id);
+    Object.entries(sfrSections).map(([sfrUUID, sfrContent]) => {
+      const { sfrType = "" } = sfrs.sections[sfrUUID] || {};
+
+      Object.entries(sfrContent).map(([componentUUID, sfrComponent]) => {
+        const { cc_id, iteration_id, additionalSfr = false, modifiedSfr = false } = sfrComponent;
+
+        let title = getSfrTitle(cc_id, iteration_id);
+
+        // Get module title
+        if (ppType === "Module") {
+          title = getModuleTitle(title, additionalSfr, modifiedSfr, sfrUUID, sfrType);
+        }
 
         if (!sfrMap.sfrNames.includes(title)) {
           sfrMap.sfrNames.push(title);
-          sfrMap.sfrNameMap[title] = elementUUID;
-          sfrMap.sfrUUIDMap[elementUUID] = title;
+          sfrMap.sfrNameMap[title] = componentUUID;
+          sfrMap.sfrUUIDMap[componentUUID] = title;
         }
       });
     });
 
     sfrMap.sfrNames.sort();
+
+    function getModuleTitle(title, additionalSfr, modifiedSfr, sfrUUID, sfrType) {
+      try {
+        if (additionalSfr || modifiedSfr) {
+          for (const sfrBasePP of Object.values(sfrBasePPs)) {
+            const { declarationAndRef = { short: "" }, additionalSfrs = { sfrSections: {} }, modifiedSfrs = { sfrSections: {} } } = sfrBasePP || {};
+            if (additionalSfr && additionalSfrs.sfrSections.hasOwnProperty(sfrUUID)) {
+              return `${title} (additional to ${declarationAndRef.short} PP)`;
+            } else if (modifiedSfr && modifiedSfrs.sfrSections.hasOwnProperty(sfrUUID)) {
+              return `${title} (modified from ${declarationAndRef.short} PP)`;
+            }
+          }
+        } else {
+          switch (sfrType) {
+            case "optional": {
+              return `${title} (optional)`;
+            }
+            case "objective": {
+              return `${title} (objective)`;
+            }
+            case "selectionBased": {
+              return `${title} (selection-based)`;
+            }
+            case "implementationDependent": {
+              return `${title} (implementation-dependent)`;
+            }
+            default:
+              return title;
+          }
+        }
+      } catch (e) {
+        console.log(e);
+      }
+      return title;
+    }
   } catch (e) {
     handleSnackBarError(e);
     console.log(e);
   }
 
   return sfrMap;
+};
+/**
+ * Maps objectives to sfrs
+ * @returns {{}}
+ */
+export const mapObjectivesToSFRs = () => {
+  let objectiveToSFRsMap = {};
+  const state = store.getState();
+  const { sfrSections } = state;
+
+  try {
+    if (sfrSections) {
+      Object.values(sfrSections).map((sfrContent) => {
+        Object.entries(sfrContent).map(([sfrUUID, sfr]) => {
+          sfr.objectives.forEach((objective) => {
+            const objectiveUUID = objective.uuid;
+
+            // Initialize array
+            if (!objectiveToSFRsMap[objectiveUUID]) {
+              objectiveToSFRsMap[objectiveUUID] = [];
+            }
+
+            if (!Object.values(objectiveToSFRsMap[objectiveUUID]).includes(sfrUUID)) {
+              objectiveToSFRsMap[objectiveUUID].push({ sfrUUID, rationale: objective.rationale });
+            }
+          });
+        });
+      });
+    }
+  } catch (e) {
+    handleSnackBarError("Failed to map objectives to SFRs.");
+    console.log(e);
+  }
+
+  return objectiveToSFRsMap;
 };
 /**
  * Gets the sfr title
@@ -1024,22 +1108,23 @@ const updateEaRefIdsForManagementFunctions = (event, activity, managementFunctio
 /**
  * Adds a new sfr component
  * @param uuid the uuid of the sfr component
- * @param isAdditionalSfr if the component is an additional sfr
+ * @param component the component value, set to {} by default
  * @returns {Promise<void>}
  */
-export const addNewSfrComponent = async (uuid, isAdditionalSfr = false) => {
-  const state = store.getState();
-  const sfrSections = deepCopy(state.sfrSections);
+export const addNewSfrComponent = async (uuid, component = {}) => {
   const newSfrComponent = await store.dispatch(
     CREATE_SFR_COMPONENT({
       sfrUUID: uuid,
-      additionalSfr: isAdditionalSfr,
+      component,
     })
   ).payload;
   const { sfrUUID, id: componentUUID } = newSfrComponent;
 
   // Open sfr worksheet
   if (sfrUUID && componentUUID) {
+    const state = store.getState();
+    const { sfrSections } = state;
+
     setSfrWorksheetUIItems({
       openSfrWorksheet: true,
       sfrUUID,
@@ -1098,6 +1183,9 @@ export const deleteSfrSectionByType = async ({ type, sfrUUID, uuid, sfrList, del
           // Delete the sfr base pp
           await store.dispatch(DELETE_SFR_BASE_PP({ uuid }));
 
+          // Update threat from base pp tags
+          deleteThreatTermFromTagWithUUID(uuid);
+
           // Delete the sfr sections
           for (const currentUUID of uuids) {
             await deleteSfrSection(currentUUID);
@@ -1105,17 +1193,15 @@ export const deleteSfrSectionByType = async ({ type, sfrUUID, uuid, sfrList, del
         }
         break;
       }
-      case "additional": {
+      case "additional":
+      case "modified": {
         await store.dispatch(
-          DELETE_ADDITIONAL_SFR_SECTION({
+          DELETE_BASE_PP_SFR_SECTION({
             sfrUUID,
             uuid,
+            parentKey: type + "Sfrs",
           })
         );
-        break;
-      }
-      case "modified": {
-        // TODO: Add functionality in ticket #194
         break;
       }
       default:
@@ -1356,6 +1442,12 @@ export const updateSfrWorksheetComponent = (sfrSections, terms) => {
   }
 };
 /**
+ * Resets the sfr worksheet ui to the default state
+ */
+export const resetSfrWorksheetUI = () => {
+  store.dispatch(RESET_SFR_WORKSHEET_UI());
+};
+/**
  * Updates the component items
  * @param itemMap the item map of values to update\
  */
@@ -1441,6 +1533,77 @@ export const updateAdditionalSfr = (uuid, key, value) => {
       value,
     })
   );
+};
+/**
+ * Updates the toe sfr section by sfr type
+ * @param sfrType the sfr type (mandatory, optional, objective, selectionBased, implementationDependent)
+ * @param key the key used in the toe sfr for updates
+ * @param value the value to update
+ */
+export const updateToeSfr = (sfrType, key, value) => {
+  store.dispatch(
+    UPDATE_TOE_SFRS({
+      sfrType,
+      key,
+      value,
+    })
+  );
+};
+/**
+ * Updates the modified sfr section
+ * @param uuid the uuid
+ * @param key the key
+ * @param value the value
+ */
+export const updateModifiedSfr = (uuid, key, value) => {
+  store.dispatch(
+    UPDATE_MODIFIED_SFRS({
+      uuid,
+      key,
+      value,
+    })
+  );
+};
+/**
+ * Updates the from tag for threat terms
+ * @param threatUUID the threat uuid
+ * @param termUUID the threat term uuid
+ * @param from the threat from base pp list
+ */
+export const updateThreatTermFromTag = (threatUUID, termUUID, from) => {
+  store.dispatch(
+    UPDATE_THREAT_TERM_FROM({
+      threatUUID,
+      uuid: termUUID,
+      from,
+    })
+  );
+};
+/**
+ * Deletes the specified uuid from the threat term from base pp list if it exists
+ * @param uuid the uuid of the base pp to delete
+ */
+export const deleteThreatTermFromTagWithUUID = (uuid) => {
+  const state = store.getState();
+  const { threats } = state;
+
+  // Update threat from base pp tags
+  if (threats && Object.keys(threats).length > 0) {
+    Object.entries(threats)?.forEach(([threatUUID, threat]) => {
+      const { terms } = threat;
+
+      if (terms && Object.keys(terms).length > 0) {
+        Object.entries(terms)?.forEach(([termUUID, term]) => {
+          const { from: original } = term;
+          let from = original.filter((item) => uuid !== item);
+
+          if (JSON.stringify(from) !== JSON.stringify(original)) {
+            updateThreatTermFromTag(threatUUID, termUUID, from);
+          }
+        });
+      }
+    });
+  }
 };
 
 // Components

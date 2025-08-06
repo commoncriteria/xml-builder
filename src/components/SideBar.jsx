@@ -33,18 +33,18 @@ import XMLExporter from "./modalComponents/XMLExporter.jsx";
  */
 function SideBar() {
   // Constants
-  const [openMenuItems, setOpenMenuItems] = React.useState(0);
-  const [openFileLoaderMenu, setOpenFileLoaderMenu] = React.useState(false);
-  const [openAccordionMenu, setOpenAccordionMenu] = React.useState(false);
-  const [openResetDataMenu, setOpenResetDataMenu] = React.useState(false);
-  const [openXMLExporterMenu, setOpenXMLExporterMenu] = React.useState(false);
-  const { primary, icons } = useSelector((state) => state.styling);
+  const dispatch = useDispatch();
   const isNavOpen = useSelector((state) => state.navBar.isNavOpen);
   const accordions = useSelector((state) => state.accordionPane.sections);
   const terms = useSelector((state) => state.terms);
   const editors = useSelector((state) => state.editors);
   const isPreviewToggled = useSelector((state) => state.navBar.isPreviewToggled);
-  const dispatch = useDispatch();
+  const { primary, icons } = useSelector((state) => state.styling);
+  const [openMenuItems, setOpenMenuItems] = React.useState(0);
+  const [openFileLoaderMenu, setOpenFileLoaderMenu] = React.useState(false);
+  const [openAccordionMenu, setOpenAccordionMenu] = React.useState(false);
+  const [openResetDataMenu, setOpenResetDataMenu] = React.useState(false);
+  const [openXMLExporterMenu, setOpenXMLExporterMenu] = React.useState(false);
 
   // Use Effects
   useEffect(() => {
@@ -59,22 +59,30 @@ function SideBar() {
   }, []);
 
   // Methods
+  /**
+   * Handles opening and closing the accordions in the side bar menu
+   * @param value the value of the accordion to open or close
+   */
   const handleOpenMenuItems = (value) => {
     setOpenMenuItems(openMenuItems === value ? 0 : value);
   };
+  /**
+   * Handles opening the file loader dialog
+   * @returns {Promise<void>}
+   */
   const handleOpenFileLoader = async () => {
     if (!openFileLoaderMenu) {
       if (isPreviewToggled) {
         await dispatch(setIsPreviewToggled());
       }
       await dispatch(RESET_EXPORT());
-    } else {
-      // Reload page on dialog close
-      location.reload();
     }
     setOpenFileLoaderMenu(!openFileLoaderMenu);
   };
-
+  /**
+   * Handles opening the xml exporter dialog
+   * @returns {Promise<void>}
+   */
   const handleOpenXMLExporter = async () => {
     if (!openXMLExporterMenu) {
       if (isPreviewToggled) {
@@ -84,13 +92,22 @@ function SideBar() {
     }
     setOpenXMLExporterMenu(!openXMLExporterMenu);
   };
-
+  /**
+   * Handles opening the new accordion dialog
+   */
   const handleOpenAccordionMenu = () => {
     setOpenAccordionMenu(!openAccordionMenu);
   };
+  /**
+   * Handles opening the reset data dialog
+   */
   const handleOpenResetDataMenu = () => {
     setOpenResetDataMenu(!openResetDataMenu);
   };
+  /**
+   * Handles expanding all parent accordions
+   * @returns {Promise<void>}
+   */
   const handleExpandAllAccordions = async () => {
     await dispatch(expandAllAccordions());
     await collapseSectionsHelper(true);
@@ -101,6 +118,10 @@ function SideBar() {
     // Update snackbar
     handleSnackBarSuccess("All Accordions Successfully Expanded");
   };
+  /**
+   * Handles collapsing all parent accordions
+   * @returns {Promise<void>}
+   */
   const handleCollapseAllAccordions = async () => {
     await dispatch(collapseAllAccordions());
     await collapseSectionsHelper(false);
@@ -111,6 +132,13 @@ function SideBar() {
     // Update snackbar
     handleSnackBarSuccess("All Accordions Successfully Collapsed");
   };
+
+  // Helper Methods
+  /**
+   * Collapses or expands the parent accordions
+   * @param open the value of collapse or expand (boolean)
+   * @returns {Promise<void>}
+   */
   const collapseSectionsHelper = async (open) => {
     // Collapse all terms
     Object.keys(terms).map(async (uuid) => {
@@ -124,6 +152,14 @@ function SideBar() {
       await dispatch(COLLAPSE_EDITOR({ uuid: uuid, title: title, open: open }));
     });
   };
+
+  // Components
+  /**
+   * The section list component
+   * @param item the item object used for getting the section details
+   * @param key the accordion uuid key (optional)
+   * @returns {Element}
+   */
   const getCurrentSectionsLists = (item, key) => {
     return (
       <div className='py-0' key={item.title + (key ? key : "") + "SectionMenuItem"}>
@@ -150,7 +186,7 @@ function SideBar() {
             <ListItemPrefix>
               <WebIcon htmlColor={primary} sx={icons.small} />
             </ListItemPrefix>
-            <Typography className='text-[14px]'>{item.title}</Typography>
+            <Typography className='text-[14px] pt-[8px]'>{item.title}</Typography>
           </ListItem>
         </Tooltip>
       </div>
@@ -167,7 +203,7 @@ function SideBar() {
                                  ${isNavOpen ? "translate-x-0 " : "translate-x-full"}`}>
           <Card className='w-full h-full bg-neutral border-2 border-gray-500 pt-5 overflow-y-auto'>
             <div className='h-full w-full'>
-              <div className='flex items-center justify-center pb-5 border-b-[3px] rounded-b-sm border-gray-500'>
+              <div className='flex items-center justify-center pb-2 border-b-[3px] rounded-b-sm border-gray-500'>
                 <Typography className='text-2xl font-semibold text-secondary'>Menu</Typography>
               </div>
               <div className='flex items-start justify-start w-full text-white'>
@@ -177,7 +213,14 @@ function SideBar() {
                     open={openMenuItems === 1}
                     icon={
                       <div className='flex mx-auto'>
-                        <ArrowDropDownIcon sx={{ width: 25, height: 25, marginBottom: "2px", transform: openMenuItems === 1 ? "rotate(180deg)" : "" }} />
+                        <ArrowDropDownIcon
+                          sx={{
+                            width: 25,
+                            height: 25,
+                            marginBottom: "2px",
+                            transform: openMenuItems === 1 ? "rotate(180deg)" : "",
+                          }}
+                        />
                       </div>
                     }>
                     <ListItem className='p-0' selected={openMenuItems === 1}>
@@ -185,7 +228,7 @@ function SideBar() {
                         <ListItemPrefix>
                           <LayersIcon htmlColor={primary} sx={icons.extraLarge} />
                         </ListItemPrefix>
-                        <Typography className='text-[16px] mr-auto'>Current Sections</Typography>
+                        <Typography className='text-[16px] mr-auto pt-[8px]'>Current Sections</Typography>
                       </AccordionHeader>
                     </ListItem>
                     <AccordionBody className='pl-0 pt-1 pb-0 text-white'>
@@ -205,7 +248,13 @@ function SideBar() {
                     open={openMenuItems === 2}
                     icon={
                       <div className='flex mx-auto'>
-                        <ArrowDropDownIcon sx={{ ...icons.large, marginBottom: "2px", transform: openMenuItems === 2 ? "rotate(180deg)" : "" }} />
+                        <ArrowDropDownIcon
+                          sx={{
+                            ...icons.large,
+                            marginBottom: "2px",
+                            transform: openMenuItems === 2 ? "rotate(180deg)" : "",
+                          }}
+                        />
                       </div>
                     }>
                     <ListItem className='p-0' selected={openMenuItems === 2}>
@@ -213,7 +262,7 @@ function SideBar() {
                         <ListItemPrefix>
                           <FolderIcon htmlColor={primary} sx={icons.large} />
                         </ListItemPrefix>
-                        <Typography className='text-[16px] mr-auto'>File Options</Typography>
+                        <Typography className='text-[16px] mr-auto pt-[8px]'>File Options</Typography>
                       </AccordionHeader>
                     </ListItem>
                     <AccordionBody className='pl-0 pt-1 pb-0 text-white'>
@@ -226,18 +275,18 @@ function SideBar() {
                             <ListItemPrefix>
                               <UploadFileIcon htmlColor={primary} sx={icons.small} />
                             </ListItemPrefix>
-                            <Typography className='text-[14px]'>Configure XML Settings</Typography>
+                            <Typography className='text-[14px] pt-[8px]'>Configure XML Settings</Typography>
                           </ListItem>
                         </Tooltip>
                         <Tooltip title={"Exports the XML File Content"} placement={"top"} id={"exportXMLTooltip"}>
-                          <ListItem onClick={handleOpenXMLExporter}>
+                          <ListItem id={"side-bar-export-button"} onClick={handleOpenXMLExporter}>
                             <ListItemPrefix>
                               <ArrowRightIcon sx={icons.small} />
                             </ListItemPrefix>
                             <ListItemPrefix>
                               <FileDownloadIcon htmlColor={primary} sx={icons.small} />
                             </ListItemPrefix>
-                            <Typography className='text-[14px]'>Export XML</Typography>
+                            <Typography className='text-[14px] pt-[8px]'>Export XML</Typography>
                           </ListItem>
                         </Tooltip>
                       </List>
@@ -248,7 +297,13 @@ function SideBar() {
                     open={openMenuItems === 3}
                     icon={
                       <div className='flex mx-auto'>
-                        <ArrowDropDownIcon sx={{ ...icons.large, marginBottom: "2px", transform: openMenuItems === 3 ? "rotate(180deg)" : "" }} />
+                        <ArrowDropDownIcon
+                          sx={{
+                            ...icons.large,
+                            marginBottom: "2px",
+                            transform: openMenuItems === 3 ? "rotate(180deg)" : "",
+                          }}
+                        />
                       </div>
                     }>
                     <ListItem className='p-0' selected={openMenuItems === 3}>
@@ -256,7 +311,7 @@ function SideBar() {
                         <ListItemPrefix>
                           <SettingsSharpIcon htmlColor={primary} sx={icons.large} />
                         </ListItemPrefix>
-                        <Typography className='text-[16px] mr-auto'>Settings</Typography>
+                        <Typography className='text-[16px] mr-auto pt-[8px]'>Settings</Typography>
                       </AccordionHeader>
                     </ListItem>
                     <AccordionBody className='pl-0 pt-1 pb-0 text-white'>
@@ -269,7 +324,7 @@ function SideBar() {
                             <ListItemPrefix>
                               <QueueIcon htmlColor={primary} sx={icons.small} />
                             </ListItemPrefix>
-                            <Typography className='text-[14px]'>Create a New Section</Typography>
+                            <Typography className='text-[14px] pt-[8px]'>Create a New Section</Typography>
                           </ListItem>
                         </Tooltip>
                         <ListItem onClick={handleExpandAllAccordions}>
@@ -279,7 +334,7 @@ function SideBar() {
                           <ListItemPrefix>
                             <AddCircleIcon htmlColor={primary} sx={icons.small} />
                           </ListItemPrefix>
-                          <Typography className='text-[14px]'>Expand All Sections</Typography>
+                          <Typography className='text-[14px] pt-[8px]'>Expand All Sections</Typography>
                         </ListItem>
                         <ListItem onClick={handleCollapseAllAccordions}>
                           <ListItemPrefix>
@@ -288,7 +343,7 @@ function SideBar() {
                           <ListItemPrefix>
                             <RemoveCircleIcon htmlColor={primary} sx={icons.small} />
                           </ListItemPrefix>
-                          <Typography className='text-[14px]'>Collapse All Sections</Typography>
+                          <Typography className='text-[14px] pt-[8px]'>Collapse All Sections</Typography>
                         </ListItem>
                         <Tooltip title={"Clears Out All Data"} placement={"top"} id={"clearOutDataTooltip"}>
                           <ListItem onClick={handleOpenResetDataMenu}>
@@ -298,7 +353,7 @@ function SideBar() {
                             <ListItemPrefix>
                               <RestoreIcon htmlColor={primary} sx={icons.small} />
                             </ListItemPrefix>
-                            <Typography className='text-[14px]'>Reset Template Data</Typography>
+                            <Typography className='text-[14px] pt-[8px]'>Reset Template Data</Typography>
                           </ListItem>
                         </Tooltip>
                       </List>

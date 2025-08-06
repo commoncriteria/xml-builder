@@ -1,5 +1,20 @@
 import { createSlice } from "@reduxjs/toolkit";
 import { v4 as uuidv4 } from "uuid";
+import { defaultAudit } from "./sfrBasePPsSlice.js";
+import { deepCopy } from "../../utils/deepCopy.js";
+
+// Constants
+export const defaultToeSfr = {
+  open: false,
+  audit: deepCopy(defaultAudit),
+};
+export const sfrTypeMap = {
+  Mandatory: "mandatory",
+  Optional: "optional",
+  Objective: "objective",
+  "Selection-based": "selectionBased",
+  "Implementation-dependent": "implementationDependent",
+};
 
 const initialState = {
   auditSection: "",
@@ -16,6 +31,13 @@ const initialState = {
                     Showing the value in square brackets indicates assignment.</li><li><strong>Iteration operation</strong>:
                     Is indicated by appending the SFRs name with a slash and unique identifier suggesting the purpose of
                     the operation, e.g. "/EXAMPLE1."</li></ul>`,
+  toeSfrs: {
+    mandatory: deepCopy(defaultToeSfr),
+    optional: deepCopy(defaultToeSfr),
+    objective: deepCopy(defaultToeSfr),
+    selectionBased: deepCopy(defaultToeSfr),
+    implementationDependent: deepCopy(defaultToeSfr),
+  },
   sections: {},
 };
 
@@ -31,12 +53,15 @@ export const sfrSlice = createSlice({
     },
     CREATE_SFR_SECTION: (state, action) => {
       let newId = uuidv4();
-      const { title, definition, extendedComponentDefinition } = action.payload;
+      const { id, title, sfrType, definition, classDescription, extendedComponentDefinition } = action.payload;
 
       if (!state.sections.hasOwnProperty(newId)) {
         state.sections[newId] = {
           title,
+          id: id ? id : "",
+          sfrType: sfrType ? sfrType : "",
           definition: definition ? definition : "",
+          classDescription: classDescription ? classDescription : "",
           extendedComponentDefinition: extendedComponentDefinition ? extendedComponentDefinition : [],
           open: false,
         };
@@ -53,6 +78,20 @@ export const sfrSlice = createSlice({
         if (state.sections[uuid].title === title) {
           state.sections[uuid].title = newTitle;
         }
+      }
+    },
+    UPDATE_SFR_SECTION_ID: (state, action) => {
+      const { id, uuid } = action.payload;
+
+      if (state.sections.hasOwnProperty(uuid)) {
+        state.sections[uuid].id = id;
+      }
+    },
+    UPDATE_SFR_SECTION_TYPE: (state, action) => {
+      const { sfrType, uuid } = action.payload;
+
+      if (state.sections.hasOwnProperty(uuid)) {
+        state.sections[uuid].sfrType = sfrType;
       }
     },
     UPDATE_SFR_SECTION_DEFINITION: (state, action) => {
@@ -130,6 +169,19 @@ export const sfrSlice = createSlice({
         }
       }
     },
+    UPDATE_TOE_SFRS: (state, action) => {
+      try {
+        const { sfrType, key, value } = action.payload;
+
+        // Initialize toe sfr
+        initializeToeSfr(state, sfrType, key);
+
+        // Update the value of the toeSfr key
+        state.toeSfrs[sfrType][key] = value;
+      } catch (e) {
+        console.log(e);
+      }
+    },
     SET_SFRS_INITIAL_STATE: (state, action) => {
       try {
         return {
@@ -143,13 +195,36 @@ export const sfrSlice = createSlice({
   },
 });
 
+// Internal Methods
+/**
+ * Initializes the toe sfrs if the values do not already exist
+ * @param state the state
+ * @param sfrType the sfr type (mandatory, optional, objective, selectionBased, implementationDependent)
+ */
+const initializeToeSfr = (state, sfrType) => {
+  try {
+    if (!state.hasOwnProperty("toeSfrs")) {
+      state.toeSfrs = deepCopy(initialState.toeSfrs);
+    }
+
+    if (!state.toeSfrs?.hasOwnProperty(sfrType)) {
+      state.toeSfrs[sfrType] = deepCopy(defaultToeSfr);
+    }
+  } catch (e) {
+    console.log(e);
+  }
+};
+
 // Action creators are generated for each case reducer function
 export const {
   UPDATE_MAIN_SFR_DEFINITION,
   CREATE_SFR_SECTION,
   UPDATE_AUDIT_SECTION,
   UPDATE_SFR_SECTION_TITLE,
+  UPDATE_SFR_SECTION_ID,
+  UPDATE_SFR_SECTION_TYPE,
   UPDATE_SFR_SECTION_DEFINITION,
+  UPDATE_TOE_SFRS,
   DELETE_ALL_SFR_SECTIONS,
   COLLAPSE_SFR_SECTION,
   RESET_SFR_STATE,

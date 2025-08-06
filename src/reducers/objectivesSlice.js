@@ -42,6 +42,13 @@ export const objectivesSlice = createSlice({
         }
       }
     },
+    UPDATE_OBJECTIVE_SECTION_METADATA: (state, action) => {
+      const xmlTagMeta = action.payload.xmlTagMeta;
+      const uuid = action.payload.uuid;
+      if (state.hasOwnProperty(uuid)) {
+        state[uuid].xmlTagMeta = xmlTagMeta;
+      }
+    },
     DELETE_OBJECTIVE_SECTION: (state, action) => {
       let title = action.payload.title;
       let uuid = action.payload.uuid;
@@ -62,16 +69,17 @@ export const objectivesSlice = createSlice({
       }
     },
     CREATE_OBJECTIVE_TERM: (state, action) => {
-      let objectiveUUID = action.payload.objectiveUUID;
-      let title = action.payload.title;
-      let definition = action.payload.definition;
+      const { objectiveUUID, title = "", definition = "", consistencyRationale = "" } = action.payload;
+
       let uuid = uuidv4();
-      if (state.hasOwnProperty(objectiveUUID)) {
+      if (objectiveUUID && state.hasOwnProperty(objectiveUUID)) {
         let currentTermList = state[objectiveUUID];
+
         if (!currentTermList.hasOwnProperty(uuid)) {
           currentTermList.terms[uuid] = {
-            title: title ? title : "",
-            definition: definition ? definition : "",
+            title,
+            definition,
+            consistencyRationale,
             open: false,
           };
         }
@@ -104,6 +112,16 @@ export const objectivesSlice = createSlice({
         if (state[objectiveUUID].terms.hasOwnProperty(uuid) && state[objectiveUUID].terms[uuid].title === originalTitle) {
           state[objectiveUUID].terms[uuid].definition = newDefinition;
         }
+      }
+    },
+    UPDATE_OBJECTIVE_TERM_CONSISTENCY_RATIONALE: (state, action) => {
+      const { objectiveUUID, uuid, consistencyRationale } = action.payload;
+      const validParams = objectiveUUID && uuid && consistencyRationale;
+      const isValidTerms =
+        state.hasOwnProperty(objectiveUUID) && state[objectiveUUID].hasOwnProperty("terms") && state[objectiveUUID].terms.hasOwnProperty(uuid);
+
+      if (validParams && isValidTerms) {
+        state[objectiveUUID].terms[uuid].consistencyRationale = consistencyRationale;
       }
     },
     DELETE_OBJECTIVE_TERM: (state, action) => {
@@ -193,6 +211,8 @@ export const {
   CREATE_OBJECTIVE_TERM,
   UPDATE_OBJECTIVE_TERM_TITLE,
   UPDATE_OBJECTIVE_TERM_DEFINITION,
+  UPDATE_OBJECTIVE_SECTION_METADATA,
+  UPDATE_OBJECTIVE_TERM_CONSISTENCY_RATIONALE,
   DELETE_OBJECTIVE_TERM,
   DELETE_ALL_OBJECTIVE_TERMS,
   COLLAPSE_OBJECTIVE_TERM,

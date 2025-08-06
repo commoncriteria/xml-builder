@@ -249,6 +249,7 @@ function SfrEvaluationActivity({ isManagementFunction }) {
                   <div className='flex justify-center w-full'>
                     <div className='w-full'>
                       <MultiSelectDropdown
+                        selectId='eval_act_select'
                         selectionOptions={evaluationActivityDropdown}
                         selections={selectedEvaluationActivity}
                         title={"Evaluation Activity"}
@@ -282,6 +283,7 @@ function SfrEvaluationActivity({ isManagementFunction }) {
                 <span className='w-full inline-flex items-baseline'>
                   <div className='w-[96%]'>
                     <MultiSelectDropdown
+                      selectId='new_eval_act_select'
                       selectionOptions={newEvaluationActivityDropdown}
                       selections={newSelectedEvaluationActivity}
                       title={"Evaluation Activities"}

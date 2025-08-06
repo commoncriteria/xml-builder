@@ -10,12 +10,15 @@ export const editorSlice = createSlice({
     CREATE_EDITOR: (state, action) => {
       let title = action.payload.title;
       let index = Object.values(state).findIndex((value) => value.title === title);
+      const text = action.payload?.text || "";
       if (index === -1) {
         let newId = uuidv4();
         state[newId] = {
           title: title,
-          text: "",
+          text: text,
           open: false,
+          custom: action.payload.custom,
+          xmlTagMeta: action.payload?.xmlTagMeta,
         };
         action.payload = newId;
       } else {

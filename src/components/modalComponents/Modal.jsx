@@ -26,6 +26,7 @@ function Modal(props) {
     disabled: PropTypes.bool,
     hideSubmit: PropTypes.bool,
     fullscreen: PropTypes.bool,
+    closeButtonId: PropTypes.string,
     handleOpen: PropTypes.func.isRequired,
     handleSubmit: PropTypes.func,
     handleDialogActions: PropTypes.node,
@@ -118,6 +119,7 @@ function Modal(props) {
               marginBottom: "8px",
             }}>
             <Button
+              id={props.closeButtonId || "modal-close-button"}
               onClick={props.handleOpen}
               variant={`${props.hideSubmit ? "contained" : "outlined"}`}
               color={"primary"}

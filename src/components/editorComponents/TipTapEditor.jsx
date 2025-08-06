@@ -19,6 +19,7 @@ import {
   FaAlignJustify,
   FaAlignLeft,
   FaListOl,
+  FaCode,
 } from "react-icons/fa";
 import { LuHeading1, LuHeading2 } from "react-icons/lu";
 import { RiDeleteColumn, RiDeleteRow, RiInsertColumnLeft, RiInsertColumnRight } from "react-icons/ri";
@@ -34,11 +35,19 @@ import { Superscript } from "@tiptap/extension-superscript";
 import { Subscript } from "@tiptap/extension-subscript";
 import { TextAlign } from "@tiptap/extension-text-align";
 import { Placeholder } from "@tiptap/extension-placeholder";
+import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
+import { all, createLowlight } from "lowlight";
 import { Card, CardFooter } from "@material-tailwind/react";
 import { deepCopy } from "../../utils/deepCopy.js";
 import { handleSnackBarSuccess, handleSnackBarError } from "../../utils/securityComponents.jsx";
+import css from "highlight.js/lib/languages/css";
+import javascript from "highlight.js/lib/languages/javascript";
+import json from "highlight.js/lib/languages/json";
+import plaintext from "highlight.js/lib/languages/plaintext";
+import xml from "highlight.js/lib/languages/xml";
 import "tw-elements-react/dist/css/tw-elements-react.min.css";
 import "../../../index.css";
+import "highlight.js/styles/a11y-dark.css";
 
 /**
  * The TipTapEditor rich text editor
@@ -58,12 +67,21 @@ const TipTapEditor = (props) => {
     index: PropTypes.number,
   };
 
+  // Register languages
+  const lowlight = createLowlight(all);
+  lowlight.register("css", css);
+  lowlight.register("javascript", javascript);
+  lowlight.register("json", json);
+  lowlight.register("plaintext", plaintext);
+  lowlight.register("xml", xml);
+
   // Constants
   const { icons } = useSelector((state) => state.styling);
   const [isNewContent, setIsNewContent] = useState(false);
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
+        codeBlock: false,
         paragraph: {
           renderHTML({ node }) {
             // Return plain text without wrapping it in <p> tags
@@ -97,6 +115,9 @@ const TipTapEditor = (props) => {
           class: "text-blue-600 underline hover:text-blue-800",
           target: "_blank",
         },
+      }),
+      CodeBlockLowlight.configure({
+        lowlight,
       }),
     ],
     content: props.text || "",
@@ -221,9 +242,39 @@ const MenuBar = ({ editor, icons }) => {
   // Constants
   const { textEditor } = icons;
 
-  // Prevent editor blur when clicking on menu bar buttons
+  // Methods
+  /**
+   * Prevents editor blur when clicking on menu bar buttons
+   * @param event the event as a domNode
+   */
   const handleMouseDown = (event) => {
-    event.preventDefault(); // Prevent focus loss
+    // Prevents focus loss
+    event.preventDefault();
+  };
+  /**
+   * Wraps the selected text into a code block instead of the whole line of text
+   */
+  const wrapSelectedTextInCodeBlock = () => {
+    const { state, commands } = editor;
+
+    // Check if the current selection is inside a code block
+    if (editor.isActive("codeBlock")) {
+      // If the selection is inside a code block, toggle it off (remove the code block)
+      commands.toggleNode("paragraph", "codeBlock");
+    } else {
+      // Otherwise, get the selected text
+      const { from, to } = state.selection;
+      const selectedText = state.doc.textBetween(from, to);
+
+      // Wrap in a code block
+      if (from === to) {
+        // If no text is selected, insert an empty code block at the cursor position
+        commands.insertContentAt(from, `<pre><code></code></pre>`);
+      } else if (selectedText) {
+        // Wrap the selected text in a code block
+        commands.insertContentAt({ from, to }, `<pre><code>${selectedText}</code></pre>`);
+      }
+    }
   };
 
   // Return Method
@@ -360,6 +411,23 @@ const MenuBar = ({ editor, icons }) => {
       <Tooltip title={"Insert Table"}>
         <button onMouseDown={handleMouseDown} onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3 }).run()}>
           <GrTableAdd style={textEditor} />
+        </button>
+      </Tooltip>
+      <Tooltip
+        title={
+          <div>
+            Code Block
+            <br />
+            <br />* Note: Press Command/Ctrl + Enter to leave the code block and return to editing the paragraph.
+          </div>
+        }>
+        <button
+          onMouseDown={handleMouseDown}
+          onClick={() => {
+            wrapSelectedTextInCodeBlock();
+          }}
+          className={editor.isActive("codeBlock") ? "is-active" : ""}>
+          <FaCode style={textEditor} />
         </button>
       </Tooltip>
     </div>

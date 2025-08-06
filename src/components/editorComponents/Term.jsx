@@ -82,7 +82,7 @@ function Term(props) {
             <th scope='row' className={`py-2 whitespace-normal justify-left ${props.open ? "w-[30%]" : "w-[85%]"}`}>
               <div id={props.uuid} className='ml-1'>
                 <textarea
-                  className='w-full font-bold text-[13px] text-accent'
+                  className='w-full font-bold text-[13px] text-accent border-2 rounded-lg border-gray-300'
                   onChange={updateTermTitle}
                   rows={`${!props.open ? "1" : ""}`}
                   value={props.title}>

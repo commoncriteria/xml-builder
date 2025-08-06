@@ -18,7 +18,7 @@ import {
   CREATE_SAR_ELEMENT,
 } from "../../reducers/sarsSlice.js";
 import * as fileParser from "../../utils/fileParser.js";
-import { CREATE_TERM_ITEM, DELETE_ALL_SECTION_TERMS, RESET_TERMS_STATE } from "../../reducers/termsSlice.js";
+import { CREATE_TERM_ITEM, DELETE_ALL_SECTION_TERMS, RESET_TERMS_STATE, CREATE_TERMS_LIST } from "../../reducers/termsSlice.js";
 import {
   CREATE_THREAT_TERM,
   UPDATE_THREAT_TERM_SFRS,
@@ -32,6 +32,7 @@ import {
   DELETE_ALL_OBJECTIVE_TERMS,
   RESET_OBJECTIVES_STATE,
   UPDATE_OBJECTIVE_SECTION_DEFINITION,
+  UPDATE_OBJECTIVE_SECTION_METADATA,
 } from "../../reducers/objectivesSlice.js";
 import { CREATE_EDITOR, UPDATE_EDITOR_TEXT, RESET_EDITOR_STATE, UPDATE_EDITOR_METADATA } from "../../reducers/editorSlice.js";
 import {
@@ -47,12 +48,14 @@ import {
   UPDATE_AUDIT_SECTION,
   RESET_SFR_STATE,
   CREATE_SFR_SECTION,
+  UPDATE_TOE_SFRS,
 } from "../../reducers/SFRs/sfrSlice.js";
 import {
   CREATE_ACCORDION_FORM_ITEM,
   DELETE_ALL_ACCORDION_FORM_ITEMS,
   RESET_ACCORDION_PANE_STATE,
   CREATE_ACCORDION_SUB_FORM_ITEM,
+  CREATE_ACCORDION_SFR_MODULE_FORM_ITEM,
   updateMetaDataItem,
   updateFileUploaded,
   updatePlatforms,
@@ -81,7 +84,7 @@ import {
   RESET_CONFORMANCE_CLAIMS_STATE,
 } from "../../reducers/conformanceClaimsSlice.js";
 import ProgressBar from "../ProgressBar.jsx";
-import { clearSessionStorageExcept, fetchTemplateData, handleSnackBarError, handleSnackBarSuccess } from "../../utils/securityComponents.jsx";
+import { clearSessionStorageExcept, fetchTemplateData, getSfrMaps, handleSnackBarError, handleSnackBarSuccess } from "../../utils/securityComponents.jsx";
 import { deepCopy } from "../../utils/deepCopy.js";
 import { getPpTemplateVersion, getPpType } from "../../utils/fileParser.js";
 import { UPDATE_DISTRIBUTED_TOE_INTRO, RESET_DISTRIBUTED_TOE_STATE } from "../../reducers/distributedToeSlice.js";
@@ -92,6 +95,7 @@ import {
   LOAD_TABLE_ROWS,
   RESET_COMPLIANT_TARGETS_OF_EVALUATION_STATE,
 } from "../../reducers/compliantTargetsOfEvaluationSlice.js";
+import { CREATE_SFR_BASE_PP_SECTION, RESET_SFR_BASE_PP_STATE } from "../../reducers/SFRs/sfrBasePPsSlice.js";
 
 /**
  * The FileLoader class that gives various options for file loading
@@ -117,8 +121,82 @@ function FileLoader(props) {
     stateRef.current = state;
     // console.log(state);
   }, [state]);
+  useEffect(() => {
+    // Returns the snackbar success for loading in default xml template when dialog is closed prematurely
+    if (sessionStorage.getItem("fileMenuClosed") === "true") {
+      handleSnackBarSuccess(`Loaded in Default XML Template`);
+      sessionStorage.removeItem("fileMenuClosed");
+    }
+  }, []);
 
   // Methods
+  /**
+   * Handles the dialog open
+   */
+  const handleOpen = () => {
+    const isLoading = sessionStorage.getItem("isLoading");
+
+    // If the dialog was closed prematurely, reset isLoading in session storage
+    if (isLoading !== null && isLoading === "true") {
+      try {
+        // Set fileMenuClosed to true and clear out session storage
+        sessionStorage.setItem("fileMenuClosed", "true");
+        clearSessionStorageExcept(["fileMenuClosed"]).then(() => {
+          // Reload the page
+          location.reload();
+        });
+        sessionStorage.clear();
+      } catch (e) {
+        console.log(e);
+        handleSnackBarError(e);
+      }
+    } else {
+      props.handleOpen();
+    }
+  };
+  /**
+   * Handles updating the progressBar
+   * @param progress  the progress as a number from 0-100
+   * @param steps     any steps that should be visualized/updated
+   */
+  const handleProgressBar = (progress, steps) => {
+    dispatch(
+      setProgress({
+        progress: progress,
+        steps: steps,
+      })
+    );
+  };
+  /**
+   * Handler to update files
+   * @param file the file
+   * @param content the content
+   * @param currentPP the current pp
+   * @param currentMod the current mod
+   */
+  const handleUpdateFiles = (file, content, currentPP, currentMod) => {
+    if (file !== "" && content !== "") {
+      dispatch(
+        updateFileUploaded({
+          filename: file.name,
+          content: content,
+          pp: currentPP !== undefined ? currentPP : false,
+          mod: currentMod !== undefined ? currentMod : false,
+        })
+      );
+    } else {
+      dispatch(
+        updateFileUploaded({
+          filename: file,
+          content: content,
+          pp: currentPP !== undefined ? currentPP : false,
+          mod: currentMod !== undefined ? currentMod : false,
+        })
+      );
+    }
+  };
+
+  // Helper Methods
   /**
    * Validate syntax and store in redux
    * @param xml source xml as a string
@@ -169,13 +247,11 @@ function FileLoader(props) {
       return "fail";
     }
   };
-
   /**
    * Load PP sections into redux slices
    * @param xml the xml
    */
   const loadPPXML = (xml) => {
-    let useCaseMap = {};
     let ppTemplateVersion = "CC2022 Standard";
     let ppType = "Protection Profile";
 
@@ -193,12 +269,11 @@ function FileLoader(props) {
         // Load initial components
         loadPackages(xml);
         loadModules(xml);
-        loadPlatforms(xml);
         loadPPReference(xml, ppType);
-        loadOverview(xml);
-        loadTOEOverview(xml, ppType);
         loadDistributedTOE(xml);
         loadPreferences(xml);
+
+        loadXml(xml, ppType, ppTemplateVersion);
 
         // Update progress
         const currentProgress = 30;
@@ -213,13 +288,6 @@ function FileLoader(props) {
         handleProgressBar(currentProgress, currentSteps);
       }, 500);
       setTimeout(() => {
-        // Load more components
-        loadDocumentScope(xml);
-        loadIntendedReadership(xml);
-        loadTechTerms(xml);
-        useCaseMap = loadUseCase(xml);
-        loadConformanceClaim(xml, ppTemplateVersion);
-
         // Update progress
         const currentProgress = 50;
         const currentSteps = {
@@ -233,14 +301,6 @@ function FileLoader(props) {
       }, 500);
 
       setTimeout(() => {
-        // Get maps from objectives and load other components
-        const { objectivesMap, sfrToObjectivesMap, objectivetoSfrsMap } = loadObjectives(xml);
-        loadOEs(xml, objectivesMap);
-        loadSecurityProblemDescription(xml);
-        const threatWithSFR = loadThreats(xml, objectivesMap, objectivetoSfrsMap, ppTemplateVersion);
-        loadAssumptions(xml, objectivesMap);
-        loadOSPs(xml, objectivesMap);
-
         // Update progress
         const currentProgress = 70;
         const currentSteps = {
@@ -251,17 +311,10 @@ function FileLoader(props) {
         };
         handleProgressBar(currentProgress, currentSteps);
 
-        loadSecurityRequirement(xml);
-
-        // Load SFRS and SARs
-        const { sfrsMap } = loadSFRs(xml, sfrToObjectivesMap, useCaseMap);
-
-        // Add SFR data to the threats
-        if (ppTemplateVersion != "Version 3.1") {
-          updateUUIDDirectRationale(sfrsMap, threatWithSFR);
+        if (ppType !== "Module") {
+          loadSecurityRequirement(xml);
+          loadSARs(xml);
         }
-
-        loadSARs(xml);
       }, 500);
       setTimeout(() => {
         // Update progress
@@ -271,20 +324,9 @@ function FileLoader(props) {
           SARS: true,
         };
         handleProgressBar(currentProgress, currentSteps);
-
-        // Load the remaining appendices
-        loadBibliography(xml);
-        loadEntropyAppendix(xml);
-        loadGuidelinesAppendix(xml);
-        loadSatisfiedReqsAppendix(xml);
       }, 500);
       setTimeout(() => {
-        loadValidationGuidelinesAppendix(xml);
-        loadVectorAppendix(xml);
-        loadAcknowledgementsAppendix(xml);
         loadCustomCSS(xml);
-      }, 5000);
-      setTimeout(() => {
         // Update progress
         const currentProgress = 100;
         const currentSteps = {
@@ -297,7 +339,6 @@ function FileLoader(props) {
       }, 500);
     }
   };
-
   /**
    * Selector function to get UUID by title
    * @param slice the slice
@@ -312,7 +353,6 @@ function FileLoader(props) {
     }
     return null; // return null if no matching title is found
   };
-
   /**
    * Delete all existing data in a certain section
    */
@@ -387,7 +427,6 @@ function FileLoader(props) {
       handleSnackBarError(e);
     }
   };
-
   /**
    * Clears out the sections
    */
@@ -428,7 +467,6 @@ function FileLoader(props) {
     // Clear out existing SAR Sections
     clear_section(stateSars, "sars");
   };
-
   /**
    * Handles removing files by resetting the state
    */
@@ -457,9 +495,9 @@ function FileLoader(props) {
       dispatch(RESET_PREFERENCE_STATE());
       dispatch(RESET_CONFORMANCE_CLAIMS_STATE());
       dispatch(RESET_DISTRIBUTED_TOE_STATE());
+      dispatch(RESET_SFR_BASE_PP_STATE());
     }, 300);
   };
-
   /**
    * Loads in the PP Reference
    * @param xml the xml
@@ -483,7 +521,6 @@ function FileLoader(props) {
       handleSnackBarError(errorMessage);
     }
   };
-
   /**
    * Loads the external package dependencies
    * @param xml the xml
@@ -503,7 +540,6 @@ function FileLoader(props) {
       handleSnackBarError(errorMessage);
     }
   };
-
   /**
    * Loads the <pp-preferences>
    * @param xml the xml
@@ -521,7 +557,6 @@ function FileLoader(props) {
       handleSnackBarError(errorMessage);
     }
   };
-
   /**
    * Loads the external module dependencies
    * @param xml the xml
@@ -539,20 +574,132 @@ function FileLoader(props) {
       handleSnackBarError(errorMessage);
     }
   };
-
   /**
    * Loads the platforms
-   * @param xml the xml
+   * @param platformMeta parsed platform data
    */
-  const loadPlatforms = (xml) => {
+  const loadPlatforms = (platformMeta) => {
     try {
-      const platformMeta = fileParser.getPlatforms(xml);
       const platformData = platformMeta.platformObj;
       const platformXML = platformMeta.platformRawXML;
 
-      dispatch(updatePlatforms({ description: platformData.description, platforms: platformData.platforms, xml: platformXML }));
+      if (platformData.platforms.length !== 0) {
+        dispatch(
+          updatePlatforms({
+            description: platformData.description,
+            platforms: platformData.platforms,
+            xml: platformXML,
+          })
+        );
+      }
     } catch (err) {
       const errorMessage = `Failed to load Platform Data: ${err}`;
+      console.log(errorMessage);
+      handleSnackBarError(errorMessage);
+    }
+  };
+  /**
+   * This function loads all the parsed XML data into the store
+   * @param xml the xml
+   * @param ppType PP, Module, Functional Package
+   * @param ppVersion PP template version
+   */
+  const loadXml = (xml, ppType, ppVersion) => {
+    let useCaseMap = {};
+    let objectivesMap;
+    let sfrToObjectivesMap;
+    let objectivetoSfrsMap;
+    let threatWithSFR;
+    let sfrsMap;
+    try {
+      let returnObject = fileParser.getXmlData(xml, ppType, ppVersion);
+      // 1.0 Introduction
+      for (const introSection of returnObject.intro) {
+        if ("overview" in introSection) {
+          loadOverview(introSection.overview);
+        } else if ("techTerms" in introSection) {
+          loadTechTerms(introSection.techTerms);
+        } else if ("compliantTOE" in introSection) {
+          loadTOEOverview(introSection.compliantTOE);
+        } else if ("useCaseDescription" in introSection) {
+          const useCasesIndex = returnObject.intro.findIndex((introSection) => introSection.hasOwnProperty("useCases"));
+          if (useCasesIndex !== -1) {
+            useCaseMap = loadUseCase(introSection.useCaseDescription, returnObject.intro[useCasesIndex].useCases);
+          }
+        } else if ("platforms" in introSection) {
+          loadPlatforms(introSection.platforms);
+        } else if ("scope" in introSection) {
+          loadDocumentScope(introSection.scope);
+        } else if ("intended" in introSection) {
+          loadIntendedReadership(introSection.intended);
+        }
+      }
+      // 1.0 Intro custom sections
+      returnObject.customIntro.forEach((customIntroSec) => {
+        loadCustomIntroSections(customIntroSec);
+      });
+      // 2.0 Conformance Claims
+      if (returnObject.cClaims?.cClaims && returnObject.cClaims?.cClaimsAttributes) {
+        loadConformanceClaim(returnObject.cClaims.cClaims, returnObject.cClaims?.cClaimsAttributes);
+      }
+      // 4.0 Security Objectives (needs to be processed before section 3 because it relies on this section's outputs)
+      if (returnObject.securityObjectives?.toeObjectives) {
+        ({ objectivesMap, sfrToObjectivesMap, objectivetoSfrsMap } = loadObjectives(returnObject.securityObjectives.toeObjectives));
+      }
+      if (returnObject.securityObjectives?.oeObjectives) {
+        const { intro, securityObjectives, xmlTagMeta } = returnObject.securityObjectives.oeObjectives;
+        loadOEs(intro, securityObjectives, objectivesMap, xmlTagMeta);
+      }
+      // 3.0 Security Problem Definition
+      if (returnObject.spd.definition) {
+        loadSecurityProblemDescription(returnObject.spd.definition);
+      }
+      if (returnObject.spd.threats) {
+        threatWithSFR = loadThreats(returnObject.spd.threats, objectivesMap, objectivetoSfrsMap, ppVersion);
+      }
+      if (returnObject.spd.assumptions) {
+        loadAssumptions(returnObject.spd.assumptions, objectivesMap);
+      }
+      if (returnObject.spd.osp) {
+        loadOSPs(returnObject.spd.osp, objectivesMap);
+      }
+      // 5.0 Security Requirements
+      if (returnObject.sfr.sfrs) {
+        loadSFRs(returnObject.sfr.sfrs, sfrToObjectivesMap, useCaseMap, returnObject.sfr.auditSection, ppType);
+        if (ppType === "Module") {
+          loadBasePPs(xml);
+          loadSfrAuditTables(xml);
+        }
+      }
+      // Add SFR data to the threats
+      if (ppVersion !== "Version 3.1" && threatWithSFR) {
+        sfrsMap = getSfrMaps().sfrNameMap;
+        updateUUIDDirectRationale(sfrsMap, threatWithSFR, ppType);
+      }
+      // custom top level sections
+      returnObject.custom.forEach((customSection) => {
+        loadCustomTopLevelSections(customSection);
+      });
+      // Appendices
+      for (const appendix of returnObject.appendices) {
+        if ("entropy" in appendix) {
+          loadEntropyAppendix(appendix.entropy);
+        } else if ("satisfied" in appendix) {
+          loadSatisfiedReqsAppendix(appendix.satisfied);
+        } else if ("bibliography" in appendix) {
+          loadBibliography(appendix.bibliography);
+        } else if ("acknowledgements" in appendix) {
+          loadAcknowledgementsAppendix(appendix.acknowledgements);
+        } else if ("validation" in appendix) {
+          loadValidationGuidelinesAppendix(appendix.validation);
+        } else if ("equivalency" in appendix) {
+          loadGuidelinesAppendix(appendix.equivalency);
+        } else if ("vector" in appendix) {
+          loadVectorAppendix(appendix.vector);
+        }
+      }
+    } catch (err) {
+      const errorMessage = `Failed to load XML: ${err}`;
       console.log(errorMessage);
       handleSnackBarError(errorMessage);
     }
@@ -560,14 +707,12 @@ function FileLoader(props) {
 
   /**
    * Loads the overview
-   * @param xml the xml
+   * @param overviewData parsed overview data
    */
-  const loadOverview = (xml) => {
+  const loadOverview = (overviewData) => {
     try {
       const { editors: stateEditors } = stateRef.current;
       const overviewUUID = getUUIDByTitle(stateEditors, "Objectives of Document");
-      const overviewData = fileParser.getDocumentObjectives(xml);
-
       if (overviewData.doc_objectives.length != 0) {
         dispatch(UPDATE_EDITOR_TEXT({ uuid: overviewUUID, newText: overviewData.doc_objectives }));
       }
@@ -579,7 +724,6 @@ function FileLoader(props) {
       handleSnackBarError(errorMessage);
     }
   };
-
   /**
    * Loads the Distributed TOE section
    * @param xml the xml
@@ -590,8 +734,18 @@ function FileLoader(props) {
       if (!distributedTOE) return;
 
       // create TOE accordion section and update intro
-      const accordionUUID = dispatch(CREATE_ACCORDION({ title: "Distributed TOE", selected_section: "Conformance Claims" })).payload.uuid;
-      dispatch(UPDATE_DISTRIBUTED_TOE_INTRO({ newIntro: distributedTOE.intro.xml, xmlTagMeta: distributedTOE.intro.xmlTagMeta }));
+      const accordionUUID = dispatch(
+        CREATE_ACCORDION({
+          title: "Distributed TOE",
+          selected_section: "Conformance Claims",
+        })
+      ).payload.uuid;
+      dispatch(
+        UPDATE_DISTRIBUTED_TOE_INTRO({
+          newIntro: distributedTOE.intro.xml,
+          xmlTagMeta: distributedTOE.intro.xmlTagMeta,
+        })
+      );
 
       // create sub-sections
       for (let key of Object.keys(distributedTOE)) {
@@ -613,18 +767,16 @@ function FileLoader(props) {
       handleSnackBarError(errorMessage);
     }
   };
-
   /**
    * Loads the TOE overview
-   * @param xml the xml
+   * @param compliantTOE parsed compliantTOE data
    * @param ppType the pp type
    */
-  const loadTOEOverview = (xml, ppType) => {
+  const loadTOEOverview = (compliantTOE, ppType) => {
     try {
       const { accordionPane: stateAccordionPane, editors: stateEditors } = stateRef.current;
       const introductionUUID = getUUIDByTitle(stateAccordionPane.sections, "Introduction");
       const TOEoverviewUUID = getUUIDByTitle(stateEditors, "TOE Overview");
-      const compliantTOE = fileParser.getCompliantTOE(xml, ppType);
 
       if (compliantTOE) {
         const toeOverview = compliantTOE.toe_overview;
@@ -656,7 +808,14 @@ function FileLoader(props) {
 
             if (editorUUID) {
               // Add the editor to the TOE Overview as a subsection
-              dispatch(CREATE_ACCORDION_SUB_FORM_ITEM({ accordionUUID: introductionUUID, uuid: editorUUID, formUUID: TOEoverviewUUID, contentType: "editor" }));
+              dispatch(
+                CREATE_ACCORDION_SUB_FORM_ITEM({
+                  accordionUUID: introductionUUID,
+                  uuid: editorUUID,
+                  formUUID: TOEoverviewUUID,
+                  contentType: "editor",
+                })
+              );
             }
           }
         }
@@ -667,32 +826,27 @@ function FileLoader(props) {
       handleSnackBarError(errorMessage);
     }
   };
-
   /**
    * Loads the Scope of the Document Section (if exists)
-   * @param xml the xml
+   * @param documentScope
    */
-  const loadDocumentScope = (xml) => {
+  const loadDocumentScope = (documentScope) => {
     try {
       const { accordionPane: stateAccordionPane } = stateRef.current;
       const introductionUUID = getUUIDByTitle(stateAccordionPane.sections, "Introduction");
 
-      // Create the editor if there is content in the xml
-      if (fileParser.getDocumentScope(xml).length != 0) {
-        let editorUUID = dispatch(CREATE_EDITOR({ title: "Scope of the Document" })).payload;
+      let editorUUID = dispatch(CREATE_EDITOR({ title: "Scope of the Document" })).payload;
+      dispatch(UPDATE_EDITOR_TEXT({ uuid: editorUUID, newText: documentScope }));
 
-        dispatch(UPDATE_EDITOR_TEXT({ uuid: editorUUID, newText: fileParser.getDocumentScope(xml) }));
-
-        // Add the editor to the Introduction section
-        if (editorUUID) {
-          dispatch(
-            CREATE_ACCORDION_FORM_ITEM({
-              accordionUUID: introductionUUID,
-              uuid: editorUUID,
-              contentType: "editor",
-            })
-          );
-        }
+      // Add the editor to the Introduction section
+      if (editorUUID) {
+        dispatch(
+          CREATE_ACCORDION_FORM_ITEM({
+            accordionUUID: introductionUUID,
+            uuid: editorUUID,
+            contentType: "editor",
+          })
+        );
       }
     } catch (err) {
       const errorMessage = `Failed to load Scope of the Document Data: ${err}`;
@@ -700,32 +854,27 @@ function FileLoader(props) {
       handleSnackBarError(errorMessage);
     }
   };
-
   /**
    * Loads the Scope of the Document Section (if exists)
-   * @param xml the xml
+   * @param intendedReadership
    */
-  const loadIntendedReadership = (xml) => {
+  const loadIntendedReadership = (intendedReadership) => {
     try {
       const { accordionPane: stateAccordionPane } = stateRef.current;
       const introductionUUID = getUUIDByTitle(stateAccordionPane.sections, "Introduction");
 
-      // Create the editor if there is content in the xml
-      if (fileParser.getIndendedReadership(xml).length != 0) {
-        let editorUUID = dispatch(CREATE_EDITOR({ title: "Intended Readership" })).payload;
+      let editorUUID = dispatch(CREATE_EDITOR({ title: "Intended Readership" })).payload;
+      dispatch(UPDATE_EDITOR_TEXT({ uuid: editorUUID, newText: intendedReadership }));
 
-        dispatch(UPDATE_EDITOR_TEXT({ uuid: editorUUID, newText: fileParser.getIndendedReadership(xml) }));
-
-        // Add the editor to the Introduction section
-        if (editorUUID) {
-          dispatch(
-            CREATE_ACCORDION_FORM_ITEM({
-              accordionUUID: introductionUUID,
-              uuid: editorUUID,
-              contentType: "editor",
-            })
-          );
-        }
+      // Add the editor to the Introduction section
+      if (editorUUID) {
+        dispatch(
+          CREATE_ACCORDION_FORM_ITEM({
+            accordionUUID: introductionUUID,
+            uuid: editorUUID,
+            contentType: "editor",
+          })
+        );
       }
     } catch (err) {
       const errorMessage = `Failed to load Indented Readership Data: ${err}`;
@@ -733,12 +882,11 @@ function FileLoader(props) {
       handleSnackBarError(errorMessage);
     }
   };
-
   /**
    * Loads the tech terms
-   * @param xml the xml
+   * @param terms parsed terms data
    */
-  const loadTechTerms = (xml) => {
+  const loadTechTerms = (terms) => {
     try {
       // Get UUID of the Tech Terms section in order to add terms to that section
       const { terms: stateTerms } = stateRef.current;
@@ -746,8 +894,6 @@ function FileLoader(props) {
       const acronymUUID = getUUIDByTitle(stateTerms, "Acronyms");
       const suppressedUUID = getUUIDByTitle(stateTerms, "Suppressed Terms");
 
-      // Get all the Tech Terms
-      const terms = fileParser.getAllTechTerms(xml);
       if (terms) {
         const { termsArray, acronymsArray, suppressedTermsArray } = terms;
 
@@ -774,20 +920,19 @@ function FileLoader(props) {
       handleSnackBarError(errorMessage);
     }
   };
-
   /**
    * Loads the use cases
-   * @param xml the xml
+   * @param useCaseDescription description
+   * @param allUseCases use cases array
    */
-  const loadUseCase = (xml) => {
+  const loadUseCase = (useCaseDescription, allUseCases) => {
     let useCaseMap = {};
     try {
       const { editors: stateEditors, terms: stateTerms } = stateRef.current;
       const useCaseDescriptionUUID = getUUIDByTitle(stateEditors, "TOE Usage");
-      dispatch(UPDATE_EDITOR_TEXT({ uuid: useCaseDescriptionUUID, newText: fileParser.getUseCaseDescription(xml) }));
+      dispatch(UPDATE_EDITOR_TEXT({ uuid: useCaseDescriptionUUID, newText: useCaseDescription }));
 
       const useCaseUUID = getUUIDByTitle(stateTerms, "Use Cases");
-      const allUseCases = fileParser.getUseCases(xml);
 
       if (allUseCases && allUseCases.length != 0) {
         Object.values(allUseCases).map((term) => {
@@ -814,12 +959,11 @@ function FileLoader(props) {
     }
     return useCaseMap;
   };
-
   /**
    * Loads the conformance claim
    * @param xml the xml
    */
-  const loadConformanceClaim = (xml, ppTemplateVersion) => {
+  const loadConformanceClaim = (allCClaims, cClaimsAttributes) => {
     // Helper function to take PPs that are both conformant and configuration and store in its own array (to avoid duplicates in UI)
     function consolidatePPs(conformantPPs, configurationPPs, consolidatedPPs) {
       for (let i = conformantPPs.length - 1; i >= 0; i--) {
@@ -843,8 +987,6 @@ function FileLoader(props) {
       const ccConformanceClaimsUUID = getUUIDByTitle(stateEditors, "CC Conformance Claims");
       const ppClaimUUID = getUUIDByTitle(stateEditors, "PP Claims");
       const packageClaimUUID = getUUIDByTitle(stateEditors, "Package Claims");
-      const allCClaims = fileParser.getCClaims(xml, ppTemplateVersion);
-      const cClaimsAttributes = fileParser.getCClaimsAttributes(xml);
 
       if (cClaimsAttributes) {
         dispatch(UPDATE_CC_ERRATA({ cc_errata: cClaimsAttributes["cc-errata"] }));
@@ -884,7 +1026,13 @@ function FileLoader(props) {
 
               // Store PP that is conformant and part of configuration
               claim.conformantAndConfig.forEach((claim) => {
-                dispatch(CREATE_NEW_PP_CLAIM({ isPP: true, status: ["Conformance", "Configuration"], description: claim.description }));
+                dispatch(
+                  CREATE_NEW_PP_CLAIM({
+                    isPP: true,
+                    status: ["Conformance", "Configuration"],
+                    description: claim.description,
+                  })
+                );
               });
 
               // Store PP that is only conformant
@@ -897,7 +1045,13 @@ function FileLoader(props) {
                 dispatch(CREATE_NEW_PP_CLAIM({ isPP: true, status: ["Configuration"], description: pp.description }));
               });
               claim.configurations.modules.forEach((module) => {
-                dispatch(CREATE_NEW_PP_CLAIM({ isPP: false, status: ["Configuration"], description: module.description }));
+                dispatch(
+                  CREATE_NEW_PP_CLAIM({
+                    isPP: false,
+                    status: ["Configuration"],
+                    description: module.description,
+                  })
+                );
               });
               return;
             case "Package Claim CC2022":
@@ -928,13 +1082,12 @@ function FileLoader(props) {
       handleSnackBarError(errorMessage);
     }
   };
-
   /**
    * Loads the objectives
-   * @param xml the xml
+   * @param toeObjectives
    * @returns {{objectivesMap: {}, sfrToObjectivesMap: {}}} the objectives and sfrToObjectives maps
    */
-  const loadObjectives = (xml) => {
+  const loadObjectives = (toeObjectives) => {
     let objectivesMap = {};
     let sfrToObjectivesMap = {};
     let objectivetoSfrsMap = {};
@@ -943,12 +1096,18 @@ function FileLoader(props) {
       // Get Objectives
       const { objectives: stateObjectives } = stateRef.current;
       const objectivesUUID = getUUIDByTitle(stateObjectives, "Security Objectives for the TOE");
-      const toeObjectives = fileParser.getAllSecurityObjectivesTOE(xml);
+
       Object.values(toeObjectives).map((objective) => {
         const name = objective.name;
         const definition = objective.definition;
         const sfrs = objective.sfrs;
-        const result = dispatch(CREATE_OBJECTIVE_TERM({ objectiveUUID: objectivesUUID, title: name, definition: definition }));
+        const result = dispatch(
+          CREATE_OBJECTIVE_TERM({
+            objectiveUUID: objectivesUUID,
+            title: name,
+            definition: definition,
+          })
+        );
         const objectiveUUID = result.payload.id;
         objectivesMap[name] = objectiveUUID;
         objectivetoSfrsMap[name] = sfrs;
@@ -979,39 +1138,58 @@ function FileLoader(props) {
     }
     return { objectivesMap, sfrToObjectivesMap, objectivetoSfrsMap };
   };
-
   /**
    * Loads the OEs
-   * @param xml the xml
+   * @param intro
+   * @param securityObjectives
    * @param objectivesMap the objectives map
+   * @param xmlTagMeta tag/attribute data for the section
    */
-  const loadOEs = (xml, objectivesMap) => {
+  const loadOEs = (intro, securityObjectives, objectivesMap, xmlTagMeta) => {
     try {
       const { objectives: stateObjectives } = stateRef.current;
       const oeUUID = getUUIDByTitle(stateObjectives, "Security Objectives for the Operational Environment");
-      const { intro, securityObjectives } = fileParser.getAllSecurityObjectivesOE(xml);
-      dispatch(UPDATE_OBJECTIVE_SECTION_DEFINITION({ uuid: oeUUID, title: "Security Objectives for the Operational Environment", newDefinition: intro }));
+
+      dispatch(
+        UPDATE_OBJECTIVE_SECTION_DEFINITION({
+          uuid: oeUUID,
+          title: "Security Objectives for the Operational Environment",
+          newDefinition: intro,
+        })
+      );
       Object.values(securityObjectives).map((objective) => {
         const name = objective.name;
         const definition = objective.definition;
         const sfrs = objective.sfrs;
-        const result = dispatch(CREATE_OBJECTIVE_TERM({ objectiveUUID: oeUUID, title: name, definition: definition, sfrs: sfrs }));
+        const result = dispatch(
+          CREATE_OBJECTIVE_TERM({
+            objectiveUUID: oeUUID,
+            title: name,
+            definition: definition,
+            sfrs: sfrs,
+          })
+        );
         objectivesMap[name] = result.payload.id;
       });
+
+      dispatch(
+        UPDATE_OBJECTIVE_SECTION_METADATA({
+          uuid: oeUUID,
+          xmlTagMeta: xmlTagMeta,
+        })
+      );
     } catch (err) {
       const errorMessage = `Failed to load Security Objectives of the Operational Environment Data: ${err}`;
       console.log(errorMessage);
       handleSnackBarError(errorMessage);
     }
   };
-
   /**
    * Load Security Problem Definition
-   * @param {*} xml
+   * @param {String} definition
    */
-  const loadSecurityProblemDescription = (xml) => {
+  const loadSecurityProblemDescription = (definition) => {
     try {
-      const definition = fileParser.getSecurityProblemDefinition(xml);
       if (definition.length != 0) {
         dispatch(UPDATE_MAIN_SECURITY_PROBLEM_DEFINITION({ newDefinition: definition }));
       }
@@ -1021,27 +1199,31 @@ function FileLoader(props) {
       handleSnackBarError(errorMessage);
     }
   };
-
   /**
    * Loads the threats
-   * @param xml the xml
+   * @param threatMeta parsed threats data
    * @param objectivesMap the objectives map
    * @param objectivetoSfrsMap objective to sfr name, rationale
    * @param ppTemplateVersion PP version
    */
-  const loadThreats = (xml, objectivesMap, objectivetoSfrsMap, ppTemplateVersion) => {
+  const loadThreats = (threatMeta, objectivesMap, objectivetoSfrsMap, ppTemplateVersion) => {
     let threatWithSFR = {};
 
     try {
       const { threats: stateThreats } = stateRef.current;
       const threatsUUID = getUUIDByTitle(stateThreats, "Threats");
-      const threatMeta = fileParser.getAllThreats(xml);
       const threatDescription = threatMeta.threat_description;
       const allThreats = threatMeta.threats;
       let sfrs = [];
 
       // Set the description
-      dispatch(UPDATE_THREAT_SECTION_DEFINITION({ uuid: threatsUUID, title: "Threats", newDefinition: threatDescription }));
+      dispatch(
+        UPDATE_THREAT_SECTION_DEFINITION({
+          uuid: threatsUUID,
+          title: "Threats",
+          newDefinition: threatDescription,
+        })
+      );
 
       threatWithSFR = Object.values(allThreats).map((threat) => {
         sfrs = [];
@@ -1070,7 +1252,14 @@ function FileLoader(props) {
         }
 
         const threatStateRef = dispatch(
-          CREATE_THREAT_TERM({ threatUUID: threatsUUID, title: threat.name, definition: threat.definition, objectives: objectivesWithUUID, sfrs: sfrs })
+          CREATE_THREAT_TERM({
+            threatUUID: threatsUUID,
+            title: threat.name,
+            definition: threat.definition,
+            objectives: objectivesWithUUID,
+            sfrs: sfrs,
+            basePPs: threat.basePPs,
+          })
         );
         return {
           ...threat,
@@ -1086,22 +1275,24 @@ function FileLoader(props) {
       handleSnackBarError(errorMessage);
     }
   };
-
   /**
    * Add the UUID for the SFRs in the threat -> SFR relationship for v3.1 to CC2022 DR conversion
-   * @param {*} sfrsMap
-   * @param {*} threatWithSFR
+   * @param sfrsMap the map of sfrs
+   * @param threatWithSFR the map of threats to sfrs
+   * @param ppType the current pp type of the file being imported
    */
-  const updateUUIDDirectRationale = (sfrsMap, threatWithSFR) => {
+  const updateUUIDDirectRationale = (sfrsMap, threatWithSFR, ppType) => {
     // Passing data via threatsWithSfr instead of using another useState as this is a one time operation
     const { threats: stateThreats } = stateRef.current;
     const sectionUUID = getUUIDByTitle(stateThreats, "Threats");
+    const isModule = ppType === "Module";
 
     Object.values(threatWithSFR).forEach((threat) => {
       const sfrMap = new Map();
 
       threat.sfrs.forEach((sfr) => {
-        const sfrName = sfr.name;
+        const initialSfrName = sfr.name;
+        const sfrName = isModule ? getCorrectSfrType(initialSfrName, sfrsMap) : initialSfrName;
         const sfrUUID = sfrsMap[sfrName];
         const rationale = sfr.rationale;
 
@@ -1127,8 +1318,39 @@ function FileLoader(props) {
         })
       );
     });
-  };
 
+    /**
+     * Gets the true sfr type instead of the generic "optional" where applicable
+     * @param sfrName the original name of the sfr to update
+     * @param sfrsMap the current sfrs map of the true sfr names
+     * @returns {*|string}
+     */
+    function getCorrectSfrType(sfrName, sfrsMap) {
+      try {
+        const typeMatch = sfrName.match(/\(([^)]+)\)/);
+        const sfrType = typeMatch ? typeMatch[1] : null;
+
+        // Check if the sfrType is optional and if the map does not have the name
+        if (sfrType && sfrType === "optional" && !sfrsMap?.hasOwnProperty(sfrName)) {
+          const sfrNameArr = sfrName.replace(/["']/g, "").split("(");
+          const sfrValue = sfrNameArr[0].trim();
+          const implementationDependentName = `${sfrValue} (implementation-dependent)`;
+          const objectiveName = `${sfrValue} (objective)`;
+
+          // If the name exists with implementation dependent or objective, return the updated sfr name
+          if (sfrsMap.hasOwnProperty(implementationDependentName)) {
+            return implementationDependentName;
+          } else if (sfrsMap.hasOwnProperty(objectiveName)) {
+            return objectiveName;
+          }
+        }
+      } catch (e) {
+        console.log(e);
+      }
+
+      return sfrName;
+    }
+  };
   /**
    * Convert simple selectables and component dependencies to UUIDs
    */
@@ -1143,7 +1365,7 @@ function FileLoader(props) {
 
         if (component.evaluationActivities) {
           for (const [eAUUID, eADetails] of Object.entries(component.evaluationActivities)) {
-            const tests = eADetails.tests;
+            const tests = eADetails.tests || {};
             const dependencyMap = {};
 
             for (const [_, test] of Object.entries(tests)) {
@@ -1230,22 +1452,28 @@ function FileLoader(props) {
             selection_obj.elements = elements;
 
             // Update the selection dependent IDs in the slice
-            dispatch(UPDATE_SFR_COMPONENT_ITEMS({ sfrUUID: familiyUUID, uuid: componentUUID, itemMap: { selections: selection_obj } }));
+            dispatch(
+              UPDATE_SFR_COMPONENT_ITEMS({
+                sfrUUID: familiyUUID,
+                uuid: componentUUID,
+                itemMap: { selections: selection_obj },
+              })
+            );
           }
         }
       }
     }
   };
-
   /**
    * Loads the assumptions
-   * @param xml the xml
+   * @param allAssumptions
+   * @param objectivesMap the map of objectives
    */
-  const loadAssumptions = (xml, objectivesMap) => {
+  const loadAssumptions = (allAssumptions, objectivesMap) => {
     try {
       const { threats: stateThreats } = stateRef.current;
       const assumptionsUUID = getUUIDByTitle(stateThreats, "Assumptions");
-      const allAssumptions = fileParser.getAllAssumptions(xml);
+
       Object.values(allAssumptions).map((assumption) => {
         const name = assumption.name;
         const definition = assumption.definition;
@@ -1259,7 +1487,14 @@ function FileLoader(props) {
             uuid: objectiveUUID,
           };
         });
-        dispatch(CREATE_THREAT_TERM({ threatUUID: assumptionsUUID, title: name, definition: definition, objectives: objectivesWithUUID }));
+        dispatch(
+          CREATE_THREAT_TERM({
+            threatUUID: assumptionsUUID,
+            title: name,
+            definition: definition,
+            objectives: objectivesWithUUID,
+          })
+        );
       });
     } catch (err) {
       const errorMessage = `Failed to load Assumptions Data: ${err}`;
@@ -1267,16 +1502,16 @@ function FileLoader(props) {
       handleSnackBarError(errorMessage);
     }
   };
-
   /**
    * Loads the OSPs (Organizational Security Policies)
-   * @param xml the xml
+   * @param allOSPs
+   * @param objectivesMap the map of objectives
    */
-  const loadOSPs = (xml, objectivesMap) => {
+  const loadOSPs = (allOSPs, objectivesMap) => {
     try {
       const { threats: stateThreats } = stateRef.current;
       const ospUUID = getUUIDByTitle(stateThreats, "Organizational Security Policies");
-      const allOSPs = fileParser.getAllOSPs(xml);
+
       Object.values(allOSPs).map((osp) => {
         const name = osp.name;
         const definition = osp.definition;
@@ -1290,7 +1525,14 @@ function FileLoader(props) {
             uuid: objectiveUUID,
           };
         });
-        dispatch(CREATE_THREAT_TERM({ threatUUID: ospUUID, title: name, definition: definition, objectives: objectivesWithUUID }));
+        dispatch(
+          CREATE_THREAT_TERM({
+            threatUUID: ospUUID,
+            title: name,
+            definition: definition,
+            objectives: objectivesWithUUID,
+          })
+        );
       });
     } catch (err) {
       const errorMessage = `Failed to load OSPs Data: ${err}`;
@@ -1298,7 +1540,6 @@ function FileLoader(props) {
       handleSnackBarError(errorMessage);
     }
   };
-
   /**
    * Loads the Security Requirement
    * @param xml the xml
@@ -1313,100 +1554,214 @@ function FileLoader(props) {
       handleSnackBarError(errorMessage);
     }
   };
+  /**
+   * Loading of Base PPs for Modules
+   * @param {Node} xml
+   */
+  const loadBasePPs = (xml) => {
+    const { accordionPane: stateAccordionPane } = stateRef.current;
+
+    fileParser.getBasePPs(xml).forEach((basePP) => {
+      // Create the base PP sections
+      let baseSfrUUID = dispatch(
+        CREATE_SFR_BASE_PP_SECTION({
+          declarationAndRef: basePP.declarationAndRef,
+          modifiedSfrs: basePP.modifiedSfrs,
+          additionalSfrs: basePP.additionalSfrs,
+          consistencyRationale: basePP.consistencyRationale,
+          name: basePP.declarationAndRef.name,
+        })
+      ).payload;
+
+      // Add the base PP sections to the formItems for section 5 (security requirements)
+      const securityRequirementsUUID = getUUIDByTitle(stateAccordionPane.sections, "Security Requirements");
+      dispatch(
+        CREATE_ACCORDION_FORM_ITEM({
+          accordionUUID: securityRequirementsUUID,
+          uuid: baseSfrUUID,
+          contentType: "sfrBasePPs",
+        })
+      );
+
+      // Create the SFR components for the additional SFRs
+      basePP.additionalSFRComponents?.forEach((comp) => {
+        dispatch(
+          CREATE_SFR_COMPONENT({
+            sfrUUID: comp.familyExtCompDef,
+            component: comp,
+          })
+        );
+      });
+
+      // Create the SFR components for the modified SFRs according to mod reform format
+      basePP.modifiedSFRElements?.forEach((elem) => {
+        dispatch(
+          CREATE_SFR_COMPONENT({
+            sfrUUID: elem.familyUUIDMap.get(elem.sectionID),
+            component: elem.matchedComponent,
+            xPathDetails: elem.xPathDetails,
+          })
+        );
+      });
+
+      // Create the SFR components for the modified SFRs according to old format
+      basePP.modifiedSFRComponents?.forEach((comp) => {
+        dispatch(
+          CREATE_SFR_COMPONENT({
+            sfrUUID: comp.familyUUID,
+            component: comp,
+          })
+        );
+      });
+    });
+  };
+
+  /**
+   * Load audit table sections for modules
+   * @param {Node} xml
+   */
+  const loadSfrAuditTables = (xml) => {
+    try {
+      const result = fileParser.getSfrAuditTables(xml);
+      for (const key in result) {
+        dispatch(
+          UPDATE_TOE_SFRS({
+            sfrType: key,
+            key: "audit",
+            value: result[key],
+          })
+        );
+      }
+    } catch (e) {
+      console.log(e);
+      handleSnackBarError(e);
+    }
+  };
 
   /**
    * Loads the sfrs
-   * @param xml the xml
+   * @param allSFRs
    * @param sfrToObjectivesMap the sfrToObjectives map
    * @param useCaseMap the use case map
+   * @param auditSection
+   * @param ppType
    */
-  const loadSFRs = (xml, sfrToObjectivesMap, useCaseMap) => {
-    const { accordionPane: stateAccordionPane, editors: stateEditors } = stateRef.current;
+  const loadSFRs = (allSFRs, sfrToObjectivesMap, useCaseMap, auditSection, ppType) => {
+    try {
+      const { accordionPane: stateAccordionPane, editors: stateEditors } = stateRef.current;
 
-    // Load audit section
-    dispatch(UPDATE_AUDIT_SECTION({ newDefinition: fileParser.getAuditSection(xml) }));
+      // Load audit section
+      dispatch(UPDATE_AUDIT_SECTION({ newDefinition: auditSection }));
 
-    // SFRs
-    const extCompDefMap = fileParser.getSectionExtendedComponentDefinitionMap(xml);
-    const allSFRs = fileParser.getSFRs(xml, extCompDefMap);
-    let previousSfrFamily = null;
-    let previousFamilyUUID = null;
-    let sfrComponents = [];
-    let sfrFamilyUUID = null;
-    let sfrName = "";
-    let sfrsMap = {}; // SFR to UUID, to be used in direct rationale mapping
+      // SFRs
+      let previousSfrFamily = null;
+      let previousFamilyUUID = null;
+      let sfrComponents = [];
+      let sfrFamilyUUID = null;
+      let sfrName = "";
+      let sfrsMap = {}; // SFR to UUID, to be used in direct rationale mapping
 
-    let familiesDone = new Set();
-    allSFRs.forEach((sfr, index) => {
-      if (!familiesDone.has(sfr.family_id) || index == 0) {
-        // Create SFR slices (SFR Classes parent high level)
-        const result = dispatch(
-          CREATE_SFR_SECTION({
-            title: sfr.family_name,
-            definition: sfr.familyDescription,
-            extendedComponentDefinition: sfr.familyExtCompDef,
-          })
-        );
-        sfrFamilyUUID = result.payload;
-
-        // Create these classes under the Security Functional Requirements section which is under the Security Requirements accordionPane section
-        const secReqsUUID = getUUIDByTitle(stateAccordionPane.sections, "Security Requirements");
-        const secFuncReqsUUID = getUUIDByTitle(stateEditors, "Security Functional Requirements");
-
-        dispatch(CREATE_ACCORDION_SUB_FORM_ITEM({ accordionUUID: secReqsUUID, uuid: sfrFamilyUUID, formUUID: secFuncReqsUUID, contentType: "sfrs" }));
-      }
-
-      if (sfr.family_id != previousSfrFamily && index != 0) {
-        // Create sfrSections slices (content for the SFR Classes)
-        sfrComponents.forEach((component) => {
-          // Get objectives
-          const { cc_id, iteration_id } = component;
-          sfrName = `${cc_id}${iteration_id ? "/" + iteration_id : ""}`;
-
-          // Get the objectives based off of the sfrName and set to empty if no objectives exist for the entry
-          if (sfrToObjectivesMap.hasOwnProperty(sfrName)) {
-            component.objectives = deepCopy(sfrToObjectivesMap[sfrName]);
-          } else {
-            component.objectives = [];
+      let familiesDone = new Set();
+      for (let index = 0; index < allSFRs.length; index++) {
+        const sfr = allSFRs[index];
+        if (!familiesDone.has(sfr.family_id) || index === 0) {
+          if (ppType === "Module" && !sfr.sfrType) {
+            // module SFRs without an sfrType are additional SFRs
+            // which dont need to be added to sfrSlice
+            continue;
           }
+          // Create SFR slices (SFR Classes parent high level)
+          const result = dispatch(
+            CREATE_SFR_SECTION({
+              title: sfr.family_name,
+              definition: sfr.familyDescription,
+              classDescription: sfr.classDescription,
+              extendedComponentDefinition: sfr.familyExtCompDef,
+              sfrType: sfr.sfrType,
+            })
+          );
+          sfrFamilyUUID = result.payload;
 
-          // Convert the use case dependency names into UUIDs
-          let use_cases = [];
-          component.useCases.forEach((use_case) => {
-            // Update the use case array with the UUIDs instead of names
-            if (useCaseMap.hasOwnProperty(use_case) && !use_cases.includes(useCaseMap[use_case])) {
-              use_cases.push(useCaseMap[use_case]);
+          // Create these classes under the Security Functional Requirements section which is under the Security Requirements accordionPane section
+          const secReqsUUID = getUUIDByTitle(stateAccordionPane.sections, "Security Requirements");
+          const toeSecurityReqsUUID = getUUIDByTitle(stateEditors, "TOE Security Requirements");
+          const secFuncReqsUUID = getUUIDByTitle(stateEditors, "Security Functional Requirements");
+
+          if (ppType === "Module") {
+            dispatch(
+              CREATE_ACCORDION_SFR_MODULE_FORM_ITEM({
+                accordionUUID: secReqsUUID,
+                formUUID: toeSecurityReqsUUID,
+                innerFormUUID: secFuncReqsUUID,
+                newUUID: sfrFamilyUUID,
+                contentType: "sfrs",
+              })
+            );
+          } else {
+            dispatch(
+              CREATE_ACCORDION_SUB_FORM_ITEM({
+                accordionUUID: secReqsUUID,
+                uuid: sfrFamilyUUID,
+                formUUID: secFuncReqsUUID,
+                contentType: "sfrs",
+              })
+            );
+          }
+        }
+
+        if (sfr.family_id != previousSfrFamily && index != 0) {
+          // Create sfrSections slices (content for the SFR Classes)
+          sfrComponents.forEach((component) => {
+            // Get objectives
+            const { cc_id, iteration_id } = component;
+            sfrName = `${cc_id}${iteration_id ? "/" + iteration_id : ""}`;
+
+            // Get the objectives based off of the sfrName and set to empty if no objectives exist for the entry
+            if (sfrToObjectivesMap.hasOwnProperty(sfrName)) {
+              component.objectives = deepCopy(sfrToObjectivesMap[sfrName]);
+            } else {
+              component.objectives = [];
             }
-          });
-          component.useCases = use_cases;
 
-          // Create SFR Component
-          const result = dispatch(CREATE_SFR_COMPONENT({ sfrUUID: previousFamilyUUID, component: component }));
-          const componentUUID = result.payload.id;
-          sfrsMap[sfrName] = componentUUID;
-        });
-        sfrComponents = [];
+            // Convert the use case dependency names into UUIDs
+            let use_cases = [];
+            component.useCases.forEach((use_case) => {
+              // Update the use case array with the UUIDs instead of names
+              if (useCaseMap.hasOwnProperty(use_case) && !use_cases.includes(useCaseMap[use_case])) {
+                use_cases.push(useCaseMap[use_case]);
+              }
+            });
+            component.useCases = use_cases;
+
+            // Create SFR Component
+            const result = dispatch(CREATE_SFR_COMPONENT({ sfrUUID: previousFamilyUUID, component: component }));
+            const componentUUID = result.payload.id;
+            sfrsMap[sfrName] = componentUUID;
+          });
+          sfrComponents = [];
+        }
+
+        sfrComponents.push(sfr);
+        previousSfrFamily = sfr.family_id;
+        previousFamilyUUID = sfrFamilyUUID;
+        familiesDone.add(sfr.family_id);
       }
 
-      sfrComponents.push(sfr);
-      previousSfrFamily = sfr.family_id;
-      previousFamilyUUID = sfrFamilyUUID;
-      familiesDone.add(sfr.family_id);
-    });
+      // Create component (if PP only has 1 SFR)
+      sfrComponents.forEach((component) => {
+        const { cc_id, iteration_id } = component;
+        sfrName = `${cc_id}${iteration_id ? "/" + iteration_id : ""}`;
 
-    // Create component (if PP only has 1 SFR)
-    sfrComponents.forEach((component) => {
-      const { cc_id, iteration_id } = component;
-      sfrName = `${cc_id}${iteration_id ? "/" + iteration_id : ""}`;
+        const result = dispatch(CREATE_SFR_COMPONENT({ sfrUUID: previousFamilyUUID, component: component }));
+        const componentUUID = result.payload.id;
+        sfrsMap[sfrName] = componentUUID;
+      });
 
-      const result = dispatch(CREATE_SFR_COMPONENT({ sfrUUID: previousFamilyUUID, component: component }));
-      const componentUUID = result.payload.id;
-      sfrsMap[sfrName] = componentUUID;
-    });
-
-    return { sfrsMap };
+      return { sfrsMap };
+    } catch (e) {
+      console.error("Failed to load SFRs:", e);
+    }
   };
-
   /**
    * Loads the SARs
    * @param xml the xml
@@ -1438,7 +1793,14 @@ function FileLoader(props) {
       // Create these Families under the Security Assurance Requirements section which is under the Security Requirements accordionPane section
       const secReqsUUID = getUUIDByTitle(stateAccordionPane.sections, "Security Requirements");
       const secAssuranceReqsUUID = getUUIDByTitle(stateEditors, "Security Assurance Requirements");
-      dispatch(CREATE_ACCORDION_SUB_FORM_ITEM({ accordionUUID: secReqsUUID, uuid: sarFamilyUUID, formUUID: secAssuranceReqsUUID, contentType: "sars" }));
+      dispatch(
+        CREATE_ACCORDION_SUB_FORM_ITEM({
+          accordionUUID: secReqsUUID,
+          uuid: sarFamilyUUID,
+          formUUID: secAssuranceReqsUUID,
+          contentType: "sars",
+        })
+      );
 
       family.components.forEach((component) => {
         // Create the components
@@ -1452,88 +1814,153 @@ function FileLoader(props) {
       });
     });
   };
-
   /**
    * Load Bibliography
-   * @param xml the xml
+   * @param bibliography
    */
-  const loadBibliography = (xml) => {
-    const bibliography = fileParser.getBibliography(xml);
-
+  const loadBibliography = (bibliography) => {
     if (bibliography) {
       dispatch(ADD_ENTRIES({ entries: bibliography.entries }));
     }
   };
-
   /**
    * Load Entropy Appendix
-   * @param xml the xml
+   * @param appendix
    */
-  const loadEntropyAppendix = (xml) => {
-    const appendix = fileParser.getEntropyAppendix(xml);
-
+  const loadEntropyAppendix = (appendix) => {
     if (appendix.entropyAppendix) {
       dispatch(SET_ENTROPY_XML({ xml: appendix.entropyAppendix, xmlTagMeta: appendix.xmlTagMeta }));
     }
   };
-
   /**
    * Load Application Software Equivalency Guidelines
-   * @param xml the xml
+   * @param appendix
    */
-  const loadGuidelinesAppendix = (xml) => {
-    const appendix = fileParser.getEquivGuidelinesAppendix(xml);
-
+  const loadGuidelinesAppendix = (appendix) => {
     if (appendix.guidelinesAppendix) {
       dispatch(SET_EQUIV_GUIDELINES_XML({ xml: appendix.guidelinesAppendix, xmlTagMeta: appendix.xmlTagMeta }));
     }
   };
-
   /**
    * Load Implicitly Satisfied Requirements
-   * @param xml the xml
+   * @param appendix
    */
-  const loadSatisfiedReqsAppendix = (xml) => {
-    const appendix = fileParser.getSatisfiedReqsAppendix(xml);
-
+  const loadSatisfiedReqsAppendix = (appendix) => {
     if (appendix.satisfiedReqsAppendix) {
       dispatch(SET_SATISFIED_REQS_XML({ xml: appendix.satisfiedReqsAppendix, xmlTagMeta: appendix.xmlTagMeta }));
     }
   };
-
   /**
    * Load Validation Guidelines
-   * @param xml the xml
+   * @param appendix
    */
-  const loadValidationGuidelinesAppendix = (xml) => {
-    const appendix = fileParser.getValidationGuidelinesAppendix(xml);
-
+  const loadValidationGuidelinesAppendix = (appendix) => {
     if (appendix.valGuideAppendix) {
       dispatch(SET_VALIDATION_GUIDELINES_XML({ xml: appendix.valGuideAppendix, xmlTagMeta: appendix.xmlTagMeta }));
     }
   };
-
   /**
    * Load Initialization Vector Requirements for NIST-Approved Cipher Modes
-   * @param xml the xml
+   * @param appendix
    */
-  const loadVectorAppendix = (xml) => {
-    const appendix = fileParser.getVectorAppendix(xml);
-
+  const loadVectorAppendix = (appendix) => {
     if (appendix.vectorReqsAppendix) {
       dispatch(SET_VECTOR_XML({ xml: appendix.vectorReqsAppendix, xmlTagMeta: appendix.xmlTagMeta }));
     }
   };
-
   /**
    * Load Acknowledgements
-   * @param xml the xml
+   * @param appendix
    */
-  const loadAcknowledgementsAppendix = (xml) => {
-    const appendix = fileParser.getAcknowledgementsAppendix(xml);
-
+  const loadAcknowledgementsAppendix = (appendix) => {
     if (appendix.acknowledgementsReqsAppendix) {
       dispatch(SET_ACKNOWLEDGEMENTS_XML({ xml: appendix.acknowledgementsReqsAppendix, xmlTagMeta: appendix.xmlTagMeta }));
+    }
+  };
+  /**
+   * Load Acknowledgements
+   * @param customSectionData parsed custom sectiondata
+   */
+  const loadCustomTopLevelSections = async (customSectionData) => {
+    const previousSection = customSectionData.xmlTagMeta.attributes.previous_section || "";
+    const title = customSectionData.localName === "appendix" ? customSectionData.xmlTagMeta.attributes.title : customSectionData.localName;
+    const editorUUID = await dispatch(CREATE_EDITOR({ title: title, text: customSectionData.definition })).payload;
+    dispatch(
+      CREATE_ACCORDION({
+        title: title,
+        custom: editorUUID,
+        selected_section: previousSection,
+        isAppendix: previousSection.includes("Appendix"),
+      })
+    ).payload.uuid;
+  };
+
+  /**
+   * Load user-created custom sections in introduction
+   * @param customIntroSectionData prased custom intro section data
+   */
+  const loadCustomIntroSections = async (customIntroSectionData) => {
+    const introductionUUID = getUUIDByTitle(stateRef.current.accordionPane.sections, "Introduction");
+    if (customIntroSectionData.node.localName === "terms") {
+      // if user created section is a terms list
+      const termUUID = await dispatch(
+        CREATE_TERMS_LIST({
+          title: customIntroSectionData.title,
+          custom: true,
+          xmlTagMeta: customIntroSectionData.xmlTagMeta,
+        })
+      ).payload;
+      if (termUUID) {
+        await dispatch(
+          CREATE_ACCORDION_FORM_ITEM({
+            accordionUUID: introductionUUID,
+            uuid: termUUID,
+            contentType: "terms",
+          })
+        );
+
+        for (let term of customIntroSectionData.node.childNodes) {
+          if (term.nodeType === Node.ELEMENT_NODE) {
+            const abbr = term.getAttribute("abbr");
+            const name = abbr ? term.getAttribute("full").concat(" (", abbr, ")") : term.getAttribute("full");
+            if (term.tagName === "term") {
+              dispatch(
+                CREATE_TERM_ITEM({
+                  termUUID: termUUID,
+                  name: name,
+                  definition: term.textContent,
+                  tagMeta: {
+                    tagName: term.tagName,
+                    attributes: {
+                      abbr: term.getAttribute("abbr") ? term.getAttribute("abbr") : "",
+                      full: term.getAttribute("full") ? term.getAttribute("full") : "",
+                    },
+                  },
+                })
+              );
+            }
+          }
+        }
+      }
+    } else if (customIntroSectionData.node.localName === "section") {
+      // if user created section is a text editor
+      let editorUUID = await dispatch(
+        CREATE_EDITOR({
+          title: customIntroSectionData.title,
+          custom: true,
+          xmlTagMeta: customIntroSectionData.xmlTagMeta,
+        })
+      ).payload;
+      if (editorUUID) {
+        await dispatch(
+          CREATE_ACCORDION_FORM_ITEM({
+            accordionUUID: introductionUUID,
+            uuid: editorUUID,
+            contentType: "editor",
+          })
+        );
+        dispatch(UPDATE_EDITOR_TEXT({ uuid: editorUUID, newText: customIntroSectionData.text }));
+      }
     }
   };
 
@@ -1548,8 +1975,45 @@ function FileLoader(props) {
       dispatch(updateMetaDataItem({ type: "customCSS", item: css }));
     }
   };
+  /**
+   * Creates the default slices
+   * @param xml the input xml
+   * @returns {string}
+   */
+  const createDefaultSlices = (xml) => {
+    const ppTemplateVersion = getPpTemplateVersion(xml);
+    const ppType = getPpType(xml);
+    fetchTemplateData({
+      version: ppTemplateVersion,
+      type: ppType,
+      base: true,
+    }).then();
+    return {
+      ppTemplateVersion,
+      ppType,
+    };
+  };
+  const resetTemplateData = async () => {
+    const ppTemplateVersion = sessionStorage.getItem("ppTemplateVersion");
+    const ppType = sessionStorage.getItem("ppType");
+    const version = ppTemplateVersion === "Version 3.1" ? "CC2022 Standard" : ppTemplateVersion;
+
+    // Reset the state and load in the template by version
+    await fetchTemplateData({
+      version: version,
+      type: ppType,
+      base: false,
+    });
+
+    // Update snackbar
+    handleSnackBarSuccess(`Loaded in Default XML Template`);
+  };
 
   // Callbacks
+  /**
+   * Handles dropping a file into the dialog
+   * @type {(function(*): void)|*}
+   */
   const onDrop = useCallback(
     (acceptedFiles) => {
       if (acceptedFiles.length === 0) {
@@ -1618,102 +2082,6 @@ function FileLoader(props) {
     },
     [dispatch]
   );
-
-  /**
-   * Handles updating the progressBar
-   * @param progress  the progress as a number from 0-100
-   * @param steps     any steps that should be visualized/updated
-   */
-  const handleProgressBar = (progress, steps) => {
-    dispatch(
-      setProgress({
-        progress: progress,
-        steps: steps,
-      })
-    );
-  };
-
-  /**
-   * Handler to update files
-   * @param file      the file
-   * @param content   the content
-   */
-  const handleUpdateFiles = (file, content, currentPP, currentMod) => {
-    if (file !== "" && content !== "") {
-      dispatch(
-        updateFileUploaded({
-          filename: file.name,
-          content: content,
-          pp: currentPP !== undefined ? currentPP : false,
-          mod: currentMod !== undefined ? currentMod : false,
-        })
-      );
-    } else {
-      dispatch(
-        updateFileUploaded({
-          filename: file,
-          content: content,
-          pp: currentPP !== undefined ? currentPP : false,
-          mod: currentMod !== undefined ? currentMod : false,
-        })
-      );
-    }
-  };
-
-  /**
-   * Creates the default slices
-   * @param xml the input xml
-   * @returns {string}
-   */
-  const createDefaultSlices = (xml) => {
-    const ppTemplateVersion = getPpTemplateVersion(xml);
-    const ppType = getPpType(xml);
-    fetchTemplateData({
-      version: ppTemplateVersion,
-      type: ppType,
-      base: true,
-    }).then();
-    return {
-      ppTemplateVersion,
-      ppType,
-    };
-  };
-  const resetTemplateData = async () => {
-    const ppTemplateVersion = sessionStorage.getItem("ppTemplateVersion");
-    const ppType = sessionStorage.getItem("ppType");
-    const version = ppTemplateVersion === "Version 3.1" ? "CC2022 Standard" : ppTemplateVersion;
-
-    // Reset the state and load in the template by version
-    await fetchTemplateData({
-      version: version,
-      type: ppType,
-      base: false,
-    });
-
-    // Update snackbar
-    handleSnackBarSuccess(`Loaded in Default XML Template`);
-  };
-  const handleOpen = () => {
-    const isLoading = sessionStorage.getItem("isLoading");
-
-    // If the dialog was closed prematurely, reset isLoading in session storage
-    if (isLoading !== null && isLoading === "true") {
-      try {
-        // Set fileMenuClosed to true and clear out session storage
-        sessionStorage.setItem("fileMenuClosed", "true");
-        clearSessionStorageExcept(["fileMenuClosed"]).then(() => {
-          // Close Dialog
-          props.handleOpen();
-        });
-        sessionStorage.clear();
-      } catch (e) {
-        console.log(e);
-        handleSnackBarError(e);
-      }
-    } else {
-      props.handleOpen();
-    }
-  };
 
   // Use Dropzones
   const { getRootProps, getInputProps } = useDropzone({
