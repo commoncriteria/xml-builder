@@ -1,1495 +1,519 @@
 {
   "accordionPane": {
     "loadedfile": {
-        "filename": "",
-        "content": "",
-        "pp": false,
-        "mod": false
-      },
-      "platformdata": {
-        "description": "",
-        "platforms": [],
-        "xml": ""
-      },
-      "metadata": {
-        "open": false,
-        "ppType": "Module",
-        "ppTemplateVersion": "CC2022 Standard",
-        "ppName": "",
-        "author": "",
-        "keywords": "",
-        "version": "",
-        "releaseDate": "",
-        "revisionHistory": [],
-        "xmlTagMeta": {}
-      },
-      "sections": {
-        "2687f815-d716-4e10-955d-1b506a99a448": {
-          "title": "Security Requirements",
+      "filename": "",
+      "content": "",
+      "pp": false,
+      "mod": false
+    },
+    "platformData": {
+      "description": "",
+      "platforms": [],
+      "xml": ""
+    },
+    "metadata": {
+      "open": false,
+      "ppType": "Module",
+      "ppTemplateVersion": "",
+      "ppName": "",
+      "author": "",
+      "keywords": "",
+      "version": "",
+      "releaseDate": "",
+      "revisionHistory": [],
+      "xmlTagMeta": {}
+    },
+    "sections": {
+      "bfeff570-4ed9-461e-b6c4-b380a4399e01": {
+          "title": "Introduction",
+          "xmlTagMeta": {
+            "tagName": "sec:Introduction",
+            "attributes": {}
+          },
+          "open": false,
           "formItems": [
             {
-              "uuid": "05070d5c-1846-478e-b433-52033ae03153",
-              "contentType": "sfrBasePPs"
+              "uuid": "37ef5096-4e69-4a5a-ba68-277440e24f70",
+              "contentType": "editor"
             },
             {
-              "uuid": "15f1ba2e-7e17-4827-acf9-c15d85dfff71",
-              "contentType": "sfrBasePPs"
-            },
-            {
-              "uuid": "636aa772-3374-4219-9679-c0079fbf0b4f",
+              "uuid": "da39f7c1-78dc-4cc0-a564-4f607d511f6f",
               "contentType": "editor",
               "formItems": [
                 {
-                  "uuid": "849fe5bc-7364-4448-863a-d280f63d9516",
-                  "contentType": "editor",
-                  "formItems": [
-
-                  ]
+                  "uuid": "132a214e-ce03-4c48-abe8-5f7d460b5fdf",
+                  "contentType": "terms"
                 },
                 {
-                  "uuid": "0bc94c48-1450-4f53-8935-9fc81bfcf066",
-                  "contentType": "editor",
-                  "formItems": [
-
-                  ]
+                  "uuid": "2a9beedb-a7ce-4586-b374-1c22ac37c6fa",
+                  "contentType": "terms"
+                }
+              ]
+            },
+            {
+              "uuid": "f98870e2-4264-4d39-8b02-a5297d0a5b3d",
+              "contentType": "editor",
+              "formItems": [
+                {
+                  "uuid": "1e583a1f-0075-47f2-a757-e33d82bd68cc",
+                  "contentType": "editor"
+                }
+              ]
+            },
+            {
+              "uuid": "d68577d1-5737-4074-a700-764ca6a9189f",
+              "contentType": "editor",
+              "formItems": [
+                {
+                  "uuid": "4fe05e05-3d61-47a6-b4c0-ccc1fcd29391",
+                  "contentType": "terms"
                 }
               ]
             }
-          ],
-          "open": true
+          ]
         },
-        "c7cd87c6-e7c4-497e-8bed-0f7948db1e27": {
-          "title": "Appendix A - Optional Requirements",
-          "formItems": [],
-          "open": false
-        },
-        "f86fcb19-bb13-45bb-bc01-ed91256d6743": {
-          "title": "Appendix B - Selection-Based Requirements",
-          "formItems": [],
-          "open": false
-        },
-        "a0c8d239-42ee-42a5-8d4f-96b3992db4a5": {
-          "title": "Appendix C - Extended Component Definitions",
-          "formItems": [],
-          "open": false
-        },
-        "0a126d67-e945-41f8-8517-eef6786dca10": {
-          "title": "Appendix D - Validation Guidelines",
-          "formItems": [],
-          "open": false
-        },
-        "279086d8-89df-41fd-9dff-53be9f979877": {
-          "title": "Appendix E - Implicitly Satisfied Requirements",
-          "formItems": [],
-          "open": false
-        },
-        "8bb37899-24ee-405b-b33b-4da304e3d016": {
-          "title": "Appendix F - Entropy Documentation And Assessment",
-          "formItems": [],
-          "open": false
-        },
-        "5a189416-144b-491c-8a82-8fae63552d06": {
-          "title": "Appendix H - Use Case Templates",
-          "formItems": [],
-          "open": false
-        },
-        "5d13f61c-550e-4ca2-90b5-54d563c44146": {
-          "title": "Appendix I - Acronyms",
+        "1c487474-5e05-4837-a1d9-23da1530688d": {
+          "title": "Conformance Claims",
+          "open": false,
+          "xmlTagMeta": {
+            "tagName": "sec:Conformance_Claims",
+            "childTagName": "CClaimsInfo",
+            "attributes": {}
+          },
           "formItems": [
             {
-              "uuid": "caa5d2b5-ca76-476d-be81-69e5478547cb",
-              "contentType": "appendixI"
+              "uuid": "1c487474-5e05-4837-a1d9-23da1530688d",
+              "contentType": "conformanceClaims"
+            }
+          ]
+        },
+        "0f2f8c02-a71b-4fe7-9e80-da93d1ea70cd": {
+          "title": "Security Problem Definition",
+          "xmlTagMeta": {
+            "tagName": "sec:Security_Problem_Definition",
+            "attributes": {}
+          },
+          "formItems": [
+            {
+              "uuid": "c0dbc61b-cf58-4db6-985b-5539ae2f7455",
+              "contentType": "threats"
+            },
+            {
+              "uuid": "3a8ef499-784b-485c-8321-a02083aafda8",
+              "contentType": "threats",
+              "xmlTagMeta": {
+                "tagName": "sec:Assumptions",
+                "childTagName": "assumptions",
+                "attributes": {}
+              }
             }
           ],
           "open": false
         },
-        "81e06b51-407f-4daf-a805-2abfd41f2ffd": {
-          "title": "Appendix J - Bibliography",
-          "formItems": [],
-          "open": false
-        },
-        "c2c5eb25-c3a1-4c17-9595-fffdb80f655a": {
-          "title": "Appendix K - Acknowledgments",
-          "formItems": [],
-          "open": false
-        }
-      }
-    },
-    "terms": {},
-    "editors": {
-      "636aa772-3374-4219-9679-c0079fbf0b4f": {
-        "title": "TOE Security Requirements",
-        "text": "",
-        "open": false
-      },
-      "849fe5bc-7364-4448-863a-d280f63d9516": {
-        "title": "Security Functional Requirements",
-        "text": "",
-        "open": false
-      },
-      "0bc94c48-1450-4f53-8935-9fc81bfcf066": {
-        "title": "Security Assurance Requirements",
-        "text": "",
-        "open": false
-      }
-    },
-    "threats": {
-      "securityProblemDefinition": ""
-    },
-    "objectives": {},
-    "sfrBasePPs": {
-      "sfrBasePPDefinition": "",
-      "05070d5c-1846-478e-b433-52033ae03153": {
-        "declarationAndRef": {
-          "id": "bpp-gpos",
-          "name": "Protection Profile for General Purpose Operating System",
-          "product": "Operating System",
-          "short": "GPOS",
-          "version": "4.3",
-          "url": "https://www.niap-ccevs.org/static_html/protection-profile/469/OS%204.3%20PP/index.html",
-          "git": {
-            "url": "https://github.com/commoncriteria/operatingsystem",
-            "branch": "release-4.3",
-            "open": true
+        "ee00eb97-a279-41d3-911f-0236fdda9567": {
+          "title": "Security Objectives",
+          "xmlTagMeta": {
+            "tagName": "sec:Security_Objectives",
+            "attributes": {}
           },
-          "secFuncReqDir": {
-            "text": "In a PP-Configuration that includes the GPOS PP, the VPN client is expected to rely on some of the\nsecurity functions implemented by the OS as a whole and evaluated against the Base-PP.\nIn this case, the following sections describe any modifications that the ST author must make to the SFRs\ndefined in the Base-PP in addition to what is mandated by section 5.5.\n",
-            "open": true
-          },
-          "open": false
-        },
-        "modifiedSfrs": {
-          "open": false
-        },
-        "additionalSfrs": {
-          "introduction": "",
-          "audit": {
-            "isAudit": true,
-            "section": {
-              "id": "gpos-audit-table",
-              "title": "Auditable Events for GPOS PP Additional SFRs",
-              "open": false
-            },
-            "auditTable": {
-              "id": "gpos-additional",
-              "table": "tab-gpos-additional",
-              "title": "Auditable Events for GPOS PP Additional SFRs",
-              "open": false
-            },
-            "open": true
-          },
-          "sfrSections": {
-            "6c15518f-1a6b-4948-9c91-308f47d3fdce": {
-              "title": "Cryptographic Support (FCS)",
-              "definition": "",
-              "extendedComponentDefinition": [
-                {
-                  "famId": "FCS_CKM_EXT",
-                  "title": "Cryptographic Key Management",
-                  "famBehavior": "Components in this family describe requirements for key management functionality such as key storage and destruction."
-                }
-              ],
-              "extendedComponentOpen": false,
-              "open": false
-            },
-            "61139d3f-8ac6-4f9f-bbbf-c7341ddb8e0d": {
-              "title": "Identification and Authentication (FIA)",
-              "definition": "",
-              "extendedComponentDefinition": [
-                {
-                  "famId": "FIA_X509_EXT",
-                  "title": "X.509 Certificate Use and Management",
-                  "famBehavior": "Components in this family describe the requirements that pertain to IP traffic and information flow through the VPN client."
-                }
-              ],
-              "extendedComponentOpen": false,
-              "open": false
-            },
-            "aea7c04d-1918-4749-9ae6-3e9c0f8bb1dc": {
-              "title": "Trusted Path/Channels (FTP)",
-              "definition": "",
-              "extendedComponentDefinition": [],
-              "extendedComponentOpen": false,
-              "open": false
+          "formItems": [
+            {
+              "uuid": "9d813e26-364b-4149-ae05-f2459b2d76d5",
+              "contentType": "objectives"
             }
-          },
+          ],
           "open": false
         },
-        "consistencyRationale": {
-          "conToe": {
-            "text": "If this PP-Module is used to extend the GPOS PP, the TOE type for the overall TOE is still a \n\t\tgeneral-purpose OS. The TOE boundary is simply extended to include VPN client functionality that\n\t\tis built into the OS so that additional security functionality is claimed within the scope of\n\t\tthe TOE.",
-            "open": true
-          },
-          "conSecProb": {
-            "text": "The threats and assumptions defined by this PP-Module (see sections 3.1 and 3.2) supplement those\n\t\tdefined in the GPOS PP as follows:",
-            "open": true
-          },
-          "conObj": {
-            "text": "The security objectives defined by this PP-Module (see sections 4.1 and 4.2) supplement those defined\n\t\tin the GPOS PP as follows:",
-            "open": true
-          },
-          "conOpEn": {
-            "text": "",
-            "open": true
-          },
-          "conMod": {
-            "rows": [
+      "2687f815-d716-4e10-955d-1b506a99a448": {
+        "title": "Security Requirements",
+        "formItems": [
+          {
+            "uuid": "636aa772-3374-4219-9679-c0079fbf0b4f",
+            "contentType": "editor",
+            "formItems": [
               {
-                "ref": "T.UNAUTHORIZED_ACCESS",
-                "text": "The threat of an attacker gaining access to a network interface or data that is transmitted over it is consistent with the T.NETWORK_ATTACK and T.NETWORK_EAVESDROP threats in the GPOS PP."
+                "uuid": "849fe5bc-7364-4448-863a-d280f63d9516",
+                "contentType": "editor",
+                "formItems": []
               },
               {
-                "ref": "T.TSF_CONFIGURATION",
-                "text": "The threat of a misconfigured VPN client is consistent with the T.NETWORK_ATTACK and T.NETWORK_EAVESDROP threats on the GPOS PP because misconfiguration could allow VPN traffic to be subjected unexpectedly to unauthorized modification or disclosure."
-              },
-              {
-                "ref": "T.USER_DATA_REUSE",
-                "text": "Inadvertent disclosure of user data to an unauthorized recipient is consistent with the T.NETWORK_EAVESDROP threat in the GPOS PP."
-              },
-              {
-                "ref": "T.TSF_FAILURE",
-                "text": "A failure of TSF functionality could compromise the local system, which is consistent with the T.LOCAL_ATTACK threat in the GPOS PP."
-              },
-              {
-                "ref": "A.NO_TOE_BYPASS",
-                "text": "The A.NO_TOE_BYPASS assumption assumes that the OE is configured in such a manner that the only network route to the protected network is through the TOE. This does not conflict with the GPOS PP because the GPOS PP makes no assumptions about the network architecture in which the TOE is deployed."
-              },
-              {
-                "ref": "A.PHYSICAL",
-                "text": "The assumption that physical security is provided by the environment is not explicitly stated in the GPOS PP but is consistent with the A.PLATFORM assumption defined in the GPOS PP, which expects the computing platform to be trusted."
-              },
-              {
-                "ref": "A.TRUSTED_CONFIG",
-                "text": "The assumption that personnel responsible for the TOE’s configuration are trusted to follow the guidance is consistent with the A.PROPER_ADMIN defined in the GPOS PP."
-              },
-              {
-                "ref": "OE.NO_TOE_BYPASS",
-                "text": "This objective addresses behavior that is out of scope of the GPOS PP and does not define an environment that a GPOS TOE is incapable of existing in."
-              },
-              {
-                "ref": "OE.PHYSICAL",
-                "text": "This is part of satisfying OE.PLATFORM as defined in the GPOS PP because physical security is required for hardware to be considered ‘trusted.’"
-              },
-              {
-                "ref": "OE.TRUSTED_CONFIG",
-                "text": "The expectation of trusted configuration is consistent with OE.PROPER_USER and OE.PROPER_ADMIN in the GPOS PP."
-              },
-              {
-                "ref": "os-fcs-ckm-1",
-                "text": "The ST author is instructed to make specific selections at minimum to address VPN client requirements; the SFR behavior itself is unmodified."
-              },
-              {
-                "ref": "os-fcs-ckm-2",
-                "text": "The ST author is instructed to make specific selections at minimum to address VPN client requirements; the SFR behavior itself is unmodified."
-              },
-              {
-                "ref": "os-fcs-cop-1-1",
-                "text": "The SFR is refined to list an additional AES mode that must be supported to address VPN client requirements; the use of this mode for VPN connectivity does not impact the ability of the GPOS to satisfy any of its other security requirements."
-              },
-              {
-                "ref": "os-fcs-ckm-ext-2",
-                "text": "Storage of key data related to VPN functionality can be accomplished using the same mechanism defined by FCS_STO_EXT.1 in the GPOS PP."
-              },
-              {
-                "ref": "os-fia-x509-ext-3",
-                "text": "This SFR defines additional uses for X.509 certificate functionality that do not conflict with those defined in the GPOS PP."
-              },
-              {
-                "ref": "os-ftp-itc-1",
-                "text": "This SFR defines a trusted channel for IPsec, which is added functionality that does not prevent the existing GPOS functions from being performed."
-              },
-              {
-                "ref": "fcs-ckm-1-vpn",
-                "text": "Generation of IKE peer authentication keys is added functionality that does not prevent the existing GPOS functions from being performed."
-              },
-              {
-                "ref": "fcs-ipsec-ext-1",
-                "text": "This SFR defines the VPN client’s IPsec implementation, which is added functionality that does not interfere with the GPOS functions."
-              },
-              {
-                "ref": "fdp-rip-2",
-                "text": "The requirement to protect against reuse of residual data is a property of the VPN client behavior and does not impact the GPOS functionality."
-              },
-              {
-                "ref": "fmt-smf-1-vpn",
-                "text": "The ability to configure the VPN client behavior does not affect whether the GPOS as a whole can perform its security functions."
-              },
-              {
-                "ref": "fpt-tst-ext-1-vpn",
-                "text": "Self-testing of the VPN client functionality does not impact the ability of the GPOS to perform its security functions."
-              },
-              {
-                "ref": "fau-gen-1-vpn",
-                "text": "Audit data generated by the VPN client does not interfere with GPOS functionality. The possibility of the underlying OS platform generating audit records is consistent with the GPOS PP, which already contains FAU_GEN.1."
-              },
-              {
-                "ref": "fau-sel-1-vpn",
-                "text": "The ability to suppress the generation of certain audit data related to VPN activity does not interfere with the ability of the GPOS to satisfy its security functionality."
-              },
-              {
-                "ref": "fdp-vpn-ext-1",
-                "text": "The ability of the VPN client to prevent split tunneling of IPsec traffic requires it to have hooks into lower-level OS behavior, but there are no requirements in the GPOS PP that would prevent this functionality from being supported."
-              },
-              {
-                "ref": "fia-bma-ext-1",
-                "text": "This SFR relates to biometric authentication, which does not conflict with the GPOS PP because it may be a function offered by the part of the TOE described by the GPOS PP."
-              },
-              {
-                "ref": "fpf-mfa-ext-1",
-                "text": "This SFR relates specifically to the handling of traffic that is used for the establishment of IPsec connections."
-              },
-              {
-                "ref": "fcs-eap-ext-1",
-                "text": "This SFR defines an additional cryptographic protocol that is beyond the scope of those defined in the GPOS PP but does not prevent any GPOS PP functionality from being implemented."
-              },
-              {
-                "ref": "fia-psk-ext-1",
-                "text": "This SFR defines the use of pre-shared keys, which is behavior that only relates to the establishment of IPsec connections."
-              },
-              {
-                "ref": "fia-psk-ext-2",
-                "text": "This SFR relates to use of pre-shared keys, which is behavior that only applies to the establishment of IPsec connections."
-              },
-              {
-                "ref": "fia-psk-ext-3",
-                "text": "This SFR relates to use of pre-shared keys, which is behavior that only applies to the establishment of IPsec connections."
-              },
-              {
-                "ref": "fia-psk-ext-4",
-                "text": "This SFR relates to use of pre-shared keys, which is behavior that only applies to the establishment of IPsec connections."
-              },
-              {
-                "ref": "fia-psk-ext-5",
-                "text": "This SFR relates to use of pre-shared keys, which is behavior that only applies to the establishment of IPsec connections."
+                "uuid": "0bc94c48-1450-4f53-8935-9fc81bfcf066",
+                "contentType": "editor",
+                "formItems": []
               }
-            ],
-            "open": true
-          },
-          "open": false
-        },
+            ]
+          }
+        ],
         "open": false
       },
-      "15f1ba2e-7e17-4827-acf9-c15d85dfff71": {
-        "declarationAndRef": {
-          "id": "bpp-mdf",
-          "name": "Protection Profile for Mobile Device Fundamentals",
-          "product": "Mobile Device",
-          "short": "MDF",
-          "version": "3.3",
-          "url": "https://www.niap-ccevs.org/static_html/protection-profile/468/MDF%203.3%20PP/index.html",
-          "git": {
-            "url": "https://github.com/commoncriteria/mobile-device",
-            "branch": "release-3.3",
-            "open": true
-          },
-          "secFuncReqDir": {
-            "text": "In a PP-Configuration that includes the MDF PP, the VPN client is expected to rely on some of the\nsecurity functions implemented by the OS as a whole and evaluated against the Base-PP.\nIn this case, the following sections describe any modifications that the ST author must make to the SFRs\ndefined in the Base-PP in addition to what is mandated by section 5.5.\n",
-            "open": true
-          },
-          "open": false
-        },
-        "modifiedSfrs": {
-          "open": false
-        },
-        "additionalSfrs": {
-          "introduction": "",
-          "audit": {
-            "isAudit": true,
-            "section": {
-              "id": "mdf-audit-table",
-              "title": "Auditable Events for MDF PP Additional SFRs",
-              "open": false
-            },
-            "auditTable": {
-              "id": "mdf-additional",
-              "table": "tab-mdf-additional",
-              "title": "Auditable Events for MDF PP Additional SFRs",
-              "open": false
-            },
-            "open": true
-          },
-          "sfrSections": {
-            "1a0b00e2-804e-4e12-ac2f-31a0720c2b8a": {
-              "title": "User Data Protection (FDP)",
-              "definition": "",
-              "extendedComponentDefinition": [
-                {
-                  "famId": "FDP_VPN_EXT",
-                  "title": "Subset Information Flow Control",
-                  "famBehavior": "Components in this family describe the requirements that pertain to IP traffic and information flow through the VPN client."
-                }
-              ],
-              "open": false
-            }
-          },
-          "open": false
-        },
-        "consistencyRationale": {
-          "conToe": {
-            "text": "If this PP-Module is used to extend the MDF PP, the TOE type for the overall TOE is still a mobile device.\n\t\tThe TOE boundary is simply extended to include VPN client functionality that is built into the device’s\n\t\tsoftware so that additional security functionality is claimed within the scope of the TOE.  ",
-            "open": true
-          },
-          "conSecProb": {
-            "text": "The threats and assumptions defined by this PP-Module (see sections 3.1 and 3.2) supplement those\n\t\tdefined in the MDF PP as follows: ",
-            "open": true
-          },
-          "conObj": {
-            "text": "The security objectives defined by this PP-Module (see sections 4.1 and 4.2) supplement those defined\n\t\tin the MDF PP as follows:",
-            "open": true
-          },
-          "conOpEn": {
-            "text": "",
-            "open": true
-          },
-          "conMod": {
-            "rows": [
-              {
-                "ref": "T.UNAUTHORIZED_ACCESS",
-                "text": "The threat of an attacker gaining access to a network interface or data that is transmitted over it is consistent with the T.NETWORK and T.EAVESDROP threats in the MDF PP."
-              },
-              {
-                "ref": "T.TSF_CONFIGURATION",
-                "text": "The threat of a misconfigured VPN client is consistent with the T.NETWORK and T.EAVESDROP threats in the MDF PP because failure to mitigate against misconfiguration makes these threats more significant."
-              },
-              {
-                "ref": "T.USER_DATA_REUSE",
-                "text": "Inadvertent disclosure of user data to an unauthorized recipient is consistent with the T.EAVESDROP threat in the MDF PP."
-              },
-              {
-                "ref": "T.TSF_FAILURE",
-                "text": "A failure of TSF functionality could compromise the local system, which is consistent with the T.FLAWAPP threat in the MDF PP."
-              },
-              {
-                "ref": "A.NO_TOE_BYPASS",
-                "text": "The A.NO_TOE_BYPASS assumption assumes that the OE is configured in such a manner that the only network route to the protected network is through the TOE. This does not conflict with the MDF PP because the MDF PP makes no assumptions about the network architecture in which the TOE is deployed."
-              },
-              {
-                "ref": "A.PHYSICAL",
-                "text": "The MDF PP includes the A.NOTIFY and A.PRECAUTION assumptions to mitigate the risk of physical theft of the TOE. This is consistent with the A.PHYSICAL assumption in this PP-Module because the MDF PP includes reasonable assumptions about the physical security of the TOE."
-              },
-              {
-                "ref": "A.TRUSTED_CONFIG",
-                "text": "This assumption is consistent with the MDF PP because the MDF PP includes the A.CONFIG assumption which assumes that all security functions are appropriately configured."
-              },
-              {
-                "ref": "OE.NO_TOE_BYPASS",
-                "text": "This objective addresses behavior that is out of scope of the MDF PP and does not define an environment that an MDF TOE is incapable of existing in."
-              },
-              {
-                "ref": "OE.PHYSICAL",
-                "text": "The operational environment of a mobile device cannot guarantee physical security, but the OE.PRECAUTION objective in the MDF PP ensures that an appropriate level of physical security is provided."
-              },
-              {
-                "ref": "OE.TRUSTED_CONFIG",
-                "text": "The expectation of trusted configuration is consistent with OE.CONFIG in the MDF PP."
-              },
-              {
-                "ref": "md-fcs-ckm-1",
-                "text": "The ST author is instructed to make specific selections at minimum to address VPN client requirements; the SFR behavior itself is unmodified."
-              },
-              {
-                "ref": "md-fcs-ckm-2-1",
-                "text": "The ST author is instructed to make specific selections at minimum to address VPN client requirements; the SFR behavior itself is unmodified."
-              },
-              {
-                "ref": "md-fcs-cop-1-1",
-                "text": "The ST author is instructed to make specific selections at minimum to address VPN client requirements; the SFR behavior itself is unmodified."
-              },
-              {
-                "ref": "md-fia-x509-ext-2",
-                "text": "This PP-Module adds IPsec as a new trusted protocol where x.509 certificate authentication is used."
-              },
-              {
-                "ref": "md-ftp-itc-ext-1",
-                "text": "This PP-Module adds IPsec as a new protocol that is used to implement trusted channels."
-              },
-              {
-                "ref": "fcs-ckm-1-vpn",
-                "text": "This SFR defines the method of key generation for IKE peer authentication, which is a function that does not interfere with the functionality defined in the MDF PP."
-              },
-              {
-                "ref": "fcs-ipsec-ext-1",
-                "text": "This SFR defines the VPN client’s IPsec implementation, which is added functionality that does not interfere with the MDF functions."
-              },
-              {
-                "ref": "fdp-rip-2",
-                "text": "The requirement to protect against reuse of residual data is a property of the VPN client behavior and does not impact the MDF functionality."
-              },
-              {
-                "ref": "fmt-smf-1-vpn",
-                "text": "The ability to configure the VPN client behavior does not affect whether the MDF as a whole can perform its security functions."
-              },
-              {
-                "ref": "fpt-tst-ext-1-vpn",
-                "text": "Self-testing of the VPN client functionality does not impact the ability of the MDF to perform its security functions."
-              },
-              {
-                "ref": "fau-gen-1-vpn",
-                "text": "Audit data generated by the VPN client does not interfere with MDF functionality. The possibility of the underlying MDF platform generating audit data is consistent with the MDF PP, which already contains FAU_GEN.1."
-              },
-              {
-                "ref": "fau-sel-1-vpn",
-                "text": "The ability to suppress the generation of certain VPN client audit data does not interfere with MDM functionality. The MDF PP already contains FAU_SEL.1 as an objective SFR which means that this functionality does not conflict with the expected behavior of a mobile device."
-              },
-              {
-                "ref": "fdp-vpn-ext-1",
-                "text": "The ability of the VPN client to prevent split tunneling of IPsec traffic requires it to have hooks into lower-level mobile device behavior, but there are no requirements in the MDF PP that would prevent this functionality from being supported."
-              },
-              {
-                "ref": "fia-bma-ext-1",
-                "text": "This SFR relates to biometric authentication, which does not conflict with the MDF PP because it may be a function offered by the part of the TOE described by the MDF PP."
-              },
-              {
-                "ref": "fpf-mfa-ext-1",
-                "text": "This SFR relates specifically to the handling of traffic that is used for the establishment of IPsec connections."
-              },
-              {
-                "ref": "fcs-eap-ext-1",
-                "text": "This SFR defines an additional cryptographic protocol that is beyond the scope of those defined in the MDF PP but does not prevent any MDF PP functionality from being implemented."
-              },
-              {
-                "ref": "fia-psk-ext-1",
-                "text": "This SFR defines the use of pre-shared keys, which is behavior that only relates to the establishment of IPsec connections."
-              },
-              {
-                "ref": "fia-psk-ext-2",
-                "text": "This SFR relates to use of pre-shared keys, which is behavior that only applies to the establishment of IPsec connections."
-              },
-              {
-                "ref": "fia-psk-ext-3",
-                "text": "This SFR relates to use of pre-shared keys, which is behavior that only applies to the establishment of IPsec connections."
-              },
-              {
-                "ref": "fia-psk-ext-4",
-                "text": "This SFR relates to use of pre-shared keys, which is behavior that only applies to the establishment of IPsec connections."
-              },
-              {
-                "ref": "fia-psk-ext-5",
-                "text": "This SFR relates to use of pre-shared keys, which is behavior that only applies to the establishment of IPsec connections."
-              }
-            ],
-            "open": true
-          },
-          "open": false
-        },
+      "c7cd87c6-e7c4-497e-8bed-0f7948db1e27": {
+        "title": "Appendix A - Optional Requirements",
+        "formItems": [],
+        "open": false
+      },
+      "f86fcb19-bb13-45bb-bc01-ed91256d6743": {
+        "title": "Appendix B - Selection-Based Requirements",
+        "formItems": [],
+        "open": false
+      },
+      "a0c8d239-42ee-42a5-8d4f-96b3992db4a5": {
+        "title": "Appendix C - Extended Component Definitions",
+        "formItems": [],
+        "open": false
+      },
+      "0a126d67-e945-41f8-8517-eef6786dca10": {
+        "title": "Appendix D - Validation Guidelines",
+        "formItems": [],
+        "open": false
+      },
+      "279086d8-89df-41fd-9dff-53be9f979877": {
+        "title": "Appendix E - Implicitly Satisfied Requirements",
+        "formItems": [],
+        "open": false
+      },
+      "8bb37899-24ee-405b-b33b-4da304e3d016": {
+        "title": "Appendix F - Entropy Documentation And Assessment",
+        "formItems": [],
+        "open": false
+      },
+      "5a189416-144b-491c-8a82-8fae63552d06": {
+        "title": "Appendix H - Use Case Templates",
+        "formItems": [],
+        "open": false
+      },
+      "5d13f61c-550e-4ca2-90b5-54d563c44146": {
+        "title": "Appendix I - Acronyms",
+        "formItems": [
+          {
+            "uuid": "caa5d2b5-ca76-476d-be81-69e5478547cb",
+            "contentType": "appendixI"
+          }
+        ],
+        "open": false
+      },
+      "81e06b51-407f-4daf-a805-2abfd41f2ffd": {
+        "title": "Appendix J - Bibliography",
+        "formItems": [],
+        "open": false
+      },
+      "c2c5eb25-c3a1-4c17-9595-fffdb80f655a": {
+        "title": "Appendix K - Acknowledgments",
+        "formItems": [],
         "open": false
       }
+    }
+  },
+  "terms": {
+    "132a214e-ce03-4c48-abe8-5f7d460b5fdf": {
+      "title": "Common Criteria Terms",
+      "open": false,
+      "showAddButton": false
     },
-    "sfrs": {
-      "auditSection": "",
-      "sfrDefinition": "",
-      "sections": {}
+    "2a9beedb-a7ce-4586-b374-1c22ac37c6fa": {
+      "title": "Technical Terms",
+      "open": false
     },
-    "sfrSections": {
-      "6c15518f-1a6b-4948-9c91-308f47d3fdce": {
-        "3d5f123c-0127-4309-818f-5eae35d985c3": {
-          "title": "Cryptographic Key Storage",
-          "cc_id": "FCS_CKM_EXT.2",
-          "iteration_id": "",
-          "xml_id": "os-fcs-ckm-ext-2",
-          "definition": "",
-          "optional": false,
-          "objective": false,
-          "selectionBased": false,
-          "selections": {
-            "components": [],
-            "elements": [],
-            "selections": []
-          },
-          "useCaseBased": false,
-          "useCases": [],
-          "implementationDependent": false,
-          "reasons": [],
-          "tableOpen": false,
-          "objectives": [],
-          "extendedComponentDefinition": {
-            "audit": "There are no auditable events foreseen.",
-            "componentLeveling": "requires the TSF to securely store key data when not in use.",
-            "dependencies": "No dependencies.",
-            "managementFunction": "No specific management functions are identified.",
-            "toggle": true
-          },
-          "auditEvents": {
-            "641f5a2c-cc49-4222-8c83-a3018e7cb2da": {
-              "items": [],
-              "optional": false
-            }
-          },
-          "open": false,
-          "elements": {
-            "c53419da-e95b-40b9-8bb8-76201600fdca": {
-              "elementXMLID": "os-fcs-ckm-ext-2e1",
-              "selectableGroups": {
-                "group-1": {
-                  "onlyOne": false,
-                  "linebreak": false,
-                  "groups": [
-                    "a2d02ca4-9519-45f0-9c99-f9ec0ef32ac6",
-                    "6defdc51-e6de-4d70-a2b7-c0633e4a1f1d"
-                  ]
-                }
-              },
-              "title": [
-                {
-                  "text": "The"
-                },
-                {
-                  "selections": "group-1"
-                },
-                {
-                  "text": "shall store persistent secrets and private keys when not in use in OS-provided key storage."
-                }
-              ],
-              "selectables": {
-                "a2d02ca4-9519-45f0-9c99-f9ec0ef32ac6": {
-                  "type": "selectable",
-                  "uuid": "a2d02ca4-9519-45f0-9c99-f9ec0ef32ac6",
-                  "id": "fcs_ckm_ext.2.1_1",
-                  "description": "VPN client",
-                  "exclusive": false,
-                  "nestedGroups": []
-                },
-                "6defdc51-e6de-4d70-a2b7-c0633e4a1f1d": {
-                  "type": "selectable",
-                  "uuid": "6defdc51-e6de-4d70-a2b7-c0633e4a1f1d",
-                  "id": "fcs_ckm_ext.2.1_2",
-                  "description": "OS",
-                  "exclusive": false,
-                  "nestedGroups": []
-                }
-              },
-              "isManagementFunction": false,
-              "managementFunctions": {
-                "tableName": "Management Functions",
-                "statusMarkers": "",
-                "rows": [],
-                "columns": [
-                  {
-                    "headerName": "#",
-                    "field": "rowNum",
-                    "editable": false,
-                    "resizable": true,
-                    "type": "Index",
-                    "flex": 0.5
-                  },
-                  {
-                    "headerName": "ID",
-                    "field": "id",
-                    "editable": true,
-                    "resizable": true,
-                    "type": "Editor",
-                    "flex": 1
-                  },
-                  {
-                    "headerName": "Management Function",
-                    "field": "textArray",
-                    "editable": false,
-                    "resizable": true,
-                    "type": "Button",
-                    "flex": 2
-                  }
-                ]
-              },
-              "note": "\r\n                This requirement ensures that persistent secrets (credentials, secret keys) and\r\n                private keys are stored securely when not in use. If some secrets or keys are\r\n                manipulated by the VPN client and others are manipulated by the OS, then both\r\n                of the selections can be specified by the ST author.\r\n              "
-            }
-          },
-          "invisible": false,
-          "evaluationActivities": {
-            "c53419da-e95b-40b9-8bb8-76201600fdca": {
-              "tss": "Regardless of whether this requirement is met by the VPN client or the OS, the evaluator shall check the\r\n\t\t\tTSS to ensure that it lists each persistent secret (credential, secret key) and private key needed to meet\r\n\t\t\tthe requirements in the ST. For each of these items, the evaluator shall confirm that the TSS lists for what\r\n\t\t\tpurpose it is used, and how it is stored. \r\n                  \tThe evaluator shall review the TSS to determine that it makes a case that, for each item listed as being\r\n\t\t\tmanipulated, it is not written unencrypted to persistent memory, and that the item is\r\n\t\t\tstored by the OS.",
-              "introduction": "",
-              "guidance": "There are no guidance EAs for this requirement.",
-              "testIntroduction": "There are no test EAs for this component.",
-              "testClosing": "",
-              "testList": [],
-              "level": "element",
-              "platformMap": {},
-              "isNoTest": false,
-              "noTest": ""
-            }
-          },
-          "modifiedSfr": false,
-          "additionalSfr": true,
-          "consistencyRationale": "Storage of key data related to VPN functionality can be accomplished using the same mechanism defined by FCS_STO_EXT.1 in the GPOS PP."
-        }
-      },
-      "61139d3f-8ac6-4f9f-bbbf-c7341ddb8e0d": {
-        "9f015ce5-0f91-47c4-9104-8e5bfb8f19de": {
-          "title": "X.509 Certificate Use and Management",
-          "cc_id": "FIA_X509_EXT.4",
-          "iteration_id": "",
-          "xml_id": "os-fia-x509-ext-4",
-          "definition": "",
-          "optional": false,
-          "objective": false,
-          "selectionBased": false,
-          "selections": {
-            "components": [],
-            "elements": [],
-            "selections": []
-          },
-          "useCaseBased": false,
-          "useCases": [],
-          "implementationDependent": false,
-          "reasons": [],
-          "tableOpen": false,
-          "objectives": [],
-          "extendedComponentDefinition": {
-            "audit": "There are no auditable events foreseen.",
-            "componentLeveling": "requires the TOE to perform X.509 certificate\r\n              authentication and describes the behavior that is followed if the status of the certificate is unknown or\r\n              invalid.",
-            "dependencies": "FIA_X509_EXT.1 X.509 Certificate Validation &lt;no-link&gt;FPT_TST_EXT.1&lt;/no-link&gt; TSF Self-Test\r\n            FPT_TUD_EXT.1 Trusted Update",
-            "managementFunction": "No specific management functions are identified.",
-            "toggle": true
-          },
-          "auditEvents": {
-            "facc6d12-edf7-4e73-b6dc-aa0bb5a9d7b1": {
-              "items": [],
-              "optional": false
-            }
-          },
-          "open": false,
-          "elements": {
-            "5748115e-0056-4dba-b851-ea88057279e7": {
-              "elementXMLID": "os-fia-x509-ext-4e1",
-              "selectableGroups": {
-                "group-2": {
-                  "onlyOne": false,
-                  "linebreak": false,
-                  "groups": [
-                    "61623c2c-de6c-457c-b7d8-841eadc9276e",
-                    "76dc62a8-7e55-4a54-9940-10be7a64ad20",
-                    "3ac89d77-4482-4135-8c52-e0a08ef39350"
-                  ]
-                }
-              },
-              "title": [
-                {
-                  "text": "The TSF shall use X.509v3 certificates as defined by RFC 5280 to support authentication for IPsec exchanges, and"
-                },
-                {
-                  "selections": "group-2"
-                },
-                {
-                  "text": "."
-                }
-              ],
-              "selectables": {
-                "61623c2c-de6c-457c-b7d8-841eadc9276e": {
-                  "type": "selectable",
-                  "uuid": "61623c2c-de6c-457c-b7d8-841eadc9276e",
-                  "id": "fia_x509_ext.4.1_1",
-                  "description": "digital signatures for FPT_TUD_EXT.1",
-                  "exclusive": false,
-                  "nestedGroups": []
-                },
-                "76dc62a8-7e55-4a54-9940-10be7a64ad20": {
-                  "type": "selectable",
-                  "uuid": "76dc62a8-7e55-4a54-9940-10be7a64ad20",
-                  "id": "fia_x509_ext.4.1_2",
-                  "description": "integrity checks for FPT_TST_EXT.1",
-                  "exclusive": false,
-                  "nestedGroups": []
-                },
-                "3ac89d77-4482-4135-8c52-e0a08ef39350": {
-                  "type": "selectable",
-                  "uuid": "3ac89d77-4482-4135-8c52-e0a08ef39350",
-                  "id": "fia_x509_ext.4.1_3",
-                  "description": "no additional uses",
-                  "exclusive": true,
-                  "nestedGroups": []
-                }
-              },
-              "isManagementFunction": false,
-              "managementFunctions": {
-                "tableName": "Management Functions",
-                "statusMarkers": "",
-                "rows": [],
-                "columns": [
-                  {
-                    "headerName": "#",
-                    "field": "rowNum",
-                    "editable": false,
-                    "resizable": true,
-                    "type": "Index",
-                    "flex": 0.5
-                  },
-                  {
-                    "headerName": "ID",
-                    "field": "id",
-                    "editable": true,
-                    "resizable": true,
-                    "type": "Editor",
-                    "flex": 1
-                  },
-                  {
-                    "headerName": "Management Function",
-                    "field": "textArray",
-                    "editable": false,
-                    "resizable": true,
-                    "type": "Button",
-                    "flex": 2
-                  }
-                ]
-              },
-              "note": ""
-            },
-            "1354cfb5-bd4d-4870-a3ba-43d4644ede5e": {
-              "elementXMLID": "os-fia-x509-ext-4e2",
-              "selectableGroups": {
-                "group-3": {
-                  "onlyOne": true,
-                  "linebreak": false,
-                  "groups": [
-                    "cb88d551-8a49-47f9-9fce-92938bae10ac",
-                    "26b64754-bc09-4ce8-9473-39f28768ac00"
-                  ]
-                },
-                "group-4": {
-                  "onlyOne": true,
-                  "linebreak": false,
-                  "groups": [
-                    "443c1c79-96e0-477a-9c9e-152a504d7c1f",
-                    "8c703c01-d456-4c13-bc9c-cdd8fb55c4d8",
-                    "518ff44b-0e8e-4133-a1f8-b72404d8f2fa"
-                  ]
-                }
-              },
-              "title": [
-                {
-                  "text": "When a connection to determine the validity of a certificate cannot be established, the"
-                },
-                {
-                  "selections": "group-3"
-                },
-                {
-                  "text": "shall"
-                },
-                {
-                  "selections": "group-4"
-                },
-                {
-                  "text": "."
-                }
-              ],
-              "selectables": {
-                "cb88d551-8a49-47f9-9fce-92938bae10ac": {
-                  "type": "selectable",
-                  "uuid": "cb88d551-8a49-47f9-9fce-92938bae10ac",
-                  "id": "fia_x509_ext.4.2_1",
-                  "description": "VPN client",
-                  "exclusive": false,
-                  "nestedGroups": []
-                },
-                "26b64754-bc09-4ce8-9473-39f28768ac00": {
-                  "type": "selectable",
-                  "uuid": "26b64754-bc09-4ce8-9473-39f28768ac00",
-                  "id": "fia_x509_ext.4.2_2",
-                  "description": "OS",
-                  "exclusive": false,
-                  "nestedGroups": []
-                },
-                "443c1c79-96e0-477a-9c9e-152a504d7c1f": {
-                  "type": "selectable",
-                  "uuid": "443c1c79-96e0-477a-9c9e-152a504d7c1f",
-                  "id": "fia_x509_ext.4.2_3",
-                  "description": "allow the administrator to choose whether to accept the certificate in these cases",
-                  "exclusive": false,
-                  "nestedGroups": []
-                },
-                "8c703c01-d456-4c13-bc9c-cdd8fb55c4d8": {
-                  "type": "selectable",
-                  "uuid": "8c703c01-d456-4c13-bc9c-cdd8fb55c4d8",
-                  "id": "fia_x509_ext.4.2_4",
-                  "description": "accept the certificate",
-                  "exclusive": false,
-                  "nestedGroups": []
-                },
-                "518ff44b-0e8e-4133-a1f8-b72404d8f2fa": {
-                  "type": "selectable",
-                  "uuid": "518ff44b-0e8e-4133-a1f8-b72404d8f2fa",
-                  "id": "fia_x509_ext.4.2_5",
-                  "description": "not accept the certificate",
-                  "exclusive": false,
-                  "nestedGroups": []
-                }
-              },
-              "isManagementFunction": false,
-              "managementFunctions": {
-                "tableName": "Management Functions",
-                "statusMarkers": "",
-                "rows": [],
-                "columns": [
-                  {
-                    "headerName": "#",
-                    "field": "rowNum",
-                    "editable": false,
-                    "resizable": true,
-                    "type": "Index",
-                    "flex": 0.5
-                  },
-                  {
-                    "headerName": "ID",
-                    "field": "id",
-                    "editable": true,
-                    "resizable": true,
-                    "type": "Editor",
-                    "flex": 1
-                  },
-                  {
-                    "headerName": "Management Function",
-                    "field": "textArray",
-                    "editable": false,
-                    "resizable": true,
-                    "type": "Button",
-                    "flex": 2
-                  }
-                ]
-              },
-              "note": "\r\n                    Oftentimes a connection must be established to perform a verification of the\r\n                    revocation status of a certificate - either to download a certificate revocation list (CRL)\r\n\t\t\tor to use the online certificate status protocol (OCSP) to check revocation status.\r\n                    The selection is used to describe the behavior in the event that such a connection\r\n                    cannot be established (for example, due to a network error). The behavior of the\r\n                    TOE in these cases is described by the second selection. If the TOE has\r\n                    determined the certificate is valid according to all other rules in FIA_X509_EXT.1 in  &lt;xref to=\"pkg-x509\"&gt;&lt;/xref&gt;,\r\n                    the behavior indicated in the second selection will determine the validity. The\r\n                    TOE must not accept the certificate if it fails any of the other validation rules in\r\n                    FIA_X509_EXT.1 in  &lt;xref to=\"pkg-x509\"&gt;&lt;/xref&gt;. If the administrator-configured option is selected by the ST\r\n                    Author, the ST author must also make the appropriate selection in\r\n                    FMT_SMF.1/VPN.\r\n                "
-            },
-            "24167b4b-3b4c-4c02-addd-27e1a20f6cd3": {
-              "elementXMLID": "os-fia-x509-ext-4e3",
-              "selectableGroups": {
-                "group-5": {
-                  "onlyOne": true,
-                  "linebreak": false,
-                  "groups": [
-                    "defc08b9-d9e6-4674-9417-31656a771ed4",
-                    "6178364a-49e6-49ee-a4e4-4ccf18f8baca"
-                  ]
-                }
-              },
-              "title": [
-                {
-                  "text": "The"
-                },
-                {
-                  "selections": "group-5"
-                },
-                {
-                  "text": "shall not establish an SA if a certificate or certificate path is deemed invalid."
-                }
-              ],
-              "selectables": {
-                "defc08b9-d9e6-4674-9417-31656a771ed4": {
-                  "type": "selectable",
-                  "uuid": "defc08b9-d9e6-4674-9417-31656a771ed4",
-                  "id": "fia_x509_ext.4.3_1",
-                  "description": "VPN client",
-                  "exclusive": false,
-                  "nestedGroups": []
-                },
-                "6178364a-49e6-49ee-a4e4-4ccf18f8baca": {
-                  "type": "selectable",
-                  "uuid": "6178364a-49e6-49ee-a4e4-4ccf18f8baca",
-                  "id": "fia_x509_ext.4.3_2",
-                  "description": "OS",
-                  "exclusive": false,
-                  "nestedGroups": []
-                }
-              },
-              "isManagementFunction": false,
-              "managementFunctions": {
-                "tableName": "Management Functions",
-                "statusMarkers": "",
-                "rows": [],
-                "columns": [
-                  {
-                    "headerName": "#",
-                    "field": "rowNum",
-                    "editable": false,
-                    "resizable": true,
-                    "type": "Index",
-                    "flex": 0.5
-                  },
-                  {
-                    "headerName": "ID",
-                    "field": "id",
-                    "editable": true,
-                    "resizable": true,
-                    "type": "Editor",
-                    "flex": 1
-                  },
-                  {
-                    "headerName": "Management Function",
-                    "field": "textArray",
-                    "editable": false,
-                    "resizable": true,
-                    "type": "Button",
-                    "flex": 2
-                  }
-                ]
-              },
-              "note": ""
-            }
-          },
-          "invisible": false,
-          "evaluationActivities": {
-            "5748115e-0056-4dba-b851-ea88057279e7": {
-              "tss": "",
-              "introduction": "",
-              "guidance": "",
-              "testIntroduction": "",
-              "testClosing": "",
-              "testList": [],
-              "level": "element",
-              "platformMap": {},
-              "isNoTest": true,
-              "noTest": " &lt;no-link&gt;FIA_X509_EXT.4.1&lt;/no-link&gt; is evaluated as part of  &lt;no-link&gt;FCS_IPSEC_EXT.1&lt;/no-link&gt; (and\r\n                  conditionally as part of  &lt;no-link&gt;FPT_TUD_EXT.1&lt;/no-link&gt; or  &lt;no-link&gt;FPT_TST_EXT.1&lt;/no-link&gt;).\r\n                "
-            },
-            "1354cfb5-bd4d-4870-a3ba-43d4644ede5e": {
-              "tss": "The evaluator shall check the TSS to ensure that it describes whether the VPN client or the OS implements\r\n                  the certificate validation functionality, how the VPN client/OS chooses which certificates to use, and any\r\n                  necessary instructions in the administrative guidance for configuring the OS so that desired certificates\r\n                  can be used.\r\n                  The evaluator shall examine the TSS to confirm that it describes the behavior of the client/OS when a\r\n                  connection cannot be established during the validity check of a certificate used in establishing a trusted\r\n                  channel.",
-              "introduction": "",
-              "guidance": "If the requirement indicates that the administrator is able to specify the default action, then the evaluator\r\n                  shall ensure that the operational guidance contains instructions on how this configuration action is\r\n                  performed.",
-              "testIntroduction": "The evaluator shall perform the following test regardless of whether the certificate validation functionality\r\n                  is implemented by the VPN client or by the OS:",
-              "testClosing": "",
-              "testList": [
-                {
-                  "description": "",
-                  "tests": [
-                    {
-                      "id": "",
-                      "dependencies": [],
-                      "objective": "The evaluator shall demonstrate that using a valid certificate that requires certificate validation\r\n                      checking to be performed in at least some part by communicating with a non-TOE IT entity. The evaluator\r\n                      shall then manipulate the environment so that the TOE is unable to verify the validity of the certificate,\r\n                      and observe that the action selected in FIA_X509_EXT.4.2 is performed. If the selected action is\r\n                      administrator-configurable, then the evaluator shall follow the operational guidance to determine that all\r\n                      supported administrator-configurable options behave in their documented manner.\r\n                    ",
-                      "nestedTestList": []
-                    }
-                  ]
-                }
-              ],
-              "level": "element",
-              "platformMap": {},
-              "isNoTest": false,
-              "noTest": ""
-            },
-            "24167b4b-3b4c-4c02-addd-27e1a20f6cd3": {
-              "tss": "",
-              "introduction": "",
-              "guidance": "",
-              "testIntroduction": "",
-              "testClosing": "",
-              "testList": [],
-              "level": "element",
-              "platformMap": {},
-              "isNoTest": true,
-              "noTest": "FIA_X509_EXT.4.3 is evaluated as part of FCS_IPSEC_EXT.1.11.\r\n                "
-            }
-          },
-          "modifiedSfr": false,
-          "additionalSfr": true,
-          "consistencyRationale": "This SFR defines additional uses for X.509 certificate functionality that do not conflict with those defined in the GPOS PP."
-        }
-      },
-      "aea7c04d-1918-4749-9ae6-3e9c0f8bb1dc": {
-        "468cb0ec-2226-48a5-aab1-5873b80dac8b": {
-          "title": "Inter-TSF Trusted Channel",
-          "cc_id": "FTP_ITC.1",
-          "iteration_id": "",
-          "xml_id": "os-ftp-itc-1",
-          "definition": "",
-          "optional": false,
-          "objective": false,
-          "selectionBased": false,
-          "selections": {
-            "components": [],
-            "elements": [],
-            "selections": []
-          },
-          "useCaseBased": false,
-          "useCases": [],
-          "implementationDependent": false,
-          "reasons": [],
-          "tableOpen": false,
-          "objectives": [],
-          "extendedComponentDefinition": {
-            "audit": "",
-            "componentLeveling": "",
-            "dependencies": "",
-            "managementFunction": "",
-            "toggle": false
-          },
-          "auditEvents": {
-            "ba662943-7e84-4c97-ba66-842f9937bc62": {
-              "description": "Initiation of the trusted channel.",
-              "items": [
-                {
-                  "info": "Identification of the initiator and target.",
-                  "optional": false
-                }
-              ],
-              "optional": false
-            },
-            "77523e7b-6010-4440-b86c-c230ea56da85": {
-              "description": "Termination of the trusted channel.",
-              "items": [
-                {
-                  "info": "No additional information.",
-                  "optional": false
-                }
-              ],
-              "optional": false
-            },
-            "e8ae2294-5fee-49f0-adef-cbbaedc7cf78": {
-              "description": "Failure of the trusted channel functions.",
-              "items": [
-                {
-                  "info": "Identification of the initiator and target, reason for failure.",
-                  "optional": false
-                }
-              ],
-              "optional": false
-            }
-          },
-          "open": false,
-          "elements": {
-            "d26ca62a-31d5-4f0f-a85c-2135e8ac7ff0": {
-              "elementXMLID": "os-ftp-itc-1e1",
-              "selectableGroups": {},
-              "title": [
-                {
-                  "text": "The"
-                },
-                {
-                  "text": "provide a"
-                },
-                {
-                  "text": "communication channel between itself and"
-                },
-                {
-                  "text": "that is logically distinct from other communication channels and provides assured identification of its end points and protection of the channel data from"
-                },
-                {
-                  "text": "."
-                }
-              ],
-              "selectables": {},
-              "isManagementFunction": false,
-              "managementFunctions": {
-                "tableName": "Management Functions",
-                "statusMarkers": "",
-                "rows": [],
-                "columns": [
-                  {
-                    "headerName": "#",
-                    "field": "rowNum",
-                    "editable": false,
-                    "resizable": true,
-                    "type": "Index",
-                    "flex": 0.5
-                  },
-                  {
-                    "headerName": "ID",
-                    "field": "id",
-                    "editable": true,
-                    "resizable": true,
-                    "type": "Editor",
-                    "flex": 1
-                  },
-                  {
-                    "headerName": "Management Function",
-                    "field": "textArray",
-                    "editable": false,
-                    "resizable": true,
-                    "type": "Button",
-                    "flex": 2
-                  }
-                ]
-              },
-              "note": ""
-            },
-            "e980747f-6a95-4568-8e7a-13ad5e1f5a89": {
-              "elementXMLID": "os-ftp-itc-1e2",
-              "selectableGroups": {},
-              "title": [
-                {
-                  "text": "The"
-                },
-                {
-                  "text": "shall permit ["
-                },
-                {
-                  "text": "] to initiate communication via the trusted channel."
-                }
-              ],
-              "selectables": {},
-              "isManagementFunction": false,
-              "managementFunctions": {
-                "tableName": "Management Functions",
-                "statusMarkers": "",
-                "rows": [],
-                "columns": [
-                  {
-                    "headerName": "#",
-                    "field": "rowNum",
-                    "editable": false,
-                    "resizable": true,
-                    "type": "Index",
-                    "flex": 0.5
-                  },
-                  {
-                    "headerName": "ID",
-                    "field": "id",
-                    "editable": true,
-                    "resizable": true,
-                    "type": "Editor",
-                    "flex": 1
-                  },
-                  {
-                    "headerName": "Management Function",
-                    "field": "textArray",
-                    "editable": false,
-                    "resizable": true,
-                    "type": "Button",
-                    "flex": 2
-                  }
-                ]
-              },
-              "note": ""
-            },
-            "ec2f0f03-7962-49df-8db2-f8ae369f4f73": {
-              "elementXMLID": "os-ftp-itc-1e3",
-              "selectableGroups": {},
-              "title": [
-                {
-                  "text": "The"
-                },
-                {
-                  "text": "shall initiate communication via the trusted channel for ["
-                },
-                {
-                  "text": "]."
-                }
-              ],
-              "selectables": {},
-              "isManagementFunction": false,
-              "managementFunctions": {
-                "tableName": "Management Functions",
-                "statusMarkers": "",
-                "rows": [],
-                "columns": [
-                  {
-                    "headerName": "#",
-                    "field": "rowNum",
-                    "editable": false,
-                    "resizable": true,
-                    "type": "Index",
-                    "flex": 0.5
-                  },
-                  {
-                    "headerName": "ID",
-                    "field": "id",
-                    "editable": true,
-                    "resizable": true,
-                    "type": "Editor",
-                    "flex": 1
-                  },
-                  {
-                    "headerName": "Management Function",
-                    "field": "textArray",
-                    "editable": false,
-                    "resizable": true,
-                    "type": "Button",
-                    "flex": 2
-                  }
-                ]
-              },
-              "note": "\r\n                The intent of the above requirement is to demonstrate that IPsec can be used to\r\n                establish remote communications in transport mode, tunnel mode, or both.\r\n                The requirement implies that not only are communications protected when they\r\n                are initially established, but also on resumption after an outage. It may be the\r\n                case that some part of the TOE setup involves manually setting up tunnels to\r\n                protect other communication, and if after an outage the TOE attempts to reestablish \r\n                the communication automatically with (the necessary) manual\r\n                intervention, there may be a window created where an attacker might be able to\r\n                gain critical information or compromise a connection.\r\n              "
-            }
-          },
-          "invisible": false,
-          "evaluationActivities": {
-            "468cb0ec-2226-48a5-aab1-5873b80dac8b": {
-              "tss": "The evaluator shall examine the TSS to determine that it describes the details of the TOE connecting to a\r\n\t\t\tVPN gateway, VPN client, or IPsec-capable network device in terms of the cryptographic\r\n\t\t\tprotocols specified in the requirement, along with TOE-specific options or procedures that might not be\r\n\t\t\treflected in the specification. The evaluator shall also confirm that all protocols listed in the TSS are\r\n\t\t\tspecified and included in the requirements in the ST.",
-              "introduction": "",
-              "guidance": "The evaluator shall confirm that the operational guidance contains instructions for establishing the\r\n\t\t\tconnection to a VPN gateway, VPN client, or IPsec-capable network device, and that it contains\r\n\t\t\trecovery instructions should a connection be unintentionally broken.",
-              "testIntroduction": "The evaluator shall perform the following tests:",
-              "testClosing": "Further EAs are associated with requirements for FCS_IPSEC_EXT.1.",
-              "testList": [
-                {
-                  "description": "",
-                  "tests": [
-                    {
-                      "id": "",
-                      "dependencies": [],
-                      "objective": "The evaluator shall ensure that the TOE is able to initiate communications with a VPN gateway,\r\n\t\t\tVPN client, or IPsec-capable network device using the protocols specified in the requirement,\r\n\t\t\tsetting up the connections as described in the operational guidance and ensuring that communication is\r\n\t\t\tsuccessful.",
-                      "nestedTestList": []
-                    },
-                    {
-                      "id": "",
-                      "dependencies": [],
-                      "objective": "The evaluator shall ensure, for each communication channel with an IPsec peer, the channel data\r\n\t\t\tis not sent in plaintext.\r\n                    ",
-                      "nestedTestList": []
-                    },
-                    {
-                      "id": "",
-                      "dependencies": [],
-                      "objective": "The evaluator shall ensure, for each communication channel with an IPsec peer, modification of\r\n\t\t\tthe channel data is detected by the TOE.",
-                      "nestedTestList": []
-                    },
-                    {
-                      "id": "",
-                      "dependencies": [],
-                      "objective": "The evaluator shall physically interrupt the connection from the TOE to the IPsec peer. The\r\n\t\t\tevaluator shall ensure that subsequent communications are appropriately protected, at a minimum in\r\n\t\t\tthe case of any attempts to automatically resume the connection or connect to a new access point.",
-                      "nestedTestList": []
-                    }
-                  ]
-                }
-              ],
-              "level": "element",
-              "platformMap": {},
-              "isNoTest": false,
-              "noTest": ""
-            }
-          },
-          "modifiedSfr": false,
-          "additionalSfr": true,
-          "consistencyRationale": "This SFR defines a trusted channel for IPsec, which is added functionality that does not prevent the existing OS functions from being performed."
-        }
-      },
-      "1a0b00e2-804e-4e12-ac2f-31a0720c2b8a": {
-        "d91959d9-6496-499f-a0d1-7a2151b26e90": {
-          "title": "Split Tunnel Prevention",
-          "cc_id": "FDP_VPN_EXT.1",
-          "iteration_id": "",
-          "xml_id": "fdp-vpn-ext-1",
-          "definition": "",
-          "optional": false,
-          "objective": false,
-          "selectionBased": false,
-          "selections": {
-            "components": [],
-            "elements": [],
-            "selections": []
-          },
-          "useCaseBased": false,
-          "useCases": [],
-          "implementationDependent": false,
-          "reasons": [],
-          "tableOpen": false,
-          "objectives": [],
-          "extendedComponentDefinition": {
-            "audit": "There are no auditable events foreseen.",
-            "componentLeveling": "requires the TSF to process all IP traffic through its VPN client\r\n              functionality.",
-            "dependencies": " &lt;no-link&gt;FCS_IPSEC_EXT.1&lt;/no-link&gt; IPsec",
-            "managementFunction": "No specific management functions are identified.",
-            "toggle": true
-          },
-          "auditEvents": {
-            "60da6407-ae0e-4eb5-938d-5be636ef771a": {
-              "items": [],
-              "optional": false
-            }
-          },
-          "open": false,
-          "elements": {
-            "e0130f5c-b7a3-4ea3-9d55-f23c3f106e72": {
-              "elementXMLID": "fdp-vpn-ext-1e1",
-              "selectableGroups": {},
-              "title": [
-                {
-                  "text": "The TSF shall ensure that all IP traffic (other than IP traffic required to establish the VPN connection) flow through the IPsec VPN client."
-                }
-              ],
-              "selectables": {},
-              "isManagementFunction": false,
-              "managementFunctions": {
-                "tableName": "Management Functions",
-                "statusMarkers": "",
-                "rows": [],
-                "columns": [
-                  {
-                    "headerName": "#",
-                    "field": "rowNum",
-                    "editable": false,
-                    "resizable": true,
-                    "type": "Index",
-                    "flex": 0.5
-                  },
-                  {
-                    "headerName": "ID",
-                    "field": "id",
-                    "editable": true,
-                    "resizable": true,
-                    "type": "Editor",
-                    "flex": 1
-                  },
-                  {
-                    "headerName": "Management Function",
-                    "field": "textArray",
-                    "editable": false,
-                    "resizable": true,
-                    "type": "Button",
-                    "flex": 2
-                  }
-                ]
-              },
-              "note": "\r\n                This requirement is implementation-dependent on the MDF PP being the Base-PP claimed by the TOE. In this case, this requirement must be claimed.\r\n                For all other Base-PPs, this requirement is strictly optional.\r\n                This requirement is used when the VPN client is able to enforce the requirement\r\n                through its own components. This generally will have to be done through using\r\n                hooks provided by the platform such that the TOE is able to ensure that no IP\r\n                traffic can flow through other network interfaces.\r\n              "
-            }
-          },
-          "invisible": false,
-          "evaluationActivities": {
-            "e0130f5c-b7a3-4ea3-9d55-f23c3f106e72": {
-              "tss": "The evaluator shall verify that the TSS section of the ST describes the routing of IP traffic through processes\r\n                  on the TSF when a VPN client is enabled. The evaluator shall ensure that the description indicates which\r\n                  traffic does not go through the VPN and which traffic does and that a configuration exists for each\r\n                  baseband protocol in which only the traffic identified by the ST author is necessary for establishing the\r\n                  VPN connection (IKE traffic and perhaps HTTPS or DNS traffic) is not encapsulated by the VPN protocol \r\n                  (IPsec). The ST author shall also identify in the TSS section any differences in the routing of IP traffic when\r\n                  using any supported baseband protocols (e.g. Wi-Fi, LTE).",
-              "introduction": "",
-              "guidance": "The evaluator shall verify that the following is addressed by the documentation:\r\n                  ",
-              "testIntroduction": "The evaluator shall perform the following test: <h:br></h:br> <h:br></h:br>Step 1 - The evaluator shall use the platform to enable a network connection without using IPsec. The\r\n                  evaluator shall use a packet sniffing tool between the platform and an internet-connected network. The\r\n                  evaluator shall turn on the sniffing tool and perform actions with the device such as navigating to\r\n                  websites, using provided applications, accessing other internet resources (Use Case 1), accessing another\r\n                  VPN client (Use Case 2), or accessing an IPsec-capable network device (Use Case 3). The evaluator shall\r\n                  verify that the sniffing tool captures the traffic generated by these actions, turn off the sniffing tool, and\r\n                  save the session data. <h:br></h:br> <h:br></h:br>Step 2 - The evaluator shall configure an IPsec VPN client that supports the routing specified in this\r\n                  requirement, and if necessary, configure the device to perform the routing specified as described in the\r\n                  AGD guidance. The evaluator shall turn on the sniffing tool, establish the VPN connection, and perform\r\n                  the same actions with the device as performed in the first step. The evaluator shall verify that the sniffing\r\n                  tool captures traffic generated by these actions, turn off the sniffing tool, and save the session data. <h:br></h:br> <h:br></h:br>Step 3 - The evaluator shall examine the traffic from both step one and step two to verify that all IP traffic,\r\n                  aside from and after traffic necessary for establishing the VPN (such as IKE, DNS, and possibly HTTPS), is\r\n                  encapsulated by IPsec. <h:br></h:br> <h:br></h:br>Step 4 - The evaluator shall attempt to send packets to the TOE outside the VPN connection and shall\r\n                  verify that the TOE discards them.",
-              "testClosing": "",
-              "testList": [],
-              "level": "element",
-              "platformMap": {},
-              "isNoTest": false,
-              "noTest": ""
-            }
-          },
-          "modifiedSfr": false,
-          "additionalSfr": true,
-          "consistencyRationale": ""
-        }
-      }
+    "78a497d4-095f-4fa5-888b-c575c53754cc": {
+      "title": "Suppressed Terms",
+      "open": false
     },
-    "sars": {
+    "1f3f5182-ffbf-4259-9074-2b8f8942151e": {
+      "title": "Acronyms",
+      "open": false,
       "xmlTagMeta": {
-        "tagName": "section",
+        "tagName": "",
+        "attributes": {}
+      }
+    },
+    "4fe05e05-3d61-47a6-b4c0-ccc1fcd29391": {
+      "title": "Use Cases",
+      "open": false
+    }
+  },
+  "editors": {
+    "37ef5096-4e69-4a5a-ba68-277440e24f70": {
+      "title": "Objectives of Document",
+      "xmlTagMeta": {
+        "tagName": "sec:Overview",
         "attributes": {}
       },
-      "sections": {},
-      "components": {},
-      "elements": {}
+      "text": "",
+      "open": false
     },
-    "bibliography": {
-      "cc": {},
-      "entries": []
+    "da39f7c1-78dc-4cc0-a564-4f607d511f6f": {
+      "title": "Terms",
+      "text": "<p><span style=\"color: black;\">The following sections list Common Criteria and technology terms used in this document.</span></p>",
+      "open": false
     },
-    "entropyAppendix": {
-      "xmlContent": "",
-      "xmlTagMeta": {}
+    "f98870e2-4264-4d39-8b02-a5297d0a5b3d": {
+      "title": "TOE Overview",
+      "xmlTagMeta": {
+        "tagName": "section",
+        "attributes": {
+          "title": "Compliant Targets of Evaluation",
+          "id": "TOEdescription"
+        }
+      },
+      "text": "",
+      "open": false
     },
-    "equivGuidelinesAppendix": {
-      "xmlContent": "",
-      "xmlTagMeta": {}
+    "d68577d1-5737-4074-a700-764ca6a9189f": {
+      "title": "TOE Usage",
+      "xmlTagMeta": {
+        "tagName": "sec:Use_Cases",
+        "attributes": {}
+      },
+      "text": "",
+      "open": false
     },
-    "satisfiedReqsAppendix": {
-      "xmlContent": "",
-      "xmlTagMeta": {}
+    "1e583a1f-0075-47f2-a757-e33d82bd68cc": {
+      "title": "TOE Boundary",
+      "text": "",
+      "open": false
     },
-    "validationGuidelinesAppendix": {
-      "xmlContent": "",
-      "xmlTagMeta": {}
+    "636aa772-3374-4219-9679-c0079fbf0b4f": {
+      "title": "TOE Security Requirements",
+      "text": "",
+      "open": false
     },
-    "vectorAppendix": {
-      "xmlContent": "",
-      "xmlTagMeta": {}
+    "849fe5bc-7364-4448-863a-d280f63d9516": {
+      "title": "Security Functional Requirements",
+      "text": "",
+      "open": false
     },
-    "acknowledgementsAppendix": {
-      "xmlContent": "",
-      "xmlTagMeta": {}
-    },
-    "includePackage": {
-      "packages": []
-    },
-    "modules": {
-      "xml": ""
-    },
-    "ppPreference": {
-      "xml": ""
+    "0bc94c48-1450-4f53-8935-9fc81bfcf066": {
+      "title": "Security Assurance Requirements",
+      "text": "",
+      "open": false
     }
+  },
+  "threats": {
+    "securityProblemDefinition": "",
+    "c0dbc61b-cf58-4db6-985b-5539ae2f7455": {
+      "title": "Threats",
+      "xmlTagMeta": {
+        "tagName": "sec:Threats",
+        "childTagName": "threats",
+        "attributes": {}
+      },
+      "definition": "",
+      "open": false,
+      "terms": {}
+    },
+    "3a8ef499-784b-485c-8321-a02083aafda8": {
+      "title": "Assumptions",
+      "xmlTagMeta": {
+        "tagName": "sec:Assumptions",
+        "childTagName": "assumptions",
+        "attributes": {}
+      },
+      "definition": "",
+      "open": false,
+      "terms": {}
+    }
+  },
+  "objectives": {
+    "9d813e26-364b-4149-ae05-f2459b2d76d5": {
+      "title": "Security Objectives for the Operational Environment",
+      "xmlTagMeta": {
+        "tagName": "sec:Security_Objectives_for_the_Operational_Environment",
+        "childTagName": "SOEs",
+        "attributes": {}
+      },
+      "definition": "",
+      "open": false,
+      "terms": {}
+    }
+  },
+  "sfrBasePPs": {
+    "sfrBasePPDefinition": "",
+    "05070d5c-1846-478e-b433-52033ae03153": {
+      "declarationAndRef": {
+        "id": "bpp-gpos",
+        "name": "Protection Profile for General Purpose Operating System",
+        "product": "Operating System",
+        "short": "GPOS",
+        "version": "4.3",
+        "url": "https://www.niap-ccevs.org/static_html/protection-profile/469/OS%204.3%20PP/index.html",
+        "git": {
+          "url": "https://github.com/commoncriteria/operatingsystem",
+          "branch": "release-4.3",
+          "open": true
+        },
+        "secFuncReqDir": {
+          "text": "In a PP-Configuration that includes the GPOS PP, the VPN client is expected to rely on some of the\nsecurity functions implemented by the OS as a whole and evaluated against the Base-PP.\nIn this case, the following sections describe any modifications that the ST author must make to the SFRs\ndefined in the Base-PP in addition to what is mandated by section 5.5.\n",
+          "open": true
+        },
+        "open": false
+      },
+      "definition": "",
+      "open": false,
+      "terms": {}
+    },
+    "3a8ef499-784b-485c-8321-a02083aafda8": {
+      "title": "Assumptions",
+      "xmlTagMeta": {
+        "tagName": "sec:Assumptions",
+        "childTagName": "assumptions",
+        "attributes": {}
+      },
+      "definition": "",
+      "open": false,
+      "terms": {}
+    }
+  },
+  "sfrs": {
+    "auditSection": "",
+    "sfrDefinition": "",
+    "toeSfrs": {
+      "mandatory": {
+        "open": false,
+        "audit": {
+          "isAudit": true,
+          "section": {
+            "id": "",
+            "title": "",
+            "description": "",
+            "open": false
+          },
+          "auditTable": {
+            "id": "",
+            "table": "",
+            "title": "",
+            "open": false
+          },
+          "eventsTableOpen": false,
+          "open": true
+        }
+      },
+      "optional": {
+        "open": false,
+        "audit": {
+          "isAudit": true,
+          "section": {
+            "id": "",
+            "title": "",
+            "description": "",
+            "open": false
+          },
+          "auditTable": {
+            "id": "",
+            "table": "",
+            "title": "",
+            "open": false
+          },
+          "eventsTableOpen": false,
+          "open": true
+        }
+      },
+      "objective": {
+        "open": false,
+        "audit": {
+          "isAudit": true,
+          "section": {
+            "id": "",
+            "title": "",
+            "description": "",
+            "open": false
+          },
+          "auditTable": {
+            "id": "",
+            "table": "",
+            "title": "",
+            "open": false
+          },
+          "eventsTableOpen": false,
+          "open": true
+        }
+      },
+      "selectionBased": {
+        "open": false,
+        "audit": {
+          "isAudit": true,
+          "section": {
+            "id": "",
+            "title": "",
+            "description": "",
+            "open": false
+          },
+          "auditTable": {
+            "id": "",
+            "table": "",
+            "title": "",
+            "open": false
+          },
+          "eventsTableOpen": false,
+          "open": true
+        }
+      },
+      "implementationDependent": {
+        "open": false,
+        "audit": {
+          "isAudit": true,
+          "section": {
+            "id": "",
+            "title": "",
+            "description": "",
+            "open": false
+          },
+          "auditTable": {
+            "id": "",
+            "table": "",
+            "title": "",
+            "open": false
+          },
+          "eventsTableOpen": false,
+          "open": true
+        }
+      }
+    },
+    "sections": {}
+  },
+  "sfrSections": {},
+  "sars": {
+    "xmlTagMeta": {
+      "tagName": "section",
+      "attributes": {}
+    },
+    "sections": {},
+    "components": {},
+    "elements": {}
+  },
+  "bibliography": {
+    "cc": {},
+    "entries": []
+  },
+  "entropyAppendix": {
+    "xmlContent": "",
+    "xmlTagMeta": {}
+  },
+  "equivGuidelinesAppendix": {
+    "xmlContent": "",
+    "xmlTagMeta": {}
+  },
+  "satisfiedReqsAppendix": {
+    "xmlContent": "",
+    "xmlTagMeta": {}
+  },
+  "validationGuidelinesAppendix": {
+    "xmlContent": "",
+    "xmlTagMeta": {}
+  },
+  "vectorAppendix": {
+    "xmlContent": "",
+    "xmlTagMeta": {}
+  },
+  "acknowledgementsAppendix": {
+    "xmlContent": "",
+    "xmlTagMeta": {}
+  },
+  "includePackage": {
+    "packages": []
+  },
+  "modules": {
+    "xml": ""
+  },
+  "ppPreference": {
+    "xml": ""
+  }
 }
