@@ -33,6 +33,7 @@ import {
   RESET_OBJECTIVES_STATE,
   UPDATE_OBJECTIVE_SECTION_DEFINITION,
   UPDATE_OBJECTIVE_SECTION_METADATA,
+  UPDATE_MAIN_OBJECTIVES_DEFINITION,
 } from "../../reducers/objectivesSlice.js";
 import { CREATE_EDITOR, UPDATE_EDITOR_TEXT, RESET_EDITOR_STATE, UPDATE_EDITOR_METADATA } from "../../reducers/editorSlice.js";
 import {
@@ -620,7 +621,7 @@ function FileLoader(props) {
         } else if ("techTerms" in introSection) {
           loadTechTerms(introSection.techTerms);
         } else if ("compliantTOE" in introSection) {
-          loadTOEOverview(introSection.compliantTOE);
+          loadTOEOverview(introSection.compliantTOE, ppType);
         } else if ("useCaseDescription" in introSection) {
           const useCasesIndex = returnObject.intro.findIndex((introSection) => introSection.hasOwnProperty("useCases"));
           if (useCasesIndex !== -1) {
@@ -643,6 +644,9 @@ function FileLoader(props) {
         loadConformanceClaim(returnObject.cClaims.cClaims, returnObject.cClaims?.cClaimsAttributes);
       }
       // 4.0 Security Objectives (needs to be processed before section 3 because it relies on this section's outputs)
+      if (returnObject.securityObjectives?.objectivesDefinition) {
+        dispatch(UPDATE_MAIN_OBJECTIVES_DEFINITION({ newDefinition: returnObject.securityObjectives.objectivesDefinition }));
+      }
       if (returnObject.securityObjectives?.toeObjectives) {
         ({ objectivesMap, sfrToObjectivesMap, objectivetoSfrsMap } = loadObjectives(returnObject.securityObjectives.toeObjectives));
       }
@@ -1158,14 +1162,13 @@ function FileLoader(props) {
         })
       );
       Object.values(securityObjectives).map((objective) => {
-        const name = objective.name;
-        const definition = objective.definition;
-        const sfrs = objective.sfrs;
+        const { name, definition, sfrs, rationale } = objective;
         const result = dispatch(
           CREATE_OBJECTIVE_TERM({
             objectiveUUID: oeUUID,
             title: name,
             definition: definition,
+            consistencyRationale: rationale,
             sfrs: sfrs,
           })
         );
@@ -1258,7 +1261,7 @@ function FileLoader(props) {
             definition: threat.definition,
             objectives: objectivesWithUUID,
             sfrs: sfrs,
-            basePPs: threat.basePPs,
+            from: threat.basePPs,
           })
         );
         return {
@@ -1664,7 +1667,8 @@ function FileLoader(props) {
       let familiesDone = new Set();
       for (let index = 0; index < allSFRs.length; index++) {
         const sfr = allSFRs[index];
-        if (!familiesDone.has(sfr.family_id) || index === 0) {
+        const uniqueFamily = `${sfr.family_id}-${sfr.sfrType}`;
+        if (!familiesDone.has(uniqueFamily) || index === 0) {
           if (ppType === "Module" && !sfr.sfrType) {
             // module SFRs without an sfrType are additional SFRs
             // which dont need to be added to sfrSlice
@@ -1744,7 +1748,7 @@ function FileLoader(props) {
         sfrComponents.push(sfr);
         previousSfrFamily = sfr.family_id;
         previousFamilyUUID = sfrFamilyUUID;
-        familiesDone.add(sfr.family_id);
+        familiesDone.add(uniqueFamily);
       }
 
       // Create component (if PP only has 1 SFR)
@@ -1878,19 +1882,20 @@ function FileLoader(props) {
     }
   };
   /**
-   * Load Acknowledgements
+   * Load top level custom sections
    * @param customSectionData parsed custom sectiondata
    */
   const loadCustomTopLevelSections = async (customSectionData) => {
     const previousSection = customSectionData.xmlTagMeta.attributes.previous_section || "";
-    const title = customSectionData.localName === "appendix" ? customSectionData.xmlTagMeta.attributes.title : customSectionData.localName;
+    const title = customSectionData.xmlTagMeta.tagName === "appendix" ? customSectionData.xmlTagMeta.attributes.title : customSectionData.xmlTagMeta.tagName;
     const editorUUID = await dispatch(CREATE_EDITOR({ title: title, text: customSectionData.definition })).payload;
     dispatch(
       CREATE_ACCORDION({
         title: title,
         custom: editorUUID,
         selected_section: previousSection,
-        isAppendix: previousSection.includes("Appendix"),
+        isAppendix: previousSection.includes("Appendix") || customSectionData.xmlTagMeta.tagName === "appendix",
+        xmlTagMeta: customSectionData.xmlTagMeta,
       })
     ).payload.uuid;
   };

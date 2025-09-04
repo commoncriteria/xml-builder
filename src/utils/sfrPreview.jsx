@@ -1,3 +1,5 @@
+import { style_tags } from "./fileParser.js";
+
 // Methods
 /**
  * Gets the sfr preview text string
@@ -58,7 +60,7 @@ export const getSfrPreviewTextString = (inputs) => {
       });
 
       // Create title string and remove excess whitespace where possible
-      textString = textArray.join(" ");
+      textString = textArray.reduce((finalArr, currItem) => smartAppend(finalArr, currItem), "");
       textString = cleanUpStringHelper(textString);
     }
   } catch (e) {
@@ -375,5 +377,56 @@ const getTabularizedRows = (columns, rows, selectables, selectableGroups) => {
  */
 const cleanUpStringHelper = (originalString) => {
   originalString = originalString.trim();
-  return originalString.replace(/^[/\s+]/g, " ");
+  return originalString
+    .replace(/^[/\s+]/g, " ")
+    .replace(/\^\s+/g, "^")
+    .replace(/\]\s*(<\/[a-zA-Z0-9]+>\])/g, "]$1");
+};
+/**
+ * Checks if text is a rich text element
+ * @param {*} htmlEnd
+ * @returns
+ */
+const precededByRichText = (htmlEnd) => {
+  if (!htmlEnd) return false;
+  const tail = htmlEnd.trimEnd();
+
+  // capture the last HTML tag at the end of the string
+  const m = tail.match(/<\s*(\/?)([a-zA-Z0-9:_-]+)[^>]*>\s*$/);
+  if (!m) return false;
+
+  const isClosing = m[1] === "/";
+  if (isClosing) return false;
+
+  const tag = (m[2] || "").toLowerCase();
+  const base = tag.includes(":") ? tag.split(":")[1] : tag; // normalize namespace
+
+  return style_tags.includes(base);
+};
+/**
+ * Checks if element is a selectable(s)/assignable
+ * @param {*} s
+ * @returns
+ */
+const startsWithSelectables = (s) => {
+  if (!s) return false;
+  const t = s.trimStart();
+
+  return (
+    /^<\s*selectables\b/i.test(t) || /^<\s*selectable\b/i.test(t) || /^<\s*assignable\b/i.test(t) || /^\[\s*<\s*b\s*>selection/i.test(t) || /^<\s*ul\b/i.test(t)
+  );
+};
+/**
+ * Don't add trailing space if previous element is opening of a rich text tag and next element is
+ * selectable(s)/assignable
+ * @param {*} acc
+ * @param {*} next
+ * @returns
+ */
+const smartAppend = (acc, next) => {
+  if (!acc) return next;
+  if (precededByRichText(acc) && startsWithSelectables(next)) {
+    return acc + next;
+  }
+  return acc + " " + next;
 };

@@ -54,7 +54,7 @@ function SfrTest(props) {
    * Handles the text update
    * @param event the text from the textbox
    */
-  const handleTextUpdate = (event) => {
+  const handleTextUpdate = (event, type) => {
     try {
       const { isManagementFunction, testUUID } = props;
 
@@ -64,6 +64,11 @@ function SfrTest(props) {
         let activityCopy = deepCopy(latestActivity);
 
         let testItem = activityCopy.tests[testUUID];
+        if (testItem) {
+          type == "conclusion" ? (testItem["conclusion"] = event) : (testItem["objective"] = event);
+        } else {
+          handleSnackBarError(`Test UUID ${testUUID} not found`);
+        }
 
         if (JSON.stringify(testItem.objective) !== JSON.stringify(event)) {
           testItem.objective = event;
@@ -79,15 +84,16 @@ function SfrTest(props) {
             true
           );
         }
-      }
-
-      if (uuid && activities?.hasOwnProperty(uuid)) {
+      } else if (uuid && activities?.hasOwnProperty(uuid)) {
         // Pull latest activity state from store - to avoid conflicting updates to the state
         const latestActivities = store.getState().sfrWorksheetUI.activities;
         let activitiesCopy = deepCopy(latestActivities);
 
-        if (activitiesCopy[uuid].tests?.[testUUID]) {
-          activitiesCopy[uuid].tests[testUUID].objective = event;
+        let testItem = activitiesCopy[uuid].tests?.[testUUID];
+        if (testItem) {
+          type == "conclusion" ? (testItem["conclusion"] = event) : (testItem["objective"] = event);
+
+          // Update evaluation activities
           updateEvaluationActivities(activitiesCopy);
         } else {
           handleSnackBarError(`Test UUID ${testUUID} not found`);
@@ -389,7 +395,7 @@ function SfrTest(props) {
           index={TestIndex}
           uuid={uuid}
           text={props.test.objective || ""}
-          handleTextUpdate={handleTextUpdate}
+          handleTextUpdate={(event) => handleTextUpdate(event, "objective")}
         />
         <div className='mt-2 mb-[-8px]'>
           {nestedTestLists.length > 0 ? (
@@ -397,7 +403,7 @@ function SfrTest(props) {
               <SfrTestList
                 key={"TestListSection_" + testListUUID}
                 testListDescription={testList.description || ""}
-                testListConclusion={testList.conclusion }
+                testListConclusion={testList.conclusion}
                 testUUIDs={testList.testUUIDs}
                 dependencyDropdown={props.dependencyMenuOptions}
                 isManagementFunction={props.isManagementFunction}
@@ -423,9 +429,19 @@ function SfrTest(props) {
             <div className='mb-4' />
           )}
         </div>
+        {/* Test Conclusion RTE */}
+        <TipTapEditor
+          className='w-full'
+          contentType={"term"}
+          title={"testConclusion"}
+          index={TestIndex}
+          uuid={uuid}
+          text={props.test.conclusion || ""}
+          handleTextUpdate={(event) => handleTextUpdate(event, "conclusion")}
+        />
       </div>
     );
-  }, [props.test.objective, props.testUUID, JSON.stringify(activityData)]);
+  }, [props.test.objective, props.test.conclusion, props.testUUID, JSON.stringify(activityData)]);
 
   // Return Method
   return (

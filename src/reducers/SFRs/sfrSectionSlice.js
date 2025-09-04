@@ -36,6 +36,7 @@ const sfrComponentDefault = {
   additionalSfr: false,
   consistencyRationale: "",
   xPathDetails: {},
+  sfrType: "",
 };
 export const defaultModifiedSfrComponent = {
   fromPkgData: {
@@ -114,6 +115,7 @@ export const sfrSectionSlice = createSlice({
           notNew: component?.notNew,
           xPathDetails: component?.xPathDetails || defaultSfr.xPathDetails,
           classDescription: component?.classDescription,
+          sfrType: component?.sfrType || defaultSfr.sfrType,
         };
 
         // Adjust component if it is a modified sfr

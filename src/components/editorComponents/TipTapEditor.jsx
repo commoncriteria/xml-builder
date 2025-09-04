@@ -141,6 +141,21 @@ const TipTapEditor = (props) => {
     }
   }, [props.readOnly]);
 
+  // Sync React props and TipTap editor instance
+  useEffect(() => {
+    if (!editor) return;
+
+    // Normalize incoming prop to string
+    const incoming = (typeof props.text === "string" ? props.text : "") || "";
+
+    const current = editor.getHTML();
+
+    // If the editor isn't focused (user is not actively typing) and the content differs, update it
+    if (!editor.isFocused && current !== incoming) {
+      editor.commands.setContent(incoming, false); // false = no undo step
+    }
+  }, [props.text, editor]);
+
   // Methods
   /**
    * Handles updating the editor text

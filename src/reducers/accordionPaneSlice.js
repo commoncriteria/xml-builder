@@ -42,25 +42,30 @@ export const accordionPaneSlice = createSlice({
   initialState,
   reducers: {
     CREATE_ACCORDION: (state, action) => {
-      let title = action.payload.title;
-      let selectedSection = action.payload.selected_section ? action.payload.selected_section : "";
       // custom is the UUID of the editor, populated only for user-created custom sections
-      let custom = action.payload.custom;
-      let isAppendix = action.payload.isAppendix;
+      const { title, selected_section, custom, isAppendix, xmlTagMeta } = action.payload;
 
       let uuid = uuidv4();
-      let index = Object.values(state.sections).findIndex((value) => value.title === selectedSection);
+      let index = Object.values(state.sections).findIndex((value) => value.title === selected_section);
 
       // Add new section if the accordion title does not already exist
       if (index !== -1) {
         let keyValues = Object.entries(state.sections);
         keyValues.splice(index + 1, 0, [
           uuid,
-          { title: title, open: false, formItems: [], custom: custom, selectedSection: selectedSection, isAppendix: isAppendix },
+          { title: isAppendix ? `Appendix - ${title}` : title, open: false, formItems: [], custom, selected_section, isAppendix, xmlTagMeta },
         ]);
         state.sections = Object.fromEntries(keyValues);
       } else {
-        state.sections[uuid] = { title: title, open: false, formItems: [] };
+        state.sections[uuid] = {
+          title: isAppendix ? `Appendix - ${title}` : title,
+          open: false,
+          formItems: [],
+          custom,
+          selected_section,
+          isAppendix,
+          xmlTagMeta,
+        };
       }
 
       // Return the uuid of the accordion

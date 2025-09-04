@@ -154,11 +154,12 @@ function SfrTestList(props) {
         let activitiesCopy = deepCopy(latestActivities);
 
         let testListItem = activitiesCopy[uuid].testLists[props.testListUUID];
+        if (testListItem) {
+          type == "conclusion" ? (testListItem["conclusion"] = event) : (testListItem["description"] = event);
 
-        type == "conclusion" ? (testListItem["conclusion"] = event) : (testListItem["description"] = event);
-
-        // Update evaluation activities
-        updateEvaluationActivities(activitiesCopy);
+          // Update evaluation activities
+          updateEvaluationActivities(activitiesCopy);
+        }
       }
     } catch (e) {
       console.log(e);
@@ -237,8 +238,8 @@ function SfrTestList(props) {
 
   // Use Memos
   /**
-  * The TestListEditor component
-  */
+   * The TestListEditor component
+   */
   const TestListEditor = useMemo(() => {
     return (
       <TipTapEditor
@@ -251,7 +252,7 @@ function SfrTestList(props) {
       />
     );
   }, [props.testListDescription, activity, activities]);
-   /**
+  /**
    * The TestListConclusion component
    */
   const TestListConclusion = useMemo(() => {
@@ -344,7 +345,6 @@ function SfrTestList(props) {
                   <div className='mb-6' />
                 )}
                 {TestListConclusion}
-
               </div>
               <div className='border-t-2 border-gray-200 m-0 p-0 mx-[-16px] mt-[-6px]'>
                 <div className='w-full p-1 justify-items-center'>

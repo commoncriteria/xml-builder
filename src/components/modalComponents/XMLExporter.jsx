@@ -32,6 +32,7 @@ import { deepCopy } from "../../utils/deepCopy";
 import { handleSnackBarSuccess, handleSnackBarError, getSfrMaps } from "../../utils/securityComponents.jsx";
 import Modal from "./Modal";
 import format from "xml-formatter";
+import { style_tags } from "../../utils/fileParser.js";
 
 /**
  * The XML Exporter class that packages the form into an XML export file
@@ -135,6 +136,7 @@ function XMLExporter({ open, handleOpen, preview }) {
 
     dispatch(
       SET_SECURITY_OBJECTIVES_SECTION({
+        objectivesDefinition: stateObject.objectives.objectivesDefinition || "",
         sfrSections: stateObject.sfrSections,
         toe: toe,
         operationalEnvironment: operationalEnvironment,
@@ -273,6 +275,7 @@ function XMLExporter({ open, handleOpen, preview }) {
 
       formattedSections[key] = {
         title: section.title,
+        ...(section.selected_section && section.selected_section.length !== 0 ? { selected_section: section.selected_section } : {}),
         formItems: section.formItems.map((formItem) => {
           const { uuid, contentType } = formItem;
 
@@ -378,7 +381,7 @@ function XMLExporter({ open, handleOpen, preview }) {
       dispatch(
         SET_DISTRIBUTED_TOE({
           state: stateObject.distributedTOE,
-          subSections: distributedTOE.formItems,
+          distributedTOE,
           ppType: ppType,
         })
       ); // Pass ppType
@@ -389,6 +392,7 @@ function XMLExporter({ open, handleOpen, preview }) {
           text: editors[section.custom].text,
           title: section.title,
           selectedSection: section.selectedSection,
+          ppType,
         })
       );
     });
@@ -409,8 +413,8 @@ function XMLExporter({ open, handleOpen, preview }) {
       }
 
       getMetaData();
-      let useCases = getTerms();
-      parseSections(useCases);
+      let terms = getTerms();
+      parseSections(terms);
       getSecurityProblemDefinitionSection();
       getSecurityObjectives();
     } catch (e) {
@@ -427,8 +431,8 @@ function XMLExporter({ open, handleOpen, preview }) {
       let txt = document.createElement("textarea");
       txt.innerHTML = doc.end({ prettyPrint: true });
       let xmlString = txt.value;
-      xmlString = addNamespace(xmlString);
       xmlString = cleanUpXml(xmlString);
+      xmlString = addNamespace(xmlString);
 
       // xmlString = format(xmlString, {
       //   indentation: "  ", // 2-space indent
@@ -483,12 +487,20 @@ function XMLExporter({ open, handleOpen, preview }) {
 
     let cleanedXmlString = xmlString.replace(removeWhiteSpaceRegex, "<$1>");
 
-    // Remove default aactivity tags
-    return cleanedXmlString
-      .replace(/<aactivity level="element"\/>\n/g, "")
-      .replace(/<aactivity level="component"\/>\n/g, "")
-      .replace(/<aactivity level="element"\/>/g, "")
-      .replace(/<aactivity level="component"\/>/g, "");
+    // Build regex to match any style tag
+    const tagPattern = style_tags.join("|");
+
+    // Remove space after any opening style tag and before an opening selectable-like tag
+    // eg. <i> <selectables> -> <i><selectables>
+    const openSpace = new RegExp(`(</?(?:${tagPattern})\\b[^>]*>)\\s+(?=<(?:selectables|selectable|assignable)\\b)`, "gi");
+
+    // Remove space after any closing style tag and before a closing selectable-like tag
+    // eg. </i> </selectables> -> </i></selectables>
+    const closeSpace = new RegExp(`(</(?:${tagPattern})\\s*>)\\s+(?=</(?:selectables|selectable|assignable)\\b)`, "gi");
+
+    cleanedXmlString = cleanedXmlString.replace(openSpace, "$1").replace(closeSpace, "$1");
+
+    return cleanedXmlString;
   };
 
   function addNamespace(content) {
@@ -516,6 +528,8 @@ function XMLExporter({ open, handleOpen, preview }) {
       "span",
       "u",
       "sub",
+      "h4",
+      "mark",
     ]; // tags which require namespace
     // ([\\/]?): capture group to match opening and closing tags
 

@@ -1,12 +1,17 @@
 import { createSlice } from "@reduxjs/toolkit";
 import { v4 as uuidv4 } from "uuid";
 
-const initialState = {};
+const initialState = {
+  objectivesDefinition: "",
+};
 
 export const objectivesSlice = createSlice({
   name: "objectives",
   initialState,
   reducers: {
+    UPDATE_MAIN_OBJECTIVES_DEFINITION: (state, action) => {
+      state.objectivesDefinition = action.payload.newDefinition;
+    },
     CREATE_OBJECTIVE_SECTION: (state, action) => {
       let newId = uuidv4();
       let title = action.payload.title;
@@ -203,6 +208,7 @@ export const objectivesSlice = createSlice({
 
 // Action creators are generated for each case reducer function
 export const {
+  UPDATE_MAIN_OBJECTIVES_DEFINITION,
   CREATE_OBJECTIVE_SECTION,
   UPDATE_OBJECTIVE_SECTION_TITLE,
   UPDATE_OBJECTIVE_SECTION_DEFINITION,

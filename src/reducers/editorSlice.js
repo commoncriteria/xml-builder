@@ -8,11 +8,11 @@ export const editorSlice = createSlice({
   initialState,
   reducers: {
     CREATE_EDITOR: (state, action) => {
-      let title = action.payload.title;
-      let index = Object.values(state).findIndex((value) => value.title === title);
+      const title = action.payload.title;
+      const index = Object.values(state).findIndex((value) => value.title === title);
       const text = action.payload?.text || "";
+      const newId = uuidv4();
       if (index === -1) {
-        let newId = uuidv4();
         state[newId] = {
           title: title,
           text: text,
@@ -24,6 +24,9 @@ export const editorSlice = createSlice({
       } else {
         action.payload = null;
       }
+
+      // Return the uuid of the editor
+      action.payload = newId;
     },
     UPDATE_EDITOR_TITLE: (state, action) => {
       const { uuid, title, newTitle } = action.payload;
@@ -49,8 +52,8 @@ export const editorSlice = createSlice({
       }
     },
     DELETE_EDITOR: (state, action) => {
-      let title = action.payload.title;
-      let uuid = action.payload.uuid;
+      const { uuid, title } = action.payload;
+
       if (state.hasOwnProperty(uuid)) {
         if (state[uuid].title === title) {
           delete state[uuid];
@@ -58,9 +61,8 @@ export const editorSlice = createSlice({
       }
     },
     COLLAPSE_EDITOR: (state, action) => {
-      let uuid = action.payload.uuid;
-      let title = action.payload.title;
-      let open = action.payload.open;
+      const { uuid, title, open } = action.payload;
+
       if (state.hasOwnProperty(uuid)) {
         if (state[uuid].title === title) {
           state[uuid].open = open !== null && typeof open === "boolean" ? open : !state[uuid].open;

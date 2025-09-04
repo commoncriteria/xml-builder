@@ -12,23 +12,8 @@ import virtualization from "../../public/data/sfr_components/virtualization_cc20
 
 // Constants
 const raw_xml_tags = ["xref", "rule", "figure", "ctr", "snip", "if-opt-app", "also", "_", "no-link", "comment"];
-const style_tags = ["b", "p", "s", "i", "strike", "h3", "span", "u", "ol", "ul", "li", "sup", "sub", "pre", "code", "table"];
-export const escapedTagsRegex = /<(\/?)(xref|rule|figure|ctr|snip|if-opt-app|also|_|no-link|comment)\b([^>]*)>/g;
-
-/**
- * Selector function to get UUID by title
- * @param slice the slice
- * @param title the title
- * @returns {null|string} the uuid, null if no matching title is found
- */
-export const getUUIDByTitle = (slice, title) => {
-  for (const [uuid, termDetails] of Object.entries(slice)) {
-    if (termDetails.title === title) {
-      return uuid;
-    }
-  }
-  return null; // return null if no matching title is found
-};
+export const style_tags = ["b", "p", "s", "i", "strike", "h3", "span", "u", "ol", "ul", "li", "sup", "sub", "pre", "code", "table", "h4"];
+const escapedTagsRegex = /<(\/?)(xref|rule|figure|ctr|snip|if-opt-app|also|_|no-link|comment)\b([^>]*)>/g;
 
 /**
  * Escape XML tags, while preserving attributes
@@ -693,7 +678,7 @@ export const getAllSecurityObjectivesTOE = (domNode) => {
 };
 
 /**
- * Parse Security Objectives for OE section
+ * Parse Security Objectives for OE section (<SOE>)
  * @param {Node} domNode
  * @returns {{
  *   intro: string,
@@ -734,12 +719,18 @@ export const getAllSecurityObjectivesOE = (domNode) => {
       if (subsection.nodeType == Node.ELEMENT_NODE && subsection.tagName == "SOEs") {
         subsection.childNodes.forEach((soeSection) => {
           if (soeSection.nodeType == Node.ELEMENT_NODE) {
-            let description = findAllByTagName("description", soeSection);
-            description = description.length !== 0 ? description[0].textContent : "";
             let name = soeSection.getAttribute("name");
+
+            let description = findAllByTagName("description", soeSection);
+            description = description.length !== 0 ? parseRichTextChildren(description[0]) : "";
+
+            let rationale = findAllByTagName("consistency-rationale", soeSection);
+            rationale = rationale.length !== 0 ? parseRichTextChildren(rationale[0]) : "";
+
             securityObjectives.push({
               name: name,
               definition: description,
+              rationale,
               xmlTagMeta: {
                 tagName: "SOE",
                 attributes: {
@@ -865,6 +856,11 @@ export const getDocumentObjectives = (domNode) => {
   };
 
   doc_objectives = parseRichTextChildren(domNode);
+
+  // Set the attributes
+  domNode.attributes.forEach((attr) => {
+    xmlTagMeta.attributes[attr.name] = attr.value;
+  });
 
   xmlTagMeta.tagName = domNode.tagName;
 
@@ -1005,6 +1001,7 @@ export const getXmlData = (domNode, ppType, ppVersion) => {
       } else if (sec.localName === "Security_Objectives" || hasAttribute(sec, "title", "Security Objectives")) {
         // 4.0 Security Objectives
         masterObject.securityObjectives = {
+          objectivesDefinition: parseRichTextChildren(sec),
           toeObjectives: getAllSecurityObjectivesTOE(sec),
           oeObjectives: getAllSecurityObjectivesOE(sec),
         };
@@ -1073,7 +1070,7 @@ export const getXmlData = (domNode, ppType, ppVersion) => {
  */
 export const getCustomSection = (customSection) => {
   let xmlTagMeta = {
-    tagName: "section",
+    tagName: customSection.localName,
     attributes: {},
   };
 
@@ -1084,7 +1081,7 @@ export const getCustomSection = (customSection) => {
 
   const definition = getNodeContentWithTags(customSection);
 
-  return { localName: customSection.localName, definition: definition, xmlTagMeta };
+  return { definition: definition, xmlTagMeta };
 };
 
 /**
@@ -1623,7 +1620,7 @@ const getNodeContentWithTags = (node, retainNamespace = false) => {
 const getNodeContent = (node, retainNamespace = false) => {
   if (node.nodeType == Node.TEXT_NODE) {
     // If text node, return text content
-    return `${removeWhitespace(escapeLTSign(node.textContent))} `;
+    return escapeLTSign(node.textContent);
   } else if (node.nodeType == Node.COMMENT_NODE) {
     return `<!--  ${node.textContent}  -->`;
   } else if (node.nodeType == Node.ELEMENT_NODE) {
@@ -1649,7 +1646,7 @@ const getNodeContent = (node, retainNamespace = false) => {
       for (let childNode of node.childNodes) {
         content += getNodeContent(childNode, retainNamespace);
       }
-      content += `</${nodeName}> `;
+      content += `</${nodeName}>`;
     }
 
     return content;
@@ -2051,7 +2048,7 @@ export const getBasePPs = (domNode) => {
 
     const getTextByTag = (tagName) => {
       const tagNode = findAllByTagName(tagName, basePP)[0];
-      return tagNode ? tagNode.textContent.trim() : "";
+      return tagNode ? parseRichTextChildren(tagNode) : "";
     };
 
     const conModNodes = findAllByTagName("con-mod", basePP);
@@ -2699,7 +2696,8 @@ export const getSFRs = (domNode, extCompDefMap, platformObject) => {
           let extCompDefTitleTagTitle;
           if (extCompDefTitleTag) {
             extCompDefTitleTagTitle = findAllByTagName("title", extCompDefTitleTag)[0];
-            sfrElementMeta["extCompDefTitle"] = escapeXmlTags(getNodeContent(extCompDefTitleTagTitle));
+            extCompDefTitleTagTitle = removeSpaceBeforeClosingSelectablesAndAssignments(escapeXmlTags(getNodeContent(extCompDefTitleTagTitle)));
+            sfrElementMeta["extCompDefTitle"] = extCompDefTitleTagTitle.replace(/&gt;\s\./g, "&gt;.").replace(/&gt;\s\,/g, "&gt;,");
           }
 
           // Parse through title tag
@@ -2810,10 +2808,8 @@ export const getSFRs = (domNode, extCompDefMap, platformObject) => {
                         }
 
                         sfrContent.pop(); // remove entry
-                        // sfrContent.push({ description: `${previousText} ${removeWhitespace(content)}</${tagName}>` });
                         sfrContent.push({ description: `${previousText}${content}</${tagName}>` });
                       } else {
-                        // sfrContent.push({ description: `${removeWhitespace(content)}</${tagName}>` });
                         sfrContent.push({ description: `${content}</${tagName}>` });
                       }
                     } else {
@@ -3056,34 +3052,30 @@ export const getSFRs = (domNode, extCompDefMap, platformObject) => {
                 testLists: {},
                 tests: {},
                 level: "element",
+                // level: "",
                 platformMap: platformMap,
                 isNoTest: false,
                 noTest: "",
               };
 
               eActivityLevel = activity.getAttribute("level") ? activity.getAttribute("level").toLowerCase() : "component";
+              // eA.level = eActivityLevel;
+
+              eA.introduction = parseRichTextChildren(activity);
 
               activity.childNodes.forEach((c) => {
-                if (c.nodeType == Node.TEXT_NODE) {
-                  eA.introduction += parseRichTextChildren(activity);
-                } else if (c.nodeType == Node.ELEMENT_NODE) {
+                if (c.nodeType == Node.ELEMENT_NODE) {
                   const aactivityChildTag = c.tagName.toLowerCase();
 
-                  if (aactivityChildTag == "tss") {
-                    if (c.childNodes) {
-                      eA.tss = parseRichTextChildren(c).trim();
-                    }
-                  } else if (aactivityChildTag == "guidance") {
-                    if (c.childNodes) {
-                      eA.guidance = parseRichTextChildren(c);
-                    }
+                  if (aactivityChildTag == "tss" && c.childNodes) {
+                    eA.tss = parseRichTextChildren(c).trim();
+                  } else if (aactivityChildTag == "guidance" && c.childNodes) {
+                    eA.guidance = parseRichTextChildren(c);
                   } else if (aactivityChildTag == "tests" && c.childNodes) {
                     parseTests(c, eA);
-                  } else if (aactivityChildTag == "no-tests") {
+                  } else if (aactivityChildTag == "no-tests" && c.childNodes) {
                     eA.noTest = parseRichTextChildren(c);
                     eA.isNoTest = true;
-                  } else {
-                    eA.introduction += parseRichTextChildren(c); // likely rich text
                   }
                 }
               });
@@ -3216,6 +3208,16 @@ export const getSFRs = (domNode, extCompDefMap, platformObject) => {
 };
 
 /**
+ * Removes space before closing selectable or assignable tag
+ * @param htmlEscapedString
+ * @returns {string}
+ */
+function removeSpaceBeforeClosingSelectablesAndAssignments(htmlEscapedString) {
+  if (typeof htmlEscapedString !== "string") return htmlEscapedString;
+  return htmlEscapedString.replace(/\s+(?=&lt;\/(?:selectable|assignable)&gt;)/g, "");
+}
+
+/**
  * Gets the section extended component definition map
  * @param domNode
  * @returns {Map<any, any>}
@@ -3295,9 +3297,10 @@ function parseManagementFunction(parent, selectableMeta, contents = "", rowDef =
     } else if (c.nodeType == Node.ELEMENT_NODE) {
       if (c.localName.toLowerCase() == "refinement") {
         // TODO: Need to figure out how to convert these tags back to refinement on export
-        const innerContent = parseManagementFunction(c, selectableMeta, contents, rowDef);
-        const fullTagContent = `<b${getNodeAttributes(c)}>${innerContent}</b>`;
-        contents += fullTagContent;
+        const innerContent = parseManagementFunction(c, selectableMeta, `${contents}<b${getNodeAttributes(c)}>`, rowDef);
+        let fullTagContent = `${innerContent}</b>`;
+
+        contents = fullTagContent;
       } else if (c.localName.toLowerCase() == "a") {
         const href = c.getAttribute("href");
         const fullTagContent = href ? `<a href="${href}">${c.textContent}</a>` : ` <a>${c.textContent}</a>`;
@@ -3309,8 +3312,9 @@ function parseManagementFunction(parent, selectableMeta, contents = "", rowDef =
       } else if (c.localName.toLowerCase() == "br") {
         contents += "<br/>";
       } else if (style_tags.includes(c.localName.toLowerCase())) {
-        const innerContent = parseManagementFunction(c, selectableMeta, contents, rowDef);
-        let fullTagContent = `<${c.localName}${getNodeAttributes(c)}>${innerContent}</${c.localName}>`;
+        // Hacky way to preseve rich text nodes that have selectables/assignables as children
+        const innerContent = parseManagementFunction(c, selectableMeta, `${contents}<${c.localName}${getNodeAttributes(c)}>`, rowDef);
+        let fullTagContent = `${innerContent}</${c.localName}>`;
 
         // Include a space if the last character isn't whitespace and next node is inline;
         // this is for sibling tags that are both rich text
@@ -3320,13 +3324,13 @@ function parseManagementFunction(parent, selectableMeta, contents = "", rowDef =
           !/\s$/.test(fullTagContent) && // checks whether the string does not end in whitespace
           nextElement &&
           nextElement.nodeType === Node.ELEMENT_NODE &&
-          style_tags.includes(nextElement.localName?.toLowerCase());
+          style_tags.concat(raw_xml_tags).includes(nextElement.localName?.toLowerCase());
 
         if (needsTrailingSpace) {
           fullTagContent += " ";
         }
 
-        contents += fullTagContent;
+        contents = fullTagContent;
       } else if (c.tagName == "selectables") {
         const result = processSelectables(
           c,
@@ -3407,9 +3411,10 @@ function parseRichTextChildren(parent, contents = "", sfrContent = [], selectabl
     } else if (c.nodeType == Node.ELEMENT_NODE) {
       if (c.localName.toLowerCase() == "refinement") {
         // TODO: Need to figure out how to convert these tags back to refinement on export
-        const innerContent = parseRichTextChildren(c, "", sfrContent, selectableMeta);
-        const fullTagContent = `<b${getNodeAttributes(c)}>${innerContent}</b>`;
-        contents += fullTagContent;
+        const innerContent = parseRichTextChildren(c, `${contents}<b${getNodeAttributes(c)}>`, sfrContent, selectableMeta);
+        let fullTagContent = `${innerContent}</b>`;
+
+        contents = fullTagContent;
       } else if (c.localName.toLowerCase() == "a") {
         const href = c.getAttribute("href");
         const fullTagContent = href ? `<a href="${href}">${c.textContent}</a>` : ` <a>${c.textContent}</a>`;
@@ -3421,8 +3426,9 @@ function parseRichTextChildren(parent, contents = "", sfrContent = [], selectabl
       } else if (c.localName.toLowerCase() == "br") {
         contents += "<br/>";
       } else if (style_tags.includes(c.localName.toLowerCase()) || c.localName.toLowerCase() == "tr" || c.localName.toLowerCase() == "td") {
-        const innerContent = parseRichTextChildren(c, "", sfrContent, selectableMeta);
-        let fullTagContent = `<${c.localName}${getNodeAttributes(c)}>${innerContent}</${c.localName}>`;
+        // Hacky way to preseve rich text nodes that have selectables/assignables as children
+        const innerContent = parseRichTextChildren(c, `${contents}<${c.localName}${getNodeAttributes(c)}>`, sfrContent, selectableMeta);
+        let fullTagContent = `${innerContent}</${c.localName}>`;
 
         // Include a space if the last character isn't whitespace and next node is inline;
         // this is for sibling tags that are both rich text
@@ -3432,13 +3438,13 @@ function parseRichTextChildren(parent, contents = "", sfrContent = [], selectabl
           !/\s$/.test(fullTagContent) && // checks whether the string does not end in whitespace
           nextElement &&
           nextElement.nodeType === Node.ELEMENT_NODE &&
-          style_tags.includes(nextElement.localName?.toLowerCase());
+          style_tags.concat(raw_xml_tags).includes(nextElement.localName?.toLowerCase());
 
         if (needsTrailingSpace) {
           fullTagContent += " ";
         }
 
-        contents += fullTagContent;
+        contents = fullTagContent;
       } else if (c.localName.toLowerCase() == "div") {
         if (!hasAncestorTag(c, "tests")) {
           // pull in raw xml for div taqg (normally has been seen to be platform dependencies in other sections - outside of Tests)
@@ -3467,9 +3473,9 @@ function parseRichTextChildren(parent, contents = "", sfrContent = [], selectabl
           }
 
           sfrContent.pop(); // remove entry
-          sfrContent.push({ description: `${previousText} ${removeWhitespace(contents)}` });
+          sfrContent.push({ description: `${previousText}${contents}` });
         } else {
-          sfrContent.push({ description: removeWhitespace(contents) });
+          sfrContent.push({ description: contents });
         }
 
         // Reset the contents buffer so that text doesn't repeat on next iteration
@@ -3524,8 +3530,14 @@ function parseRichTextChildren(parent, contents = "", sfrContent = [], selectabl
           }
 
           sfrContent.pop(); // remove entry
-          // sfrContent.push({ description: `${previousText}  ${removeWhitespace(contents)}` });
-          sfrContent.push({ description: `${previousText}${contents ? " " + removeWhitespace(contents) : ""}` });
+
+          let descriptionString = previousText;
+
+          if (contents) {
+            descriptionString += `${(previousText.trim().endsWith("[") ? "" : " ") + removeWhitespace(contents)}`;
+          }
+
+          sfrContent.push({ description: descriptionString });
         } else {
           sfrContent.push({ description: removeWhitespace(contents) });
         }
@@ -3630,6 +3642,7 @@ function parseTests(testsNode, eA) {
           testListUUID: divTestListUUID,
           objective: parseRichTextChildren(node),
           dependencies: [],
+          conclusion: "",
         };
 
         node.childNodes.forEach((divChild) => {
@@ -3726,12 +3739,23 @@ function parseTestList(eA, testListFromNode, parentTestUUID = null) {
         const test = {
           testListUUID: testListUUID,
           id: child.getAttribute("id") || "",
-          objective: parseRichTextChildren(child),
+          objective: "",
           dependencies: [],
           nestedTestListUUIDs: [],
+          conclusion: "",
         };
 
-        child.childNodes.forEach((grandchild) => {
+        const testChildren = Array.from(child.childNodes);
+
+        // Find the last "control" node (testlist/depends) to use as the split point
+        const lastControlIdxCandidates = testChildren
+          .map((n, i) => (n.nodeType === Node.ELEMENT_NODE && ["testlist", "depends"].includes(n.tagName.toLowerCase()) ? i : -1))
+          .filter((i) => i !== -1);
+
+        // If none found, keep marker as -1 (all text will be intro/there is no conclusion text)
+        const lastControlIdx = lastControlIdxCandidates.length > 0 ? Math.max(...lastControlIdxCandidates) : -1;
+
+        testChildren.forEach((grandchild, grandchildIdx) => {
           if (grandchild.nodeType === Node.ELEMENT_NODE) {
             const gTag = grandchild.tagName.toLowerCase();
             if (gTag === "testlist") {
@@ -3743,6 +3767,25 @@ function parseTestList(eA, testListFromNode, parentTestUUID = null) {
               } else {
                 test.dependencies.push(grandchild.getAttribute("on") || "");
               }
+            } else {
+              const richText = raw_xml_tags.includes(grandchild.localName)
+                ? ` ${escapeXmlTags(getNodeContent(grandchild))} `
+                : ` <${grandchild.localName}${getNodeAttributes(grandchild)}>${parseRichTextChildren(grandchild)}</${grandchild.localName}> `;
+
+              // Rich text content: decide whether it goes to objective or conclusion
+              // If we've haven't passed the last control node, it is not conclusion text
+              if (lastControlIdx === -1 || grandchildIdx <= lastControlIdx) {
+                test.objective += richText;
+              } else {
+                test.conclusion += richText;
+              }
+            }
+          } else if (grandchild.nodeType === Node.TEXT_NODE) {
+            const text = removeWhitespace(escapeLTSign(grandchild.textContent));
+            if (lastControlIdx === -1 || grandchildIdx <= lastControlIdx) {
+              test.objective += text;
+            } else {
+              test.conclusion += text;
             }
           }
         });

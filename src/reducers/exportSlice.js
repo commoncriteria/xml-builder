@@ -160,7 +160,7 @@ export const exportSlice = createSlice({
     },
     SET_SECURITY_OBJECTIVES_SECTION: (state, action) => {
       try {
-        const { toe, operationalEnvironment, objectivesToSFRs } = action.payload;
+        const { toe, operationalEnvironment, objectivesToSFRs, objectivesDefinition } = action.payload;
         const ppType = action.payload.ppType;
         const docType = getDocType(ppType);
 
@@ -171,13 +171,21 @@ export const exportSlice = createSlice({
         }
 
         // Get Security_Objectives_for_the_TOE
-        const isSecurityObjectives = state.overallObject[docType]?.hasOwnProperty("sec:Security_Objectives");
-
+        const hasSecurityObjectives = state.overallObject[docType]?.hasOwnProperty("sec:Security_Objectives");
         // Generate objective section if it does not exist
-        if (!isSecurityObjectives) {
+        if (!hasSecurityObjectives) {
           state.overallObject[docType]["sec:Security_Objectives"] = {};
         }
 
+        // Add intro text if it exists
+        if (objectivesDefinition.length !== 0) {
+          state.overallObject[docType]["sec:Security_Objectives"] = {
+            "#": objectivesDefinition,
+            ...state.overallObject[docType]["sec:Security_Objectives"],
+          };
+        }
+
+        // Get Security_Objectives_for_the_TOE
         if (toe) {
           const reformattedTOE = getSecurityObjectives(toe.terms, objectivesToSFRs, sfrSections);
           state.overallObject[docType]["sec:Security_Objectives"]["sec:Security_Objectives_for_the_TOE"] = {
@@ -199,13 +207,15 @@ export const exportSlice = createSlice({
 
           const sectionObject = {
             "#": operationalEnvironment.definition,
-            SOEs: {
-              SOE: reformattedOperationalEnvironment,
-            },
+            ...(reformattedOperationalEnvironment.length > 0 && {
+              SOEs: {
+                SOE: reformattedOperationalEnvironment,
+              },
+            }),
           };
 
           // If import has different tag name, use that
-          if (tagName && attributes) {
+          if (tagName != "" || Object.keys(attributes).length !== 0) {
             for (const [key, value] of Object.entries(attributes)) {
               sectionObject[`@${key}`] = value;
             }
@@ -225,6 +235,8 @@ export const exportSlice = createSlice({
 
             // Replace the placeholder with the newly updated section
             state.overallObject[docType]["sec:Security_Objectives"] = newSecObjectives;
+          } else {
+            state.overallObject[docType]["sec:Security_Objectives"][sectionTagName] = sectionObject;
           }
         } else {
           delete state.overallObject[docType]["sec:Security_Objectives"]["sec:Security_Objectives_for_the_Operational_Environment"];
@@ -243,7 +255,6 @@ export const exportSlice = createSlice({
       const fileType =
         xmlTagMeta.hasOwnProperty("attributes") && xmlTagMeta.attributes.hasOwnProperty("target-product") ? xmlTagMeta.attributes["target-product"] : "";
       state.fileType = fileType;
-      const isMobileDevice = fileType === "Mobile Device" ? true : false;
       const reformattedRevisionHistory = {
         entry: Object.values(revisionHistory).map((entry) => {
           return {
@@ -255,7 +266,7 @@ export const exportSlice = createSlice({
                 .map((item, index, array) => {
                   item = item.trim();
                   if (index !== array.length - 1) {
-                    item += isMobileDevice ? "<htm:br/>" : "<h:br/>";
+                    item += " ";
                   }
                   return item;
                 }),
@@ -359,7 +370,6 @@ export const exportSlice = createSlice({
       state.overallObject[docType]["include-pkg"] = packageArr;
     },
     SET_MODULES: (state, action) => {
-      // const docType = state.overallObject["PP"] ? "PP" : "Package";
       const ppType = action.payload.ppType;
       const docType = getDocType(ppType);
       const modules = action.payload.modules.xml;
@@ -384,25 +394,29 @@ export const exportSlice = createSlice({
       }
     },
     SET_CUSTOM_SECTIONS: (state, action) => {
+      const { text, title, selectedSection, ppType } = action.payload;
+      const docType = getDocType(ppType);
+      const oldObject = state.overallObject[docType];
       let newObject = {};
-      const keyToUse = state.overallObject.PP ? "PP" : "Package";
-      const oldObject = state.overallObject[keyToUse];
+
       for (const [key, value] of Object.entries(oldObject)) {
         newObject[key] = value;
-        if (key.startsWith("sec:") && key.slice(4).replace(/_/g, " ") === action.payload.selectedSection) {
-          newObject[`sec:${action.payload.title.replace(/\s+/g, "_")}`] = {
-            "#": action.payload.text,
-            "@previous_section": action.payload.selectedSection,
+        if (key.startsWith("sec:") && key.slice(4).replace(/_/g, " ") === selectedSection) {
+          newObject[`sec:${title.replace(/\s+/g, "_")}`] = {
+            "#": text,
+            "@previous_section": selectedSection,
           };
         }
       }
-      state.overallObject[keyToUse] = newObject;
+      state.overallObject[docType] = newObject;
     },
     SET_INTRODUCTION: (state, action) => {
       const intro = action.payload.introduction.formItems;
       const ctoeData = action.payload.compliantTargets;
       const { xml: platformXML } = action.payload.platformData;
-      const sec_overview_section = intro.find((formItem) => formItem.title == "Objectives of Document").xmlTagMeta.tagName;
+      const sec_overview_section = intro.find((formItem) => formItem.title == "Objectives of Document").xmlTagMeta.tagName || "section";
+      const sec_overview_id = intro.find((formItem) => formItem.title == "Objectives of Document").xmlTagMeta.attributes?.id || "intro-overview";
+      const sec_overview_title = intro.find((formItem) => formItem.title == "Objectives of Document").xmlTagMeta.attributes?.title || "Overview";
       const sec_overview_text = intro.find((formItem) => formItem.title == "Objectives of Document").text;
       const ppType = action.payload.ppType;
       const docType = getDocType(ppType);
@@ -454,7 +468,11 @@ export const exportSlice = createSlice({
       // Refactor this so that we're looping through the loop items and using their embedded tags
       // Search the form items for duplicate tags, and if there are, use an array
       let formattedIntroduction = {
-        [sec_overview_section]: sec_overview_text,
+        [sec_overview_section]: {
+          "#": sec_overview_text,
+          ...(sec_overview_section === "section" ? { "@id": sec_overview_id } : {}), // id attr is only allowed with section tag
+          "@title": sec_overview_title,
+        },
         "#": [],
       };
 
@@ -494,8 +512,6 @@ export const exportSlice = createSlice({
           },
         });
       }
-
-      formattedIntroduction[`section`] = [];
 
       // Add Use Cases
       if (Object.keys(useCaseState).length > 0) {
@@ -811,13 +827,9 @@ export const exportSlice = createSlice({
       }
     },
     SET_DISTRIBUTED_TOE: (state, action) => {
-      if (action.payload.state.intro.length === 0) {
-        delete state.overallObject.PP.section;
-        return;
-      }
-
+      const { formItems, selected_section } = action.payload.distributedTOE;
       const attributes = action.payload.state.xmlTagMeta.attributes;
-      const subSections = action.payload.subSections;
+      const subSections = formItems;
       let formattedSubsections = [];
       const ppType = action.payload.ppType;
       const docType = getDocType(ppType);
@@ -839,10 +851,36 @@ export const exportSlice = createSlice({
         "#": action.payload.state.intro,
       };
 
-      state.overallObject[docType].section = {
+      const distributedToeBlock = {
         "#": introFormatted,
         section: [...formattedSubsections],
       };
+
+      const sectionName = (action.payload.state.xmlTagMeta && action.payload.state.xmlTagMeta.tagName) || "section";
+
+      // Logic to find the target section for which this one goes after
+      const targetSectionTitle = selected_section; // e.g. "Conformance Claims"
+      const targetSectionKey = `sec:${targetSectionTitle.replaceAll(" ", "_")}`; // e.g. "sec:Conformance_Claims"
+
+      const targetSection = ([k, v]) =>
+        k === targetSectionKey ||
+        (k === "section" &&
+          v &&
+          ((Array.isArray(v) && v.some((o) => o && o["@title"] === targetSectionTitle)) || (typeof v === "object" && v["@title"] === targetSectionTitle)));
+
+      // Remove any previous section with the same name
+      const filtered = Object.entries(state.overallObject[docType]).filter(([k]) => k !== sectionName);
+
+      const idx = filtered.findIndex(targetSection);
+
+      // Insert after the target section if found, otherwise append
+      if (idx !== -1) {
+        filtered.splice(idx + 1, 0, [sectionName, distributedToeBlock]);
+      } else {
+        filtered.push([sectionName, distributedToeBlock]);
+      }
+
+      state.overallObject[docType] = Object.fromEntries(filtered);
     },
     SET_APPENDICES: (state, action) => {
       let appendices = [];
@@ -939,57 +977,24 @@ export const exportSlice = createSlice({
         formattedAppendix = appendices;
       }
 
-      let customAppendices = Object.values(action.payload.state.accordionPane.sections).filter((sec) => sec.isAppendix === true);
-
-      const defaultOrder = [
-        "Appendix A - Optional Requirements",
-        "Appendix B - Selection-Based Requirements",
-        "Appendix C - Extended Component Definitions",
-        "Appendix D - Validation Guidelines",
-        "Appendix E - Implicitly Satisfied Requirements",
-        "Appendix F - Entropy Documentation And Assessment",
-        "Appendix H - Use Case Templates",
-        "Appendix I - Acronyms",
-        "Appendix J - Bibliography",
-        "Appendix K - Acknowledgments",
-      ];
+      const customAppendices = Object.values(action.payload.state.accordionPane.sections).filter((sec) => sec.isAppendix === true);
 
       customAppendices.forEach((app) => {
         const xml = {
           "@title": app.title,
           "#": action.payload.state.editors[app.custom].text,
-          "@previous_section": app.selectedSection,
         };
 
-        // try to find index of selectedSection in formattedAppendix
-        let index;
-        if (app.selectedSection.startsWith("Appendix - ")) {
-          index = formattedAppendix.findIndex((sec) => app.selectedSection.slice(13).toLowerCase() === sec["@title"].toLowerCase());
-        } else {
-          index = formattedAppendix.findIndex((sec) => app.selectedSection.toLowerCase() === sec["@title"].toLowerCase());
-        }
-
-        if (index !== -1) {
-          // if found, place custom appendix after
-          formattedAppendix.splice(index + 1, 0, xml);
-        } else {
-          // if not found, place it in the correct relative position (based on defaultOrder above)
-          const targetIndexInDefault = defaultOrder.indexOf(app.selectedSection);
-          let insertAt = formattedAppendix.length; // default to end
-
-          // walk forward in defaultOrder to find the next appendix that does exist in formattedAppendix
-          for (let i = targetIndexInDefault + 1; i < defaultOrder.length; i++) {
-            const nextTitle = defaultOrder[i].slice(13);
-            const existingIndex = formattedAppendix.findIndex((sec) => sec["@title"].toLowerCase() === nextTitle.toLowerCase());
-            if (existingIndex !== -1) {
-              insertAt = existingIndex;
-              break;
+        // Add attributes
+        if (app.xmlTagMeta?.attributes) {
+          for (const [attrName, attrValue] of Object.entries(app.xmlTagMeta.attributes)) {
+            if (attrName.toLowerCase() !== "title") {
+              xml[`@${attrName}`] = attrValue;
             }
           }
-
-          // insert at calculated index
-          formattedAppendix.splice(insertAt, 0, xml);
         }
+
+        formattedAppendix.push(xml);
       });
 
       // Delete appendix and move to the end of the object for gpcp
@@ -1048,11 +1053,14 @@ const constructDirectRationaleThreats = (threats, sfrSections, ppType, sfrMaps) 
   let terms = threats.terms;
   // iterate through threat terms
   Object.keys(terms).forEach((key) => {
-    output += `<threat name="${terms[key].title}">`;
-    terms[key].from.forEach((PP) => (output += `<from base="${PP}/">`));
-    output += `<description>${terms[key].definition}</description>`;
+    const title = terms[key].title;
+    output += `<threat name="${title}">`;
+    terms[key].from.forEach((PP) => (output += `<from base="${PP}"/>`));
+    if (terms[key].definition && terms[key].definition.length > 0) {
+      output += `<description>${terms[key].definition}</description>`;
+    }
 
-    if (!Object.hasOwn(terms[key], "sfrs") || terms[key].sfrs.length === 0) return;
+    if (!Object.hasOwn(terms[key], "sfrs")) return;
     output += `<!-- New mapping to build updated threat mapping table. -->`;
 
     // Add sfr type
@@ -1205,7 +1213,7 @@ const getSecurityObjectives = (terms, objectivesToSFRs, sfrSections) => {
     } else {
       // For Objectives for the OE
       reformattedJSON = Object.entries(terms).map(([uuid, value]) => {
-        const { title, definition } = value;
+        const { title, definition, consistencyRationale } = value;
         let outputs = [];
         let sfrs = objectivesToSFRs.hasOwnProperty(uuid) ? objectivesToSFRs[uuid] : [];
         if (sfrs && sfrs.length > 0) {
@@ -1218,6 +1226,7 @@ const getSecurityObjectives = (terms, objectivesToSFRs, sfrSections) => {
         return {
           "@name": title,
           description: definition,
+          ...(consistencyRationale && consistencyRationale.length > 0 ? { "consistency-rationale": consistencyRationale } : {}),
           "#": outputs,
         };
       });
@@ -1517,19 +1526,28 @@ const parseElement = (element) => {
 
     let result = "";
 
+    const startsWithPunctuation = (text) => {
+      if (!text) return false;
+      const firstChar = text.trimStart().charAt(0);
+      return [".", ",", ")", "]"].includes(firstChar);
+    };
+
+    // Removes the preceding space when incoming starts with punctuation
+    const removeSpace = (finalText, incomingText) => {
+      if (!incomingText) return finalText;
+      if (startsWithPunctuation(incomingText) && finalText.endsWith(" ")) {
+        return finalText.trimEnd() + incomingText.trimStart();
+      }
+      return finalText + incomingText;
+    };
+
     titleOrDescription.forEach((item) => {
       const assignmentEdgeCase = item.groups && item.groups.length == 1 && selectables[item.groups[0]] && selectables[item.groups[0]].assignment;
 
       if (item.text) {
-        const firstChar = item.text.trimStart().charAt(0);
-        if ((firstChar === "." || firstChar === "," || firstChar === ")" || firstChar === "]") && result.endsWith(" ")) {
-          // remove space when adding period or comma
-          item.text = item.text.trimStart();
-          result = result.trimEnd();
-        }
-        result += item.text;
+        result = removeSpace(result, item.text);
       } else if (item.description) {
-        result += item.description;
+        result = removeSpace(result, item.description);
       } else if (item.assignment) {
         result += ` <assignable>${selectables[item.assignment].description}</assignable> `;
       } else if (item.selections) {
@@ -1561,7 +1579,10 @@ const parseElement = (element) => {
         }
       }
     });
-    return result;
+    return result
+      .replace(/\^\s+/g, "^")
+      .replace(/(<\/[a-zA-Z0-9]+>)\s*(<\/[a-zA-Z0-9]+>\])/g, "$1$2")
+      .replace(/\]\.$/, "");
   }
 
   // Within the 'selections' field of a title array, one or two things can happen
@@ -1825,6 +1846,7 @@ const parseElement = (element) => {
   if (isManagementFunction && managementFunctions && Object.keys(managementFunctions).length > 0) {
     const managementResult = parseManagementFunctionsTable(managementFunctions);
     finalResult += managementResult;
+    finalResult += "].";
   }
   return finalResult;
 };
@@ -1866,6 +1888,7 @@ const getComponentSelections = (
   optional,
   objective,
   invisible,
+  extendedComponentDefinition,
   isModule
 ) => {
   if (component && component[1]) {
@@ -1891,12 +1914,11 @@ const getComponentSelections = (
 
     // Add selection based
     if (selectionBased) {
+      if (!isModule) {
+        fComponent["@status"] = "sel-based";
+      }
       if (selections && Object.keys(selections).length > 0) {
         if (selections.hasOwnProperty("selections")) {
-          if (!isModule) {
-            fComponent["@status"] = "sel-based";
-          }
-
           // Get components
           if (selections.components.length > 0) {
             selections.components.forEach((component) => {
@@ -2010,7 +2032,7 @@ const getAuditEvents = (auditEvents, auditData) => {
                   "audit-event-info": {
                     selectables: {
                       "@onlyone": "yes",
-                      selectable: [info ? info : "", "No additional information"],
+                      selectable: [info ? info : "", "None"],
                     },
                   },
                 });
@@ -2041,8 +2063,11 @@ const getAuditEvents = (auditEvents, auditData) => {
 const getSfrEvaluationActivities = (evaluationActivity, formattedEvaluationActivities, selectableUUIDtoID, isComponent, platforms) => {
   try {
     let formattedEvaluationActivity = {
+      // aactivity: {
+      //   "@level": isComponent ? "component" : "element",
+      // },
       aactivity: {
-        "@level": isComponent ? "component" : "element",
+        "@level": evaluationActivity.level,
       },
     };
     if (evaluationActivity) {
@@ -2100,7 +2125,7 @@ const getSfrEvaluationActivities = (evaluationActivity, formattedEvaluationActiv
                     const test = tests[uuid];
                     if (!test) return;
 
-                    const { id, dependencies, objective, nestedTestListUUIDs } = test;
+                    const { id, dependencies, objective, conclusion: testConclusion, nestedTestListUUIDs } = test;
 
                     let formattedDependencies = [];
                     if (dependencies?.length > 0) {
@@ -2145,12 +2170,12 @@ const getSfrEvaluationActivities = (evaluationActivity, formattedEvaluationActiv
 
                       return {
                         ...(test.id && { "@id": test.id }),
-                        "#": [test.dependencies, test.objective, ...nested],
+                        "#": [test.dependencies, test.objective, ...nested, test.testConclusion],
                       };
                     };
 
                     const formattedTest = {
-                      test: formatTest({ id, dependencies: formattedDependencies, objective, nestedTestListUUIDs }),
+                      test: formatTest({ id, dependencies: formattedDependencies, objective, nestedTestListUUIDs, testConclusion }),
                     };
 
                     formattedTests.push(formattedTest);
@@ -2641,7 +2666,7 @@ const getModifiedSfrFilteredSections = (filteredSections, selectableUUIDtoID, co
 
         // Filter components down based on changed elements
         if (originalComponent && elementsValid) {
-          const { elements: originalElements } = originalComponent || {};
+          const { elements: originalElements = {} } = originalComponent || {};
 
           // Run through each element to check for any updates from the original element
           Object.entries(elements).forEach(([elementUUID, element]) => {
@@ -2793,7 +2818,7 @@ const getToeSfrs = (state, toeSfrs, toeAuditTables, useCaseMap, platforms, fileT
                   : {};
               let auditTableExists = auditEventMap.hasOwnProperty(sfrType) ? auditEventMap[sfrType] : null;
               let findValues = title.split(/\(([^)]+)\)/);
-              const id = findValues && findValues.length > 1 ? findValues[1].trim().toLowerCase() : "";
+              const id = findValues && findValues.length > 1 ? `${findValues[1].trim().toLowerCase()}-${sfrType}` : "";
               const formattedExtendedComponentDefinition = getFamilyExtendedComponentDefinition(extendedComponentDefinition);
               let { formattedComponents, implementSection } = getSfrComponents(
                 components,
@@ -2820,7 +2845,7 @@ const getToeSfrs = (state, toeSfrs, toeAuditTables, useCaseMap, platforms, fileT
                 {
                   section: {
                     "@title": title ? title : "",
-                    "@id": id,
+                    ...(id && id.length > 0 ? { "@id": id } : {}),
                     "#": [formattedClassDescription, definition, formattedExtendedComponentDefinition, formattedComponents, formattedImplementSection],
                   },
                 },

@@ -10,7 +10,7 @@ import ExpandCircleDownIcon from "@mui/icons-material/ExpandCircleDown";
 import ExpandCircleDownOutlinedIcon from "@mui/icons-material/ExpandCircleDownOutlined";
 import { DELETE_ACCORDION, setIsAccordionOpen } from "../../reducers/accordionPaneSlice.js";
 import { SORT_THREATS_TERMS_LIST_HELPER, UPDATE_MAIN_SECURITY_PROBLEM_DEFINITION } from "../../reducers/threatsSlice.js";
-import { SORT_OBJECTIVE_TERMS_LIST_HELPER } from "../../reducers/objectivesSlice.js";
+import { SORT_OBJECTIVE_TERMS_LIST_HELPER, UPDATE_MAIN_OBJECTIVES_DEFINITION } from "../../reducers/objectivesSlice.js";
 import { UPDATE_MAIN_SFR_DEFINITION } from "../../reducers/SFRs/sfrSlice.js";
 import { SET_SATISFIED_REQS_XML } from "../../reducers/satisfiedReqsAppendix.js";
 import { SET_ENTROPY_XML } from "../../reducers/entropyAppendixSlice.js";
@@ -69,6 +69,7 @@ function AccordionContent({ title, uuid, index, open, metadata, handleMetaDataCo
   const entropy = useSelector((state) => state.entropyAppendix.xmlContent);
   const acknowledgements = useSelector((state) => state.acknowledgementsAppendix.xmlContent);
   const securityProblemDefinition = useSelector((state) => state.threats.securityProblemDefinition);
+  const securityObjectivesDefinition = useSelector((state) => state.objectives.objectivesDefinition);
   const distributedTOEIntro = useSelector((state) => state.distributedTOE.intro);
   const { ppType } = useSelector((state) => state.accordionPane.metadata);
   const { secondary, hoverOpen, hoverClosed, icons } = useSelector((state) => state.styling);
@@ -153,6 +154,17 @@ function AccordionContent({ title, uuid, index, open, metadata, handleMetaDataCo
   const handleUpdateSecurityProblemDefinition = (event) => {
     dispatch(
       UPDATE_MAIN_SECURITY_PROBLEM_DEFINITION({
+        newDefinition: event,
+      })
+    );
+  };
+  /**
+   * Handles updating the security problem definition
+   * @param event the event as a text string
+   */
+  const handleUpdateSecurityObjectivesDefinition = (event) => {
+    dispatch(
+      UPDATE_MAIN_OBJECTIVES_DEFINITION({
         newDefinition: event,
       })
     );
@@ -249,6 +261,16 @@ function AccordionContent({ title, uuid, index, open, metadata, handleMetaDataCo
       </div>
     );
   }, [distributedTOEIntro]);
+  /**
+   * The SecurityObjectivesSection
+   */
+  const SecurityObjectivesSection = useMemo(() => {
+    return (
+      <div className='mx-4 mb-2'>
+        <TipTapEditor text={securityObjectivesDefinition} contentType={"term"} handleTextUpdate={handleUpdateSecurityObjectivesDefinition} />
+      </div>
+    );
+  }, [securityObjectivesDefinition]);
   /**
    * The SecurityProblemDefinitionSection
    */
@@ -394,6 +416,7 @@ function AccordionContent({ title, uuid, index, open, metadata, handleMetaDataCo
           <div className={"flex flex-col h-fit"}>
             {title === "Distributed TOE" && DistributedToeSection}
             {title === "Security Problem Definition" && SecurityProblemDefinitionSection}
+            {title === "Security Objectives" && SecurityObjectivesSection}
             {title === "Security Requirements" && SecurityRequirementsSection}
             {custom && CustomSection}
             <slot />
