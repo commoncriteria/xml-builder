@@ -158,7 +158,7 @@ export const sarsSlice = createSlice({
           }
 
           if (component.xmlTagMeta.attributes.hasOwnProperty("status")) {
-            if (component.xmlTagMeta.attributes["status"] == "optional") {
+            if (component.xmlTagMeta.attributes["status"] === "optional") {
               component.optional = true;
             }
           }

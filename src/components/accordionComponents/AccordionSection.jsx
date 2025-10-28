@@ -266,7 +266,7 @@ function AccordionSection({ uuid, index }) {
    * @returns {boolean}
    */
   const getIsAddSection = () => {
-    return accordions[uuid].title.toString().toLowerCase() == "introduction";
+    return accordions[uuid].title.toString().toLowerCase() === "introduction";
   };
 
   // Use Memos

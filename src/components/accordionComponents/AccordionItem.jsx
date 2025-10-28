@@ -9,7 +9,7 @@ import AccordionItemByType from "./AccordionItemByType.jsx";
  * @param uuid the uuid the uuid of the accordion item
  * @param accordionUUID the accordion parent uuid
  * @param type the accordion type
- *        values: appendixI, compliantTargetsOfEvaluation, conformanceClaims, editor, terms, threats, objectives, sfrs, sars, sfrBasePPs
+ *        values: transformsAppendix, compliantTargetsOfEvaluation, conformanceClaims, editor, terms, threats, objectives, sfrs, sars, sfrBasePPs
  * @param formItems the form items array of the parent accordion
  * @returns {JSX.Element}
  * @constructor

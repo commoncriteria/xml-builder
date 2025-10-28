@@ -50,6 +50,13 @@ import { removeTagEqualities } from "./fileParser.js";
 import { getSfrPreviewTextString } from "./sfrPreview.jsx";
 import CardTemplate from "../components/editorComponents/securityComponents/CardTemplate.jsx";
 import ToggleSwitch from "../components/ToggleSwitch.jsx";
+import app from "../../public/data/sfr_components/app_cc2022.json";
+import mdm from "../../public/data/sfr_components/mdm.json";
+import gpcp from "../../public/data/sfr_components/gpcp_cc2022.json";
+import gpos from "../../public/data/sfr_components/gpos_cc2022.json";
+import mdf from "../../public/data/sfr_components/mdf.json";
+import tls from "../../public/data/sfr_components/tls_cc2022.json";
+import virtualization from "../../public/data/sfr_components/virtualization_cc2022.json";
 
 // Constants
 export const noTestTooltip = (
@@ -238,20 +245,19 @@ export const handleSnackbarTextUpdates = (logicCallback, ...args) => {
  */
 export const handleSubmitResetDataMenu = (closeMenu) => {
   try {
-    // Clear session storage and reset template data to its original state
-    sessionStorage.clear();
-
-    // Reload the page after clearing out local storage
-    location.reload();
-
     // Close the dialog
     closeMenu();
 
     // Scroll back to the top of the page
     window.scrollTo(0, 0);
 
-    // Update snackbar
-    handleSnackBarSuccess("Data Successfully Reset to Default");
+    // Reload the page after clearing out session storage
+    // A snackbar message will pop up after the page is reloaded
+    sessionStorage.setItem("resetData", "true");
+    clearSessionStorageExcept(["resetData"]).then(() => {
+      // Reload the page
+      location.reload();
+    });
   } catch (e) {
     console.log(e);
     handleSnackBarError(e);
@@ -281,7 +287,6 @@ export const getSnackBarObject = (message, severity, additionalArgs) => {
  * @returns {Promise<void>}
  */
 export const fetchTemplateData = async ({ version, type, base }) => {
-  // TODO: Update in issue #200
   try {
     // Clear session storage and reset template data to its original state
     await clearSessionStorageExcept(["ppTemplateVersion", "ppType", "isLoading"]);
@@ -312,7 +317,7 @@ export const fetchTemplateData = async ({ version, type, base }) => {
     } = data;
 
     // Dispatch actions to update different slices
-    if (version !== "Version 3.1" && version !== "Module") {
+    if (version !== "Version 3.1") {
       accordionPane.metadata.ppTemplateVersion = version;
     }
 
@@ -348,11 +353,7 @@ export const fetchTemplateData = async ({ version, type, base }) => {
     // Handle the error as needed, e.g., dispatch an error action or return a value
   } finally {
     // Update the local storage with the current version
-    if (type === "Module") {
-      sessionStorage.setItem("ppTemplateVersion", "CC2022 Standard");
-    } else {
-      sessionStorage.setItem("ppTemplateVersion", version);
-    }
+    sessionStorage.setItem("ppTemplateVersion", version);
 
     // Update pp type
     sessionStorage.setItem("ppType", type);
@@ -383,7 +384,6 @@ export const loadTemplateJson = async ({ version, type, base }) => {
         } else if (type === "Functional Package") {
           filePath = `${baseDataFolder}/base_cc2022_fp.json`;
         } else if (type === "Module") {
-          // TODO: Update in issue #200
           filePath = `${baseDataFolder}/base_cc2022_module_direct_rationale.json`;
         }
         break;
@@ -391,11 +391,9 @@ export const loadTemplateJson = async ({ version, type, base }) => {
         if (type === "Protection Profile") {
           filePath = `${baseDataFolder}/base_cc2022_standard.json`;
         } else if (type === "Functional Package") {
-          filePath = `${baseDataFolder}/base_cc2022_fp.json`;
+          filePath = `${baseDataFolder}/base_cc2022_fp.json`; // using same template as base since FPs normally don't have SARs
         } else if (type === "Module") {
-          // TODO: Update in issue #200
-          // filePath = `${baseDataFolder}/base_cc2022_module_standard.json`; // TODO: add regular objectives?
-          filePath = `${baseDataFolder}/base_module.json`; // TODO: add regular objectives?
+          filePath = `${baseDataFolder}/base_cc2022_module_standard.json`;
         }
         break;
       case "Version 3.1":
@@ -414,8 +412,7 @@ export const loadTemplateJson = async ({ version, type, base }) => {
         } else if (type === "Functional Package") {
           filePath = `${baseDataFolder}/base_cc2022_fp.json`; // using same template as base since FPs normally dont have SARs
         } else if (type === "Module") {
-          // TODO: Update in issue #200
-          filePath = `${baseDataFolder}/base_module.json`;
+          filePath = `${baseDataFolder}/base_cc2022_module_direct_rationale.json`;
         }
         break;
       case "CC2022 Standard":
@@ -424,8 +421,7 @@ export const loadTemplateJson = async ({ version, type, base }) => {
         } else if (type === "Functional Package") {
           filePath = `${baseDataFolder}/base_cc2022_fp.json`;
         } else if (type === "Module") {
-          // TODO: Update in issue #200
-          filePath = `${baseDataFolder}/base_module.json`;
+          filePath = `${baseDataFolder}/base_cc2022_module_standard.json`;
         }
         break;
       // Add more cases as needed
@@ -587,7 +583,7 @@ export const getObjectiveMaps = () => {
     const objectives = state.objectives;
 
     Object.values(objectives).map((value) => {
-      let terms = value.terms;
+      let terms = value.terms || {};
       Object.entries(terms).map(([key, value]) => {
         let title = value.title;
         if (!objectiveMap.objectiveNames.includes(title)) {
@@ -610,6 +606,8 @@ export const getObjectiveMaps = () => {
  * @returns Object containing various relationships for name, UUID, and objectives
  */
 export const getSfrMaps = () => {
+  const dataMap = { app, gpcp, gpos, mdf, mdm, tls, virtualization };
+
   let sfrMap = {
     sfrNames: [],
     sfrNameMap: {},
@@ -634,6 +632,27 @@ export const getSfrMaps = () => {
         // Get module title
         if (ppType === "Module") {
           title = getModuleTitle(title, additionalSfr, modifiedSfr, sfrUUID, sfrType);
+
+          // Add SFRs from the base PP
+          for (const sfrBasePP of Object.values(sfrBasePPs)) {
+            const { declarationAndRef = { short: "" } } = sfrBasePP || {};
+            const shortName = declarationAndRef.short.toLowerCase();
+
+            if (shortName === "app") {
+              const data = dataMap[shortName];
+
+              Object.entries(data).forEach(([key, value]) => {
+                const title = `${key} (from Base-PP)`;
+                const componentUUID = value.compUUID;
+
+                if (!sfrMap.sfrNames.includes(title)) {
+                  sfrMap.sfrNames.push(title);
+                  sfrMap.sfrNameMap[title] = componentUUID;
+                  sfrMap.sfrUUIDMap[componentUUID] = title;
+                }
+              });
+            }
+          }
         }
 
         if (!sfrMap.sfrNames.includes(title)) {
@@ -684,7 +703,7 @@ export const getSfrMaps = () => {
     handleSnackBarError(e);
     console.log(e);
   }
-
+  console.log(sfrMap);
   return sfrMap;
 };
 /**

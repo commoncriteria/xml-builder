@@ -419,7 +419,7 @@ function EditorSection({ accordionUUID, uuid, section, tooltip }) {
             <span />
             <Tooltip title={tooltip} id={uuid + tooltip + "Tooltip"} disableHoverListener={!(tooltip === "")} arrow>
               <textarea
-                key={uuid}
+                key={title}
                 className='w-full resize-none font-bold text-[14px] mb-0 h-[30px] p-0 text-secondary'
                 onBlur={(event) => handleSnackbarTextUpdates(handleEditorTitle, event)}
                 defaultValue={title}

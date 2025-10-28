@@ -4,20 +4,15 @@ import { FormControl, TextField, Tooltip } from "@mui/material";
 import { useDispatch, useSelector } from "react-redux";
 import Button from "@mui/material/Button";
 import RestoreIcon from "@mui/icons-material/Restore";
-import useToggle from "../../utils/Hooks/useToggle.js";
 import { SET_ACCORDION_PANE_INITIAL_STATE, updateMetaDataItem } from "../../reducers/accordionPaneSlice.js";
-import {
-  RESET_COMPLIANT_TARGETS_OF_EVALUATION_STATE,
-  UPDATE_COMPLIANT_TARGETS_OF_EVALUATION_BY_KEY,
-} from "../../reducers/compliantTargetsOfEvaluationSlice.js";
 import { RESET_CONFORMANCE_CLAIMS_STATE } from "../../reducers/conformanceClaimsSlice.js";
 import { SET_EDITORS_INITIAL_STATE } from "../../reducers/editorSlice.js";
-import { RESET_PACKAGE_STATE } from "../../reducers/includePackageSlice.js";
-import { RESET_SAR_STATE, SET_SARS_INITIAL_STATE } from "../../reducers/sarsSlice.js";
+import { DELETE_OBJECTIVE_SECTION, GET_OBJECTIVE_UUID_BY_TITLE } from "../../reducers/objectivesSlice.js";
+import { SET_SARS_INITIAL_STATE } from "../../reducers/sarsSlice.js";
 import { RESET_ALL_SFR_OBJECTIVES } from "../../reducers/SFRs/sfrSectionSlice.js";
 import { RESET_ALL_THREAT_TERM_OBJECTIVES } from "../../reducers/threatsSlice.js";
-import { DELETE_OBJECTIVE_SECTION, GET_OBJECTIVE_UUID_BY_TITLE } from "../../reducers/objectivesSlice.js";
 import { deepCopy } from "../../utils/deepCopy.js";
+import useToggle from "../../utils/Hooks/useToggle.js";
 import {
   fetchTemplateData,
   handleSnackBarError,
@@ -73,7 +68,7 @@ function MetadataSection() {
   useEffect(() => {
     // Check if the ppType has changed
     try {
-      convertPPType(ppType);
+      convertPPType(ppTemplateVersion, ppType);
     } catch (e) {
       console.error("Error:", e);
       handleSnackBarError(e);
@@ -368,7 +363,8 @@ function MetadataSection() {
           convertConformanceClaims(originalAccordionPane, originalEditors, data);
 
           // Convert SARS for CC2022 Standard
-          const newSars = convertSars(originalAccordionPane, originalEditors, originalSars, data);
+          // For Module since SARs are rare, use the original values. Otherwise, convert sars to the CC2022 format.
+          const newSars = ppType === "Module" ? originalSars : convertSars(originalAccordionPane, originalEditors, originalSars, data);
 
           return { originalAccordionPane, originalEditors, newSars };
         })
@@ -559,9 +555,10 @@ function MetadataSection() {
   };
   /**
    * Converts the pp type
+   * @param ppTemplateVersion the pp template version
    * @param ppType the pp type
    */
-  const convertPPType = (ppType) => {
+  const convertPPType = (ppTemplateVersion, ppType) => {
     // Retrieve the last known version from local storage
     let storedVersion = sessionStorage.getItem("ppType");
 
@@ -574,10 +571,13 @@ function MetadataSection() {
     // Check if the ppType has changed
     if (ppType && ppType !== storedVersion && isLoadingValid) {
       try {
-        if (ppType === "Functional Package") {
-          convertToFunctionalPackage(ppType).then();
-        } else if (ppType === "Module") {
-          convertToModule(ppType).then();
+        if (ppType === "Functional Package" || ppType === "Module") {
+          const version = ppTemplateVersion === "Version 3.1" || ppTemplateVersion === "CC2022 Standard" ? "CC2022 Standard" : "CC2022 Direct Rationale";
+          fetchTemplateData({
+            version: version,
+            type: ppType,
+            base: true,
+          }).then();
         }
       } catch (e) {
         console.log(e);
@@ -587,141 +587,6 @@ function MetadataSection() {
       }
     }
   };
-  /**
-   * Converts to functional package
-   * @param ppType the pp type
-   * @returns {Promise<void>}
-   */
-  const convertToFunctionalPackage = async (ppType) => {
-    try {
-      // Get original data
-      let originalAccordionPane = deepCopy(currentAccordionPane);
-      let editors = deepCopy(currentEditorSections);
-      let { metadata, sections } = originalAccordionPane;
-      let [introductionUUID, introductionSection] = getSectionByTitle(sections, "Introduction");
-      let [requirementsUUID, requirements] = getSectionByTitle(sections, "Security Requirements");
-      let { formItems: requirementsFormItems } = requirements;
-      const [toeOverviewUUID, toeOverviewEditor] = getSectionByTitle(editors, "TOE Overview");
-
-      // Set new ppType
-      if (metadata) {
-        metadata.ppType = ppType;
-      }
-
-      // Reset compliant targets of evaluation
-      dispatch(RESET_COMPLIANT_TARGETS_OF_EVALUATION_STATE());
-
-      // Update compliant targets of evaluation
-      const isToeAValidSecton = toeOverviewUUID && toeOverviewEditor && introductionUUID && sections.hasOwnProperty(introductionUUID);
-
-      if (isToeAValidSecton) {
-        // Add in compliant targets of evaluation to accordion pane sections
-        const searchContentType = "editor";
-        const newContentType = "compliantTargetsOfEvaluation";
-        sections[introductionUUID] = updateContentType(introductionSection, toeOverviewUUID, searchContentType, newContentType);
-
-        // Grab text from TOE Overview in editor section
-        const { text, title } = toeOverviewEditor;
-        if (text && title) {
-          const itemMap = { introText: text };
-          dispatch(UPDATE_COMPLIANT_TARGETS_OF_EVALUATION_BY_KEY({ itemMap }));
-        }
-        // Delete TOE Overview in editor section
-        deleteEditor(editors, toeOverviewUUID, title);
-      }
-
-      // Remove sars and remove from accordionPane and editor section
-      if (requirementsFormItems && requirementsFormItems.length > 0) {
-        const [sarUUID, sarEditor] = getSectionByTitle(editors, "Security Assurance Requirements");
-
-        // Remove sars from accordionPane sections and editor
-        if (sarUUID && sarEditor) {
-          // Find index of sars in formItems using findIndex
-          const deleteIndex = requirementsFormItems.findIndex((item) => item.uuid === sarUUID);
-
-          // Delete sars from accordionPane if found
-          const formItemExists = deleteIndex !== -1 && sections.hasOwnProperty(requirementsUUID) && sections[requirementsUUID].hasOwnProperty("formItems");
-
-          if (formItemExists) {
-            sections[requirementsUUID].formItems = requirementsFormItems.filter((_, index) => index !== deleteIndex);
-          }
-
-          // Delete sars from editor
-          let { title } = sarEditor;
-          if (title) {
-            deleteEditor(editors, sarUUID, title);
-          }
-        }
-
-        // Reset sars
-        dispatch(RESET_SAR_STATE());
-      }
-
-      // Reset include packages
-      dispatch(RESET_PACKAGE_STATE());
-
-      // Update editor state
-      dispatch(SET_EDITORS_INITIAL_STATE(editors));
-
-      // Set the accordion pane to reflect the updated sections
-      dispatch(SET_ACCORDION_PANE_INITIAL_STATE(originalAccordionPane));
-    } catch (e) {
-      console.log(e);
-      handleSnackBarError(e);
-    }
-  };
-  /**
-   * Converts to module
-   * @param ppType the pp type
-   * @returns {Promise<void>}
-   */
-  const convertToModule = async (ppType) => {
-    // TODO: Update in issue #200
-    try {
-      fetchTemplateData({
-        version: "CC2022 Standard",
-        type: ppType,
-        base: true,
-      }).then();
-    } catch (e) {
-      console.log(e);
-      handleSnackBarError(e);
-    }
-  };
-  /**
-   * Updates the content type
-   * @param data the data
-   * @param searchUUID the search UUID
-   * @param searchContentType the search content type
-   * @param newContentType the new content type
-   * @returns {*&{formItems}}
-   */
-  function updateContentType(data, searchUUID, searchContentType, newContentType) {
-    // Helper function to recursively search and update
-    function recursiveUpdate(items) {
-      return items.map((item) => {
-        // Check if the current item matches the UUID and contentType
-        if (item.uuid === searchUUID && item.contentType === searchContentType) {
-          // Update the contentType
-          return { ...item, contentType: newContentType };
-        }
-
-        // If the item has nested formItems, recurse into them
-        if (item.formItems) {
-          return { ...item, formItems: recursiveUpdate(item.formItems) };
-        }
-
-        // Return the item unchanged if no match is found
-        return item;
-      });
-    }
-
-    // Start the recursive update with the top-level formItems
-    return {
-      ...data,
-      formItems: recursiveUpdate(data.formItems),
-    };
-  }
   /**
    * Updates the sar evaluation activities and notes
    * @param originalElementMap the original element map
@@ -750,8 +615,6 @@ function MetadataSection() {
       console.log(e);
       handleSnackBarError(e);
     }
-
-    // Remove excess whitespace and compare the sar title strings
     /**
      * Converts sar titles
      * @param string1 the first string
@@ -759,6 +622,7 @@ function MetadataSection() {
      * @returns {boolean}
      */
     function compareSarTitles(string1, string2) {
+      // Remove excess whitespace and compare the sar title strings
       const normalized1 = string1.split(/\s+/).join(" ").trim();
       const normalized2 = string2.split(/\s+/).join(" ").trim();
 
@@ -767,7 +631,7 @@ function MetadataSection() {
     }
   };
   /**
-   * gets the sar element UUID to component id map
+   * Gets the sar element UUID to component id map
    * @param components the components
    * @param elements the elements
    * @returns {{}}
@@ -810,26 +674,13 @@ function MetadataSection() {
       return [null, null];
     }
   };
-  /**
-   * Deletes the editor
-   * @param editors the editors
-   * @param uuid the uuid
-   * @param title the title
-   */
-  const deleteEditor = (editors, uuid, title) => {
-    const editorExists = editors && editors.hasOwnProperty(uuid) && editors[uuid].title === title;
-
-    if (editorExists) {
-      delete editors[uuid];
-    }
-  };
 
   // Use Memos
   /**
    * The pp template dropdown section
    */
   const ppTemplateDropdown = useMemo(() => {
-    const { ppTemplateVersion, ppType } = metadataSection;
+    const { ppTemplateVersion } = metadataSection;
     const filteredOptions = getPPTemplateFilteredMenuOptions(ppTemplateVersion);
 
     return (
@@ -843,8 +694,6 @@ function MetadataSection() {
           multiple={false}
           required={true}
           defaultValue={"CC2022 Standard"}
-          // TODO: Update in issue #200
-          disabled={ppType === "Module" ? true : false}
         />
       </span>
     );

@@ -217,7 +217,7 @@ export const threatsSlice = createSlice({
           if (currentThreat.title === title) {
             currentThreat.sfrs.map((sfr) => {
               if (objectiveUUID != "") {
-                if (sfr.uuid === sfrUUID && objectiveUUID == sfr.objectiveUUID) {
+                if (sfr.uuid === sfrUUID && objectiveUUID === sfr.objectiveUUID) {
                   uuidExists = true;
                 }
               } else {
@@ -302,7 +302,7 @@ export const threatsSlice = createSlice({
           if (currentThreat.hasOwnProperty("sfrs")) {
             currentThreat.sfrs.map((sfr, index) => {
               if (objectiveUUID != "") {
-                if (sfr.uuid === sfrUUID && sfr.objectiveUUID == objectiveUUID) {
+                if (sfr.uuid === sfrUUID && sfr.objectiveUUID === objectiveUUID) {
                   currentThreat.sfrs.splice(index, 1);
                 }
               } else {

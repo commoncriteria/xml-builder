@@ -1,3 +1,4 @@
+// Imports
 import { useEffect, useState } from "react";
 import PropTypes, { any } from "prop-types";
 import { Button } from "@mui/material";
@@ -11,6 +12,8 @@ import Modal from "./Modal";
  * @param open the open boolean
  * @param handleOpen the handler for open
  * @param handleClose the handler for close
+ * @param currentPPTemplate the current pp template
+ * @param targetPPTemplate the target pp template to switch to
  * @returns {JSX.Element}
  * @constructor
  */
@@ -34,7 +37,10 @@ function SwitchWarning({ type, open, handleOpen, handleClose, currentPPTemplate,
     text = "Conformance section data will be lost and the SARs section will be augmented and updated to conform to CC2022.  ";
   }
   if (targetPPTemplate === "CC2022 Direct Rationale") {
-    text += "If you have added an objective to a threat, but have not mapped the objective to an SFR, that dependency will be lost.";
+    text += "If you have added an objective to a threat, but have not mapped the objective to an SFR, that dependency will be lost. ";
+  }
+  if (type && type === "ppType") {
+    text += "The data will be reset to the default data, all former data will be lost. ";
   }
 
   // Use Effects

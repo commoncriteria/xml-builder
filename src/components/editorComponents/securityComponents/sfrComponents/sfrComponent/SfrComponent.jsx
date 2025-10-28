@@ -196,7 +196,7 @@ function SfrComponent() {
                 />
               </FormControl>
             )}
-            {(component.additionalSfr || component.modifiedSfr) && <div>{EditorCard("consistencyRationale")}</div>}
+            {EditorCard("consistencyRationale")}
           </div>
           <div className='w-screen sm:max-w-screen-sm md:max-w-screen-sm lg:max-w-screen-lg'>
             <CardTemplate

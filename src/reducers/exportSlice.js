@@ -121,8 +121,8 @@ export const exportSlice = createSlice({
       }
     },
     SET_SECURITY_PROBLEM_DEFINITION_SECTION: (state, action) => {
-      const { sfrSections, securityProblemDefinition, threats, assumptions, objectiveTerms, OSPs, ppTemplateVersion, ppType, sfrMaps } = action.payload;
-
+      const { sfrSections, securityProblemDefinition, threats, assumptions, objectiveTerms, OSPs, ppTemplateVersion, ppType, sfrMaps, accordionSection } =
+        action.payload;
       const docType = getDocType(ppType);
 
       // Set the security problem definition section
@@ -140,27 +140,55 @@ export const exportSlice = createSlice({
       if (Object.keys(reformattedThreats).length === 0 && Object.keys(reformattedAssumptions).length === 0 && Object.keys(reformattedOSPs).length === 0) {
         delete state.overallObject[docType]["sec:Security_Problem_Definition"];
       } else {
-        // Organizational Security Policies section is needed for PPs/Modules
-        if (docType == "PP" || docType == "Module") {
+        // Organizational Security Policies section is needed for PPs/Modules, even when empty
+        if ((docType === "PP" || docType === "Module") && Object.keys(reformattedOSPs).length === 0) {
           reformattedOSPs = {
             OSPs: {},
           };
         }
+        const { tagName, attributes } = accordionSection.xmlTagMeta;
 
-        state.overallObject[docType]["sec:Security_Problem_Definition"] = {
-          "#": securityProblemDefinition,
-          "!1": " 3.1 Threats ",
-          "sec:Threats": reformattedThreats,
-          "!2": " 3.2 Assumptions ",
-          "sec:Assumptions": reformattedAssumptions,
-          "!3": " 3.3 Organizational Security Policies ",
-          "sec:Organizational_Security_Policies": reformattedOSPs,
-        };
+        if (tagName === "sec:Security_Problem_Definition") {
+          state.overallObject[docType][tagName] = {
+            "#": securityProblemDefinition,
+            "!1": " 3.1 Threats ",
+            "sec:Threats": reformattedThreats,
+            "!2": " 3.2 Assumptions ",
+            "sec:Assumptions": reformattedAssumptions,
+            "!3": " 3.3 Organizational Security Policies ",
+            "sec:Organizational_Security_Policies": reformattedOSPs,
+          };
+        } else {
+          // If the import has a different tag name
+          // Build the new section
+          const newSection = {
+            ...(Object.keys(attributes).length > 0 ? { "@": attributes } : {}),
+            "#": securityProblemDefinition,
+            "!1": " 3.1 Threats ",
+            "sec:Threats": reformattedThreats,
+            "!2": " 3.2 Assumptions ",
+            "sec:Assumptions": reformattedAssumptions,
+            "!3": " 3.3 Organizational Security Policies ",
+            "sec:Organizational_Security_Policies": reformattedOSPs,
+          };
+
+          // Work on the entries array to preserve order
+          let entries = Object.entries(state.overallObject[docType]);
+
+          // Find index of the old SPD section and replace it
+          const idx = entries.findIndex(([k]) => k === "sec:Security_Problem_Definition");
+          if (idx !== -1) {
+            entries[idx] = [tagName, newSection];
+          }
+
+          // Rebuild object, preserving order
+          state.overallObject[docType] = Object.fromEntries(entries);
+        }
       }
     },
     SET_SECURITY_OBJECTIVES_SECTION: (state, action) => {
       try {
-        const { toe, operationalEnvironment, objectivesToSFRs, objectivesDefinition } = action.payload;
+        const { toe, operationalEnvironment, objectivesToSFRs, objectivesDefinition, sfrSections } = action.payload;
         const ppType = action.payload.ppType;
         const docType = getDocType(ppType);
 
@@ -200,7 +228,7 @@ export const exportSlice = createSlice({
 
         // Get Security_Objectives_for_the_Operational_Environment
         if (operationalEnvironment) {
-          const reformattedOperationalEnvironment = getSecurityObjectives(operationalEnvironment.terms, objectivesToSFRs);
+          const reformattedOperationalEnvironment = getSecurityObjectives(operationalEnvironment.terms, objectivesToSFRs, sfrSections);
 
           const { tagName, attributes } = operationalEnvironment.xmlTagMeta;
           const sectionTagName = tagName && attributes ? tagName : "sec:Security_Objectives_for_the_Operational_Environment";
@@ -213,6 +241,11 @@ export const exportSlice = createSlice({
               },
             }),
           };
+
+          // if there are no security objectives for the OE (SOE), remove the rationale section from the template
+          if (reformattedOperationalEnvironment.length === 0) {
+            delete state.overallObject[docType]["sec:Security_Objectives"]["sec:Security_Objectives_Rationale"];
+          }
 
           // If import has different tag name, use that
           if (tagName != "" || Object.keys(attributes).length !== 0) {
@@ -336,7 +369,7 @@ export const exportSlice = createSlice({
       const docType = getDocType(ppType);
 
       let packageArr = [];
-      if (packages.length == 0) {
+      if (packages.length === 0) {
         delete state.overallObject[docType]["include-pkg"];
         return;
       }
@@ -374,7 +407,7 @@ export const exportSlice = createSlice({
       const docType = getDocType(ppType);
       const modules = action.payload.modules.xml;
 
-      if (modules.length == 0) {
+      if (modules.length === 0) {
         delete state.overallObject[docType]["modules"];
         return;
       }
@@ -414,14 +447,14 @@ export const exportSlice = createSlice({
       const intro = action.payload.introduction.formItems;
       const ctoeData = action.payload.compliantTargets;
       const { xml: platformXML } = action.payload.platformData;
-      const sec_overview_section = intro.find((formItem) => formItem.title == "Objectives of Document").xmlTagMeta.tagName || "section";
-      const sec_overview_id = intro.find((formItem) => formItem.title == "Objectives of Document").xmlTagMeta.attributes?.id || "intro-overview";
-      const sec_overview_title = intro.find((formItem) => formItem.title == "Objectives of Document").xmlTagMeta.attributes?.title || "Overview";
-      const sec_overview_text = intro.find((formItem) => formItem.title == "Objectives of Document").text;
+      const sec_overview_section = intro.find((formItem) => formItem.title === "Objectives of Document").xmlTagMeta.tagName || "section";
+      const sec_overview_id = intro.find((formItem) => formItem.title === "Objectives of Document").xmlTagMeta.attributes?.id || "intro-overview";
+      const sec_overview_title = intro.find((formItem) => formItem.title === "Objectives of Document").xmlTagMeta.attributes?.title || "Overview";
+      const sec_overview_text = intro.find((formItem) => formItem.title === "Objectives of Document").text;
       const ppType = action.payload.ppType;
       const docType = getDocType(ppType);
       const createToe = (title, intro, subTitle = "") => {
-        let formItem = intro.find((item) => item.title == title);
+        let formItem = intro.find((item) => item.title === title);
 
         if (formItem) {
           let name = "";
@@ -429,25 +462,36 @@ export const exportSlice = createSlice({
           switch (title) {
             case "TOE Overview":
               if (subTitle.length != 0) {
-                if (subTitle == "TOE Boundary") {
+                if (subTitle === "TOE Boundary") {
                   name = "sec:TOE_Boundary";
-                } else if (subTitle == "TOE Platform") {
+                } else if (subTitle === "TOE Platform") {
                   name = "sec:TOE_Platform";
+                } else if (subTitle === "TOE Operational Environment") {
+                  name = "sec:TOE_Operational_Environment";
                 }
 
-                let toeOverview = intro.find((item) => item.title == "TOE Overview");
+                let toeOverview = intro.find((item) => item.title === "TOE Overview");
 
                 if (toeOverview && toeOverview.hasOwnProperty("nestedFormItems") && toeOverview.nestedFormItems.hasOwnProperty("formItems")) {
-                  const boundaryText = toeOverview.nestedFormItems.formItems.find((item) => item.title == subTitle)
-                    ? toeOverview.nestedFormItems.formItems.find((item) => item.title == subTitle).text
-                    : "";
+                  const section = toeOverview.nestedFormItems.formItems.find((item) => item.title === subTitle);
+                  const toeText = section ? section.text : "";
+                  const toeXmlTagMeta = section && section.xmlTagMeta ? section.xmlTagMeta : { tagName: name, attributes: {} };
 
-                  if (boundaryText.length != 0) {
-                    return {
-                      [name]: {
-                        "#": boundaryText,
-                      },
-                    };
+                  if (toeText.length != 0) {
+                    if (toeXmlTagMeta.tagName === "section") {
+                      return {
+                        section: {
+                          ...toeXmlTagMeta.attributes,
+                          "#": toeText,
+                        },
+                      };
+                    } else {
+                      return {
+                        [name]: {
+                          "#": toeText,
+                        },
+                      };
+                    }
                   }
                 }
               } else {
@@ -485,14 +529,25 @@ export const exportSlice = createSlice({
         const toe_overview = createToe("TOE Overview", intro);
         const toe_boundary = createToe("TOE Overview", intro, "TOE Boundary");
         const toe_platform = createToe("TOE Overview", intro, "TOE Platform");
+        const toe_oe = createToe("TOE Overview", intro, "TOE Operational Environment");
+        const xmlTagMeta = intro.find((item) => item.title === "TOE Overview").xmlTagMeta;
 
-        formattedIntroduction["#"].push({
-          section: {
-            "@title": "Compliant Targets of Evaluation",
-            "@id": "TOEdescription",
-            "#": [toe_overview, toe_boundary, toe_platform],
-          },
-        });
+        const sectionObject =
+          xmlTagMeta.tagName === "section"
+            ? {
+                section: {
+                  "@title": xmlTagMeta.attributes.title,
+                  "@id": xmlTagMeta.attributes.id,
+                  "#": [toe_overview, toe_boundary, toe_oe, toe_platform],
+                },
+              }
+            : {
+                [xmlTagMeta.tagName]: {
+                  "#": [toe_overview, toe_boundary, toe_oe, toe_platform],
+                },
+              };
+
+        formattedIntroduction["#"].push(sectionObject);
       }
 
       // Conditionally add CTOE section
@@ -575,20 +630,46 @@ export const exportSlice = createSlice({
     SET_CONFORMANCE_CLAIMS: (state, action) => {
       const { conformanceClaims, ppType } = action.payload;
       const docType = getDocType(ppType);
+      let sectionTag = conformanceClaims.xmlTagMeta.tagName.length != 0 ? conformanceClaims.xmlTagMeta.tagName : "sec:Conformance_Claims";
+      let sectionContent;
 
-      if (action.payload.ppTemplateVersion == "Version 3.1") {
+      if (action.payload.ppTemplateVersion === "Version 3.1") {
         const emptyConformanceSection = Object.values(conformanceClaims).every((editor) => editor.text.trim() === "");
 
         if (emptyConformanceSection) {
-          state.overallObject[docType]["sec:Conformance_Claims"] = {};
+          sectionContent = {};
         } else {
-          state.overallObject[docType]["sec:Conformance_Claims"] = setConformanceClaimsTo3_1(state.fileType, conformanceClaims);
+          sectionContent = setConformanceClaimsTo3_1(state.fileType, conformanceClaims);
         }
       } else {
-        state.overallObject[docType]["sec:Conformance_Claims"] = setConformanceClaimsToCC2022(
-          action.payload.conformanceClaims,
-          action.payload.ppTemplateVersion
-        );
+        sectionContent = setConformanceClaimsToCC2022(action.payload.conformanceClaims, action.payload.ppTemplateVersion);
+      }
+
+      // Add xmlTagMeta attributes
+      if (conformanceClaims.xmlTagMeta?.attributes) {
+        for (const [attrName, attrValue] of Object.entries(conformanceClaims.xmlTagMeta.attributes)) {
+          sectionContent[`@${attrName}`] = attrValue;
+        }
+      }
+
+      // If the imported xml has a different tagName, use that and replace the placeholder sec:Conformance_Claims object
+      // that is in the base_export_pp_fp.json
+      if (sectionTag != "sec:Conformance_Claims") {
+        // Replace the key in the same position
+        const oldObj = state.overallObject[docType];
+        const newObj = {};
+
+        for (const [key, value] of Object.entries(oldObj)) {
+          if (key === "sec:Conformance_Claims") {
+            newObj[sectionTag] = sectionContent;
+          } else {
+            newObj[key] = value;
+          }
+        }
+
+        state.overallObject[docType] = newObj;
+      } else {
+        state.overallObject[docType][sectionTag] = sectionContent;
       }
     },
     SET_SECURITY_REQUIREMENTS: (state, action) => {
@@ -610,7 +691,7 @@ export const exportSlice = createSlice({
           const { nestedFormItems, text, title } = sfr;
 
           if (nestedFormItems && title) {
-            if (title == "Security Functional Requirements") {
+            if (title === "Security Functional Requirements") {
               const { formItems } = nestedFormItems;
               let innerSections = [];
               let implementSet = new Set([]);
@@ -627,7 +708,7 @@ export const exportSlice = createSlice({
                       })
                     : []
                 );
-                auditTableExists = ccIds.includes("fau_gen.1") || docType == "Package";
+                auditTableExists = ccIds.includes("fau_gen.1") || docType === "Package";
 
                 // Get section values
                 innerSections = formItems.map((section, sfrSectionIndex) => {
@@ -672,7 +753,7 @@ export const exportSlice = createSlice({
                 "@title": title,
                 "#": [text ? text : "", innerSections],
               };
-            } else if (title == "Security Assurance Requirements") {
+            } else if (title === "Security Assurance Requirements") {
               const { formItems } = nestedFormItems;
               let innerSections = [];
               if (formItems && formItems.length > 0) {
@@ -707,18 +788,18 @@ export const exportSlice = createSlice({
           delete state.overallObject[docType]["sec:req"];
         }
 
-        if (sfrSections.find((section) => section && section["@title"] == "Security Assurance Requirements")) {
+        if (sfrSections.find((section) => section && section["@title"] === "Security Assurance Requirements")) {
           state.overallObject[docType][state.fileType === "General-Purpose Computing Platforms" ? "sec:Security_Requirements" : "sec:req"] = {
             "@title": title,
             "#": definition ? definition : "",
             "!1": " 5.1 Security Functional Requirements",
             "sec:SFRs": {
-              "#": [auditTableExists ? auditSection : "", sfrSections.find((section) => section["@title"] == "Security Functional Requirements")],
+              "#": [auditTableExists ? auditSection : "", sfrSections.find((section) => section["@title"] === "Security Functional Requirements")],
             },
             "!2": " 5.2 Security Assurance Requirements ",
             [sars.xmlTagMeta.tagName]: {
               "@title": sars.xmlTagMeta.attributes.hasOwnProperty("title") ? sars.xmlTagMeta.attributes.title : "Security Assurance Requirements",
-              "#": [sfrSections.find((section) => section["@title"] == "Security Assurance Requirements")],
+              "#": [sfrSections.find((section) => section["@title"] === "Security Assurance Requirements")],
               // Conditionally add id if there is one (not setting a default as transforms doesn't expect the attribute for all PPs)
               ...(sars.xmlTagMeta.attributes.hasOwnProperty("id") && { "@id": sars.xmlTagMeta.attributes.id }),
             },
@@ -798,7 +879,7 @@ export const exportSlice = createSlice({
 
       let entries = [];
       for (const [key, value] of Object.entries(bibliography)) {
-        if (key == "entries") {
+        if (key === "entries") {
           value.forEach((e) => {
             let singleEntry = {
               entry: {
@@ -814,7 +895,6 @@ export const exportSlice = createSlice({
       }
 
       const formattedBibliography = {
-        "cc-entry": "",
         "#": entries,
       };
 
@@ -981,7 +1061,7 @@ export const exportSlice = createSlice({
 
       customAppendices.forEach((app) => {
         const xml = {
-          "@title": app.title,
+          "@title": app.title.replace("Appendix - ", ""),
           "#": action.payload.state.editors[app.custom].text,
         };
 
@@ -1058,6 +1138,10 @@ const constructDirectRationaleThreats = (threats, sfrSections, ppType, sfrMaps) 
     terms[key].from.forEach((PP) => (output += `<from base="${PP}"/>`));
     if (terms[key].definition && terms[key].definition.length > 0) {
       output += `<description>${terms[key].definition}</description>`;
+    }
+
+    if (terms[key].consistencyRationale && terms[key].consistencyRationale.length > 0) {
+      output += `<consistency-rationale>${terms[key].consistencyRationale}</consistency-rationale>`;
     }
 
     if (!Object.hasOwn(terms[key], "sfrs")) return;
@@ -1542,7 +1626,7 @@ const parseElement = (element) => {
     };
 
     titleOrDescription.forEach((item) => {
-      const assignmentEdgeCase = item.groups && item.groups.length == 1 && selectables[item.groups[0]] && selectables[item.groups[0]].assignment;
+      const assignmentEdgeCase = item.groups && item.groups.length === 1 && selectables[item.groups[0]] && selectables[item.groups[0]].assignment;
 
       if (item.text) {
         result = removeSpace(result, item.text);
@@ -1579,10 +1663,12 @@ const parseElement = (element) => {
         }
       }
     });
-    return result
-      .replace(/\^\s+/g, "^")
-      .replace(/(<\/[a-zA-Z0-9]+>)\s*(<\/[a-zA-Z0-9]+>\])/g, "$1$2")
-      .replace(/\]\.$/, "");
+
+    if (isManagementFunction) {
+      result.replace(/\]\.$/, "");
+    }
+
+    return result.replace(/\^\s+/g, "^").replace(/(<\/[a-zA-Z0-9]+>)\s*(<\/[a-zA-Z0-9]+>\])/g, "$1$2");
   }
 
   // Within the 'selections' field of a title array, one or two things can happen
@@ -1592,9 +1678,9 @@ const parseElement = (element) => {
     let nestedResults = "";
     const group = selectableGroups[selectionKey];
 
-    if (group == undefined) {
+    if (group === undefined) {
       const { description, exclusive, id, assignment } = selectables[selectionKey];
-      const isExclusive = exclusive == true ? 'exclusive="yes"' : "";
+      const isExclusive = exclusive ? 'exclusive="yes"' : "";
       const attributes = `id="${id}" ${isExclusive}`;
       const assignableOpeningTag = assignment ? "<assignable>" : "";
       const assignableClosingTag = assignment ? "</assignable>" : "";
@@ -1604,7 +1690,7 @@ const parseElement = (element) => {
       group.groups.forEach((validKey) => {
         if (selectables[validKey]) {
           const { description, exclusive, id, assignment } = selectables[validKey];
-          const isExclusive = exclusive == true ? 'exclusive="yes"' : "";
+          const isExclusive = exclusive ? 'exclusive="yes"' : "";
           const attributes = `id="${id}" ${isExclusive}`;
           const assignableOpeningTag = assignment ? "<assignable>" : "";
           const assignableClosingTag = assignment ? "</assignable>" : "";
@@ -1675,18 +1761,8 @@ const parseElement = (element) => {
 
   // Management Functions Table
   function parseManagementFunctionsTable(managementFunctions) {
-    const { id, tableName, statusMarkers, rows, columns } = managementFunctions;
-
-    const tableId = id !== "" ? id : "fmt_smf";
-    const tableTitle = tableName !== "" ? tableName : "Management Functions";
-
-    // Construct the id and table name and status markers
-    let result = `
-			<br/><br/>
-			<b><ctr id="${tableId}" ctr-type="Table">: ${tableTitle}</ctr></b>
-			<br/><br/>
-			Status Markers:<br/> ${statusMarkers}<br/>
-		`;
+    const { statusMarkers, rows, columns } = managementFunctions;
+    let result = `Status Markers:<br/> ${statusMarkers}<br/>`;
 
     // Construct the management function set
     const { columnResult, fields } = parseManagementFunctionColumns(columns);
@@ -1726,12 +1802,12 @@ const parseElement = (element) => {
         const activityAndNote = evaluationActivity ? createAActivityAndNote(evaluationActivity, note) : "";
 
         result += `
-				<management-function${idAttribute}>
-					<text>${rowText}</text>
-					${parseRowFields(row, fields)}
-					${activityAndNote}
-				</management-function>
-			`;
+          <management-function${idAttribute}>
+          <text>${rowText}</text>
+          ${parseRowFields(row, fields)}
+          ${activityAndNote && activityAndNote.length > 0 ? activityAndNote : ""}
+          </management-function>
+        `;
       });
     } catch (e) {
       console.log(e);
@@ -1802,14 +1878,16 @@ const parseElement = (element) => {
 
       const formattedRefIds = createRefIdTags(refIds);
 
-      result += `
-				<aactivity>
-					${formattedRefIds}
-					<TSS>${tss}</TSS>
-					<Guidance>${guidance}</Guidance>
-					<Tests>${testIntroduction}${formattedTestList}</Tests>
-				</aactivity>
-			`;
+      if (formattedRefIds.length !== 0 && tss.length !== 0 && guidance.length !== 0 && testIntroduction.length !== 0 && formattedTestList.length !== 0) {
+        result += `
+          <aactivity>
+            ${formattedRefIds}
+            <TSS>${tss}</TSS>
+            <Guidance>${guidance}</Guidance>
+            <Tests>${testIntroduction}${formattedTestList}</Tests>
+          </aactivity>
+			  `;
+      }
     }
     return result;
   }
@@ -1850,11 +1928,12 @@ const parseElement = (element) => {
   }
   return finalResult;
 };
+
 const getExtendedComponentDefinition = (extendedComponentDefinition) => {
   const { toggle, audit, managementFunction, componentLeveling, dependencies } = extendedComponentDefinition || {};
   let formattedExtendedComponentDefinition = [];
 
-  if (extendedComponentDefinition == undefined) return formattedExtendedComponentDefinition;
+  if (extendedComponentDefinition === undefined) return formattedExtendedComponentDefinition;
 
   // Helper function to collapse multiple if statements
   function addFormattedDefinition(key, value) {
@@ -2032,7 +2111,7 @@ const getAuditEvents = (auditEvents, auditData) => {
                   "audit-event-info": {
                     selectables: {
                       "@onlyone": "yes",
-                      selectable: [info ? info : "", "None"],
+                      selectable: [info ? info : "", "No additional information"],
                     },
                   },
                 });
@@ -2062,17 +2141,11 @@ const getAuditEvents = (auditEvents, auditData) => {
 
 const getSfrEvaluationActivities = (evaluationActivity, formattedEvaluationActivities, selectableUUIDtoID, isComponent, platforms) => {
   try {
-    let formattedEvaluationActivity = {
-      // aactivity: {
-      //   "@level": isComponent ? "component" : "element",
-      // },
-      aactivity: {
-        "@level": evaluationActivity.level,
-      },
-    };
+    let formattedEvaluationActivity = {};
     if (evaluationActivity) {
       const {
         introduction = "",
+        hasLevelSet = false,
         tss = "",
         guidance = "",
         testIntroduction = "",
@@ -2082,6 +2155,10 @@ const getSfrEvaluationActivities = (evaluationActivity, formattedEvaluationActiv
         isNoTest,
         noTest,
       } = evaluationActivity;
+
+      formattedEvaluationActivity.aactivity = {
+        ...(hasLevelSet ? { "@level": isComponent ? "component" : "element" } : {}),
+      };
 
       if (isNoTest) {
         formattedEvaluationActivity.aactivity["no-tests"] = noTest;
@@ -2378,12 +2455,11 @@ const updateOverallObject = (state, sourceKeys, targetKey) => {
 };
 
 const setConformanceClaimsToCC2022 = (conformanceClaims, ppTemplateVersion) => {
-  let formattedConformance = {
-    "@boilerplate": "no",
-  };
+  let formattedConformance = {};
 
   const cclaimInfo = conformanceClaims;
-  const { stConformance, part2Conformance, part3Conformance, cc_errata, ppClaims, packageClaims, evaluationMethods, additionalInformation } = cclaimInfo;
+  const { stConformance, part2Conformance, part3Conformance, cc_errata, ppClaims, packageClaims, evaluationMethods, additionalInformation, cClaimsXMLTagMeta } =
+    cclaimInfo;
 
   // Generate package claim
   let ppConformance = [];
@@ -2405,10 +2481,16 @@ const setConformanceClaimsToCC2022 = (conformanceClaims, ppTemplateVersion) => {
   });
 
   // Format conformance
-  formattedConformance["CClaimsInfo"] = {
-    "@cc-version": "cc-2022r1",
-    "@cc-approach": ppTemplateVersion === "CC2022 Standard" ? "standard" : "direct-rationale",
+  formattedConformance[cClaimsXMLTagMeta.tagName] = {
+    "@cc-version": cClaimsXMLTagMeta.attributes["cc-version"].length != 0 ? cClaimsXMLTagMeta.attributes["cc-version"] : "cc-2022r1",
+    "@cc-approach":
+      cClaimsXMLTagMeta.attributes["cc-approach"].length != 0
+        ? cClaimsXMLTagMeta.attributes["cc-approach"]
+        : ppTemplateVersion === "CC2022 Standard"
+          ? "standard"
+          : "direct-rationale",
     ...(cc_errata !== "N/A" && { "@cc-errata": cc_errata }),
+    ...(cClaimsXMLTagMeta.attributes["display"]?.length != 0 && { "@display": cClaimsXMLTagMeta.attributes["display"] }),
     "cc-st-conf": stConformance,
     "cc-pt2-conf": part2Conformance,
     "cc-pt3-conf": part3Conformance,
@@ -2593,7 +2675,7 @@ const createModifiedSfrs = (modifiedSfrs, sfrSections, short, useCaseMap, platfo
               const formattedSfrSection = {
                 section: {
                   "@title": title,
-                  "@id": id,
+                  "@id": id || (title.match(/\(([^)]+)\)/) || [])[1].toLowerCase() || `id-${Math.floor(Math.random() * 100000)}`, // generate random ID
                   "#": [definition, formattedComponents],
                 },
               };
@@ -2668,9 +2750,26 @@ const getModifiedSfrFilteredSections = (filteredSections, selectableUUIDtoID, co
         if (originalComponent && elementsValid) {
           const { elements: originalElements = {} } = originalComponent || {};
 
+          // Create a reverse lookup: map elementXMLID -> elementUUID
+          const originalElementsByXMLID = Object.values(originalElements).reduce((acc, el, idx) => {
+            if (el.elementXMLID) {
+              acc[el.elementXMLID] = el;
+            }
+            return acc;
+          }, {});
+
           // Run through each element to check for any updates from the original element
           Object.entries(elements).forEach(([elementUUID, element]) => {
-            const isElementUpdated = originalElements.hasOwnProperty(elementUUID) && JSON.stringify(element) !== JSON.stringify(originalElements[elementUUID]);
+            // const isElementUpdated = originalElements.hasOwnProperty(elementUUID) && JSON.stringify(element) !== JSON.stringify(originalElements[elementUUID]);
+
+            // Check for modified elements based on mod reform structure
+            let isElementUpdated = originalElements.hasOwnProperty(elementUUID) && JSON.stringify(element) !== JSON.stringify(originalElements[elementUUID]);
+
+            if (!isElementUpdated) {
+              // Check elements for old modified sfr structure (component is new/not integrated with original component from base PP)
+              const originalElement = originalElementsByXMLID[element.elementXMLID];
+              isElementUpdated = originalElement && JSON.stringify(element) !== JSON.stringify(originalElement);
+            }
 
             if (isElementUpdated) {
               newComponent.elements[elementUUID] = deepCopy(element);

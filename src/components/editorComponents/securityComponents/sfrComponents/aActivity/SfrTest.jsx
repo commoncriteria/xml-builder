@@ -65,7 +65,7 @@ function SfrTest(props) {
 
         let testItem = activityCopy.tests[testUUID];
         if (testItem) {
-          type == "conclusion" ? (testItem["conclusion"] = event) : (testItem["objective"] = event);
+          type === "conclusion" ? (testItem["conclusion"] = event) : (testItem["objective"] = event);
         } else {
           handleSnackBarError(`Test UUID ${testUUID} not found`);
         }
@@ -91,7 +91,7 @@ function SfrTest(props) {
 
         let testItem = activitiesCopy[uuid].tests?.[testUUID];
         if (testItem) {
-          type == "conclusion" ? (testItem["conclusion"] = event) : (testItem["objective"] = event);
+          type === "conclusion" ? (testItem["conclusion"] = event) : (testItem["objective"] = event);
 
           // Update evaluation activities
           updateEvaluationActivities(activitiesCopy);

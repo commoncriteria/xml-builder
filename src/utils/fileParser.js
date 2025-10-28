@@ -12,7 +12,7 @@ import virtualization from "../../public/data/sfr_components/virtualization_cc20
 
 // Constants
 const raw_xml_tags = ["xref", "rule", "figure", "ctr", "snip", "if-opt-app", "also", "_", "no-link", "comment"];
-export const style_tags = ["b", "p", "s", "i", "strike", "h3", "span", "u", "ol", "ul", "li", "sup", "sub", "pre", "code", "table", "h4"];
+export const style_tags = ["b", "p", "s", "i", "strike", "h3", "span", "u", "ol", "ul", "li", "sup", "sub", "pre", "code", "table", "h4", "mark", "abbr"];
 const escapedTagsRegex = /<(\/?)(xref|rule|figure|ctr|snip|if-opt-app|also|_|no-link|comment)\b([^>]*)>/g;
 
 /**
@@ -79,7 +79,7 @@ export const findAllByTagName = (nodeName, domNode) => findAllByCallback(domNode
  * @returns {Array.<Node>}
  */
 export const findAllByAttribute = (attributeName, attributeValue, domNode) =>
-  findAllByCallback(domNode, (node) => node.nodeType == Node.ELEMENT_NODE && node.getAttribute(attributeName) == attributeValue);
+  findAllByCallback(domNode, (node) => node.nodeType === Node.ELEMENT_NODE && node.getAttribute(attributeName) === attributeValue);
 
 export const findAllByAttributes = (attributeKeyPairs, domNode) => {
   let arrayOfNodes = new Array();
@@ -109,24 +109,24 @@ export const getExternalPackages = (domNode) => {
       pkg["id"] = p.id ? p.id : "";
 
       p.childNodes.forEach((c) => {
-        if (c.nodeType == Node.ELEMENT_NODE) {
-          if (c.nodeName.toLowerCase() == "git") {
+        if (c.nodeType === Node.ELEMENT_NODE) {
+          if (c.nodeName.toLowerCase() === "git") {
             let gitObj = {};
 
             c.childNodes.forEach((gitChild) => {
-              if (gitChild.nodeType == Node.ELEMENT_NODE) {
-                if (gitChild.nodeName == "url") {
+              if (gitChild.nodeType === Node.ELEMENT_NODE) {
+                if (gitChild.nodeName === "url") {
                   gitObj["url"] = gitChild.textContent;
-                } else if (gitChild.nodeName == "branch") {
+                } else if (gitChild.nodeName === "branch") {
                   gitObj["branch"] = gitChild.textContent;
                 }
               }
             });
 
             pkg["git"] = gitObj;
-          } else if (c.nodeName.toLowerCase() == "url") {
+          } else if (c.nodeName.toLowerCase() === "url") {
             pkg["url"] = c.textContent;
-          } else if (c.nodeName.toLowerCase() == "depends") {
+          } else if (c.nodeName.toLowerCase() === "depends") {
             c.attributes.forEach((attr) => {
               let depends = {};
               depends[attr.name] = attr.value;
@@ -198,7 +198,7 @@ export const getPlatforms = (domNode) => {
 
   let platform_section = findAllByAttribute("title", "Platforms with Specific EAs", domNode);
 
-  if (platform_section.length == 0) {
+  if (platform_section.length === 0) {
     if (findAllByAttribute("id", "sec-platforms", domNode).length !== 0) {
       platform_section = findAllByAttribute("id", "sec-platforms", domNode)[0];
     }
@@ -207,7 +207,7 @@ export const getPlatforms = (domNode) => {
 
     if (platform_section[0].childNodes) {
       platform_section[0].childNodes.forEach((child) => {
-        if (child.tagName.toLowerCase() == "choice") {
+        if (child.tagName.toLowerCase() === "choice") {
           platformObj.description = getDirectTextContent(child);
         }
       });
@@ -222,11 +222,11 @@ export const getPlatforms = (domNode) => {
 
             if (selectable.childNodes) {
               selectable.childNodes.forEach((s) => {
-                if (s.nodeType == Node.ELEMENT_NODE) {
-                  if (s.localName.toLowerCase() == "b") {
+                if (s.nodeType === Node.ELEMENT_NODE) {
+                  if (s.localName.toLowerCase() === "b") {
                     platformName = s.textContent;
                     platformMap[selectable.getAttribute("id")] = platformName;
-                  } else if (s.localName.toLowerCase() == "i") {
+                  } else if (s.localName.toLowerCase() === "i") {
                     description = s.textContent;
                   }
                 }
@@ -263,13 +263,13 @@ export const getPPMetadata = (domNode, ppType) => {
     attributes: {},
   };
 
-  if (ppType == "Functional Package") {
+  if (ppType === "Functional Package") {
     section = findAllByTagName("Package", domNode)[0];
     xmlTagMeta.tagName = "Package";
-  } else if (ppType == "Protection Profile") {
+  } else if (ppType === "Protection Profile") {
     section = findAllByTagName("PP", domNode)[0];
     xmlTagMeta.tagName = "PP";
-  } else if (ppType == "Module") {
+  } else if (ppType === "Module") {
     section = findAllByTagName("Module", domNode)[0];
     xmlTagMeta.tagName = "Module";
   }
@@ -315,19 +315,19 @@ export const getPPReference = (domNode) => {
 
   if (ppRef.length !== 0) {
     ppRef[0].childNodes.forEach((child) => {
-      if (child.tagName.toLowerCase() == "referencetable") {
+      if (child.tagName.toLowerCase() === "referencetable") {
         child.childNodes.forEach((c) => {
           const refTableChildTag = c.tagName.toLowerCase();
 
-          if (refTableChildTag == "pptitle") {
+          if (refTableChildTag === "pptitle") {
             ppObj.PPTitle = c.textContent;
-          } else if (refTableChildTag == "ppversion") {
+          } else if (refTableChildTag === "ppversion") {
             ppObj.PPVersion = c.textContent;
-          } else if (refTableChildTag == "ppauthor") {
+          } else if (refTableChildTag === "ppauthor") {
             ppObj.PPAuthor = c.textContent;
-          } else if (refTableChildTag == "pppubdate") {
+          } else if (refTableChildTag === "pppubdate") {
             ppObj.PPPubDate = c.textContent;
-          } else if (refTableChildTag == "keywords") {
+          } else if (refTableChildTag === "keywords") {
             ppObj.Keywords = c.textContent;
           }
         });
@@ -338,7 +338,7 @@ export const getPPReference = (domNode) => {
   let revisionHistory = findAllByTagName("RevisionHistory", domNode);
   if (revisionHistory.length !== 0) {
     revisionHistory[0].childNodes.forEach((child) => {
-      if (child.tagName.toLowerCase() == "entry") {
+      if (child.tagName.toLowerCase() === "entry") {
         let revisionInstance = {
           version: "",
           date: "",
@@ -346,11 +346,11 @@ export const getPPReference = (domNode) => {
         };
         child.childNodes.forEach((c) => {
           const revHistoryChildTag = c.tagName.toLowerCase();
-          if (revHistoryChildTag == "version") {
+          if (revHistoryChildTag === "version") {
             revisionInstance.version = c.textContent;
-          } else if (revHistoryChildTag == "date") {
+          } else if (revHistoryChildTag === "date") {
             revisionInstance.date = c.textContent;
-          } else if (revHistoryChildTag == "subject") {
+          } else if (revHistoryChildTag === "subject") {
             revisionInstance.comment = parseRichTextChildren(c);
           }
         });
@@ -403,23 +403,27 @@ export const getAllThreats = (threat_description_section, ppType) => {
   threat_tags.forEach((threat) => {
     let securityObjectives = new Array();
 
-    if (threat.nodeType == Node.ELEMENT_NODE && threat.tagName == "threat") {
+    if (threat.nodeType === Node.ELEMENT_NODE && threat.tagName === "threat") {
       let name = threat.getAttribute("name") || "";
       let description = "";
+      let consistencyRationale = "";
       let sfrs = [];
       let lastSfrName = "";
+      let sfrTypes = ["optional", "objective", "selection-based"];
       let basePPs = []; // for modules
 
       threat.childNodes.forEach((threatChild) => {
-        if (threatChild.nodeType == Node.ELEMENT_NODE) {
-          if (threatChild.nodeName.toLowerCase() == "description") {
+        if (threatChild.nodeType === Node.ELEMENT_NODE) {
+          if (threatChild.nodeName.toLowerCase() === "description") {
             description = parseRichTextChildren(threatChild);
-          } else if (threatChild.nodeName.toLowerCase() == "objective-refer") {
+          } else if (threatChild.nodeName.toLowerCase() === "consistency-rationale") {
+            consistencyRationale = parseRichTextChildren(threatChild);
+          } else if (threatChild.nodeName.toLowerCase() === "objective-refer") {
             let objective_name = threatChild.getAttribute("ref");
             let rationale = "";
 
             threatChild.childNodes.forEach((objRefereplaceChild) => {
-              if (objRefereplaceChild.nodeType == Node.ELEMENT_NODE && objRefereplaceChild.nodeName.toLowerCase() == "rationale") {
+              if (objRefereplaceChild.nodeType === Node.ELEMENT_NODE && objRefereplaceChild.nodeName.toLowerCase() === "rationale") {
                 rationale = parseRichTextChildren(objRefereplaceChild);
 
                 securityObjectives.push({
@@ -434,22 +438,29 @@ export const getAllThreats = (threat_description_section, ppType) => {
                 });
               }
             });
-          } else if (threatChild.nodeName.toLowerCase() == "addressed-by") {
+          } else if (threatChild.nodeName.toLowerCase() === "addressed-by") {
             // for Direct Rationale
             // regex to remove quotes
             const sfrNameArr = !isModule ? threatChild.textContent.replace(/["']/g, "").split("(") : threatChild.textContent;
             lastSfrName = !isModule ? sfrNameArr[0].trim() : sfrNameArr;
-          } else if (threatChild.nodeName.toLowerCase() == "rationale") {
+          } else if (threatChild.nodeName.toLowerCase() === "rationale") {
             // for Direct Rationale
+            let sfrType = "";
+            if (lastSfrName.split("(").length > 1) {
+              // Pull out the type (strip the last character if it is a closed parenthesis)
+              sfrType = lastSfrName.split("(")[1].slice(-1) === ")" ? lastSfrName.split("(")[1].slice(0, -1) : lastSfrName.split("(")[1].slice(-1);
+            }
+
             sfrs.push({
-              name: lastSfrName,
+              name: lastSfrName.trimEnd(),
+              type: sfrTypes.includes(sfrType) ? sfrType : "",
               rationale: parseRichTextChildren(threatChild),
               xmlTagMeta: {
                 tagName: "addressed-by",
               },
             });
             lastSfrName = "";
-          } else if (threatChild.nodeName.toLowerCase() == "from") {
+          } else if (threatChild.nodeName.toLowerCase() === "from") {
             basePPs.push(threatChild.getAttribute("base"));
           }
         }
@@ -458,6 +469,7 @@ export const getAllThreats = (threat_description_section, ppType) => {
       threats.push({
         name: name,
         definition: description.replace(/[\n\t]/g, ""),
+        consistencyRationale: consistencyRationale,
         securityObjectives,
         sfrs,
         xmlTagMeta: {
@@ -470,7 +482,6 @@ export const getAllThreats = (threat_description_section, ppType) => {
       });
     }
   });
-
   return { threat_description, threats };
 };
 
@@ -501,7 +512,7 @@ export const getAllAssumptions = (domNode) => {
   assumption_tags.forEach((assumption) => {
     let securityObjectives = new Array();
 
-    if (assumption.nodeType == Node.ELEMENT_NODE && assumption.tagName == "assumption") {
+    if (assumption.nodeType === Node.ELEMENT_NODE && assumption.tagName === "assumption") {
       let description = findAllByTagName("description", assumption);
       description = description.length !== 0 ? parseRichTextChildren(description[0]) : "";
       let name = assumption.getAttribute("name");
@@ -569,7 +580,7 @@ export const getAllOSPs = (domNode) => {
   osp_tags.forEach((osp) => {
     let securityObjectives = new Array();
 
-    if (osp.nodeType == Node.ELEMENT_NODE && osp.tagName == "OSP") {
+    if (osp.nodeType === Node.ELEMENT_NODE && osp.tagName === "OSP") {
       let description = findAllByTagName("description", osp);
       description = description.length !== 0 ? description[0].textContent : "";
       let name = osp.getAttribute("name");
@@ -635,7 +646,7 @@ export const getAllSecurityObjectivesTOE = (domNode) => {
   let security_objectives = new Array();
 
   securityobjective_tags.forEach((security_objective) => {
-    if (security_objective.nodeType == Node.ELEMENT_NODE && security_objective.tagName == "SO") {
+    if (security_objective.nodeType === Node.ELEMENT_NODE && security_objective.tagName === "SO") {
       let description = findAllByTagName("description", security_objective);
       description = description.length !== 0 ? description[0].textContent : "";
       const name = security_objective.getAttribute("name");
@@ -647,7 +658,7 @@ export const getAllSecurityObjectivesTOE = (domNode) => {
         while (rationaleNode && rationaleNode.nodeType !== Node.ELEMENT_NODE) {
           rationaleNode = rationaleNode.nextSibling; // skip non-element nodes (eg. text nodes)
         }
-        const rationale = rationaleNode && rationaleNode.tagName == "rationale" ? rationaleNode.textContent.trim() : "";
+        const rationale = rationaleNode && rationaleNode.tagName === "rationale" ? rationaleNode.textContent.trim() : "";
         return {
           name: sfr_name,
           rationale: rationale,
@@ -713,12 +724,12 @@ export const getAllSecurityObjectivesOE = (domNode) => {
 
   if (securityObjectiveSection) {
     securityObjectiveSection.childNodes.forEach((subsection) => {
-      if (subsection.nodeType == Node.TEXT_NODE) {
+      if (subsection.nodeType === Node.TEXT_NODE) {
         intro = removeWhitespace(escapeLTSign(subsection.textContent));
       }
-      if (subsection.nodeType == Node.ELEMENT_NODE && subsection.tagName == "SOEs") {
+      if (subsection.nodeType === Node.ELEMENT_NODE && subsection.tagName === "SOEs") {
         subsection.childNodes.forEach((soeSection) => {
-          if (soeSection.nodeType == Node.ELEMENT_NODE) {
+          if (soeSection.nodeType === Node.ELEMENT_NODE) {
             let name = soeSection.getAttribute("name");
 
             let description = findAllByTagName("description", soeSection);
@@ -787,8 +798,8 @@ export const getAllTechTerms = (domNode) => {
     techTerms = techTerms[0];
 
     for (let term of techTerms.childNodes) {
-      if (term.nodeType == Node.ELEMENT_NODE) {
-        if (term.tagName == "term") {
+      if (term.nodeType === Node.ELEMENT_NODE) {
+        if (term.tagName === "term") {
           // Check if abbr attribute exists and is not empty
           const abbr = term.getAttribute("abbr");
           const name = abbr ? term.getAttribute("full").concat(" (", abbr, ")") : term.getAttribute("full");
@@ -819,7 +830,7 @@ export const getAllTechTerms = (domNode) => {
               },
             });
           }
-        } else if (term.tagName == "suppress") {
+        } else if (term.tagName === "suppress") {
           suppressedTermsArray.push({
             name: removeWhitespace(term.textContent),
             definition: "",
@@ -907,6 +918,7 @@ export const getXmlData = (domNode, ppType, ppVersion) => {
     sfr: {},
     appendices: [],
     custom: [],
+    distributedToe: {},
   };
   let platformObject;
   const otherTopSections = ["PPReference", "RevisionHistory", "include-pkg", "pp-preferences", "extra-css", "modules", "implements"];
@@ -933,14 +945,24 @@ export const getXmlData = (domNode, ppType, ppVersion) => {
               });
             } else if (
               introSection.localName === "Compliant_Targets_of_Evaluation" ||
+              introSection.localName === "TOE_Overview" ||
               hasAttribute(introSection, "id", "TOEdescription") ||
               hasAttribute(introSection, "id", "toeov") ||
               hasAttribute(introSection, "id", "s-complianttargets") ||
               hasAttribute(introSection, "title", "TOE Overview") ||
               hasAttribute(introSection, "title", "Compliant Targets of Evaluation")
             ) {
+              let xmlTagMeta = {
+                tagName: introSection.tagName,
+                attributes: {},
+              };
+
+              for (let attr of introSection.attributes) {
+                xmlTagMeta.attributes[attr.name] = attr.value;
+              }
+
               masterObject.intro.push({
-                compliantTOE: getCompliantTOE(introSection, ppType),
+                compliantTOE: { ...getCompliantTOE(introSection, ppType), xmlTagMeta },
               });
             } else if (introSection.localName === "Use_Cases" || introSection.localName === "TOE_Usage" || hasAttribute(introSection, "title", "Use Cases")) {
               masterObject.intro.push({
@@ -979,6 +1001,9 @@ export const getXmlData = (domNode, ppType, ppVersion) => {
           cClaims: getCClaims(sec, ppVersion),
           cClaimsAttributes: getCClaimsAttributes(sec),
         };
+      } else if (hasAttribute(sec, "title", "Introduction to Distributed TOEs")) {
+        // 3.0 (for MDM) Distributed TOE
+        masterObject.distributedToe = getDistributedTOE(sec);
       } else if (
         sec.localName === "Security_Problem_Definition" ||
         sec.localName === "Security_Problem_Description" ||
@@ -986,11 +1011,22 @@ export const getXmlData = (domNode, ppType, ppVersion) => {
         hasAttribute(sec, "title", "Security Problem Definition")
       ) {
         // 3.0 Security Problem Definition
+        let xmlTagMeta = {
+          tagName: sec.tagName,
+          attributes: {},
+        };
+
+        for (let attr of sec.attributes) {
+          xmlTagMeta.attributes[attr.name] = attr.value;
+        }
+
+        masterObject.spd.xmlTagMeta = xmlTagMeta;
+
         masterObject.spd.definition = parseRichTextChildren(sec);
         Array.from(sec.childNodes)
           .filter((sec) => sec.nodeType === Node.ELEMENT_NODE)
           .forEach((spdSection) => {
-            if (spdSection.localName === "Threats" || (spdSection.localName == "section" && spdSection.getAttribute("title") === "Threats")) {
+            if (spdSection.localName === "Threats" || (spdSection.localName === "section" && spdSection.getAttribute("title") === "Threats")) {
               masterObject.spd.threats = getAllThreats(spdSection, ppType);
             } else if (spdSection.localName === "Assumptions" || hasAttribute(spdSection, "title", "Assumptions")) {
               masterObject.spd.assumptions = getAllAssumptions(spdSection);
@@ -1011,8 +1047,8 @@ export const getXmlData = (domNode, ppType, ppVersion) => {
         hasAttribute(sec, "title", "Security Requirements")
       ) {
         // 5.0 Security Requirements
-        const extCompDefMap = getSectionExtendedComponentDefinitionMap(sec);
-        masterObject.sfr.sfrs = getSFRs(sec, extCompDefMap, platformObject);
+        const extCompDefMap = getSectionExtendedComponentDefinitionMap(sec, ppType);
+        masterObject.sfr.sfrs = getSFRs(sec, extCompDefMap, platformObject, ppType);
         masterObject.sfr.auditSection = getAuditSection(sec);
       } else if (hasAttribute(sec, "title", "Validation Guidelines")) {
         // Appendix D - Validation Guidelines
@@ -1182,28 +1218,33 @@ export const getCompliantTOE = (toeSection, ppType) => {
   let toe_overview = "";
   let toe_boundary = "";
   let toe_platform = "";
+  let toe_oe = {
+    content: "",
+    tagName: "section",
+    attributes: {},
+  };
   let components = [];
   let additionalText = "";
 
   if (toeSection) {
-    if (ppType == "Functional Package") {
+    if (ppType === "Functional Package") {
       let finishedComponents = false;
       toeSection.childNodes.forEach((toeChild) => {
         if (toeChild.nodeType === Node.ELEMENT_NODE) {
           const tagName = toeChild.localName.toLowerCase();
 
-          if (tagName == "componentsneeded") {
+          if (tagName === "componentsneeded") {
             toeChild.childNodes.forEach((component) => {
-              if (component.nodeType == Node.ELEMENT_NODE && component.localName.toLowerCase() == "componentneeded") {
+              if (component.nodeType === Node.ELEMENT_NODE && component.localName.toLowerCase() === "componentneeded") {
                 let comp = {};
 
                 component.childNodes.forEach((componentChild) => {
-                  if (componentChild.nodeType == Node.ELEMENT_NODE) {
+                  if (componentChild.nodeType === Node.ELEMENT_NODE) {
                     const childTag = componentChild.localName.toLowerCase();
 
-                    if (childTag == "componentid") {
+                    if (childTag === "componentid") {
                       comp["compID"] = componentChild.textContent;
-                    } else if (childTag == "notes") {
+                    } else if (childTag === "notes") {
                       comp["notes"] = removeWhitespace(componentChild.textContent);
                     }
                   }
@@ -1234,18 +1275,28 @@ export const getCompliantTOE = (toeSection, ppType) => {
       toe_overview = parseRichTextChildren(toeSection);
 
       toeSection.childNodes.forEach((subsection) => {
-        if (subsection.nodeType == Node.ELEMENT_NODE) {
-          if (subsection.getAttribute("title") === "TOE Boundary" || subsection.tagName.toLowerCase() == "sec:toe_boundary") {
+        if (subsection.nodeType === Node.ELEMENT_NODE) {
+          if (subsection.getAttribute("title") === "TOE Boundary" || subsection.localName.toLowerCase() === "toe_boundary") {
             toe_boundary = parseRichTextChildren(subsection);
-          } else if (subsection.tagName.toLowerCase() == "sec:toe_platform") {
+          } else if (subsection.localName.toLowerCase() === "toe_platform") {
             toe_platform = parseRichTextChildren(subsection);
+          } else if (
+            subsection.localName.toLowerCase() === "toe_operational_environment" ||
+            subsection.getAttribute("title") === "TOE Operational Environment"
+          ) {
+            toe_oe.content = parseRichTextChildren(subsection);
+            toe_oe.tagName = subsection.tagName;
+
+            subsection.attributes.forEach((attr) => {
+              toe_oe.attributes[attr.name] = attr.value;
+            });
           }
         }
       });
     }
   }
 
-  return { toe_overview, toe_boundary, toe_platform, components, additionalText };
+  return { toe_overview, toe_boundary, toe_platform, toe_oe, components, additionalText };
 };
 
 /**
@@ -1289,7 +1340,7 @@ export const getUseCases = (domNode) => {
 
   if (useCases) {
     for (let useCase of useCases.childNodes) {
-      if (useCase.nodeType == Node.ELEMENT_NODE && useCase.tagName.toLowerCase() == "usecase") {
+      if (useCase.nodeType === Node.ELEMENT_NODE && useCase.tagName.toLowerCase() === "usecase") {
         let description = parseRichTextChildren(findAllByTagName("description", useCase)[0]);
         let name = useCase.getAttribute("title") ? useCase.getAttribute("title") : "";
         let id = useCase.getAttribute("id") ? useCase.getAttribute("id") : "";
@@ -1452,20 +1503,44 @@ export const getCClaimsAttributes = (domNode) => {
  *       name: "CClaim Additional Info CC2022",
  *       description: string
  *     }
- * >}
+ * >,
+ *   sectionXMLTagMeta: {
+ *     tagName: string,
+ *     attributes: Object.<string,string>
+ *   },
+ *   cClaimsXMLTagMeta: {
+ *     tagName: string,
+ *     attributes: Object.<string,string>
+ *   }
+ * }
  */
 export const getCClaims = (domNode, ppVersion) => {
   let cclaims = null;
   let cclaimArray = new Array();
+  let sectionXMLTagMeta = {
+    tagName: "",
+    attributes: {},
+  };
+  let cClaimsXMLTagMeta = {
+    tagName: "CClaimsInfo",
+    attributes: {},
+  };
 
-  if (ppVersion == "Version 3.1") {
+  sectionXMLTagMeta.tagName = domNode.tagName;
+
+  // Set attributes (if any)
+  for (let attr of domNode.attributes) {
+    sectionXMLTagMeta.attributes[attr.name] = attr.value;
+  }
+
+  if (ppVersion === "Version 3.1") {
     cclaims = findAllByTagName("cclaims", domNode) || [];
 
     if (cclaims.length !== 0) {
       cclaims = cclaims[0];
 
       for (let cclaim of cclaims.childNodes) {
-        if (cclaim.nodeType == Node.ELEMENT_NODE && cclaim.tagName.toLowerCase() == "cclaim") {
+        if (cclaim.nodeType === Node.ELEMENT_NODE && cclaim.tagName.toLowerCase() === "cclaim") {
           let description = parseRichTextChildren(findAllByTagName("description", cclaim)[0]);
 
           cclaimArray.push({
@@ -1487,6 +1562,11 @@ export const getCClaims = (domNode, ppVersion) => {
     if (cclaims.length !== 0) {
       cclaims = cclaims[0];
 
+      // Set attributes (if any)
+      for (let attr of cclaims.attributes) {
+        cClaimsXMLTagMeta.attributes[attr.name] = attr.value;
+      }
+
       let conformanceTypes = ["cc-st-conf", "cc-pt2-conf", "cc-pt3-conf"];
       cclaimArray.push({
         name: "PP Claim CC2022",
@@ -1495,25 +1575,25 @@ export const getCClaims = (domNode, ppVersion) => {
       });
 
       for (let cclaim of cclaims.childNodes) {
-        if (cclaim.nodeType == Node.ELEMENT_NODE) {
+        if (cclaim.nodeType === Node.ELEMENT_NODE) {
           if (conformanceTypes.includes(cclaim.tagName.toLowerCase())) {
             cclaimArray.push({
               name: "Conformance CC2022",
               description: cclaim.textContent,
               tagName: cclaim.tagName.toLowerCase(),
             });
-          } else if (cclaim.tagName.toLowerCase() == "cc-pp-conf" || cclaim.tagName.toLowerCase() == "cc-pp-config-with") {
-            let ppClaimArr = cclaimArray.filter((entry) => entry.name == "PP Claim CC2022")[0];
+          } else if (cclaim.tagName.toLowerCase() === "cc-pp-conf" || cclaim.tagName.toLowerCase() === "cc-pp-config-with") {
+            let ppClaimArr = cclaimArray.filter((entry) => entry.name === "PP Claim CC2022")[0];
             let ppConformanceClaims = [];
             let ppConfig = {
               pp: [],
               modules: [],
             };
 
-            if (cclaim.tagName.toLowerCase() == "cc-pp-conf") {
+            if (cclaim.tagName.toLowerCase() === "cc-pp-conf") {
               cclaim.childNodes.forEach((ppClaimChild) => {
-                if (ppClaimChild.nodeType == Node.ELEMENT_NODE) {
-                  if (ppClaimChild.tagName.toLowerCase() == "pp-cc-ref") {
+                if (ppClaimChild.nodeType === Node.ELEMENT_NODE) {
+                  if (ppClaimChild.tagName.toLowerCase() === "pp-cc-ref") {
                     ppConformanceClaims.push({
                       name: "PP Conformance",
                       description: ppClaimChild.textContent,
@@ -1523,15 +1603,15 @@ export const getCClaims = (domNode, ppVersion) => {
               });
 
               ppClaimArr.ppClaim = ppConformanceClaims;
-            } else if (cclaim.tagName.toLowerCase() == "cc-pp-config-with") {
+            } else if (cclaim.tagName.toLowerCase() === "cc-pp-config-with") {
               cclaim.childNodes.forEach((ppClaimChild) => {
-                if (ppClaimChild.nodeType == Node.ELEMENT_NODE) {
-                  if (ppClaimChild.tagName.toLowerCase() == "pp-cc-ref") {
+                if (ppClaimChild.nodeType === Node.ELEMENT_NODE) {
+                  if (ppClaimChild.tagName.toLowerCase() === "pp-cc-ref") {
                     ppConfig.pp.push({
                       name: "PP Configuration",
                       description: ppClaimChild.textContent,
                     });
-                  } else if (ppClaimChild.tagName.toLowerCase() == "mod-cc-ref") {
+                  } else if (ppClaimChild.tagName.toLowerCase() === "mod-cc-ref") {
                     ppConfig.modules.push({
                       name: "Module Configuration",
                       description: ppClaimChild.textContent,
@@ -1541,21 +1621,21 @@ export const getCClaims = (domNode, ppVersion) => {
               });
               ppClaimArr.configurations = ppConfig;
             }
-          } else if (cclaim.tagName.toLowerCase() == "cc-pkg-claim") {
+          } else if (cclaim.tagName.toLowerCase() === "cc-pkg-claim") {
             let packageClaim = {
               functionalPackages: [],
               assurancePackages: [],
             };
 
             cclaim.childNodes.forEach((packageClaimChild) => {
-              if (packageClaimChild.nodeType == Node.ELEMENT_NODE) {
-                if (packageClaimChild.tagName.toLowerCase() == "fp-cc-ref") {
+              if (packageClaimChild.nodeType === Node.ELEMENT_NODE) {
+                if (packageClaimChild.tagName.toLowerCase() === "fp-cc-ref") {
                   packageClaim.functionalPackages.push({
                     name: "Functional Package",
                     description: packageClaimChild.textContent,
                     conf: packageClaimChild.getAttribute("conf") ? packageClaimChild.getAttribute("conf") : "",
                   });
-                } else if (packageClaimChild.tagName.toLowerCase() == "ap-cc-ref") {
+                } else if (packageClaimChild.tagName.toLowerCase() === "ap-cc-ref") {
                   packageClaim.assurancePackages.push({
                     name: "Assurance Package",
                     description: packageClaimChild.textContent,
@@ -1568,12 +1648,12 @@ export const getCClaims = (domNode, ppVersion) => {
               name: "Package Claim CC2022",
               configurations: packageClaim,
             });
-          } else if (cclaim.tagName.toLowerCase() == "cc-eval-methods") {
+          } else if (cclaim.tagName.toLowerCase() === "cc-eval-methods") {
             let evalMethods = [];
 
             cclaim.childNodes.forEach((evalMethodChild) => {
-              if (evalMethodChild.nodeType == Node.ELEMENT_NODE) {
-                if (evalMethodChild.tagName.toLowerCase() == "em-cc-ref") {
+              if (evalMethodChild.nodeType === Node.ELEMENT_NODE) {
+                if (evalMethodChild.tagName.toLowerCase() === "em-cc-ref") {
                   evalMethods.push({ description: evalMethodChild.textContent });
                 }
               }
@@ -1583,7 +1663,7 @@ export const getCClaims = (domNode, ppVersion) => {
               name: "Evaluation Methods CC2022",
               methods: evalMethods,
             });
-          } else if (cclaim.tagName.toLowerCase() == "cc-claims-addnl-info") {
+          } else if (cclaim.tagName.toLowerCase() === "cc-claims-addnl-info") {
             cclaimArray.push({
               name: "CClaim Additional Info CC2022",
               description: cclaim.textContent,
@@ -1594,7 +1674,7 @@ export const getCClaims = (domNode, ppVersion) => {
     }
   }
 
-  return cclaimArray;
+  return { cclaimArray, sectionXMLTagMeta, cClaimsXMLTagMeta };
 };
 
 /**
@@ -1618,12 +1698,12 @@ const getNodeContentWithTags = (node, retainNamespace = false) => {
  * @returns {string}
  */
 const getNodeContent = (node, retainNamespace = false) => {
-  if (node.nodeType == Node.TEXT_NODE) {
+  if (node.nodeType === Node.TEXT_NODE) {
     // If text node, return text content
     return escapeLTSign(node.textContent);
-  } else if (node.nodeType == Node.COMMENT_NODE) {
+  } else if (node.nodeType === Node.COMMENT_NODE) {
     return `<!--  ${node.textContent}  -->`;
-  } else if (node.nodeType == Node.ELEMENT_NODE) {
+  } else if (node.nodeType === Node.ELEMENT_NODE) {
     // Constructs opening tag with attributes, recursively get content for child nodes
     let nodeName = retainNamespace ? node.tagName : node.localName;
     let attrs = "";
@@ -1682,8 +1762,8 @@ export const getSARs = (domNode) => {
   function parseSectionChildren(parent, section) {
     // Iterate through children of <section>
     parent.childNodes.forEach((sectionChild) => {
-      if (sectionChild.nodeType == Node.ELEMENT_NODE) {
-        if (sectionChild.tagName.toLowerCase() == "a-component") {
+      if (sectionChild.nodeType === Node.ELEMENT_NODE) {
+        if (sectionChild.tagName.toLowerCase() === "a-component") {
           let component = {
             summary: "",
             elements: [],
@@ -1700,8 +1780,8 @@ export const getSARs = (domNode) => {
 
           // Iterate through children of <a-component>
           sectionChild.childNodes.forEach((componentChild) => {
-            if (componentChild.nodeType == Node.ELEMENT_NODE) {
-              if (componentChild.tagName.toLowerCase() == "a-element") {
+            if (componentChild.nodeType === Node.ELEMENT_NODE) {
+              if (componentChild.tagName.toLowerCase() === "a-element") {
                 let element = {
                   aactivity: "",
                   title: "",
@@ -1718,7 +1798,7 @@ export const getSARs = (domNode) => {
                 });
 
                 componentChild.childNodes.forEach((elementChild) => {
-                  if (elementChild.nodeType == Node.ELEMENT_NODE) {
+                  if (elementChild.nodeType === Node.ELEMENT_NODE) {
                     const tagName = elementChild.tagName.toLowerCase();
                     element[tagName] = parseRichTextChildren(elementChild);
                   }
@@ -1748,8 +1828,8 @@ export const getSARs = (domNode) => {
     });
 
     sars.childNodes.forEach((child) => {
-      if (child.nodeType == Node.ELEMENT_NODE) {
-        if (child.nodeName.toLowerCase() == "section" || (child.prefix && child.prefix.toLowerCase() == "sec")) {
+      if (child.nodeType === Node.ELEMENT_NODE) {
+        if (child.nodeName.toLowerCase() === "section" || (child.prefix && child.prefix.toLowerCase() === "sec")) {
           let section = {
             summary: "",
             open: false,
@@ -1766,7 +1846,7 @@ export const getSARs = (domNode) => {
           });
 
           // Set the id from the tag
-          if (child.prefix && child.prefix.toLowerCase() == "sec") {
+          if (child.prefix && child.prefix.toLowerCase() === "sec") {
             section.xmlTagMeta.attributes["id"] = child.nodeName.toLowerCase().split(":")[1];
           }
 
@@ -1782,7 +1862,7 @@ export const getSARs = (domNode) => {
     });
 
     // Set the Intro text for SARs
-    if (sarsDescription.length == 0) {
+    if (sarsDescription.length === 0) {
       sarsDescription = parseRichTextChildren(sars);
     } else {
       sarsDescription += parseRichTextChildren(sars);
@@ -2072,7 +2152,7 @@ export const getBasePPs = (domNode) => {
           open: true,
         },
         secFuncReqDir: {
-          text: secFuncReqDir ? secFuncReqDir.textContent.trim() : "",
+          text: secFuncReqDir ? parseRichTextChildren(secFuncReqDir) : "",
           open: true,
         },
         open: false,
@@ -2408,7 +2488,7 @@ export const getBaseSFRSpecs = (domNode, shortName, dataMap) => {
  * @param {Node} domNode
  * @returns {Array<Object>} Array of SFR Components
  */
-export const getSFRs = (domNode, extCompDefMap, platformObject) => {
+export const getSFRs = (domNode, extCompDefMap, platformObject, ppType) => {
   const sfrComponents = findAllByTagName("f-component", domNode);
   let selectableGroupCounter = 0;
 
@@ -2455,7 +2535,7 @@ export const getSFRs = (domNode, extCompDefMap, platformObject) => {
       let evaluationActivities = {};
       let classDescription = "";
       // Selection dependency related
-      let isSelBased = component.getAttribute("status") ? (component.getAttribute("status") == "sel-based" ? true : false) : false;
+      let isSelBased = component.getAttribute("status") ? (component.getAttribute("status") === "sel-based" ? true : false) : false;
       if (sfrType && sfrType === "selectionBased") {
         isSelBased = true;
       }
@@ -2468,12 +2548,12 @@ export const getSFRs = (domNode, extCompDefMap, platformObject) => {
       let useCaseBased = false;
       let use_cases = [];
 
-      let isOptional = component.getAttribute("status") ? (component.getAttribute("status") == "optional" ? true : false) : false;
+      let isOptional = component.getAttribute("status") ? (component.getAttribute("status") === "optional" ? true : false) : false;
       if (sfrType && sfrType === "optional") {
         isOptional = true;
       }
 
-      let isObjective = component.getAttribute("status") ? (component.getAttribute("status") == "objective" ? true : false) : false;
+      let isObjective = component.getAttribute("status") ? (component.getAttribute("status") === "objective" ? true : false) : false;
       if (sfrType && sfrType === "objective") {
         isObjective = true;
       }
@@ -2486,7 +2566,7 @@ export const getSFRs = (domNode, extCompDefMap, platformObject) => {
         toggle: false,
       };
 
-      const isInvisible = component.getAttribute("status") ? (component.getAttribute("status") == "invisible" ? true : false) : false;
+      const isInvisible = component.getAttribute("status") ? (component.getAttribute("status") === "invisible" ? true : false) : false;
 
       let implementationDependent = component.getAttribute("status") ? (component.getAttribute("status") === "feat-based" ? true : false) : false;
       if (sfrType && sfrType === "implementationDependent") {
@@ -2497,7 +2577,7 @@ export const getSFRs = (domNode, extCompDefMap, platformObject) => {
       // SFR Class description may just be text in between section header and <f-component> definition
       family_description = parseRichTextChildren(component.parentElement);
 
-      if (family_description.length == 0) {
+      if (family_description.length === 0) {
         // check <class-description>
         const class_description_section = findAllByTagName("class-description", component.parentElement);
         if (class_description_section.length !== 0) {
@@ -2505,7 +2585,7 @@ export const getSFRs = (domNode, extCompDefMap, platformObject) => {
         }
       }
 
-      if (component.nodeType == Node.ELEMENT_NODE && component.tagName == "f-component") {
+      if (component.nodeType === Node.ELEMENT_NODE && component.tagName === "f-component") {
         // Description is in template, not necessarily exists in other PPs
         let sfrDescription = findAllByTagName("description", component);
         if (sfrDescription.length !== 0) {
@@ -2579,7 +2659,7 @@ export const getSFRs = (domNode, extCompDefMap, platformObject) => {
               // Check if depends has additional component type
               if (depend.childNodes) {
                 depend.childNodes.forEach((child) => {
-                  if (child.tagName.toLowerCase() == "optional") {
+                  if (child.tagName.toLowerCase() === "optional") {
                     isOptional = true;
                   }
                 });
@@ -2611,7 +2691,7 @@ export const getSFRs = (domNode, extCompDefMap, platformObject) => {
 
         // Get family information (normally parent to the f-component)
         // TODO: add some validation checking for parent element (not all PP's have section tag)
-        if (component.parentElement.tagName == "section") {
+        if (component.parentElement.tagName === "section") {
           family_name = component.parentElement.getAttribute("title");
           family_id = component.parentElement.getAttribute("id").toUpperCase();
         } else if (component.parentElement.tagName.includes("sec:")) {
@@ -2621,7 +2701,11 @@ export const getSFRs = (domNode, extCompDefMap, platformObject) => {
 
         // Add family extended component definition if the family id exists
         if (family_id) {
-          familyExtCompDef = extCompDefMap.has(family_id) ? extCompDefMap.get(family_id) : [];
+          if (ppType === "Module") {
+            familyExtCompDef = extCompDefMap.has(`${family_id}-${sfrType}`) ? extCompDefMap.get(`${family_id}-${sfrType}`) : [];
+          } else {
+            familyExtCompDef = extCompDefMap.has(family_id) ? extCompDefMap.get(family_id) : [];
+          }
         }
 
         if (family_id != prevFamilyID) {
@@ -2706,7 +2790,7 @@ export const getSFRs = (domNode, extCompDefMap, platformObject) => {
           // Parse title tag
           for (const child of titleTag.childNodes) {
             // Skip comments
-            if (child.nodeType == Node.COMMENT_NODE) {
+            if (child.nodeType === Node.COMMENT_NODE) {
               continue;
             }
 
@@ -2715,7 +2799,7 @@ export const getSFRs = (domNode, extCompDefMap, platformObject) => {
                 {
                   const titleChildTag = child.tagName.toLowerCase();
 
-                  if (titleChildTag == "selectables") {
+                  if (titleChildTag === "selectables") {
                     const tabularizeNode = findDirectChildrenByTagName("tabularize", child);
                     if (tabularizeNode.length !== 0) {
                       const result = parseTabularize(child, selectable_id, selectableGroupCounter, component, elementName);
@@ -2746,7 +2830,7 @@ export const getSFRs = (domNode, extCompDefMap, platformObject) => {
                       // Selectables are prefaced with text, add this group to the selections which comes after opening text
                       sfrContent.push({ selections: result.group.id });
                     }
-                  } else if (titleChildTag == "assignable") {
+                  } else if (titleChildTag === "assignable") {
                     // standalone assignables
                     const text = sfrContent.slice(-1)[0];
                     const uuid = uuidv4();
@@ -2771,7 +2855,7 @@ export const getSFRs = (domNode, extCompDefMap, platformObject) => {
                   } else if (style_tags.includes(child.localName) || ["refinement", "b"].includes(child.localName)) {
                     let tagName = child.localName;
 
-                    if (tagName == "refinement") {
+                    if (tagName === "refinement") {
                       tagName = "b";
                     }
 
@@ -2817,7 +2901,7 @@ export const getSFRs = (domNode, extCompDefMap, platformObject) => {
                     }
                   } else if (raw_xml_tags.includes(child.localName)) {
                     sfrContent.push({ description: ` ${escapeXmlTags(getNodeContent(child))}` });
-                  } else if (titleChildTag == "management-function-set") {
+                  } else if (titleChildTag === "management-function-set") {
                     isManagementFunction = true;
 
                     let managerRefs = [];
@@ -2836,8 +2920,8 @@ export const getSFRs = (domNode, extCompDefMap, platformObject) => {
                     }
 
                     for (const c of child.childNodes) {
-                      if (c.nodeType == Node.ELEMENT_NODE && c.tagName) {
-                        if (c.tagName.toLowerCase() == "manager") {
+                      if (c.nodeType === Node.ELEMENT_NODE && c.tagName) {
+                        if (c.tagName.toLowerCase() === "manager") {
                           let managerAttributes = {};
                           c.attributes.forEach((attr) => {
                             managerAttributes[attr.name] = attr.value;
@@ -2858,7 +2942,7 @@ export const getSFRs = (domNode, extCompDefMap, platformObject) => {
                           }
 
                           managementFunctions.columns.push(columDef);
-                        } else if (c.tagName.toLowerCase() == "management-function") {
+                        } else if (c.tagName.toLowerCase() === "management-function") {
                           // Parse through rows
                           let rowDef = {
                             rowNum: "",
@@ -2878,10 +2962,10 @@ export const getSFRs = (domNode, extCompDefMap, platformObject) => {
                           };
 
                           c.childNodes.forEach((mfChild) => {
-                            if (mfChild.nodeType == Node.ELEMENT_NODE) {
+                            if (mfChild.nodeType === Node.ELEMENT_NODE) {
                               const nodeName = mfChild.nodeName;
 
-                              if (nodeName.toLowerCase() == "text") {
+                              if (nodeName.toLowerCase() === "text") {
                                 let selectableMeta = {
                                   selectable_id,
                                   selectableGroupCounter,
@@ -2903,7 +2987,7 @@ export const getSFRs = (domNode, extCompDefMap, platformObject) => {
 
                                 // clear out previous group data
                                 selectableGroups = {};
-                              } else if (nodeName.toLowerCase() == "app-note" || nodeName.toLowerCase() == "note") {
+                              } else if (nodeName.toLowerCase() === "app-note" || nodeName.toLowerCase() === "note") {
                                 // Get the application note
                                 let note = parseRichTextChildren(mfChild);
 
@@ -2918,15 +3002,15 @@ export const getSFRs = (domNode, extCompDefMap, platformObject) => {
                                   note: cleanedNote,
                                   refIds: refIds,
                                 });
-                              } else if (nodeName.toLowerCase() == "aactivity") {
+                              } else if (nodeName.toLowerCase() === "aactivity") {
                                 mfChild.childNodes.forEach((aactivityChild) => {
                                   const aactivityChildName = aactivityChild.nodeName.toLowerCase();
 
-                                  if (aactivityChildName == "tss") {
+                                  if (aactivityChildName === "tss") {
                                     rowDef.evaluationActivity.tss = parseRichTextChildren(aactivityChild).trim();
-                                  } else if (aactivityChildName == "guidance") {
+                                  } else if (aactivityChildName === "guidance") {
                                     rowDef.evaluationActivity.guidance = parseRichTextChildren(aactivityChild).trim();
-                                  } else if (aactivityChildName == "tests" && aactivityChild.childNodes) {
+                                  } else if (aactivityChildName === "tests" && aactivityChild.childNodes) {
                                     parseTests(aactivityChild, rowDef.evaluationActivity);
                                   } else if (raw_xml_tags.includes(aactivityChildName)) {
                                     rowDef.evaluationActivity.introduction = escapeXmlTags(getNodeContent(aactivityChild)); // pull in raw xml
@@ -3029,7 +3113,7 @@ export const getSFRs = (domNode, extCompDefMap, platformObject) => {
           // App note
           const app_note = findAllByTagName("note", element);
           let note = "";
-          if (app_note.length !== 0 && app_note[0].getAttribute("role").toLowerCase() == "application") {
+          if (app_note.length !== 0 && app_note[0].getAttribute("role").toLowerCase() === "application") {
             // Handle rich text styling
             if (app_note[0].childNodes) {
               note = parseRichTextChildren(app_note[0]);
@@ -3044,6 +3128,7 @@ export const getSFRs = (domNode, extCompDefMap, platformObject) => {
             eActivity.forEach((activity) => {
               let eActivityLevel = "";
               let eA = {
+                hasLevelSet: activity.getAttribute("level") || false,
                 tss: "",
                 introduction: "",
                 guidance: "",
@@ -3051,29 +3136,26 @@ export const getSFRs = (domNode, extCompDefMap, platformObject) => {
                 testClosing: "",
                 testLists: {},
                 tests: {},
-                level: "element",
-                // level: "",
                 platformMap: platformMap,
                 isNoTest: false,
                 noTest: "",
               };
 
-              eActivityLevel = activity.getAttribute("level") ? activity.getAttribute("level").toLowerCase() : "component";
-              // eA.level = eActivityLevel;
+              eActivityLevel = activity.getAttribute("level") ? activity.getAttribute("level").toLowerCase() : "";
 
               eA.introduction = parseRichTextChildren(activity);
 
               activity.childNodes.forEach((c) => {
-                if (c.nodeType == Node.ELEMENT_NODE) {
+                if (c.nodeType === Node.ELEMENT_NODE) {
                   const aactivityChildTag = c.tagName.toLowerCase();
 
-                  if (aactivityChildTag == "tss" && c.childNodes) {
+                  if (aactivityChildTag === "tss" && c.childNodes) {
                     eA.tss = parseRichTextChildren(c).trim();
-                  } else if (aactivityChildTag == "guidance" && c.childNodes) {
+                  } else if (aactivityChildTag === "guidance" && c.childNodes) {
                     eA.guidance = parseRichTextChildren(c);
-                  } else if (aactivityChildTag == "tests" && c.childNodes) {
+                  } else if (aactivityChildTag === "tests" && c.childNodes) {
                     parseTests(c, eA);
-                  } else if (aactivityChildTag == "no-tests" && c.childNodes) {
+                  } else if (aactivityChildTag === "no-tests" && c.childNodes) {
                     eA.noTest = parseRichTextChildren(c);
                     eA.isNoTest = true;
                   }
@@ -3081,9 +3163,9 @@ export const getSFRs = (domNode, extCompDefMap, platformObject) => {
               });
 
               // Set EA based of if it is element or component
-              if (eActivityLevel == "element") {
+              if (eActivityLevel === "element" || eActivityLevel === "") {
                 evaluationActivities[sfrElemUUID] = eA;
-              } else if (eActivityLevel == "component") {
+              } else if (eActivityLevel === "component") {
                 evaluationActivities[sfrCompUUID] = eA;
               }
             });
@@ -3106,7 +3188,7 @@ export const getSFRs = (domNode, extCompDefMap, platformObject) => {
 
             if (
               auditSection.getAttribute("type") &&
-              (auditSection.getAttribute("type").toLowerCase() == "optional" || auditSection.getAttribute("table").toLowerCase() == "optional")
+              (auditSection.getAttribute("type").toLowerCase() === "optional" || auditSection.getAttribute("table").toLowerCase() === "optional")
             ) {
               auditOptional = true;
             }
@@ -3119,7 +3201,7 @@ export const getSFRs = (domNode, extCompDefMap, platformObject) => {
               audit_description.forEach((description) => {
                 description.childNodes.forEach((child) => {
                   // If audit event description is a selection
-                  if (child.tagName == "selectables") {
+                  if (child.tagName === "selectables") {
                     // Optional = selection
                     auditOptional = true;
 
@@ -3133,7 +3215,7 @@ export const getSFRs = (domNode, extCompDefMap, platformObject) => {
                   }
 
                   // If audit event description is text
-                  if (child.nodeType == Node.TEXT_NODE) {
+                  if (child.nodeType === Node.TEXT_NODE) {
                     const text = removeWhitespace(escapeLTSign(child.textContent));
                     if (base_description.length !== 0) {
                       audit_items.push({ description: text });
@@ -3150,15 +3232,18 @@ export const getSFRs = (domNode, extCompDefMap, platformObject) => {
             if (audit_info.length !== 0) {
               audit_info.forEach((info) => {
                 info.childNodes.forEach((child) => {
-                  // If audit event info is a selection
-                  if (child.tagName == "selectables") {
-                    // Optional = selection
-                    audit_items.push({ info: getDirectTextContent(child.childNodes[0]), optional: true });
-                  }
-
-                  // If audit event info is text
-                  if (child.nodeType == Node.TEXT_NODE) {
-                    audit_items.push({ info: removeWhitespace(escapeLTSign(info.textContent)), optional: false });
+                  if (child.nodeType === Node.ELEMENT_NODE) {
+                    // If audit event info is a selection (this is our converted structure - schema uses type attr of optional
+                    // to signify a selectable)
+                    if (child.tagName === "selectables") {
+                      // Optional = selection
+                      audit_items.push({ info: getDirectTextContent(child.childNodes[0]), optional: true });
+                    }
+                  } else if (child.nodeType === Node.TEXT_NODE) {
+                    audit_items.push({
+                      info: removeWhitespace(escapeLTSign(info.textContent)),
+                      optional: info.getAttribute("type") === "optional",
+                    });
                   }
                 });
               });
@@ -3220,11 +3305,21 @@ function removeSpaceBeforeClosingSelectablesAndAssignments(htmlEscapedString) {
 /**
  * Gets the section extended component definition map
  * @param domNode
+ * @param ppType
  * @returns {Map<any, any>}
  */
-export const getSectionExtendedComponentDefinitionMap = (domNode) => {
+export const getSectionExtendedComponentDefinitionMap = (domNode, ppType) => {
   const extCompDef = findAllByTagName("ext-comp-def", domNode);
   let extCompDefMap = new Map();
+  let sfrType = "";
+
+  const validSfrTypes = {
+    "man-sfrs": "mandatory",
+    "opt-sfrs": "optional",
+    "sel-sfrs": "selectionBased",
+    "obj-sfrs": "objective",
+    "impl-dep-sfrs": "implementationDependent",
+  };
 
   try {
     // Create the extended component definition map
@@ -3232,7 +3327,7 @@ export const getSectionExtendedComponentDefinitionMap = (domNode) => {
       extCompDef.forEach((def) => {
         // Find family_id
         let family_id = "";
-        if (def.parentElement.tagName == "section") {
+        if (def.parentElement.tagName === "section") {
           family_id = def.parentElement.getAttribute("id").toUpperCase();
         } else if (def.parentElement.tagName.includes("sec:")) {
           family_id = def.parentElement.tagName.split(":")[1];
@@ -3245,6 +3340,12 @@ export const getSectionExtendedComponentDefinitionMap = (domNode) => {
           const famBehaviorElement = def.getElementsByTagName("fam-behavior")[0];
           const fam_behavior = removeWhitespace(famBehaviorElement.textContent.trim());
 
+          if (ppType === "Module") {
+            sfrType = validSfrTypes[def.parentElement.parentElement?.tagName];
+          }
+
+          const familyKey = ppType === "Module" ? `${family_id}-${sfrType}` : family_id;
+
           // Create extended component definition object
           const extCompDef = {
             famId: fam_id,
@@ -3253,13 +3354,13 @@ export const getSectionExtendedComponentDefinitionMap = (domNode) => {
           };
 
           // Create new key value pair
-          if (!extCompDefMap.has(family_id)) {
-            extCompDefMap.set(family_id, []);
+          if (!extCompDefMap.has(familyKey)) {
+            extCompDefMap.set(familyKey, []);
           }
 
           // Add extended component definition to key
-          if (!extCompDefMap.get(family_id).includes(extCompDef)) {
-            extCompDefMap.get(family_id).push(extCompDef);
+          if (!extCompDefMap.get(familyKey).includes(extCompDef)) {
+            extCompDefMap.get(familyKey).push(extCompDef);
           }
         }
       });
@@ -3292,16 +3393,16 @@ export const getSectionExtendedComponentDefinitionMap = (domNode) => {
  */
 function parseManagementFunction(parent, selectableMeta, contents = "", rowDef = {}) {
   parent.childNodes.forEach((c) => {
-    if (c.nodeType == Node.TEXT_NODE) {
+    if (c.nodeType === Node.TEXT_NODE) {
       contents += removeWhitespace(escapeLTSign(c.textContent));
-    } else if (c.nodeType == Node.ELEMENT_NODE) {
-      if (c.localName.toLowerCase() == "refinement") {
+    } else if (c.nodeType === Node.ELEMENT_NODE) {
+      if (c.localName.toLowerCase() === "refinement") {
         // TODO: Need to figure out how to convert these tags back to refinement on export
         const innerContent = parseManagementFunction(c, selectableMeta, `${contents}<b${getNodeAttributes(c)}>`, rowDef);
         let fullTagContent = `${innerContent}</b>`;
 
         contents = fullTagContent;
-      } else if (c.localName.toLowerCase() == "a") {
+      } else if (c.localName.toLowerCase() === "a") {
         const href = c.getAttribute("href");
         const fullTagContent = href ? `<a href="${href}">${c.textContent}</a>` : ` <a>${c.textContent}</a>`;
         contents += fullTagContent;
@@ -3309,7 +3410,7 @@ function parseManagementFunction(parent, selectableMeta, contents = "", rowDef =
         // For snip tag, omit the tag and just store text, else pull in raw xml
         const textContent = c.localName.toLowerCase() === "snip" ? c.textContent : escapeXmlTags(getNodeContent(c));
         contents += textContent;
-      } else if (c.localName.toLowerCase() == "br") {
+      } else if (c.localName.toLowerCase() === "br") {
         contents += "<br/>";
       } else if (style_tags.includes(c.localName.toLowerCase())) {
         // Hacky way to preseve rich text nodes that have selectables/assignables as children
@@ -3331,7 +3432,7 @@ function parseManagementFunction(parent, selectableMeta, contents = "", rowDef =
         }
 
         contents = fullTagContent;
-      } else if (c.tagName == "selectables") {
+      } else if (c.tagName === "selectables") {
         const result = processSelectables(
           c,
           selectableMeta.selectable_id,
@@ -3349,7 +3450,7 @@ function parseManagementFunction(parent, selectableMeta, contents = "", rowDef =
         selectableMeta.selectableGroups = checkNestedGroups(result.group, selectableMeta.selectableGroups);
 
         rowDef.textArray.push({ selections: result.group.id });
-      } else if (c.tagName == "assignable") {
+      } else if (c.tagName === "assignable") {
         // standalone assignables
         const uuid = uuidv4();
 
@@ -3368,7 +3469,7 @@ function parseManagementFunction(parent, selectableMeta, contents = "", rowDef =
           notSelectable: false,
         };
         rowDef.textArray.push({ assignment: uuid });
-      } else if (c.localName.toLowerCase() == "div") {
+      } else if (c.localName.toLowerCase() === "div") {
         contents = parseManagementFunction(c, selectableMeta, contents, rowDef);
       }
     }
@@ -3405,17 +3506,17 @@ function parseRichTextChildren(parent, contents = "", sfrContent = [], selectabl
   selectableMeta.is_content_pushed = false;
 
   parent.childNodes.forEach((c) => {
-    if (c.nodeType == Node.TEXT_NODE) {
+    if (c.nodeType === Node.TEXT_NODE) {
       // Escape '<' signs, and pad with surrounding whitespace so that it is not converted to < on export, as transforms will complain since it appears like an unclosed tag
       contents += escapeLTSign(c.textContent);
-    } else if (c.nodeType == Node.ELEMENT_NODE) {
-      if (c.localName.toLowerCase() == "refinement") {
+    } else if (c.nodeType === Node.ELEMENT_NODE) {
+      if (c.localName.toLowerCase() === "refinement") {
         // TODO: Need to figure out how to convert these tags back to refinement on export
         const innerContent = parseRichTextChildren(c, `${contents}<b${getNodeAttributes(c)}>`, sfrContent, selectableMeta);
         let fullTagContent = `${innerContent}</b>`;
 
         contents = fullTagContent;
-      } else if (c.localName.toLowerCase() == "a") {
+      } else if (c.localName.toLowerCase() === "a") {
         const href = c.getAttribute("href");
         const fullTagContent = href ? `<a href="${href}">${c.textContent}</a>` : ` <a>${c.textContent}</a>`;
         contents += fullTagContent;
@@ -3423,9 +3524,9 @@ function parseRichTextChildren(parent, contents = "", sfrContent = [], selectabl
         // For snip tag, omit the tag and just store text, else pull in raw xml
         const textContent = c.localName.toLowerCase() === "snip" ? c.textContent : escapeXmlTags(getNodeContent(c));
         contents += textContent;
-      } else if (c.localName.toLowerCase() == "br") {
+      } else if (c.localName.toLowerCase() === "br") {
         contents += "<br/>";
-      } else if (style_tags.includes(c.localName.toLowerCase()) || c.localName.toLowerCase() == "tr" || c.localName.toLowerCase() == "td") {
+      } else if (style_tags.includes(c.localName.toLowerCase()) || c.localName.toLowerCase() === "tr" || c.localName.toLowerCase() === "td") {
         // Hacky way to preseve rich text nodes that have selectables/assignables as children
         const innerContent = parseRichTextChildren(c, `${contents}<${c.localName}${getNodeAttributes(c)}>`, sfrContent, selectableMeta);
         let fullTagContent = `${innerContent}</${c.localName}>`;
@@ -3445,7 +3546,7 @@ function parseRichTextChildren(parent, contents = "", sfrContent = [], selectabl
         }
 
         contents = fullTagContent;
-      } else if (c.localName.toLowerCase() == "div") {
+      } else if (c.localName.toLowerCase() === "div") {
         if (!hasAncestorTag(c, "tests")) {
           // pull in raw xml for div taqg (normally has been seen to be platform dependencies in other sections - outside of Tests)
           contents += ` ${escapeXmlTags(getNodeContent(c))} `;
@@ -3458,7 +3559,7 @@ function parseRichTextChildren(parent, contents = "", sfrContent = [], selectabl
             contents += "</div>";
           }
         }
-      } else if (c.tagName.toLowerCase() == "selectables") {
+      } else if (c.tagName.toLowerCase() === "selectables") {
         // these are nested selectables
         const lastElement = sfrContent.slice(-1)[0];
 
@@ -3500,12 +3601,12 @@ function parseRichTextChildren(parent, contents = "", sfrContent = [], selectabl
         sfrContent.push({ selections: result.group.id });
 
         selectableMeta.is_content_pushed = true;
-      } else if (c.tagName.toLowerCase() == "assignable") {
+      } else if (c.tagName.toLowerCase() === "assignable") {
         const lastElement = sfrContent.slice(-1)[0];
         const uuid = uuidv4();
 
         let id = c.getAttribute("id");
-        if (id == null) {
+        if (id === null) {
           id = `${selectableMeta.elementName}_${++selectableMeta.selectable_id}`;
         }
 
@@ -3790,6 +3891,12 @@ function parseTestList(eA, testListFromNode, parentTestUUID = null) {
           }
         });
 
+        // Replace any open and close br tag variations with <br/>
+        test.objective = test.objective.replace(/<br\s*(?:\/>|>\s*<\/br\s*>)/gi, "<br/>");
+
+        // Remove extra spaces between consecutive <br/> tags
+        test.objective = test.objective.replace(/(<br\s*\/?>\s*)+/gi, "<br/>");
+
         eA.tests[testUUID] = test;
         testListForState.testUUIDs.push(testUUID);
       } else {
@@ -3879,10 +3986,10 @@ function checkNestedGroups(currentGroup, selectableGroups, subgroup = 0) {
 
   // Process each selectable in the current group
   // Only iterate if type is selectable(s)
-  if (currentGroup.type == "selectable" || currentGroup.type == "selectables") {
+  if (currentGroup.type === "selectable" || currentGroup.type === "selectables") {
     currentGroup.selectables.forEach((selectable) => {
       // Don't want to add selectable to the group if it has children (complex selectable)
-      if (selectable.nestedGroups.length == 0) {
+      if (selectable.nestedGroups.length === 0) {
         // Add the selectable's uuid to the groups list of the current group
         selectableGroups[currentGroup.id].groups.push(selectable.uuid);
       } else {
@@ -3913,7 +4020,7 @@ function checkNestedGroups(currentGroup, selectableGroups, subgroup = 0) {
             }
           */
 
-          if (group.type == "assignable") {
+          if (group.type === "assignable") {
             if (selectable.description.length !== 0 || selectable.nestedGroups.length != 1) {
               // Create a complex selectable only if there is more than just an assignment as part of the selectable
               selectableGroups[subgroupName].description.push({ groups: [group.uuid] });
@@ -3921,7 +4028,7 @@ function checkNestedGroups(currentGroup, selectableGroups, subgroup = 0) {
               // Add the assignment as a regular child to the selectables group
               selectableGroups[currentGroup.id].groups.push(group.uuid);
             }
-          } else if (group.type == "text") {
+          } else if (group.type === "text") {
             // Append to previous text if exists
             const lastElement = selectableGroups[subgroupName].description.slice(-1)[0];
             const text = removeWhitespace(group.content);
@@ -3936,7 +4043,7 @@ function checkNestedGroups(currentGroup, selectableGroups, subgroup = 0) {
             } else {
               selectableGroups[subgroupName].description.push({ text: text });
             }
-          } else if (group.type == "selectables") {
+          } else if (group.type === "selectables") {
             // Add group as child to parent group
             selectableGroups[subgroupName].description.push({ groups: [group.id] });
 
@@ -4021,9 +4128,9 @@ function checkNestedGroups(currentGroup, selectableGroups, subgroup = 0) {
 function processSelectables(node, selectable_id, selectableGroupCounter, component, elementName) {
   let topLevelGroup = {
     id: `group-${++selectableGroupCounter}`,
-    exclusive: node.getAttribute("exclusive") == "yes",
-    onlyOne: node.getAttribute("onlyone") == "yes",
-    linebreak: node.getAttribute("linebreak") == "yes",
+    exclusive: node.getAttribute("exclusive") === "yes",
+    onlyOne: node.getAttribute("onlyone") === "yes",
+    linebreak: node.getAttribute("linebreak") === "yes",
     selectables: [],
     type: "selectables",
   };
@@ -4044,11 +4151,10 @@ function processSelectables(node, selectable_id, selectableGroupCounter, compone
    */
   function parseChildren(selectable_node, context) {
     selectable_node.childNodes.forEach((childNode) => {
-      if (childNode.nodeType == Node.TEXT_NODE) {
-        // context.contents += removeWhitespace(escapeLTSign(childNode.textContent));
+      if (childNode.nodeType === Node.TEXT_NODE) {
         context.contents += escapeLTSign(childNode.textContent);
-      } else if (childNode.nodeType == Node.ELEMENT_NODE) {
-        if (childNode.tagName.toLowerCase() == "selectables") {
+      } else if (childNode.nodeType === Node.ELEMENT_NODE) {
+        if (childNode.tagName.toLowerCase() === "selectables") {
           // Handle initial text for description or subsequent text as a separate group
           if (!context.descriptionSet) {
             context.description = context.contents; // Populate description with the initial text
@@ -4064,7 +4170,7 @@ function processSelectables(node, selectable_id, selectableGroupCounter, compone
           selectable_id = nestedGroupResult.selectable_id;
           selectableGroupCounter = nestedGroupResult.lastGroupCounter;
           context.nestedGroups.push(nestedGroupResult.group);
-        } else if (childNode.tagName.toLowerCase() == "assignable") {
+        } else if (childNode.tagName.toLowerCase() === "assignable") {
           // Handle initial text for description or subsequent text as a separate group
           if (!context.descriptionSet) {
             context.description = context.contents; // Populate description with the initial text
@@ -4088,17 +4194,17 @@ function processSelectables(node, selectable_id, selectableGroupCounter, compone
             parseChildren(childNode, context);
             context.contents += "</b>";
           } else if (style_tags.includes(childNode.localName.toLowerCase())) {
-            context.contents += `<${childNode.localName}>`;
+            context.contents += `<${childNode.localName}${getNodeAttributes(childNode)}>`;
             parseChildren(childNode, context);
             context.contents += `</${childNode.localName}>`;
           } else if (raw_xml_tags.includes(childNode.localName.toLowerCase())) {
-            if (childNode.localName.toLowerCase() == "snip") {
+            if (childNode.localName.toLowerCase() === "snip") {
               // omit snip tag and just store contents
               context.contents += childNode.textContent;
             } else {
               context.contents += ` ${escapeXmlTags(getNodeContent(childNode))}`; // pull in raw xml
             }
-          } else if (childNode.localName.toLowerCase() == "a") {
+          } else if (childNode.localName.toLowerCase() === "a") {
             const href = childNode.getAttribute("href");
             context.contents += href ? ` <a href="${href}">${childNode.textContent}</a>` : ` <a>${childNode.textContent}</a>`;
           }
@@ -4110,9 +4216,9 @@ function processSelectables(node, selectable_id, selectableGroupCounter, compone
   node.childNodes.forEach((selectableNode) => {
     const uuid = uuidv4();
 
-    if (selectableNode.nodeName.toLowerCase() == "selectable") {
+    if (selectableNode.nodeName.toLowerCase() === "selectable") {
       const id = selectableNode.getAttribute("id") || `${elementName}_${++selectable_id}`;
-      let exclusive = selectableNode.getAttribute("exclusive") == "yes";
+      let exclusive = selectableNode.getAttribute("exclusive") === "yes";
       let context = {
         description: "", // For the initial direct child text
         nestedGroups: [],
@@ -4147,7 +4253,7 @@ function processSelectables(node, selectable_id, selectableGroupCounter, compone
 
       // Check if there are any nested selectables or assignable - if there are not, then it is just
       // styling tags so it doesn't need to be a complex selectable
-      const hasNestedChild = selectableEntry.nestedGroups.some((e) => e.type == "selectables" || e.type == "assignable");
+      const hasNestedChild = selectableEntry.nestedGroups.some((e) => e.type === "selectables" || e.type === "assignable");
       if (selectableEntry.nestedGroups.length !== 0 && !hasNestedChild) {
         selectableEntry.nestedGroups.forEach((entry) => {
           selectableEntry.description = selectableEntry.description + entry.content;
@@ -4157,7 +4263,7 @@ function processSelectables(node, selectable_id, selectableGroupCounter, compone
       }
 
       // Only want to add 'simple' selectable + assignments which don't have complex nested children
-      if (selectableEntry.nestedGroups.length == 0) {
+      if (selectableEntry.nestedGroups.length === 0) {
         allSelectables[uuid] = selectableEntry;
       } else {
         // Pick out lowest level children (assignable + selectable) if it is a complex selectable
@@ -4221,9 +4327,9 @@ function parseTabularize(selectablesNode, selectable_id, selectableGroupCounter,
   let selectableGroups = {};
 
   selectablesNode.childNodes.forEach((child) => {
-    if (child.nodeType == Node.ELEMENT_NODE) {
+    if (child.nodeType === Node.ELEMENT_NODE) {
       // doing check for type as there may be comments
-      if (child.nodeName.toLowerCase() == "tabularize") {
+      if (child.nodeName.toLowerCase() === "tabularize") {
         tabularizeEntry = {
           type: "tabularize",
           uuid,
@@ -4264,8 +4370,8 @@ function parseTabularize(selectablesNode, selectable_id, selectableGroupCounter,
             const field = toCamelCase(tabularizeChild.textContent);
             const editable = false;
             const resizeable = true;
-            const type = tabularizeChild.nodeName.toLowerCase() == "selectcol" ? "Button" : "Editor";
-            const flex = tabularizeChild.nodeName.toLowerCase() == "selectcol" ? 5 : 3;
+            const type = tabularizeChild.nodeName.toLowerCase() === "selectcol" ? "Button" : "Editor";
+            const flex = tabularizeChild.nodeName.toLowerCase() === "selectcol" ? 5 : 3;
 
             // Add as column header
             tabularizeEntry.columns.push({
@@ -4278,7 +4384,7 @@ function parseTabularize(selectablesNode, selectable_id, selectableGroupCounter,
             });
           }
         });
-      } else if (child.tagName.toLowerCase() == "selectable") {
+      } else if (child.tagName.toLowerCase() === "selectable") {
         let tabularizeSelectable = {
           selectableId: child.getAttribute("id") || "",
         };
@@ -4290,21 +4396,21 @@ function parseTabularize(selectablesNode, selectable_id, selectableGroupCounter,
         let childCtr = 0;
 
         child.childNodes.forEach((selectableChild) => {
-          if (selectableChild.nodeType == Node.ELEMENT_NODE) {
-            if (selectableChild.nodeName.toLowerCase() == "col" && columns[childCtr] && columns[childCtr].hasOwnProperty("type")) {
+          if (selectableChild.nodeType === Node.ELEMENT_NODE) {
+            if (selectableChild.nodeName.toLowerCase() === "col" && columns[childCtr] && columns[childCtr].hasOwnProperty("type")) {
               const columnType = columns[childCtr].type;
 
-              if (columnType == "textcol") {
+              if (columnType === "textcol") {
                 // column with plain text
                 tabularizeSelectable[toCamelCase(columns[childCtr].value)] = selectableChild.textContent;
-              } else if (columnType == "selectcol") {
+              } else if (columnType === "selectcol") {
                 // column with selectables
                 tabularizeSelectable[toCamelCase(columns[childCtr].value)] = [];
 
                 // Iterate through <col> children
                 selectableChild.childNodes.forEach((colChild, idx) => {
-                  if (colChild.nodeType == Node.ELEMENT_NODE) {
-                    if (colChild.nodeName.toLowerCase() == "selectables") {
+                  if (colChild.nodeType === Node.ELEMENT_NODE) {
+                    if (colChild.nodeName.toLowerCase() === "selectables") {
                       const result = processSelectables(colChild, selectable_id, selectableGroupCounter, component, elementName);
                       selectable_id = result.selectable_id;
                       selectableGroupCounter = result.lastGroupCounter;
@@ -4317,7 +4423,7 @@ function parseTabularize(selectablesNode, selectable_id, selectableGroupCounter,
 
                       // Selectables are prefaced with text, add this group to the selections which comes after opening text
                       tabularizeSelectable[toCamelCase(columns[childCtr].value)].push({ selections: result.group.id });
-                    } else if (colChild.nodeName.toLowerCase() == "assignable") {
+                    } else if (colChild.nodeName.toLowerCase() === "assignable") {
                       let id = child.getAttribute("id");
                       if (!id) {
                         id = `${elementName}_${++selectable_id}`;
@@ -4334,7 +4440,7 @@ function parseTabularize(selectablesNode, selectable_id, selectableGroupCounter,
                       };
                       tabularizeSelectable[toCamelCase(columns[childCtr].value)].push({ assignment: uuid });
                     }
-                  } else if (colChild.nodeType == Node.TEXT_NODE) {
+                  } else if (colChild.nodeType === Node.TEXT_NODE) {
                     tabularizeSelectable[toCamelCase(columns[childCtr].value)].push({ text: removeWhitespace(escapeLTSign(colChild.textContent)) });
                   }
                 });
@@ -4374,19 +4480,17 @@ export const getBibliography = (bibliographySection) => {
   };
 
   bibliographySection.childNodes.forEach((child) => {
-    if (child.nodeType == Node.ELEMENT_NODE) {
-      if (child.nodeName.toLowerCase() == "cc-entry") {
-        // TODO: not sure what cc-entry tag structure is at the moment
-      } else if (child.nodeName.toLowerCase() == "entry") {
+    if (child.nodeType === Node.ELEMENT_NODE) {
+      if (child.nodeName.toLowerCase() === "entry") {
         let entry = {};
         entry["id"] = child.id;
 
         // Iterate through entry
         child.childNodes.forEach((entryChild) => {
-          if (entryChild.nodeType == Node.ELEMENT_NODE) {
-            if (entryChild.nodeName == "tag") {
+          if (entryChild.nodeType === Node.ELEMENT_NODE) {
+            if (entryChild.nodeName === "tag") {
               entry["tag"] = entryChild.textContent;
-            } else if (entryChild.nodeName == "description") {
+            } else if (entryChild.nodeName === "description") {
               entry["description"] = parseRichTextChildren(entryChild);
             }
           }
@@ -4657,7 +4761,7 @@ function flattenSelectable(selectable, allSelectables, id) {
 
   if (selectable.nestedGroups.length > 0) {
     selectable.nestedGroups.forEach((item) => {
-      if (item.type == "assignable") {
+      if (item.type === "assignable") {
         allSelectables[item.uuid] = item;
 
         allSelectables[item.uuid] = {
@@ -4667,7 +4771,7 @@ function flattenSelectable(selectable, allSelectables, id) {
           exclusive: false,
           notSelectable: false,
         };
-      } else if (item.type == "selectables") {
+      } else if (item.type === "selectables") {
         item.selectables.forEach((selectable_child) => {
           flattenSelectable(selectable_child, allSelectables, lastSelectableId);
         });
@@ -4692,7 +4796,7 @@ function flattenSelectable(selectable, allSelectables, id) {
 function findDirectChildrenByTagName(tagName, parentNode) {
   let result = [];
   parentNode.childNodes.forEach((child) => {
-    if (child.nodeType == Node.ELEMENT_NODE && child.tagName.toLowerCase() == tagName) {
+    if (child.nodeType === Node.ELEMENT_NODE && child.tagName.toLowerCase() === tagName) {
       result.push(child);
     }
   });
@@ -4708,10 +4812,10 @@ function getDirectTextContent(node) {
   let textContent = "";
 
   node.childNodes.forEach((child) => {
-    if (child.nodeType == Node.TEXT_NODE) {
+    if (child.nodeType === Node.TEXT_NODE) {
       textContent += `${removeWhitespace(escapeLTSign(child.textContent))} `;
-    } else if (child.nodeType == Node.ELEMENT_NODE) {
-      textContent += getDirectTextContent(child);
+    } else if (child.nodeType === Node.ELEMENT_NODE) {
+      textContent += `<${child.localName}>${getDirectTextContent(child)}</${child.localName}>`;
     }
   });
   return textContent.trim();
@@ -4737,10 +4841,10 @@ function getSelDepParents(xmlComp, selectableId) {
     let current = selectable;
 
     while (current) {
-      if (current.nodeName == "f-element" && !fElementId) {
+      if (current.nodeName === "f-element" && !fElementId) {
         fElementId = current.getAttribute("id");
       }
-      if (current.nodeName == "f-component") {
+      if (current.nodeName === "f-component") {
         fComponentId = current.getAttribute("cc-id") || current.getAttribute("id");
         break;
       }
@@ -4769,7 +4873,7 @@ export function getUUID(slice, id, type) {
     for (const componentUUID in family) {
       const component = family[componentUUID];
 
-      if (type == "component" && component.xml_id == id) {
+      if (type === "component" && component.xml_id === id) {
         return componentUUID;
       }
 
@@ -4778,7 +4882,7 @@ export function getUUID(slice, id, type) {
         for (const elementUUID in component.elements) {
           const element = component.elements[elementUUID];
 
-          if (element.elementXMLID == id && type == "element") {
+          if (element.elementXMLID === id && type === "element") {
             return elementUUID;
           }
 
@@ -4787,7 +4891,7 @@ export function getUUID(slice, id, type) {
             for (const selectableUUID in element.selectables) {
               const selectable = element.selectables[selectableUUID];
 
-              if (selectable.id == id && type == "selectable") {
+              if (selectable.id === id && type === "selectable") {
                 return selectableUUID;
               }
             }

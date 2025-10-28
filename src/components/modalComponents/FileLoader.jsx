@@ -60,6 +60,7 @@ import {
   updateMetaDataItem,
   updateFileUploaded,
   updatePlatforms,
+  UPDATE_ACCORDION_XMLTAGMETA,
 } from "../../reducers/accordionPaneSlice.js";
 import { ADD_ENTRIES, RESET_BIBLIOGRAPHY_STATE } from "../../reducers/bibliographySlice.js";
 import { SET_ENTROPY_XML, RESET_ENTROPY_APPENDIX_STATE } from "../../reducers/entropyAppendixSlice.js";
@@ -83,6 +84,8 @@ import {
   CREATE_NEW_EVALUATION_METHOD,
   UPDATE_ADDITIONAL_INFORMATION_TEXT,
   RESET_CONFORMANCE_CLAIMS_STATE,
+  SET_CONFORMANCE_SECTION_XMLTAGMETA,
+  SET_CCLAIMS_XMLTAGMETA,
 } from "../../reducers/conformanceClaimsSlice.js";
 import ProgressBar from "../ProgressBar.jsx";
 import { clearSessionStorageExcept, fetchTemplateData, getSfrMaps, handleSnackBarError, handleSnackBarSuccess } from "../../utils/securityComponents.jsx";
@@ -271,7 +274,6 @@ function FileLoader(props) {
         loadPackages(xml);
         loadModules(xml);
         loadPPReference(xml, ppType);
-        loadDistributedTOE(xml);
         loadPreferences(xml);
 
         loadXml(xml, ppType, ppTemplateVersion);
@@ -654,6 +656,10 @@ function FileLoader(props) {
         const { intro, securityObjectives, xmlTagMeta } = returnObject.securityObjectives.oeObjectives;
         loadOEs(intro, securityObjectives, objectivesMap, xmlTagMeta);
       }
+      // 3.0 (for MDM) Distributed TOE
+      if (Object.keys(returnObject.distributedToe).length > 0) {
+        loadDistributedTOE(returnObject.distributedToe);
+      }
       // 3.0 Security Problem Definition
       if (returnObject.spd.definition) {
         loadSecurityProblemDescription(returnObject.spd.definition);
@@ -666,6 +672,10 @@ function FileLoader(props) {
       }
       if (returnObject.spd.osp) {
         loadOSPs(returnObject.spd.osp, objectivesMap);
+      }
+      if (returnObject.spd.xmlTagMeta) {
+        const spdUUID = getUUIDByTitle(stateRef.current.accordionPane.sections, "Security Problem Definition");
+        dispatch(UPDATE_ACCORDION_XMLTAGMETA({ uuid: spdUUID, xmlTagMeta: returnObject.spd.xmlTagMeta }));
       }
       // 5.0 Security Requirements
       if (returnObject.sfr.sfrs) {
@@ -730,13 +740,11 @@ function FileLoader(props) {
   };
   /**
    * Loads the Distributed TOE section
-   * @param xml the xml
+   * @param distributedTOE object containing the intro, registration,
+   * allocation, security sections of Distributed TOE
    */
-  const loadDistributedTOE = (xml) => {
+  const loadDistributedTOE = (distributedTOE) => {
     try {
-      const distributedTOE = fileParser.getDistributedTOE(xml);
-      if (!distributedTOE) return;
-
       // create TOE accordion section and update intro
       const accordionUUID = dispatch(
         CREATE_ACCORDION({
@@ -785,7 +793,7 @@ function FileLoader(props) {
       if (compliantTOE) {
         const toeOverview = compliantTOE.toe_overview;
 
-        if (ppType == "Functional Package") {
+        if (ppType === "Functional Package") {
           dispatch(SET_COMPLIANT_TARGETS_OF_EVALUATION_INTRO({ text: toeOverview }));
           dispatch(SET_COMPLIANT_TARGETS_OF_EVALUATION_ADDITIONAL_TEXT({ text: compliantTOE.additionalText }));
 
@@ -794,11 +802,15 @@ function FileLoader(props) {
         } else {
           const toeBoundary = compliantTOE.toe_boundary;
           const toePlatform = compliantTOE.toe_platform;
+          const toeOE = compliantTOE.toe_oe;
 
           // Load TOE Overview (if exists)
           dispatch(UPDATE_EDITOR_TEXT({ uuid: TOEoverviewUUID, newText: toeOverview }));
 
-          // Create the editor if there is content in the xml for TOE Boundary
+          // Update with imported tagname/attributes
+          dispatch(UPDATE_EDITOR_METADATA({ uuid: TOEoverviewUUID, xmlTagMeta: compliantTOE.xmlTagMeta }));
+
+          // Update text if there is content in the xml for TOE Boundary
           if (toeBoundary.length != 0) {
             const editorUUID = getUUIDByTitle(stateEditors, "TOE Boundary");
             dispatch(UPDATE_EDITOR_TEXT({ uuid: editorUUID, newText: toeBoundary }));
@@ -809,6 +821,27 @@ function FileLoader(props) {
             let editorUUID = dispatch(CREATE_EDITOR({ title: "TOE Platform" })).payload;
 
             dispatch(UPDATE_EDITOR_TEXT({ uuid: editorUUID, newText: toePlatform }));
+
+            if (editorUUID) {
+              // Add the editor to the TOE Overview as a subsection
+              dispatch(
+                CREATE_ACCORDION_SUB_FORM_ITEM({
+                  accordionUUID: introductionUUID,
+                  uuid: editorUUID,
+                  formUUID: TOEoverviewUUID,
+                  contentType: "editor",
+                })
+              );
+            }
+          }
+
+          // Create the editor if there is content in the xml for TOE OE
+          if (toeOE.content.length != 0) {
+            let editorUUID = dispatch(
+              CREATE_EDITOR({ title: "TOE Operational Environment", xmlTagMeta: { tagName: toeOE.tagName, attributes: toeOE.attributes } })
+            ).payload;
+
+            dispatch(UPDATE_EDITOR_TEXT({ uuid: editorUUID, newText: toeOE.content }));
 
             if (editorUUID) {
               // Add the editor to the TOE Overview as a subsection
@@ -986,6 +1019,9 @@ function FileLoader(props) {
     }
 
     try {
+      dispatch(SET_CONFORMANCE_SECTION_XMLTAGMETA({ xmlTagMeta: allCClaims.sectionXMLTagMeta }));
+      dispatch(SET_CCLAIMS_XMLTAGMETA({ cClaimsXMLTagMeta: allCClaims.cClaimsXMLTagMeta }));
+
       const { editors: stateEditors } = stateRef.current;
       const conformanceStatementUUID = getUUIDByTitle(stateEditors, "Conformance Statement");
       const ccConformanceClaimsUUID = getUUIDByTitle(stateEditors, "CC Conformance Claims");
@@ -996,8 +1032,8 @@ function FileLoader(props) {
         dispatch(UPDATE_CC_ERRATA({ cc_errata: cClaimsAttributes["cc-errata"] }));
       }
 
-      if (allCClaims.length != 0) {
-        Object.values(allCClaims).map((claim) => {
+      if (allCClaims.cclaimArray.length != 0) {
+        Object.values(allCClaims.cclaimArray).map((claim) => {
           const name = claim.name;
           const description = claim.description;
 
@@ -1015,11 +1051,11 @@ function FileLoader(props) {
               dispatch(UPDATE_EDITOR_TEXT({ uuid: packageClaimUUID, newText: description }));
               return;
             case "Conformance CC2022":
-              if (claim.tagName == "cc-st-conf") {
+              if (claim.tagName === "cc-st-conf") {
                 dispatch(UPDATE_ST_CONFORMANCE_DROPDOWN({ stConformance: claim.description }));
-              } else if (claim.tagName == "cc-pt2-conf") {
+              } else if (claim.tagName === "cc-pt2-conf") {
                 dispatch(UPDATE_PART_2_CONFORMANCE_DROPDOWN({ part2Conformance: claim.description }));
-              } else if (claim.tagName == "cc-pt3-conf") {
+              } else if (claim.tagName === "cc-pt3-conf") {
                 dispatch(UPDATE_PART_3_CONFORMANCE_DROPDOWN({ part3Conformance: claim.description }));
               }
               return;
@@ -1250,7 +1286,7 @@ function FileLoader(props) {
           };
         });
 
-        if (ppTemplateVersion == "CC2022 Direct Rationale") {
+        if (ppTemplateVersion === "CC2022 Direct Rationale") {
           sfrs = threat.sfrs; // SFRs associated with the threat (CC2022 DR)
         }
 
@@ -1262,6 +1298,7 @@ function FileLoader(props) {
             objectives: objectivesWithUUID,
             sfrs: sfrs,
             from: threat.basePPs,
+            consistencyRationale: threat.consistencyRationale,
           })
         );
         return {
@@ -1299,16 +1336,18 @@ function FileLoader(props) {
         const sfrUUID = sfrsMap[sfrName];
         const rationale = sfr.rationale;
 
-        if (!sfrMap.has(sfrUUID)) {
-          sfrMap.set(sfrUUID, {
-            name: sfrName,
-            type: sfr.type,
-            uuid: sfrUUID,
-            rationale: rationale,
-            xmlTagMeta: sfr.xmlTagMeta,
-          });
-        } else {
-          sfrMap.get(sfrUUID).rationale += `\n\n${rationale}`; // concatenate SFR rationale for objectives tied to same SFR
+        if (sfrUUID) {
+          if (!sfrMap.has(sfrUUID)) {
+            sfrMap.set(sfrUUID, {
+              name: sfrName,
+              type: sfr.type,
+              uuid: sfrUUID,
+              rationale: rationale,
+              xmlTagMeta: sfr.xmlTagMeta,
+            });
+          } else {
+            sfrMap.get(sfrUUID).rationale += `\n\n${rationale}`; // concatenate SFR rationale for objectives tied to same SFR
+          }
         }
       });
 
@@ -1606,16 +1645,6 @@ function FileLoader(props) {
           })
         );
       });
-
-      // Create the SFR components for the modified SFRs according to old format
-      basePP.modifiedSFRComponents?.forEach((comp) => {
-        dispatch(
-          CREATE_SFR_COMPONENT({
-            sfrUUID: comp.familyUUID,
-            component: comp,
-          })
-        );
-      });
     });
   };
 
@@ -1721,7 +1750,7 @@ function FileLoader(props) {
             sfrName = `${cc_id}${iteration_id ? "/" + iteration_id : ""}`;
 
             // Get the objectives based off of the sfrName and set to empty if no objectives exist for the entry
-            if (sfrToObjectivesMap.hasOwnProperty(sfrName)) {
+            if (sfrToObjectivesMap && sfrToObjectivesMap.hasOwnProperty(sfrName)) {
               component.objectives = deepCopy(sfrToObjectivesMap[sfrName]);
             } else {
               component.objectives = [];

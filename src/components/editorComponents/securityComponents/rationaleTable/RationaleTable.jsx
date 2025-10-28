@@ -12,11 +12,7 @@ import {
   SORT_OBJECTIVES_FROM_THREATS_HELPER,
   ADD_THREAT_TERM_SFR,
 } from "../../../../reducers/threatsSlice.js";
-import {
-  ADD_SFR_TERM_OBJECTIVE,
-  SORT_OBJECTIVES_FROM_SFRS_HELPER,
-  UPDATE_SFR_COMPONENT_ITEMS,
-} from "../../../../reducers/SFRs/sfrSectionSlice.js";
+import { ADD_SFR_TERM_OBJECTIVE, SORT_OBJECTIVES_FROM_SFRS_HELPER, UPDATE_SFR_COMPONENT_ITEMS } from "../../../../reducers/SFRs/sfrSectionSlice.js";
 import { DELETE_THREAT_TERM_OBJECTIVE, DELETE_THREAT_TERM_SFR } from "../../../../reducers/threatsSlice.js";
 import { DELETE_SFR_TERM_OBJECTIVE } from "../../../../reducers/SFRs/sfrSectionSlice.js";
 import { handleSnackBarError, handleSnackBarSuccess } from "../../../../utils/securityComponents.jsx";
@@ -40,19 +36,7 @@ import "../../components.css";
  * @returns {JSX.Element}
  * @constructor
  */
-function RationaleTable({
-  termUUID,
-  index,
-  uuid,
-  title,
-  objectives,
-  contentType,
-  open,
-  objectiveMaps,
-  threatMaps,
-  sfrMaps,
-  objectiveSFRsMap,
-}) {
+function RationaleTable({ termUUID, index, uuid, title, objectives, contentType, open, objectiveMaps, threatMaps, sfrMaps, objectiveSFRsMap }) {
   // Prop Types
   RationaleTable.propTypes = {
     termUUID: PropTypes.string.isRequired,
@@ -338,7 +322,7 @@ function RationaleTable({
 
           // Remove the SFRs from the threat that they were mapped to, solely via that objective
           threats[termUUID].terms[uuid].sfrs.forEach((sfr) => {
-            if (sfr.objectiveUUID == tableUUID) {
+            if (sfr.objectiveUUID === tableUUID) {
               dispatch(
                 DELETE_THREAT_TERM_SFR({
                   threatUUID: termUUID,
@@ -366,7 +350,7 @@ function RationaleTable({
             const { threatKey, filteredThreats } = filterThreatsByObjective(getState().threats, tableUUID);
             Object.entries(filteredThreats).forEach(([threatUUID, threatDetails]) => {
               threatDetails.sfrs.forEach((sfr) => {
-                if (sfr.uuid == uuid) {
+                if (sfr.uuid === uuid) {
                   dispatch(
                     DELETE_THREAT_TERM_SFR({
                       threatUUID: threatKey,
@@ -447,12 +431,7 @@ function RationaleTable({
                     </Select>
                   </FormControl>
                   <span />
-                  <IconButton
-                    key={uuid + "-AddObjective"}
-                    style={{ marginTop: "4px" }}
-                    onClick={handleNewSelection}
-                    disabled={disabled}
-                    variant='contained'>
+                  <IconButton key={uuid + "-AddObjective"} style={{ marginTop: "4px" }} onClick={handleNewSelection} disabled={disabled} variant='contained'>
                     <Tooltip title={"Add Objective"} id={"addObjectiveTooltip"}>
                       <AddCircleRoundedIcon htmlColor={secondary} sx={icons.large} />
                     </Tooltip>

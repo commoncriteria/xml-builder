@@ -18,6 +18,7 @@ import { SET_ACKNOWLEDGEMENTS_XML } from "../../reducers/acknowledgementsAppendi
 import { SORT_SFR_SECTIONS_HELPER } from "../../reducers/SFRs/sfrSectionSlice.js";
 import { UPDATE_DISTRIBUTED_TOE_INTRO } from "../../reducers/distributedToeSlice.js";
 import { UPDATE_MAIN_SFR_BASE_PP_DEFINITION } from "../../reducers/SFRs/sfrBasePPsSlice.js";
+import { UPDATE_EDITOR_TEXT } from "../../reducers/editorSlice.js";
 import {
   handleSnackBarSuccess,
   handleSnackBarError,
@@ -31,7 +32,6 @@ import AuditEventTable from "../editorComponents/securityComponents/sfrComponent
 import DeleteConfirmation from "../modalComponents/DeleteConfirmation.jsx";
 import SfrWorksheet from "../editorComponents/securityComponents/sfrComponents/SfrWorksheet.jsx";
 import TipTapEditor from "../editorComponents/TipTapEditor.jsx";
-import { UPDATE_EDITOR_TEXT } from "../../reducers/editorSlice.js";
 
 /**
  * The Accordion class that displays the accordion
@@ -72,11 +72,22 @@ function AccordionContent({ title, uuid, index, open, metadata, handleMetaDataCo
   const securityObjectivesDefinition = useSelector((state) => state.objectives.objectivesDefinition);
   const distributedTOEIntro = useSelector((state) => state.distributedTOE.intro);
   const { ppType } = useSelector((state) => state.accordionPane.metadata);
+  const isModule = ppType === "Module";
   const { secondary, hoverOpen, hoverClosed, icons } = useSelector((state) => state.styling);
   const [openDeleteDialog, setDeleteDialog] = useState(false);
   const editors = useSelector((state) => state.editors);
 
   // Use Effects
+  useEffect(() => {
+    // This runs when the data has been reset to default
+    if (sessionStorage.getItem("resetData") === "true") {
+      // Update snackbar
+      handleSnackBarSuccess("Data Successfully Reset to Default");
+
+      // Perform actions after reload
+      sessionStorage.removeItem("resetData");
+    }
+  }, []);
   useEffect(() => {
     dispatch(SORT_SFR_SECTIONS_HELPER());
     dispatch(SORT_THREATS_TERMS_LIST_HELPER());
@@ -285,23 +296,18 @@ function AccordionContent({ title, uuid, index, open, metadata, handleMetaDataCo
    * The SecurityRequirementsSection component
    */
   const SecurityRequirementsSection = useMemo(() => {
-    const isModule = ppType === "Module";
-
-    return (
-      <div className='mx-4 mb-4'>
-        <Card className='rounded-lg border-2 border-gray-300'>
-          <CardBody className='pt-6 pb-4'>
-            <TipTapEditor
-              text={isModule ? sfrBasePPDefinition : sfrDefinition}
-              contentType={"term"}
-              handleTextUpdate={isModule ? handleUpdateSfrBasePPDefinition : handleUpdateSfrDefinition}
-            />
-            {!isModule && <AuditEventTable />}
-          </CardBody>
-        </Card>
-      </div>
-    );
-  }, [ppType]);
+    if (!isModule) {
+      return <TipTapEditor text={sfrDefinition || ""} contentType={"term"} handleTextUpdate={handleUpdateSfrDefinition} />;
+    }
+  }, [sfrDefinition, isModule]);
+  /**
+   * The BasePPSecurityRequirementsSection component
+   */
+  const BasePPSecurityRequirementsSection = useMemo(() => {
+    if (isModule) {
+      return <TipTapEditor text={sfrBasePPDefinition || ""} contentType={"term"} handleTextUpdate={handleUpdateSfrBasePPDefinition} />;
+    }
+  }, [sfrBasePPDefinition, isModule]);
   /**
    * The CustomSection
    */
@@ -416,6 +422,22 @@ function AccordionContent({ title, uuid, index, open, metadata, handleMetaDataCo
           <div className={"flex flex-col h-fit"}>
             {title === "Distributed TOE" && DistributedToeSection}
             {title === "Security Problem Definition" && SecurityProblemDefinitionSection}
+            {title === "Security Requirements" && (
+              <div className='mx-4 mb-4'>
+                <Card className='rounded-lg border-2 border-gray-300'>
+                  <CardBody className='pt-6 pb-4'>
+                    {isModule ? (
+                      BasePPSecurityRequirementsSection
+                    ) : (
+                      <div>
+                        {SecurityRequirementsSection}
+                        <AuditEventTable />
+                      </div>
+                    )}
+                  </CardBody>
+                </Card>
+              </div>
+            )}
             {title === "Security Objectives" && SecurityObjectivesSection}
             {title === "Security Requirements" && SecurityRequirementsSection}
             {custom && CustomSection}

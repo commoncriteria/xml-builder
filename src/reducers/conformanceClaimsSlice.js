@@ -11,12 +11,20 @@ const initialState = {
   additionalInformation: "",
   collapseConformanceSection: false,
   collapseAdditionalInfoSection: false,
+  xmlTagMeta: {},
+  cClaimsXMLTagMeta: {},
 };
 
 export const conformanceClaimsSlice = createSlice({
   name: "conformanceClaims",
   initialState,
   reducers: {
+    SET_CONFORMANCE_SECTION_XMLTAGMETA: (state, action) => {
+      state.xmlTagMeta = action.payload.xmlTagMeta;
+    },
+    SET_CCLAIMS_XMLTAGMETA: (state, action) => {
+      state.cClaimsXMLTagMeta = action.payload.cClaimsXMLTagMeta;
+    },
     CREATE_NEW_PP_CLAIM: (state, action) => {
       const { isPP, description, status } = action.payload;
       const newPpClaim = {
@@ -107,6 +115,8 @@ export const conformanceClaimsSlice = createSlice({
 
 // Action creators are generated for each case reducer function
 export const {
+  SET_CONFORMANCE_SECTION_XMLTAGMETA,
+  SET_CCLAIMS_XMLTAGMETA,
   CREATE_NEW_PP_CLAIM,
   CREATE_NEW_PACKAGE_CLAIM,
   CREATE_NEW_EVALUATION_METHOD,

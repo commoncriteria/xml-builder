@@ -135,7 +135,7 @@ function SfrTestList(props) {
 
         let testListItem = activityCopy.testLists[props.testListUUID];
         if (testListItem) {
-          type == "conclusion" ? (testListItem["conclusion"] = event) : (testListItem["description"] = event);
+          type === "conclusion" ? (testListItem["conclusion"] = event) : (testListItem["description"] = event);
         }
 
         // Update management functions
@@ -155,7 +155,7 @@ function SfrTestList(props) {
 
         let testListItem = activitiesCopy[uuid].testLists[props.testListUUID];
         if (testListItem) {
-          type == "conclusion" ? (testListItem["conclusion"] = event) : (testListItem["description"] = event);
+          type === "conclusion" ? (testListItem["conclusion"] = event) : (testListItem["description"] = event);
 
           // Update evaluation activities
           updateEvaluationActivities(activitiesCopy);

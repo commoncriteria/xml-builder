@@ -71,6 +71,12 @@ export const accordionPaneSlice = createSlice({
       // Return the uuid of the accordion
       action.payload.uuid = uuid;
     },
+    UPDATE_ACCORDION_XMLTAGMETA: (state, action) => {
+      const { uuid, xmlTagMeta } = action.payload;
+      if (state.sections.hasOwnProperty(uuid)) {
+        state.sections[uuid].xmlTagMeta = xmlTagMeta;
+      }
+    },
     DELETE_ACCORDION: (state, action) => {
       let title = action.payload.title;
       let uuid = action.payload.uuid;
@@ -415,6 +421,7 @@ const updateInnerSecurityFormItems = (state, action) => {
 // Action creators are generated for each case reducer function
 export const {
   CREATE_ACCORDION,
+  UPDATE_ACCORDION_XMLTAGMETA,
   DELETE_ACCORDION,
   CREATE_ACCORDION_FORM_ITEM,
   DELETE_ACCORDION_FORM_ITEM,

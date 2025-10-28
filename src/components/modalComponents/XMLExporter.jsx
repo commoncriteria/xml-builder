@@ -88,16 +88,16 @@ function XMLExporter({ open, handleOpen, preview }) {
   const getTerms = () => {
     const terms = Object.values(stateObject.terms);
 
-    if (!terms || terms.length == 0) return;
+    if (!terms || terms.length === 0) return;
 
     // search through object to find the relevant terms lists
-    const techTerms = terms.find((group) => group.title == "Technical Terms");
-    const suppressedTerms = terms.find((group) => group.title == "Suppressed Terms");
-    const acronyms = terms.find((group) => group.title == "Acronyms");
+    const techTerms = terms.find((group) => group.title === "Technical Terms");
+    const suppressedTerms = terms.find((group) => group.title === "Suppressed Terms");
+    const acronyms = terms.find((group) => group.title === "Acronyms");
     // acronyms are just tech terms without without a definition, combine upon export them here
     dispatch(SET_TECH_TERMS({ techTerms: { ...techTerms, ...acronyms }, suppressedTerms }));
 
-    const useCases = terms.find((group) => group.title == "Use Cases");
+    const useCases = terms.find((group) => group.title === "Use Cases");
     dispatch(SET_USE_CASES({ useCases: useCases }));
     return useCases;
   };
@@ -107,10 +107,11 @@ function XMLExporter({ open, handleOpen, preview }) {
     const threatsSlice = Object.values(stateObject.threats);
     const objectivesSlice = Object.values(stateObject.objectives);
 
-    const threats = threatsSlice.find((group) => group.title == "Threats");
-    const assumptions = threatsSlice.find((group) => group.title == "Assumptions");
-    const OSPs = threatsSlice.find((group) => group.title == "Organizational Security Policies");
+    const threats = threatsSlice.find((group) => group.title === "Threats");
+    const assumptions = threatsSlice.find((group) => group.title === "Assumptions");
+    const OSPs = threatsSlice.find((group) => group.title === "Organizational Security Policies");
     const objectiveTerms = getObjectiveTerms(objectivesSlice);
+    const section = Object.values(stateObject.accordionPane.sections).find((section) => section.title === "Security Problem Definition");
 
     dispatch(
       SET_SECURITY_PROBLEM_DEFINITION_SECTION({
@@ -123,6 +124,7 @@ function XMLExporter({ open, handleOpen, preview }) {
         ppTemplateVersion: stateObject.accordionPane.metadata.ppTemplateVersion,
         ppType: ppType,
         sfrMaps: getSfrMaps(),
+        accordionSection: section,
       })
     );
   };
@@ -130,8 +132,8 @@ function XMLExporter({ open, handleOpen, preview }) {
   const getSecurityObjectives = () => {
     const sfrSlice = Object.values(stateObject.sfrSections);
     const objectivesSlice = Object.values(stateObject.objectives);
-    const toe = objectivesSlice.find((group) => group.title == "Security Objectives for the TOE");
-    const operationalEnvironment = objectivesSlice.find((group) => group.title == "Security Objectives for the Operational Environment");
+    const toe = objectivesSlice.find((group) => group.title === "Security Objectives for the TOE");
+    const operationalEnvironment = objectivesSlice.find((group) => group.title === "Security Objectives for the Operational Environment");
     const objectivesToSFRs = getObjectivesToSFRs(sfrSlice);
 
     dispatch(
@@ -329,7 +331,7 @@ function XMLExporter({ open, handleOpen, preview }) {
     );
     if (ppPreference !== "") dispatch(SET_PP_PREFERENCE({ ppPreference: ppPreference, ppType: ppType }));
 
-    if (stateObject.accordionPane.metadata.ppTemplateVersion == "Version 3.1") {
+    if (stateObject.accordionPane.metadata.ppTemplateVersion === "Version 3.1") {
       dispatch(
         SET_CONFORMANCE_CLAIMS({
           conformanceClaims: version3_1_conformanceClaimsObject,
@@ -434,12 +436,12 @@ function XMLExporter({ open, handleOpen, preview }) {
       xmlString = cleanUpXml(xmlString);
       xmlString = addNamespace(xmlString);
 
-      // xmlString = format(xmlString, {
-      //   indentation: "  ", // 2-space indent
-      //   collapseContent: true, // true for keeping text on same line
-      //   lineSeparator: "\n", // newline separator
-      //   stripComments: false, // keep comments if any (currently we are not importing any comments)
-      // });
+      xmlString = format(xmlString, {
+        indentation: "  ", // 2-space indent
+        collapseContent: true, // true for keeping text on same line
+        lineSeparator: "\n", // newline separator
+        stripComments: false, // keep comments if any (currently we are not importing any comments)
+      });
 
       // Fix new line issues - Formatter separates node types on new lines
       // (eg. If there are quotes followed by inline rich text, then the quote is on one line
@@ -447,6 +449,37 @@ function XMLExporter({ open, handleOpen, preview }) {
       // quote and text when it comes to rendering the HTML)
       xmlString = xmlString.replace(/"\s*\n\s*</g, '"<');
       xmlString = xmlString.replace(/>\s*\n\s*"/g, '>"');
+
+      // remove spaces or newlines before period
+      xmlString = xmlString.replace(/\s+\./g, ".");
+
+      // remove spaces or newlines before commas
+      xmlString = xmlString.replace(/\s+,/g, ",");
+
+      // remove newlines right after "[" or "("
+      xmlString = xmlString.replace(/([\[\(])\s*\n\s*/g, "$1");
+
+      // remove newlines right before "]" or ")"
+      xmlString = xmlString.replace(/\s*\n\s*([\]\)])/g, "$1");
+
+      // remove spaces or newlines between ^ and <assignable> tag
+      xmlString = xmlString.replace(/\^\s+(<assignable)/g, "^$1");
+
+      // remove spaces or newlines between style tags and open/close selectables tag
+      // allow optional namespace prefix (e.g., h:i) before the tag name
+      const nsPrefix = "(?:[A-Za-z]+:)?";
+      const styleTagPattern = `${nsPrefix}(?:${style_tags.join("|")})`;
+      const openAdj = new RegExp(`(<${styleTagPattern}\\b[^>]*>)\\s*(<selectables\\b)`, "g");
+      const closeAdj = new RegExp(`(</selectables>)\\s*(</${styleTagPattern}>)`, "g");
+      xmlString = xmlString.replace(/\[(?:[\s\S]*?)\]/g, (block) => {
+        return (
+          block
+            // e.g. <h:i>\n  <selectables>  =>  <h:i><selectables>
+            .replace(openAdj, "$1$2")
+            // e.g. </selectables>\n</h:i>    =>  </selectables></h:i>
+            .replace(closeAdj, "$1$2")
+        );
+      });
 
       // Flip this to true at top of file if we don't want file downloads
       if (preview) {
@@ -498,7 +531,11 @@ function XMLExporter({ open, handleOpen, preview }) {
     // eg. </i> </selectables> -> </i></selectables>
     const closeSpace = new RegExp(`(</(?:${tagPattern})\\s*>)\\s+(?=</(?:selectables|selectable|assignable)\\b)`, "gi");
 
-    cleanedXmlString = cleanedXmlString.replace(openSpace, "$1").replace(closeSpace, "$1");
+    // Remove space between consecutive closing assignable/selectable tags
+    // e.g </assignable> </selectable> -> </assignable></selectable>
+    const adjacentClosingTags = new RegExp(`(</(?:assignable|selectable)>)\\s+(?=</(?:assignable|selectable)>)`, "gi");
+
+    cleanedXmlString = cleanedXmlString.replace(openSpace, "$1").replace(closeSpace, "$1").replace(adjacentClosingTags, "$1");
 
     return cleanedXmlString;
   };
@@ -530,6 +567,7 @@ function XMLExporter({ open, handleOpen, preview }) {
       "sub",
       "h4",
       "mark",
+      "abbr",
     ]; // tags which require namespace
     // ([\\/]?): capture group to match opening and closing tags
 
@@ -539,7 +577,7 @@ function XMLExporter({ open, handleOpen, preview }) {
 
     // Get namespace
     let namespace = "";
-    const ppTypeKey = ppType == "Protection Profile" ? "PP" : ppType === "Module" ? "Module" : "Package";
+    const ppTypeKey = ppType === "Protection Profile" ? "PP" : ppType === "Module" ? "Module" : "Package";
     const namespaceKey = Object.keys(overallObject[ppTypeKey]).find((key) => overallObject[ppTypeKey][key] === "http://www.w3.org/1999/xhtml");
 
     // XML Cleanup
