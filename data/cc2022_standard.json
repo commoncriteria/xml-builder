@@ -211,22 +211,42 @@
       },
       "c7cd87c6-e7c4-497e-8bed-0f7948db1e27": {
         "title": "Appendix A - Optional Requirements",
-        "formItems": [],
+        "formItems": [
+          {
+            "uuid": "caa5d2b5-ca76-476d-be81-69e5478547cb",
+            "contentType": "transformsAppendix"
+          }
+        ],
         "open": false
       },
       "f86fcb19-bb13-45bb-bc01-ed91256d6743": {
         "title": "Appendix B - Selection-Based Requirements",
-        "formItems": [],
+        "formItems": [
+          {
+            "uuid": "caa5d2b5-ca76-476d-be81-69e5478547cb",
+            "contentType": "transformsAppendix"
+          }
+        ],
         "open": false
       },
       "a0c8d239-42ee-42a5-8d4f-96b3992db4a5": {
         "title": "Appendix C - Extended Component Definitions",
-        "formItems": [],
+        "formItems": [
+          {
+            "uuid": "caa5d2b5-ca76-476d-be81-69e5478547cb",
+            "contentType": "transformsAppendix"
+          }
+        ],
         "open": false
       },
       "0a126d67-e945-41f8-8517-eef6786dca10": {
         "title": "Appendix D - Validation Guidelines",
-        "formItems": [],
+        "formItems": [
+          {
+            "uuid": "caa5d2b5-ca76-476d-be81-69e5478547cb",
+            "contentType": "transformsAppendix"
+          }
+        ],
         "open": false
       },
       "279086d8-89df-41fd-9dff-53be9f979877": {
@@ -241,7 +261,12 @@
       },
       "5a189416-144b-491c-8a82-8fae63552d06": {
         "title": "Appendix H - Use Case Templates",
-        "formItems": [],
+        "formItems": [
+          {
+            "uuid": "caa5d2b5-ca76-476d-be81-69e5478547cb",
+            "contentType": "transformsAppendix"
+          }
+        ],
         "open": false
       },
       "5d13f61c-550e-4ca2-90b5-54d563c44146": {
@@ -249,14 +274,19 @@
         "formItems": [
           {
             "uuid": "caa5d2b5-ca76-476d-be81-69e5478547cb",
-            "contentType": "appendixI"
+            "contentType": "transformsAppendix"
           }
         ],
         "open": false
       },
       "81e06b51-407f-4daf-a805-2abfd41f2ffd": {
         "title": "Appendix J - Bibliography",
-        "formItems": [],
+        "formItems": [
+          {
+            "uuid": "caa5d2b5-ca76-476d-be81-69e5478547cb",
+            "contentType": "transformsAppendix"
+          }
+        ],
         "open": false
       },
       "c2c5eb25-c3a1-4c17-9595-fffdb80f655a": {
@@ -371,6 +401,7 @@
     }
   },
   "objectives": {
+    "objectiveDefinition": "",
     "8ba516d2-8336-4562-a6b3-751d722232d9": {
       "title": "Security Objectives for the TOE",
       "xmlTagMeta": {

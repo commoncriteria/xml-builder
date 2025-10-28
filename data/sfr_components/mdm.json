@@ -172,7 +172,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "44fdfdcc-2147-4972-b26c-fd8ab1b1ff7c"
   },
   "FAU_CRP_EXT.1": {
     "title": "Support for Compliance Reporting of Mobile Device Configuration",
@@ -372,7 +373,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "336565cc-3dc9-4c94-861b-9ae875c513e5"
   },
   "FAU_GEN.1/AUDITGEN": {
     "title": "Audit Data Generation",
@@ -734,7 +736,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "2b573eed-2496-4a27-883e-02c95be4a56d"
   },
   "FAU_GEN.1/MAS_SERVER": {
     "title": "Audit Data Generation (MAS Server)",
@@ -933,7 +936,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "ee351e59-60c3-4e92-a689-918a538f1092"
   },
   "FAU_NET_EXT.1": {
     "title": "Network Reachability Review",
@@ -1038,7 +1042,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "2d1ba4d9-26a6-41cb-a3e1-19b37198babd"
   },
   "FAU_SAR.1": {
     "title": "Audit Review",
@@ -1254,7 +1259,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "bf16e04b-8205-446f-b70d-017c143d5598"
   },
   "FAU_SEL.1": {
     "title": "Security Audit Event Selection",
@@ -1436,7 +1442,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "632d96f9-5acc-4ac8-81b8-3e44c0d2f8fe"
   },
   "FAU_STG.1": {
     "title": "Audit Data Storage Location",
@@ -1594,7 +1601,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "74da5ea4-6bce-48c8-b906-e3005294eb0a"
   },
   "FAU_STG.2": {
     "title": "Audit Event Storage",
@@ -1835,7 +1843,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "27b65259-f741-4fab-a060-51af40111166"
   },
   "FCO_CPC_EXT.1": {
     "title": "Component Registration Channel Definition",
@@ -2273,7 +2282,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "a994f9f6-5b88-4f6f-85f3-c3c3a3daa8a3"
   },
   "FCS_CKM.1": {
     "title": "Cryptographic Key Generation",
@@ -2480,7 +2490,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "3e1d3760-8666-49e8-ac91-c711c60fb8fa"
   },
   "FCS_CKM.2": {
     "title": "Cryptographic Key Establishment",
@@ -2686,7 +2697,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "d85eb840-3138-4d23-9751-633876975752"
   },
   "FCS_CKM.6": {
     "title": "Timing and Event of Cryptographic Key Destruction",
@@ -3205,7 +3217,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "59f90694-60ba-41f2-9fab-b886fb62a292"
   },
   "FCS_COP.1/CONF_ALG": {
     "title": "Cryptographic Operation (Confidentiality Algorithms)",
@@ -3559,7 +3572,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "708c0c1b-dc72-4c72-8c2d-97788870fea4"
   },
   "FCS_COP.1/HASH_ALG": {
     "title": "Cryptographic Operation (Hashing Algorithms)",
@@ -3777,7 +3791,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "38110c14-0269-4ad9-82b7-51035c918f60"
   },
   "FCS_COP.1/KEY_HASH": {
     "title": "Cryptographic Operation (Keyed-Hash Message Authentication)",
@@ -3914,7 +3929,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "db973470-e44d-438e-ad86-1bf42f04d381"
   },
   "FCS_COP.1/SIGN_ALG": {
     "title": "Cryptographic Operation (Signature Algorithms)",
@@ -4126,7 +4142,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "3b3adbb6-86e0-4f7b-9ab6-b2d65c475109"
   },
   "FCS_HTTPS_EXT.1": {
     "title": "HTTPS Protocol",
@@ -4315,7 +4332,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "df4741e4-90e3-412a-ba3b-bedd4a134347"
   },
   "FCS_IV_EXT.1": {
     "title": "Initialization Vector Generation",
@@ -4459,7 +4477,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "2b29e615-f44b-4b3e-80c3-a2c2deadd833"
   },
   "FCS_RBG.1": {
     "title": "Random Bit Generation (RBG)",
@@ -4985,7 +5004,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "f3449ccd-c959-489f-85a9-e2c932bb9a95"
   },
   "FCS_RBG.2": {
     "title": "Random Bit Generation (External Seeding)",
@@ -5105,7 +5125,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "b2ed8c4e-90bb-4928-a9f9-e18229c2af99"
   },
   "FCS_RBG.3": {
     "title": "Random Bit Generation (Internal Seeding - Single Source)",
@@ -5269,7 +5290,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "ed914164-2a3d-415c-8d79-5ca1df9c37e7"
   },
   "FCS_RBG.4": {
     "title": "Random Bit Generation (Internal Seeding - Multiple Sources)",
@@ -5431,7 +5453,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "5b425c0e-1237-44bf-b5eb-7ace641a3205"
   },
   "FCS_RBG.5": {
     "title": "Random Bit Generation (Combining Noise Sources)",
@@ -5609,7 +5632,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "cb8a9d65-d4ba-45a1-80d8-05c743eae8d6"
   },
   "FCS_STG_EXT.1": {
     "title": "Cryptographic Key Storage",
@@ -5746,7 +5770,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "b357e507-107e-483c-9a5c-856f83a5fadd"
   },
   "FCS_STG_EXT.2": {
     "title": "Encrypted Cryptographic Key Storage",
@@ -5944,7 +5969,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "d491560a-6004-4085-92ca-acac499f3157"
   },
   "FIA_CLI_EXT.1": {
     "title": "Client Authorization",
@@ -6081,7 +6107,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "bdd8bee0-24df-426a-8476-c73256d992ae"
   },
   "FIA_ENR_EXT.1": {
     "title": "Enrollment of Mobile Device into Management",
@@ -6384,7 +6411,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "c6444b62-4806-4918-9717-72fa5fb6e2ea"
   },
   "FIA_TOK_EXT.1": {
     "title": "Client Tokens",
@@ -6572,7 +6600,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "569347ad-8c14-49de-84c4-c07f6f48500a"
   },
   "FIA_UAU.1": {
     "title": "Timing of Authentication",
@@ -6824,7 +6853,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "2b0e88da-bcfb-4e0f-a520-8c9f5a39a8a6"
   },
   "FIA_UAU.4": {
     "title": "Single-Use Authentication Mechanisms",
@@ -6972,7 +7002,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "32ba8f7c-d0e8-415f-b232-3e769233badd"
   },
   "FIA_X509_EXT.1/CERTVAL_MAN": {
     "title": "X.509 Certificate Validation",
@@ -7393,7 +7424,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "da25a903-599b-4119-8915-6d7cf22fbe19"
   },
   "FIA_X509_EXT.1/CERTVAL_SEL": {
     "title": "X.509 Certificate Validation",
@@ -7802,7 +7834,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "199882c1-8ff3-4881-9f8e-00ee1fef919c"
   },
   "FIA_X509_EXT.2": {
     "title": "X.509 Certificate Authentication",
@@ -8356,7 +8389,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "314066b3-b566-4e7b-bb47-48985ec9b0eb"
   },
   "FIA_X509_EXT.3": {
     "title": "X.509 Enrollment",
@@ -8661,7 +8695,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "c972bbdd-7263-4ee4-8dcf-378e7055583e"
   },
   "FIA_X509_EXT.4": {
     "title": "Alternate X.509 Enrollment",
@@ -9234,7 +9269,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "f8b1a38e-3109-4481-b873-54ad8eb9ae25"
   },
   "FMT_MOF.1/FUNCBE": {
     "title": "Management of Security Functions Behavior",
@@ -9416,7 +9452,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "e010495d-8da5-45a7-854f-e2392431dbf1"
   },
   "FMT_MOF.1/MANAGEMENT_ENROLL": {
     "title": "Management of Security Functions Behavior (Enrollment)",
@@ -9531,7 +9568,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "b61fc7bd-10cc-40b4-a131-fa0ae17215f3"
   },
   "FMT_MOF.1/MANAGEMENT_MAS": {
     "title": "Management of Functions in (MAS Server Downloads)",
@@ -9677,7 +9715,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "9649777c-a3c7-4978-8b9e-5f59604a08ad"
   },
   "FMT_POL_EXT.1": {
     "title": "Trusted Policy Update",
@@ -9936,7 +9975,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "505203e2-d9dd-402f-aee3-d8994d5037c3"
   },
   "FMT_SAE_EXT.1": {
     "title": "Security Attribute Expiration",
@@ -10111,7 +10151,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "79b24011-d18b-4c87-af40-79cb85da6738"
   },
   "FMT_SMF.1/MAS": {
     "title": "Specification of Management Functions (MAS Server)",
@@ -10255,7 +10296,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "a9885d1d-1a61-4598-b9ed-93cfc00d8085"
   },
   "FMT_SMF.1/SERVER_CONF_AGENT": {
     "title": "Specification of Management Functions (Server configuration of Agent)",
@@ -11761,7 +11803,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "a03c5c20-af4f-4fa6-8f6d-6b20eb870cd2"
   },
   "FMT_SMF.1/SERVER_CONF_SERVER": {
     "title": "Specification of Management Functions (Server Configuration of Server)",
@@ -12136,7 +12179,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "783a30a1-a68d-44eb-a75f-689be0134cab"
   },
   "FMT_SMR.1/SECMAN_ROLES": {
     "title": "Security Roles",
@@ -12332,7 +12376,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "2073561f-672c-48fb-a533-c728804d8bb7"
   },
   "FMT_SMR.1/SECMAN_ROLES_MAS": {
     "title": "Security Roles (MAS Server)",
@@ -12500,7 +12545,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "955a0b8f-c02b-4e87-be89-8daf4cdbac87"
   },
   "FPT_API_EXT.1": {
     "title": "Use of Supported Services and APIs",
@@ -12605,7 +12651,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "96b27938-888b-472b-97c3-4fc16acd23f0"
   },
   "FPT_FLS.1": {
     "title": "Failure with Preservation of Secure State",
@@ -12711,7 +12758,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "b09ead8d-fbfd-4d22-90f0-e64ded0d1747"
   },
   "FPT_ITT.1/INTER_XFER": {
     "title": "Internal TOE TSF Data Transfer",
@@ -13007,7 +13055,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "be279d60-7ae1-4637-bc35-01d77c053d72"
   },
   "FPT_ITT.1/INTER_XFER_AGENT": {
     "title": "Internal TOE TSF Data\n          Transfer (MDM Agent)",
@@ -13267,7 +13316,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "23a2952c-4a3b-40a5-a5ea-b87a7afa05a6"
   },
   "FPT_LIB_EXT.1": {
     "title": "Use of Third-Party Libraries",
@@ -13388,7 +13438,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "190073fd-b44b-47b2-9d2b-dc724ce33390"
   },
   "FPT_TST.1": {
     "title": "TSF Self-Testing",
@@ -13643,7 +13694,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "43da25ca-06e4-42d8-b76b-26976d13d2cc"
   },
   "FPT_TST_EXT.1": {
     "title": "Functionality Testing",
@@ -13899,7 +13951,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "1dada946-58c5-4f37-9bcf-1a896345c556"
   },
   "FPT_TUD_EXT.1": {
     "title": "Trusted Update",
@@ -14204,7 +14257,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "5cb66af5-5191-4a7e-bb4e-d464f739a328"
   },
   "FTA_TAB.1": {
     "title": "Default TOE Access Banners",
@@ -14342,7 +14396,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "601317d7-885d-4876-b0d2-0d127c3c0145"
   },
   "FTP_ITC.1/INTER_TSF_XFER_AGENT": {
     "title": "Inter-TSF Trusted Channel (MDM agent)",
@@ -14755,7 +14810,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "e0e8b54e-7e14-4456-8dd4-03df92af74c9"
   },
   "FTP_ITC.1/INTER_XFER_IT": {
     "title": "Inter-TSF Trusted Channel (Authorized IT Entities)",
@@ -15244,7 +15300,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "644e743a-3e5a-4280-9e54-9d6a2b7ff72d"
   },
   "FTP_ITC_EXT.1": {
     "title": "Trusted Channel",
@@ -15425,7 +15482,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "cbf9c9ce-3c34-4687-a2b8-29856b5f3d04"
   },
   "FTP_TRP.1/TRUSTPATH_ENROLL": {
     "title": "Trusted Path (for Enrollment)",
@@ -15857,7 +15915,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "666ce856-9cf9-40af-a5e3-f16b4216cfd1"
   },
   "FTP_TRP.1/TRUSTPATH_JOIN": {
     "title": "Trusted Path (for Joining)",
@@ -16291,7 +16350,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "2019775c-a697-4545-b981-123b531ff815"
   },
   "FTP_TRP.1/TRUSTPATH_REM_ADMIN": {
     "title": "Trusted Path (for Remote Administration)",
@@ -16793,6 +16853,7 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "776abc5b-a4c4-41fe-a90a-e18e4970b058"
   }
 }

@@ -114,7 +114,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "8e31a0f9-f6ba-4a38-b91e-f497a282714e"
   },
   "FAU_GEN.1": {
     "title": "Audit Data Generation",
@@ -393,7 +394,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "9c546d9b-7400-4499-a7b8-51e1fde6012b"
   },
   "FAU_SAA.1": {
     "title": "Potential Violation Analysis",
@@ -573,7 +575,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "e6312709-ba8f-405f-b53d-adf6ebbd8028"
   },
   "FAU_SAR.1": {
     "title": "Audit Review",
@@ -716,7 +719,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "5d24c71c-f50e-48d8-a8f8-c79027cee67e"
   },
   "FAU_STG.1": {
     "title": "External Audit Storage",
@@ -839,7 +843,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "4ed553fe-9ff9-4a79-80da-615ed7ae3c82"
   },
   "FAU_STG.2": {
     "title": "Protected Audit Trail Storage",
@@ -1007,7 +1012,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "e7d9010c-2835-40d8-9783-7614d2af052f"
   },
   "FAU_STG.5": {
     "title": "Prevention of Audit Data Loss",
@@ -1158,7 +1164,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "e38e6cbf-c5ad-47fe-9902-5dcaabdd657d"
   },
   "FCS_CKM.1": {
     "title": "Cryptographic Key Generation",
@@ -1332,7 +1339,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "53462914-6fe1-4b6b-9f2f-19c299db28ac"
   },
   "FCS_CKM.2": {
     "title": "Cryptographic Key Distribution",
@@ -1482,7 +1490,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "8b1e932c-88a2-4083-8f29-93ec7ed9bf27"
   },
   "FCS_CKM.6": {
     "title": "Cryptographic Key Destruction",
@@ -1699,7 +1708,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "adaff1e5-e6c1-43e1-b115-e417692bf433"
   },
   "FCS_COP.1/Hash": {
     "title": "Cryptographic Operation (Hashing)",
@@ -1933,7 +1943,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "60dbbef1-b6fe-4900-b5cc-642449dd3ab8"
   },
   "FCS_COP.1/KeyedHash": {
     "title": "Cryptographic Operation (Keyed Hash Algorithms)",
@@ -2128,7 +2139,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "0088d75d-1e45-4208-a71f-e11223f57594"
   },
   "FCS_COP.1/Sig": {
     "title": "Cryptographic Operation (Signature Algorithms)",
@@ -2293,7 +2305,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "9c790190-c19d-4162-bf16-25d40b372dfd"
   },
   "FCS_COP.1/UDE": {
     "title": "Cryptographic Operation (AES Data Encryption/Decryption)",
@@ -2607,7 +2620,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "48dae54d-7ff3-4ac6-89b9-0022d55c1cd1"
   },
   "FCS_ENT_EXT.1": {
     "title": "Entropy for Virtual Machines",
@@ -2816,7 +2830,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "26e5950d-3f8a-4b81-b7df-6d4d23593721"
   },
   "FCS_HTTPS_EXT.1": {
     "title": "HTTPS Protocol",
@@ -2984,7 +2999,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "49bf2ef2-5906-4e7d-8d59-07b71904801b"
   },
   "FCS_IPSEC_EXT.1": {
     "title": "IPsec Protocol",
@@ -4480,7 +4496,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "dc4f8cea-7369-4da2-98f5-65c57c92b460"
   },
   "FCS_RBG.1": {
     "title": "Cryptographic Operation (Random Bit Generation)",
@@ -4942,7 +4959,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "b873f684-3a5b-40dc-ae6e-e6e313bf68cc"
   },
   "FCS_RBG.2": {
     "title": "Random Bit Generation (External Seeding)",
@@ -5062,7 +5080,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "920eae86-17fb-4226-89a4-d6ea6673a688"
   },
   "FCS_RBG.3": {
     "title": "Random Bit Generation (Internal Seeding - Single Source)",
@@ -5213,7 +5232,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "7b35349c-d71e-4473-a335-040a4387881f"
   },
   "FCS_RBG.4": {
     "title": "Random Bit Generation (Internal Seeding - Multiple Sources)",
@@ -5375,7 +5395,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "48965155-f582-49d3-b21d-acb9ef2a896c"
   },
   "FCS_RBG.5": {
     "title": "Random Bit Generation (Combining Noise Sources Sources)",
@@ -5553,7 +5574,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "cdc79529-5853-43e3-a733-e5a9b8d92517"
   },
   "FDP_HBI_EXT.1": {
     "title": "Hardware-Based Isolation Mechanisms",
@@ -5713,7 +5735,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "b3fa189f-0bdd-4a30-a20b-20debc817162"
   },
   "FDP_PPR_EXT.1": {
     "title": "Physical Platform Resource Controls",
@@ -6042,7 +6065,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "a8b77066-4f92-4c56-b07d-1a1e718fb499"
   },
   "FDP_RIP_EXT.1": {
     "title": "Residual Information in Memory",
@@ -6142,7 +6166,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "d920cd47-a99c-422e-b07b-a916f7b1d0c4"
   },
   "FDP_RIP_EXT.2": {
     "title": "Residual Information on Disk",
@@ -6259,7 +6284,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "0787e56e-fd40-433f-8d3e-9b5505600ac0"
   },
   "FDP_VMS_EXT.1": {
     "title": "VM Separation",
@@ -6545,7 +6571,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "d980d0c2-6140-4458-9e8b-682c601f96e8"
   },
   "FDP_VNC_EXT.1": {
     "title": "Virtual Networking Components",
@@ -6743,7 +6770,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "4ad4dc35-a494-41eb-9f7f-459a996ceed1"
   },
   "FIA_AFL_EXT.1": {
     "title": "Authentication Failure Handling",
@@ -7059,7 +7087,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "740174c0-7bb0-476e-bd57-d3fa42a156f6"
   },
   "FIA_PMG_EXT.1": {
     "title": "Password Management",
@@ -7292,7 +7321,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "bf2dc450-a69a-4f25-b0a6-3b19c1fc47da"
   },
   "FIA_UAU.5": {
     "title": "Multiple Authentication Mechanisms",
@@ -7685,7 +7715,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "3c05b6e6-378f-4980-a9b2-bb051d1b50eb"
   },
   "FIA_UIA_EXT.1": {
     "title": "Administrator Identification and Authentication",
@@ -7811,7 +7842,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "c55afe1f-7188-464c-a6e0-cd8ed4b9927a"
   },
   "FIA_X509_EXT.4": {
     "title": "Exceptions to X.509 Certificate Revocation Checking",
@@ -7961,7 +7993,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "f3447804-20e2-4459-b765-59f6d6b5e565"
   },
   "FMT_MOF_EXT.1": {
     "title": "Management of Security Functions Behavior",
@@ -8969,7 +9002,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "1af56595-bdc6-4cbb-be23-fe517e74dd03"
   },
   "FMT_SMO_EXT.1": {
     "title": "Separation of Management and Operational Networks",
@@ -9120,7 +9154,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "e0caac2f-2edf-400c-825b-7ac062ffed06"
   },
   "FPT_DDI_EXT.1": {
     "title": "Device Driver Isolation",
@@ -9220,7 +9255,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "95258978-6ea4-424f-992b-14d6fed80b75"
   },
   "FPT_DVD_EXT.1": {
     "title": "Non-Existence of Disconnected Virtual Devices",
@@ -9320,7 +9356,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "3c87c3df-dec5-4506-b2bb-b2f159b4e2c1"
   },
   "FPT_EEM_EXT.1": {
     "title": "Execution Environment Mitigations",
@@ -9484,7 +9521,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "ad87268d-0f93-49c8-b268-22ce1de2ea91"
   },
   "FPT_FLS.1": {
     "title": "Failure with Preservation of Secure State",
@@ -9585,7 +9623,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "8d8c6bbd-0907-4bdc-bc32-03805586d4d4"
   },
   "FPT_GVI_EXT.1": {
     "title": "guest VM Integrity",
@@ -9702,7 +9741,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "1c27c262-40c3-4f7e-a9e9-904f95693c78"
   },
   "FPT_HAS_EXT.1": {
     "title": "Hardware Assists",
@@ -9877,7 +9917,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "c1532cce-823b-4057-a249-05ca945b213f"
   },
   "FPT_HCL_EXT.1": {
     "title": "Hypercall Controls",
@@ -9988,7 +10029,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "d605665c-d41a-425e-8c4c-5764cd665141"
   },
   "FPT_IDV_EXT.1": {
     "title": "Software Identification and Versions",
@@ -10148,7 +10190,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "9a4bc9ba-a49a-4463-93c4-c1659fa89429"
   },
   "FPT_INT_EXT.1": {
     "title": "Support for Introspection",
@@ -10254,7 +10297,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "97968829-7805-4dcd-908f-d4530b3ecefa"
   },
   "FPT_ML_EXT.1": {
     "title": "Measured Launch of Platform and VMM",
@@ -10465,7 +10509,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "77bdd147-d745-4e6c-9a05-bb25789dba47"
   },
   "FPT_RDM_EXT.1": {
     "title": "Removable Devices and Media",
@@ -10703,7 +10748,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "38203c9a-a425-4e60-86e1-e73e41bfaed6"
   },
   "FPT_TST.1": {
     "title": "TSF Self-Testing",
@@ -10958,7 +11004,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "8cce9205-a08d-4c35-9f29-100867a2d268"
   },
   "FPT_TUD_EXT.1": {
     "title": "Trusted Updates to the Virtualization System",
@@ -11249,7 +11296,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "e4bc4900-fc48-4664-9128-c41122b65e32"
   },
   "FPT_TUD_EXT.2": {
     "title": "Trusted Update Based on Certificates",
@@ -11354,7 +11402,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "50383612-2845-4822-bd2b-6857c8dbe4bb"
   },
   "FPT_VDP_EXT.1": {
     "title": "Virtual Device Parameters",
@@ -11497,7 +11546,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "53c08942-7c69-4e2e-80f7-6f317f91c55c"
   },
   "FPT_VIV_EXT.1": {
     "title": "VMM Isolation from VMs",
@@ -11640,7 +11690,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "1b29cb12-46a7-47ec-9037-7dd2e7e83c80"
   },
   "FTA_TAB.1": {
     "title": "TOE Access Banner",
@@ -11787,7 +11838,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "e11438c2-6bff-4003-90ed-aecf3d01b00d"
   },
   "FTP_ITC_EXT.1": {
     "title": "Trusted Channel Communications",
@@ -12050,7 +12102,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "0784e32c-840d-4c73-bf66-9c189444fd74"
   },
   "FTP_TRP.1": {
     "title": "Trusted Path",
@@ -12309,7 +12362,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "35d77fee-5922-4fbc-a38c-7bffa02816a1"
   },
   "FTP_UIF_EXT.1": {
     "title": "User Interface: I/O Focus",
@@ -12409,7 +12463,8 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "374d037b-0db6-4ab3-a9aa-7c20ad0778c5"
   },
   "FTP_UIF_EXT.2": {
     "title": "User Interface: Identification of VM",
@@ -12509,6 +12564,7 @@
     "additionalSfr": false,
     "consistencyRationale": "",
     "notNew": null,
-    "xPathDetails": {}
+    "xPathDetails": {},
+    "compUUID": "860d8282-3ece-403b-8ab4-f7ea9913a9dd"
   }
 }
