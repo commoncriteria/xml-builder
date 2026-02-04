@@ -26,6 +26,7 @@ import {
   RESET_THREATS_STATE,
   UPDATE_THREAT_SECTION_DEFINITION,
   UPDATE_MAIN_SECURITY_PROBLEM_DEFINITION,
+  UPDATE_BOILERPLATE_FLAG,
 } from "../../reducers/threatsSlice.js";
 import {
   CREATE_OBJECTIVE_TERM,
@@ -230,7 +231,7 @@ function FileLoader(props) {
         clearOutSections();
 
         // LOAD XML CONTENTS INTO REDUX SLICES
-        loadPPXML(xmlReal.node);
+        loadPPXML(xmlReal.node, xml);
       }, 1000);
 
       return "success";
@@ -255,7 +256,7 @@ function FileLoader(props) {
    * Load PP sections into redux slices
    * @param xml the xml
    */
-  const loadPPXML = (xml) => {
+  const loadPPXML = (xml, xmlString) => {
     let ppTemplateVersion = "CC2022 Standard";
     let ppType = "Protection Profile";
 
@@ -276,6 +277,7 @@ function FileLoader(props) {
         loadPPReference(xml, ppType);
         loadPreferences(xml);
 
+        loadPrologTags(xml, xmlString);
         loadXml(xml, ppType, ppTemplateVersion);
 
         // Update progress
@@ -500,6 +502,22 @@ function FileLoader(props) {
       dispatch(RESET_DISTRIBUTED_TOE_STATE());
       dispatch(RESET_SFR_BASE_PP_STATE());
     }, 300);
+  };
+  /**
+   * Loads xml prolog tags <?xml> <?xml-stylesheet> <?xml-model>
+   * @param xml the xml
+   * @param xmlString xml string
+   */
+  const loadPrologTags = (xml, xmlString) => {
+    try {
+      const prologTags = fileParser.getPrologTags(xml, xmlString);
+
+      dispatch(updateMetaDataItem({ type: "prologTags", item: prologTags }));
+    } catch (err) {
+      const errorMessage = `Failed to load Prolog Tags Data: ${err}`;
+      console.log(errorMessage);
+      handleSnackBarError(errorMessage);
+    }
   };
   /**
    * Loads in the PP Reference
@@ -1508,17 +1526,28 @@ function FileLoader(props) {
   };
   /**
    * Loads the assumptions
-   * @param allAssumptions
+   * @param assumptionMeta object containing assumptions array + section intro text
    * @param objectivesMap the map of objectives
    */
-  const loadAssumptions = (allAssumptions, objectivesMap) => {
+  const loadAssumptions = (assumptionMeta, objectivesMap) => {
     try {
       const { threats: stateThreats } = stateRef.current;
       const assumptionsUUID = getUUIDByTitle(stateThreats, "Assumptions");
+      const assumptionDescription = assumptionMeta.assumption_description;
 
-      Object.values(allAssumptions).map((assumption) => {
+      // Set the description
+      dispatch(
+        UPDATE_THREAT_SECTION_DEFINITION({
+          uuid: assumptionsUUID,
+          title: "Assumptions",
+          newDefinition: assumptionDescription,
+        })
+      );
+
+      Object.values(assumptionMeta.assumptions).map((assumption) => {
         const name = assumption.name;
         const definition = assumption.definition;
+        const consistencyRationale = assumption.consistency_rationale;
         const objectivesWithUUID = Object.values(assumption.securityObjectives).map((soe) => {
           // get UUID of the matching objective
           const objectiveUUID = objectivesMap[soe.name];
@@ -1534,6 +1563,7 @@ function FileLoader(props) {
             threatUUID: assumptionsUUID,
             title: name,
             definition: definition,
+            consistencyRationale,
             objectives: objectivesWithUUID,
           })
         );
@@ -1546,15 +1576,19 @@ function FileLoader(props) {
   };
   /**
    * Loads the OSPs (Organizational Security Policies)
-   * @param allOSPs
+   * @param ospMeta
    * @param objectivesMap the map of objectives
    */
-  const loadOSPs = (allOSPs, objectivesMap) => {
+  const loadOSPs = (ospMeta, objectivesMap) => {
     try {
       const { threats: stateThreats } = stateRef.current;
       const ospUUID = getUUIDByTitle(stateThreats, "Organizational Security Policies");
 
-      Object.values(allOSPs).map((osp) => {
+      if (ospMeta.boilerplate) {
+        dispatch(UPDATE_BOILERPLATE_FLAG({ boilerplate: ospMeta.boilerplate }));
+      }
+
+      Object.values(ospMeta.OSPs).map((osp) => {
         const name = osp.name;
         const definition = osp.definition;
         const objectivesWithUUID = Object.values(osp.securityObjectives).map((soe) => {

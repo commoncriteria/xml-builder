@@ -26,7 +26,7 @@ import { SET_ACKNOWLEDGEMENTS_APPENDIX_INITIAL_STATE } from "../reducers/acknowl
 import { SET_INCLUDE_PACKAGE_INITIAL_STATE } from "../reducers/includePackageSlice.js";
 import { SET_MODULES_INITIAL_STATE } from "../reducers/moduleSlice.js";
 import { SET_PP_PREFERENCE_INITIAL_STATE } from "../reducers/ppPreferenceSlice.js";
-import { RESET_CONFORMANCE_CLAIMS_STATE } from "../reducers/conformanceClaimsSlice.js";
+import { RESET_CONFORMANCE_CLAIMS_STATE, SET_CONFORMANCE_SECTION_XMLTAGMETA, SET_CCLAIMS_XMLTAGMETA } from "../reducers/conformanceClaimsSlice.js";
 import {
   DELETE_BASE_PP_SFR_SECTION,
   DELETE_SFR_BASE_PP,
@@ -341,6 +341,17 @@ export const fetchTemplateData = async ({ version, type, base }) => {
     store.dispatch(SET_MODULES_INITIAL_STATE(modules));
     store.dispatch(SET_PP_PREFERENCE_INITIAL_STATE(ppPreference));
     store.dispatch(RESET_CONFORMANCE_CLAIMS_STATE());
+
+    const cClaimsObject = Object.values(accordionPane.sections).find((section) => section.title === "Conformance Claims");
+    store.dispatch(SET_CONFORMANCE_SECTION_XMLTAGMETA(cClaimsObject));
+    store.dispatch(
+      SET_CCLAIMS_XMLTAGMETA({
+        cClaimsXMLTagMeta: {
+          attributes: {},
+          tagName: cClaimsObject.xmlTagMeta.childTagName,
+        },
+      })
+    );
 
     // Add in sfr module
     if (type === "Module") {
@@ -703,7 +714,6 @@ export const getSfrMaps = () => {
     handleSnackBarError(e);
     console.log(e);
   }
-  console.log(sfrMap);
   return sfrMap;
 };
 /**

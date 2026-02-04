@@ -29,6 +29,7 @@ export const defaultBasePP = {
     product: "",
     version: "",
     url: "",
+    cPP: false,
     git: {
       url: "",
       branch: "",

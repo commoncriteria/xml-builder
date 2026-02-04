@@ -50,6 +50,7 @@ function XMLExporter({ open, handleOpen, preview }) {
   const { primary, secondary, linkText } = useSelector((state) => state.styling);
   const stateObject = useSelector((state) => state);
   const ppTemplateVersion = useSelector((state) => state.accordionPane.metadata.ppTemplateVersion);
+  const prologTags = useSelector((state) => state.accordionPane.metadata.prologTags);
   const ppType = useSelector((state) => state.accordionPane.metadata.ppType); // Ensure ppType is fetched from the Redux store
   const overallObject = useSelector((state) => state.exports.overallObject);
   const formattedXML = useSelector((state) => state.exports.formattedXML);
@@ -104,6 +105,7 @@ function XMLExporter({ open, handleOpen, preview }) {
 
   const getSecurityProblemDefinitionSection = () => {
     const securityProblemDefinition = stateObject.threats.securityProblemDefinition;
+    const boilerplate = stateObject.threats.boilerplate;
     const threatsSlice = Object.values(stateObject.threats);
     const objectivesSlice = Object.values(stateObject.objectives);
 
@@ -117,6 +119,7 @@ function XMLExporter({ open, handleOpen, preview }) {
       SET_SECURITY_PROBLEM_DEFINITION_SECTION({
         sfrSections: stateObject.sfrSections,
         securityProblemDefinition: securityProblemDefinition,
+        boilerplate,
         threats: threats,
         assumptions: assumptions,
         objectiveTerms: objectiveTerms,
@@ -393,7 +396,7 @@ function XMLExporter({ open, handleOpen, preview }) {
         SET_CUSTOM_SECTIONS({
           text: editors[section.custom].text,
           title: section.title,
-          selectedSection: section.selectedSection,
+          selectedSection: section.selected_section,
           ppType,
         })
       );
@@ -427,7 +430,35 @@ function XMLExporter({ open, handleOpen, preview }) {
 
   const exportXML = () => {
     try {
-      const doc = create(overallObject);
+      let doc;
+
+      // if state has prolog tags, build export with them at beginning
+      // otherwise, build as usual so default prolog tags show
+      if (prologTags?.xmlDeclaration || prologTags?.prologNodes) {
+        const rootDoc = create(overallObject); // doc based on overallObject
+        doc = create(); // empty doc shell
+
+        // <?xml>
+        if (prologTags?.xmlDeclaration) {
+          doc.dec(prologTags.xmlDeclaration);
+        }
+
+        // replay prolog nodes in order
+        for (const item of prologTags?.prologNodes ?? []) {
+          if (item.kind === "pi") {
+            // <?target data?>
+            doc.ins(item.target, item.data);
+          } else if (item.kind === "comment") {
+            // <!-- data -->
+            doc.com(item.data);
+          }
+        }
+
+        // import overallObject doc into doc shell that has prolog tags
+        doc.import(rootDoc.root());
+      } else {
+        doc = create(overallObject);
+      }
 
       // xmlbuilder2 escapes all xml tags that are stored as text, so we need to "unescape" them
       let txt = document.createElement("textarea");
@@ -450,11 +481,8 @@ function XMLExporter({ open, handleOpen, preview }) {
       xmlString = xmlString.replace(/"\s*\n\s*</g, '"<');
       xmlString = xmlString.replace(/>\s*\n\s*"/g, '>"');
 
-      // remove spaces or newlines before period
-      xmlString = xmlString.replace(/\s+\./g, ".");
-
-      // remove spaces or newlines before commas
-      xmlString = xmlString.replace(/\s+,/g, ",");
+      // remove whitespace before punctuation
+      xmlString = xmlString.replace(/\s+([:;,.])/g, "$1");
 
       // remove newlines right after "[" or "("
       xmlString = xmlString.replace(/([\[\(])\s*\n\s*/g, "$1");
@@ -465,21 +493,49 @@ function XMLExporter({ open, handleOpen, preview }) {
       // remove spaces or newlines between ^ and <assignable> tag
       xmlString = xmlString.replace(/\^\s+(<assignable)/g, "^$1");
 
-      // remove spaces or newlines between style tags and open/close selectables tag
+      // Remove whitespace/newlines only between </assignable> and </selectable>
+      xmlString = xmlString.replace(/(<\/assignable>)\s*(<\/selectable>)/g, "$1$2");
+
+      // Remove whitespace or newlines between </selectables> and a dash
+      xmlString = xmlString.replace(/(<\/selectables>)\s*-\s*/g, "$1-");
+
+      // Remove spaces or newlines between style tags and closing selectables tag
       // allow optional namespace prefix (e.g., h:i) before the tag name
       const nsPrefix = "(?:[A-Za-z]+:)?";
       const styleTagPattern = `${nsPrefix}(?:${style_tags.join("|")})`;
-      const openAdj = new RegExp(`(<${styleTagPattern}\\b[^>]*>)\\s*(<selectables\\b)`, "g");
       const closeAdj = new RegExp(`(</selectables>)\\s*(</${styleTagPattern}>)`, "g");
       xmlString = xmlString.replace(/\[(?:[\s\S]*?)\]/g, (block) => {
         return (
           block
-            // e.g. <h:i>\n  <selectables>  =>  <h:i><selectables>
-            .replace(openAdj, "$1$2")
-            // e.g. </selectables>\n</h:i>    =>  </selectables></h:i>
+            // e.g. </selectables>\n</h:i>  =>  </selectables></h:i>
             .replace(closeAdj, "$1$2")
         );
       });
+
+      // Remove whitespace between style tags and text if the style tag is preceded by an opening bracket: '(,[,{'
+      // eg. [<h:i> when the  => [<h:i>when the
+      xmlString = xmlString.replace(new RegExp(`([\\[({]<${styleTagPattern}(?:\\s[^>]*)?>)\\s+`, "g"), "$1");
+
+      // Remove whitespace/newlines between closing style tags and closing </selectable>
+      // e.g. </h:i>\n</selectable>  =>  </h:i></selectable>
+      const closeStyleToSelectable = new RegExp(`(</${nsPrefix}(?:${style_tags.join("|")})\\s*>)\\s+(</selectable\\s*>)`, "gi");
+      xmlString = xmlString.replace(closeStyleToSelectable, "$1$2");
+
+      // Ensure space between opening style tags and <selectables>
+      // eg. <h:b><selectables> =>  <h:b> <selectables>
+      // to ensure space between the text and the [selection: in the html
+      const styleToSelectables = new RegExp(`(<${styleTagPattern}\\b[^>]*>)(<selectables\\b)`, "g");
+      xmlString = xmlString.replace(styleToSelectables, "$1 $2");
+
+      // Remove spaces between closing </selectables> and closing styling tag
+      // eg. </selectables> </h:b>  =>  </selectables></h:b>
+      const closeSelectableToStyle = new RegExp(`(</selectables\\s*>)\\s+(</${nsPrefix}(?:${style_tags.join("|")})\\s*>)`, "gi");
+      xmlString = xmlString.replaceAll(closeSelectableToStyle, "$1$2");
+
+      // Remove whitespace between closing </assignable> and closing style tag
+      // e.g. </assignable> </h:b>  =>  </assignable></h:b>
+      const closeAssignableToStyle = new RegExp(`(</assignable>)\\s+(</${nsPrefix}(?:${style_tags.join("|")})\\s*>)`, "gi");
+      xmlString = xmlString.replace(closeAssignableToStyle, "$1$2");
 
       // Flip this to true at top of file if we don't want file downloads
       if (preview) {

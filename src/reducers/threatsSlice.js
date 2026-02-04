@@ -3,6 +3,7 @@ import { v4 as uuidv4 } from "uuid";
 
 const initialState = {
   securityProblemDefinition: "",
+  boilerplate: "",
 };
 
 export const threatsSlice = createSlice({
@@ -11,6 +12,9 @@ export const threatsSlice = createSlice({
   reducers: {
     UPDATE_MAIN_SECURITY_PROBLEM_DEFINITION: (state, action) => {
       state.securityProblemDefinition = action.payload.newDefinition;
+    },
+    UPDATE_BOILERPLATE_FLAG: (state, action) => {
+      state.boilerplate = action.payload.boilerplate;
     },
     CREATE_THREAT_SECTION: (state, action) => {
       let newId = uuidv4();
@@ -461,6 +465,7 @@ export const threatsSlice = createSlice({
 // Action creators are generated for each case reducer function
 export const {
   UPDATE_MAIN_SECURITY_PROBLEM_DEFINITION,
+  UPDATE_BOILERPLATE_FLAG,
   CREATE_THREAT_SECTION,
   UPDATE_THREAT_SECTION_TITLE,
   UPDATE_THREAT_SECTION_DEFINITION,

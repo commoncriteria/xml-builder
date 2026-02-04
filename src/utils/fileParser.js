@@ -505,8 +505,9 @@ export const getAllThreats = (threat_description_section, ppType) => {
  *   }
  * }>}
  */
-export const getAllAssumptions = (domNode) => {
-  let assumption_tags = findAllByTagName("assumption", domNode);
+export const getAllAssumptions = (assumptions_section) => {
+  let assumption_description = parseRichTextChildren(assumptions_section);
+  let assumption_tags = findAllByTagName("assumption", assumptions_section);
   let assumptions = new Array();
 
   assumption_tags.forEach((assumption) => {
@@ -536,9 +537,13 @@ export const getAllAssumptions = (domNode) => {
         });
       });
 
+      let consistency_rationale = findAllByTagName("consistency-rationale", assumption);
+      consistency_rationale = consistency_rationale.length !== 0 ? parseRichTextChildren(consistency_rationale[0]) : "";
+
       assumptions.push({
         name: name,
         definition: description,
+        consistency_rationale,
         securityObjectives: securityObjectives,
         xmlTagMeta: {
           tagName: assumption.tagName,
@@ -550,7 +555,7 @@ export const getAllAssumptions = (domNode) => {
     }
   });
 
-  return assumptions;
+  return { assumption_description, assumptions };
 };
 
 /**
@@ -574,51 +579,62 @@ export const getAllAssumptions = (domNode) => {
  * }>}
  */
 export const getAllOSPs = (domNode) => {
-  let osp_tags = findAllByTagName("OSP", domNode);
   let OSPs = new Array();
+  let boilerplate = null;
 
-  osp_tags.forEach((osp) => {
-    let securityObjectives = new Array();
+  let ospSection = findAllByTagName("OSPs", domNode)[0];
 
-    if (osp.nodeType === Node.ELEMENT_NODE && osp.tagName === "OSP") {
-      let description = findAllByTagName("description", osp);
-      description = description.length !== 0 ? description[0].textContent : "";
-      let name = osp.getAttribute("name");
+  if (ospSection) {
+    boilerplate = ospSection.parentElement?.getAttribute("boilerplate");
+    if (ospSection.children.length != 0) {
+      Array.from(ospSection.children).forEach((osp) => {
+        let securityObjectives = new Array();
 
-      let objectives = findAllByTagName("objective-refer", osp);
-      objectives.forEach((objective) => {
-        let objective_name = objective.getAttribute("ref");
+        if (osp.nodeType === Node.ELEMENT_NODE && osp.tagName === "OSP") {
+          if (osp.parentElement?.hasAttribute("boilerplate")) {
+            boilerplate = osp.parentElement.getAttribute("boilerplate");
+          }
 
-        let rationale = findAllByTagName("rationale", objective);
-        rationale = rationale.length !== 0 ? rationale[0].textContent : "";
+          let description = findAllByTagName("description", osp);
+          description = description.length !== 0 ? description[0].textContent : "";
+          let name = osp.getAttribute("name");
 
-        securityObjectives.push({
-          name: objective_name,
-          rationale: rationale,
-          xmlTagMeta: {
-            tagName: "objective-refer",
-            attributes: {
-              ref: objective_name,
-            },
-          },
-        });
-      });
+          let objectives = findAllByTagName("objective-refer", osp);
+          objectives.forEach((objective) => {
+            let objective_name = objective.getAttribute("ref");
 
-      OSPs.push({
-        name: name,
-        definition: description,
-        securityObjectives: securityObjectives,
-        xmlTagMeta: {
-          tagName: osp.tagName,
-          attributes: {
+            let rationale = findAllByTagName("rationale", objective);
+            rationale = rationale.length !== 0 ? rationale[0].textContent : "";
+
+            securityObjectives.push({
+              name: objective_name,
+              rationale: rationale,
+              xmlTagMeta: {
+                tagName: "objective-refer",
+                attributes: {
+                  ref: objective_name,
+                },
+              },
+            });
+          });
+
+          OSPs.push({
             name: name,
-          },
-        },
+            definition: description,
+            securityObjectives: securityObjectives,
+            xmlTagMeta: {
+              tagName: osp.tagName,
+              attributes: {
+                name: name,
+              },
+            },
+          });
+        }
       });
     }
-  });
+  }
 
-  return OSPs;
+  return { boilerplate, OSPs };
 };
 
 /**
@@ -894,9 +910,79 @@ export const getCustomIntroSection = (introSection) => {
   });
 
   const title = introSection.getAttribute("title");
-  const text = parseRichTextChildren(introSection);
+  const text = escapeXmlTags(getNodeContentWithTags(introSection));
 
   return { title, text, xmlTagMeta, node: introSection };
+};
+
+/**
+ * This function gets the XML prolog tags (processing instructions prefixed with ?)
+ * and the XML declaration (from raw XML text).
+ *
+ * @param {Node} domNode
+ * @param {string} xmlString
+ * @returns {{
+ *   xmlDeclaration: Object|null,
+ *   prologNodes: Array<
+ *     | { kind: "pi", target: string, data: string }
+ *     | { kind: "comment", data: string }
+ *   >
+ * }}
+ */
+export const getPrologTags = (domNode, xmlString) => {
+  const prologNodes = [];
+  for (const node of Array.from(domNode.childNodes)) {
+    if (node.nodeType === Node.PROCESSING_INSTRUCTION_NODE) {
+      // In the browser DOM, PI has `target` and `data`
+      prologNodes.push({
+        kind: "pi",
+        target: node.target,
+        data: node.data ?? "",
+      });
+    } else if (node.nodeType === Node.COMMENT_NODE) {
+      // Keep comments too (including those that contain a commented-out PI)
+      prologNodes.push({
+        kind: "comment",
+        data: node.data ?? "",
+      });
+    }
+  }
+
+  return {
+    xmlDeclaration: getXmlDeclaration(xmlString),
+    prologNodes,
+  };
+};
+
+/**
+ * Get XML declaration attributes from an XML string.
+ * NOTE: XML declaration is not part of the DOM and must be extracted from raw XML text.
+ *
+ * @param {string} xmlString
+ * @returns {Object|null} e.g. { version: "1.0", encoding: "utf-8" }
+ */
+export const getXmlDeclaration = (xmlString) => {
+  if (!xmlString) return null;
+
+  // Match the full XML declaration
+  const match = xmlString.match(/^<\?xml\s+[^?]+\?>/i);
+  if (!match) return null;
+
+  const xmlDecl = match[0];
+
+  // Strip '<?xml' and '?>'
+  const inner = xmlDecl.replace(/^<\?xml\s+/i, "").replace(/\?>$/, "");
+
+  const attrs = {};
+  const attrRegex = /([a-zA-Z_:][\w:.-]*)\s*=\s*"([^"]*)"/g;
+
+  let m;
+  while ((m = attrRegex.exec(inner)) !== null) {
+    const [, key, value] = m;
+    attrs[key] = value;
+  }
+
+  return attrs;
 };
 
 /**
@@ -964,7 +1050,12 @@ export const getXmlData = (domNode, ppType, ppVersion) => {
               masterObject.intro.push({
                 compliantTOE: { ...getCompliantTOE(introSection, ppType), xmlTagMeta },
               });
-            } else if (introSection.localName === "Use_Cases" || introSection.localName === "TOE_Usage" || hasAttribute(introSection, "title", "Use Cases")) {
+            } else if (
+              introSection.localName === "Use_Cases" ||
+              introSection.localName === "TOE_Usage" ||
+              introSection.localName === "Use-Cases" ||
+              hasAttribute(introSection, "title", "Use Cases")
+            ) {
               masterObject.intro.push({
                 useCaseDescription: getUseCaseDescription(introSection),
               });
@@ -1261,6 +1352,8 @@ export const getCompliantTOE = (toeSection, ppType) => {
             } else {
               additionalText += content;
             }
+          } else if (tagName === "div") {
+            toe_overview += getNodeContent(toeChild);
           }
         } else if (toeChild.nodeType === Node.TEXT_NODE) {
           const text = removeWhitespace(escapeLTSign(toeChild.textContent));
@@ -1278,7 +1371,11 @@ export const getCompliantTOE = (toeSection, ppType) => {
         if (subsection.nodeType === Node.ELEMENT_NODE) {
           if (subsection.getAttribute("title") === "TOE Boundary" || subsection.localName.toLowerCase() === "toe_boundary") {
             toe_boundary = parseRichTextChildren(subsection);
-          } else if (subsection.localName.toLowerCase() === "toe_platform") {
+          } else if (
+            subsection.getAttribute("title") === "TOE Platform" ||
+            subsection.getAttribute("id") === "TOEplatform" ||
+            subsection.localName.toLowerCase() === "toe_platform"
+          ) {
             toe_platform = parseRichTextChildren(subsection);
           } else if (
             subsection.localName.toLowerCase() === "toe_operational_environment" ||
@@ -2013,6 +2110,8 @@ export const getBasePPs = (domNode) => {
 
     const secFuncReqDir = findAllByTagName("sec-func-req-dir", basePP)[0];
 
+    const cPP = Boolean(findAllByTagName("cPP", basePP)[0]);
+
     // Get additional-sfrs if it exists
     const additionalSfrsNode = findAllByTagName("additional-sfrs", basePP)[0];
     const hasAdditionalSfrs = additionalSfrsNode && additionalSfrsNode.childNodes.length > 0; // Only care about non-empty tags
@@ -2146,6 +2245,7 @@ export const getBasePPs = (domNode) => {
         short: basePP.getAttribute("short") || "",
         version: basePP.getAttribute("version") || "",
         url: getFirstTagText("url", basePP),
+        cPP,
         git: {
           url: gitUrl,
           branch: gitBranch,
@@ -2623,35 +2723,51 @@ export const getSFRs = (domNode, extCompDefMap, platformObject, ppType) => {
         }
 
         // Get selection enabling id
-        if (isSelBased) {
+        if (isSelBased || implementationDependent) {
           // Find all dependencies (attributes in xml are totally inconsistent)
-          const dependsAttributes = ["on", "and", "on-se1", "on1", "on2", "on3", "on4", "on5", "on-sel", "also", "on-incl", "on-use", "on-uc", "on-fcomp"];
+          const dependsAttributes = [
+            "on",
+            "and",
+            "on-se1",
+            "on1",
+            "on2",
+            "on3",
+            "on4",
+            "on5",
+            "on-sel",
+            "also",
+            "on-incl",
+            "on-use",
+            "on-uc",
+            "on-fcomp",
+            "req",
+            "ids",
+          ];
           let depends = findAllByTagName("depends", component);
 
           if (depends.length !== 0) {
             depends.forEach((depend) => {
               dependsAttributes.forEach((attributeName) => {
                 if (depend.getAttribute(attributeName) !== null) {
-                  if (["on-use", "on-uc"].includes(attributeName.toLowerCase())) {
-                    // Check if use case dependent
-                    useCaseBased = true;
-                    use_cases.push(depend.getAttribute(attributeName));
-                  } else if (attributeName.toLowerCase().includes("on-incl") || attributeName.toLowerCase().includes("on-fcomp")) {
-                    // Check if component dependent
-                    selections.components.push(depend.getAttribute(attributeName));
-                  } else {
-                    const id = depend.getAttribute(attributeName);
-                    const reason = implementObject.filter((x) => x.id === id);
-                    if (attributeName.toLowerCase().includes("on") && reason.length > 0 && reason[0].hasOwnProperty("id") && reason[0].id === id) {
-                      reasons.push(reason[0]);
-                      implementationDependent = true;
+                  if (isSelBased) {
+                    if (["on-use", "on-uc"].includes(attributeName.toLowerCase())) {
+                      // Check if use case dependent
+                      useCaseBased = true;
+                      use_cases.push(depend.getAttribute(attributeName));
+                    } else if (attributeName.toLowerCase().includes("on-incl") || attributeName.toLowerCase().includes("on-fcomp")) {
+                      // Check if component dependent
+                      selections.components.push(depend.getAttribute(attributeName));
                     } else {
+                      const id = depend.getAttribute(attributeName);
                       selections.selections.push(id);
 
                       // Get element ID from parent node
                       let parent = getSelDepParents(domNode, id);
                       selections.elements.push(parent.fElementId);
                     }
+                  } else if (implementationDependent) {
+                    const id = depend.getAttribute(attributeName);
+                    reasons.push(id);
                   }
                 }
               });
@@ -2664,27 +2780,6 @@ export const getSFRs = (domNode, extCompDefMap, platformObject, ppType) => {
                   }
                 });
               }
-            });
-          }
-        }
-
-        // Get implementation dependent
-        if (implementationDependent && !isSelBased) {
-          // Find all dependencies (attributes in xml are totally inconsistent)
-          const dependsAttributes = ["on", "and", "on-se1", "on1", "on2", "on3", "on4", "on5", "on-sel", "also", "on-incl", "on-use", "on-uc"];
-          let depends = findAllByTagName("depends", component);
-
-          if (depends.length !== 0) {
-            depends.forEach((depend) => {
-              dependsAttributes.forEach((attributeName) => {
-                if (depend.getAttribute(attributeName) !== null) {
-                  const id = depend.getAttribute(attributeName);
-                  const reason = implementObject.filter((x) => x.id === id);
-                  if (reason.length > 0 && reason[0].hasOwnProperty("id") && reason[0].id === id) {
-                    reasons.push(reason[0]);
-                  }
-                }
-              });
             });
           }
         }
@@ -2731,6 +2826,7 @@ export const getSFRs = (domNode, extCompDefMap, platformObject, ppType) => {
           let sfrContent = []; // text content in SFR
           let sfrElemUUID = uuidv4();
           let isManagementFunction = false;
+          let hasStatusMarkers = false;
 
           // Dynamically create element name (XML has random id's)
           let elementName = `${component.getAttribute("cc-id")}.${++elem_counter}${iteration_id}`; // eg. fcs_ckm.1.1
@@ -2797,9 +2893,11 @@ export const getSFRs = (domNode, extCompDefMap, platformObject, ppType) => {
             switch (child.nodeType) {
               case Node.ELEMENT_NODE:
                 {
-                  const titleChildTag = child.tagName.toLowerCase();
+                  const titleChildTag = child.localName.toLowerCase();
 
-                  if (titleChildTag === "selectables") {
+                  if (titleChildTag === "br") {
+                    sfrContent.push({ text: "<br/>" });
+                  } else if (titleChildTag === "selectables") {
                     const tabularizeNode = findDirectChildrenByTagName("tabularize", child);
                     if (tabularizeNode.length !== 0) {
                       const result = parseTabularize(child, selectable_id, selectableGroupCounter, component, elementName);
@@ -2809,8 +2907,8 @@ export const getSFRs = (domNode, extCompDefMap, platformObject, ppType) => {
                       // Add all the selectables to masterlist; using Object.assign to prevent/preserve existing data
                       Object.assign(allSelectables, result.allSelectables);
 
-                      // Create the groups
-                      selectableGroups = result.selectableGroups;
+                      // add selectableGroups without overwriting existing
+                      selectableGroups = { ...selectableGroups, ...result.selectableGroups };
 
                       sfrContent.push({ tabularize: result.tabularizeEntry.uuid });
                       sfrElementMeta["tabularize"] = {
@@ -2869,7 +2967,7 @@ export const getSFRs = (domNode, extCompDefMap, platformObject, ppType) => {
                       is_content_pushed: false,
                     };
 
-                    const content = parseRichTextChildren(child, `<${tagName}>`, sfrContent, selectableMeta);
+                    const content = parseRichTextChildren(child, `<${tagName} ${getNodeAttributes(child)}>`, sfrContent, selectableMeta);
 
                     selectable_id = selectableMeta.selectable_id;
                     selectableGroupCounter = selectableMeta.selectableGroupCounter;
@@ -3068,13 +3166,15 @@ export const getSFRs = (domNode, extCompDefMap, platformObject, ppType) => {
                       }
                     }
 
-                    // Add status marker section
-                    managementFunctions.statusMarkers += `${defaultVal} - ${statusMarkers[defaultVal]}<br/>`; // add default value
-                    foundMarkers.forEach((marker) => {
-                      if (marker !== defaultVal) {
-                        managementFunctions.statusMarkers += `${marker} - ${statusMarkers[marker]}<br/>`;
-                      }
-                    });
+                    // Add status marker section - only if it is not already in the XML
+                    if (!hasStatusMarkers) {
+                      managementFunctions.statusMarkers += `${defaultVal} - ${statusMarkers[defaultVal]}<br/>`; // add default value
+                      foundMarkers.forEach((marker) => {
+                        if (marker !== defaultVal) {
+                          managementFunctions.statusMarkers += `${marker} - ${statusMarkers[marker]}<br/>`;
+                        }
+                      });
+                    }
                   }
                 }
 
@@ -3083,6 +3183,15 @@ export const getSFRs = (domNode, extCompDefMap, platformObject, ppType) => {
                 // Check if previous entry is a rich text entry, so you can concatenate
                 const lastElement = sfrContent.slice(-1)[0];
                 const text = escapeLTSign(child.textContent);
+
+                if (text.includes("Status Markers")) {
+                  hasStatusMarkers = true;
+                }
+
+                // Skip closing bracket after management-function-set since it wraps the entire structure
+                if (isManagementFunction && text.trim() === "]") {
+                  break;
+                }
 
                 if (lastElement && lastElement.hasOwnProperty("description")) {
                   let previousText = lastElement["description"];
@@ -3648,6 +3757,10 @@ function parseRichTextChildren(parent, contents = "", sfrContent = [], selectabl
 
         // Add the assignment
         sfrContent.push({ assignment: uuid });
+      } else if (c.localName.toLowerCase() === "center") {
+        contents += `<${c.tagName}${getNodeAttributes(c)}>`;
+        contents = parseRichTextChildren(c, contents, sfrContent, selectableMeta);
+        contents += `</${c.tagName}>`;
       }
     }
   });
@@ -3779,7 +3892,10 @@ function parseTests(testsNode, eA) {
         }
       }
     } else if (node.nodeType === Node.TEXT_NODE) {
-      const text = removeWhitespace(escapeLTSign(node.textContent));
+      // not calling removeWhitespace on here b/c it messes up co-mingled styled + normal text
+      // eg. in MDM, FCS_CKM.1/AKG, has <h:i>p</h:i> and <h:i>q</h:i>, but removing whitespace
+      // puts no space before the and: <h:i>p</h:i>and <h:i>q</h:i>
+      const text = escapeLTSign(node.textContent);
 
       if (text) {
         if (blockState === "intro") {
@@ -3893,9 +4009,6 @@ function parseTestList(eA, testListFromNode, parentTestUUID = null) {
 
         // Replace any open and close br tag variations with <br/>
         test.objective = test.objective.replace(/<br\s*(?:\/>|>\s*<\/br\s*>)/gi, "<br/>");
-
-        // Remove extra spaces between consecutive <br/> tags
-        test.objective = test.objective.replace(/(<br\s*\/?>\s*)+/gi, "<br/>");
 
         eA.tests[testUUID] = test;
         testListForState.testUUIDs.push(testUUID);
@@ -4207,6 +4320,8 @@ function processSelectables(node, selectable_id, selectableGroupCounter, compone
           } else if (childNode.localName.toLowerCase() === "a") {
             const href = childNode.getAttribute("href");
             context.contents += href ? ` <a href="${href}">${childNode.textContent}</a>` : ` <a>${childNode.textContent}</a>`;
+          } else if (childNode.localName.toLowerCase() === "br") {
+            context.contents += `</${childNode.localName}>`;
           }
         }
       }
@@ -4329,7 +4444,7 @@ function parseTabularize(selectablesNode, selectable_id, selectableGroupCounter,
   selectablesNode.childNodes.forEach((child) => {
     if (child.nodeType === Node.ELEMENT_NODE) {
       // doing check for type as there may be comments
-      if (child.nodeName.toLowerCase() === "tabularize") {
+      if (child.localName.toLowerCase() === "tabularize") {
         tabularizeEntry = {
           type: "tabularize",
           uuid,
@@ -4355,9 +4470,9 @@ function parseTabularize(selectablesNode, selectable_id, selectableGroupCounter,
         };
 
         child.childNodes.forEach((tabularizeChild) => {
-          if (["selectcol", "reqtext", "textcol"].includes(tabularizeChild.nodeName.toLowerCase())) {
-            const value = tabularizeChild.textContent;
-            const type = tabularizeChild.nodeName.toLowerCase().replace(" ", "_");
+          if (["selectcol", "reqtext", "textcol"].includes(tabularizeChild.localName.toLowerCase())) {
+            const value = parseRichTextChildren(tabularizeChild);
+            const type = tabularizeChild.localName.toLowerCase().replace(" ", "_");
 
             tabularizeEntry.definition.push({
               value: value,
@@ -4365,13 +4480,13 @@ function parseTabularize(selectablesNode, selectable_id, selectableGroupCounter,
             });
           }
 
-          if (["selectcol", "textcol"].includes(tabularizeChild.nodeName.toLowerCase())) {
+          if (["selectcol", "textcol"].includes(tabularizeChild.localName.toLowerCase())) {
             const headerName = tabularizeChild.textContent;
             const field = toCamelCase(tabularizeChild.textContent);
             const editable = false;
             const resizeable = true;
-            const type = tabularizeChild.nodeName.toLowerCase() === "selectcol" ? "Button" : "Editor";
-            const flex = tabularizeChild.nodeName.toLowerCase() === "selectcol" ? 5 : 3;
+            const type = tabularizeChild.localName.toLowerCase() === "selectcol" ? "Button" : "Editor";
+            const flex = tabularizeChild.localName.toLowerCase() === "selectcol" ? 5 : 3;
 
             // Add as column header
             tabularizeEntry.columns.push({
@@ -4397,12 +4512,12 @@ function parseTabularize(selectablesNode, selectable_id, selectableGroupCounter,
 
         child.childNodes.forEach((selectableChild) => {
           if (selectableChild.nodeType === Node.ELEMENT_NODE) {
-            if (selectableChild.nodeName.toLowerCase() === "col" && columns[childCtr] && columns[childCtr].hasOwnProperty("type")) {
+            if (selectableChild.localName.toLowerCase() === "col" && columns[childCtr] && columns[childCtr].hasOwnProperty("type")) {
               const columnType = columns[childCtr].type;
 
               if (columnType === "textcol") {
                 // column with plain text
-                tabularizeSelectable[toCamelCase(columns[childCtr].value)] = selectableChild.textContent;
+                tabularizeSelectable[toCamelCase(columns[childCtr].value)] = parseRichTextChildren(selectableChild);
               } else if (columnType === "selectcol") {
                 // column with selectables
                 tabularizeSelectable[toCamelCase(columns[childCtr].value)] = [];
@@ -4410,7 +4525,7 @@ function parseTabularize(selectablesNode, selectable_id, selectableGroupCounter,
                 // Iterate through <col> children
                 selectableChild.childNodes.forEach((colChild, idx) => {
                   if (colChild.nodeType === Node.ELEMENT_NODE) {
-                    if (colChild.nodeName.toLowerCase() === "selectables") {
+                    if (colChild.localName.toLowerCase() === "selectables") {
                       const result = processSelectables(colChild, selectable_id, selectableGroupCounter, component, elementName);
                       selectable_id = result.selectable_id;
                       selectableGroupCounter = result.lastGroupCounter;
@@ -4423,7 +4538,7 @@ function parseTabularize(selectablesNode, selectable_id, selectableGroupCounter,
 
                       // Selectables are prefaced with text, add this group to the selections which comes after opening text
                       tabularizeSelectable[toCamelCase(columns[childCtr].value)].push({ selections: result.group.id });
-                    } else if (colChild.nodeName.toLowerCase() === "assignable") {
+                    } else if (colChild.localName.toLowerCase() === "assignable") {
                       let id = child.getAttribute("id");
                       if (!id) {
                         id = `${elementName}_${++selectable_id}`;
@@ -4439,6 +4554,10 @@ function parseTabularize(selectablesNode, selectable_id, selectableGroupCounter,
                         notSelectable: false,
                       };
                       tabularizeSelectable[toCamelCase(columns[childCtr].value)].push({ assignment: uuid });
+                    } else if (style_tags.includes(colChild.localName.toLowerCase())) {
+                      tabularizeSelectable[toCamelCase(columns[childCtr].value)].push({
+                        text: `<${colChild.localName}>${parseRichTextChildren(colChild)}</${colChild.localName}>`,
+                      });
                     }
                   } else if (colChild.nodeType === Node.TEXT_NODE) {
                     tabularizeSelectable[toCamelCase(columns[childCtr].value)].push({ text: removeWhitespace(escapeLTSign(colChild.textContent)) });

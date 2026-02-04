@@ -439,7 +439,6 @@ function AccordionContent({ title, uuid, index, open, metadata, handleMetaDataCo
               </div>
             )}
             {title === "Security Objectives" && SecurityObjectivesSection}
-            {title === "Security Requirements" && SecurityRequirementsSection}
             {custom && CustomSection}
             <slot />
             {title === "Appendix E - Implicitly Satisfied Requirements" && AppendixESection}

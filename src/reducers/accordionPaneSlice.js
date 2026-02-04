@@ -33,6 +33,7 @@ const initialState = {
     revisionHistory: [],
     xmlTagMeta: {},
     customCSS: "",
+    prologTags: {},
   },
   sections: {},
 };

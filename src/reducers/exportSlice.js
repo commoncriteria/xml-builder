@@ -121,8 +121,19 @@ export const exportSlice = createSlice({
       }
     },
     SET_SECURITY_PROBLEM_DEFINITION_SECTION: (state, action) => {
-      const { sfrSections, securityProblemDefinition, threats, assumptions, objectiveTerms, OSPs, ppTemplateVersion, ppType, sfrMaps, accordionSection } =
-        action.payload;
+      const {
+        sfrSections,
+        securityProblemDefinition,
+        boilerplate,
+        threats,
+        assumptions,
+        objectiveTerms,
+        OSPs,
+        ppTemplateVersion,
+        ppType,
+        sfrMaps,
+        accordionSection,
+      } = action.payload;
       const docType = getDocType(ppType);
 
       // Set the security problem definition section
@@ -156,7 +167,10 @@ export const exportSlice = createSlice({
             "!2": " 3.2 Assumptions ",
             "sec:Assumptions": reformattedAssumptions,
             "!3": " 3.3 Organizational Security Policies ",
-            "sec:Organizational_Security_Policies": reformattedOSPs,
+            "sec:Organizational_Security_Policies": {
+              ...(boilerplate ? { "@": { boilerplate } } : {}),
+              "#": reformattedOSPs,
+            },
           };
         } else {
           // If the import has a different tag name
@@ -169,7 +183,10 @@ export const exportSlice = createSlice({
             "!2": " 3.2 Assumptions ",
             "sec:Assumptions": reformattedAssumptions,
             "!3": " 3.3 Organizational Security Policies ",
-            "sec:Organizational_Security_Policies": reformattedOSPs,
+            "sec:Organizational_Security_Policies": {
+              ...(boilerplate ? { "@": { boilerplate } } : {}),
+              "#": reformattedOSPs,
+            },
           };
 
           // Work on the entries array to preserve order
@@ -630,7 +647,6 @@ export const exportSlice = createSlice({
     SET_CONFORMANCE_CLAIMS: (state, action) => {
       const { conformanceClaims, ppType } = action.payload;
       const docType = getDocType(ppType);
-      let sectionTag = conformanceClaims.xmlTagMeta.tagName.length != 0 ? conformanceClaims.xmlTagMeta.tagName : "sec:Conformance_Claims";
       let sectionContent;
 
       if (action.payload.ppTemplateVersion === "Version 3.1") {
@@ -652,25 +668,7 @@ export const exportSlice = createSlice({
         }
       }
 
-      // If the imported xml has a different tagName, use that and replace the placeholder sec:Conformance_Claims object
-      // that is in the base_export_pp_fp.json
-      if (sectionTag != "sec:Conformance_Claims") {
-        // Replace the key in the same position
-        const oldObj = state.overallObject[docType];
-        const newObj = {};
-
-        for (const [key, value] of Object.entries(oldObj)) {
-          if (key === "sec:Conformance_Claims") {
-            newObj[sectionTag] = sectionContent;
-          } else {
-            newObj[key] = value;
-          }
-        }
-
-        state.overallObject[docType] = newObj;
-      } else {
-        state.overallObject[docType][sectionTag] = sectionContent;
-      }
+      state.overallObject[docType]["sec:Conformance_Claims"] = sectionContent;
     },
     SET_SECURITY_REQUIREMENTS: (state, action) => {
       const sfrSections = action.payload.securityRequirements ? deepCopy(action.payload.securityRequirements) : {};
@@ -729,12 +727,6 @@ export const exportSlice = createSlice({
 
                   // Add to implement set and compute at the last sfr section to account for all implement items
                   implementSet = new Set([...implementSet, ...implementSection]);
-                  let formattedImplementSection = [];
-
-                  if (sfrSectionIndex === Object.keys(formItems).length - 1) {
-                    const implementArray = Array.from(implementSet);
-                    formattedImplementSection = formatImplementSection(state, implementArray);
-                  }
 
                   return [
                     { "!": ` ${sectionID} ${title ? title : ""} ` },
@@ -742,7 +734,7 @@ export const exportSlice = createSlice({
                       section: {
                         "@id": id,
                         "@title": title ? title : "",
-                        "#": [definition, formattedExtendedComponentDefinition, formattedComponents, formattedImplementSection],
+                        "#": [definition, formattedExtendedComponentDefinition, formattedComponents],
                       },
                     },
                   ];
@@ -1205,7 +1197,7 @@ const getThreatsAndAssumptionsHelper = (input, objectiveTerms, type) => {
     if (input) {
       let definition = input.definition;
       const reformatted = Object.values(input.terms).map((term) => {
-        const { title, definition, objectives } = term;
+        const { title, definition, objectives, consistencyRationale } = term;
         const reformattedObjectives = objectives.map((objective) => {
           const { uuid, rationale } = objective;
           if (objectiveTerms.hasOwnProperty(uuid)) {
@@ -1218,6 +1210,7 @@ const getThreatsAndAssumptionsHelper = (input, objectiveTerms, type) => {
         return {
           "@name": title,
           description: definition,
+          ...(consistencyRationale && { "consistency-rationale": consistencyRationale }),
           "objective-refer": reformattedObjectives,
         };
       });
@@ -1262,7 +1255,7 @@ const getSecurityObjectives = (terms, objectivesToSFRs, sfrSections) => {
     if (sfrSections) {
       // For Objectives for the TOE
       reformattedJSON = Object.entries(terms).map(([uuid, value]) => {
-        const { title, definition } = value;
+        const { title, definition, consistencyRationale } = value;
         let outputs = [];
         let sfrs = objectivesToSFRs.hasOwnProperty(uuid) ? objectivesToSFRs[uuid] : [];
 
@@ -1291,6 +1284,7 @@ const getSecurityObjectives = (terms, objectivesToSFRs, sfrSections) => {
         return {
           "@name": title,
           description: definition,
+          ...(consistencyRationale && consistencyRationale.length > 0 ? { "consistency-rationale": consistencyRationale } : {}),
           "#": outputs,
         };
       });
@@ -1762,7 +1756,7 @@ const parseElement = (element) => {
   // Management Functions Table
   function parseManagementFunctionsTable(managementFunctions) {
     const { statusMarkers, rows, columns } = managementFunctions;
-    let result = `Status Markers:<br/> ${statusMarkers}<br/>`;
+    let result = statusMarkers !== "" ? `Status Markers:<br/> ${statusMarkers}<br/>` : "";
 
     // Construct the management function set
     const { columnResult, fields } = parseManagementFunctionColumns(columns);
@@ -1979,9 +1973,8 @@ const getComponentSelections = (
         fComponent["@status"] = "feat-based";
       }
       reasons.forEach((reason) => {
-        const { id } = reason;
         let formattedReason = {
-          "@on": id,
+          "@on": reason,
         };
 
         // Add formatted reason
@@ -2482,15 +2475,15 @@ const setConformanceClaimsToCC2022 = (conformanceClaims, ppTemplateVersion) => {
 
   // Format conformance
   formattedConformance[cClaimsXMLTagMeta.tagName] = {
-    "@cc-version": cClaimsXMLTagMeta.attributes["cc-version"].length != 0 ? cClaimsXMLTagMeta.attributes["cc-version"] : "cc-2022r1",
+    "@cc-version": cClaimsXMLTagMeta.attributes?.["cc-version"]?.length != 0 ? cClaimsXMLTagMeta.attributes?.["cc-version"] : "cc-2022r1",
     "@cc-approach":
-      cClaimsXMLTagMeta.attributes["cc-approach"].length != 0
-        ? cClaimsXMLTagMeta.attributes["cc-approach"]
+      cClaimsXMLTagMeta.attributes?.["cc-approach"]?.length != 0
+        ? cClaimsXMLTagMeta.attributes?.["cc-approach"]
         : ppTemplateVersion === "CC2022 Standard"
           ? "standard"
           : "direct-rationale",
     ...(cc_errata !== "N/A" && { "@cc-errata": cc_errata }),
-    ...(cClaimsXMLTagMeta.attributes["display"]?.length != 0 && { "@display": cClaimsXMLTagMeta.attributes["display"] }),
+    ...(cClaimsXMLTagMeta.attributes?.["display"]?.length != 0 && { "@display": cClaimsXMLTagMeta.attributes?.["display"] }),
     "cc-st-conf": stConformance,
     "cc-pt2-conf": part2Conformance,
     "cc-pt3-conf": part3Conformance,
@@ -2536,7 +2529,7 @@ const getSARElements = (initialElements) => {
         let formattedElement = {
           "a-element": {
             "@type": type,
-            "#": [{ title: title }, note ? { note: getNote(note) } : "", { aactivity: aactivity }],
+            "#": [{ title: title }, note ? { note: getNote(note) } : "", ...(aactivity !== "" ? [{ aactivity }] : [])],
           },
         };
 
@@ -2555,7 +2548,7 @@ const getSARElements = (initialElements) => {
 
 const getTitle = (input) => {
   return String(input)
-    .replace(/\([^)]*\)/, "")
+    .replace(/\s*\([^)]*\)\s*$/, "") // Remove the last () portion, since sometimes the term can have () which we don't want to remove
     .trim();
 };
 
@@ -2839,6 +2832,7 @@ const getSFRBasePPs = (basePPs, sfrSections, useCaseMap, platforms, fileType) =>
           product = "",
           short = "",
           version = "",
+          cPP = false,
           url = "",
           git = {
             url: "",
@@ -2859,7 +2853,8 @@ const getSFRBasePPs = (basePPs, sfrSections, useCaseMap, platforms, fileType) =>
             "@product": product,
             "@short": short,
             "@version": version,
-            git: sanitizedGit,
+            ...(sanitizedGit.url && sanitizedGit.branch ? { git: sanitizedGit } : {}),
+            ...(cPP ? { cPP: {} } : {}),
             url,
             "sec-func-req-dir": secFuncReqDir.text,
             "#": [formattedModifiedSfrs, formattedAdditionalSfrs, formattedConsistencyRationale],
@@ -2932,12 +2927,6 @@ const getToeSfrs = (state, toeSfrs, toeAuditTables, useCaseMap, platforms, fileT
 
               // Add to implement set and compute at the last sfr section to account for all implement items
               implementSet = new Set([...implementSet, ...implementSection]);
-              let formattedImplementSection = [];
-
-              if (sfrSectionIndex === Object.keys(formItems).length - 1) {
-                const implementArray = Array.from(implementSet);
-                formattedImplementSection = formatImplementSection(state, implementArray);
-              }
 
               const formattedSection = [
                 { "!": ` ${innerSectionID} ${title ? title : ""} ` },
@@ -2945,7 +2934,7 @@ const getToeSfrs = (state, toeSfrs, toeAuditTables, useCaseMap, platforms, fileT
                   section: {
                     "@title": title ? title : "",
                     ...(id && id.length > 0 ? { "@id": id } : {}),
-                    "#": [formattedClassDescription, definition, formattedExtendedComponentDefinition, formattedComponents, formattedImplementSection],
+                    "#": [formattedClassDescription, definition, formattedExtendedComponentDefinition, formattedComponents],
                   },
                 },
               ];
@@ -3089,8 +3078,8 @@ const generateFormattedToeSfrs = (
 
   function generateAuditTableSection(auditData) {
     const { isAudit = false, section = defaultAudit.section, auditTable = defaultAudit.auditTable } = auditData.audit || {};
-    const isSectionValid = section.id !== "" && section.id !== "";
-    const isAuditTableValid = auditTable.id !== "" && auditTable.table !== "" && auditTable.title !== "";
+    const isSectionValid = section.id !== "";
+    const isAuditTableValid = (auditTable.id !== "" && auditTable.table !== "") || auditTable.title !== "";
 
     if (isAudit && isSectionValid && isAuditTableValid) {
       return {
@@ -3103,7 +3092,7 @@ const generateFormattedToeSfrs = (
               "audit-table": {
                 "@id": auditTable.id,
                 "@table": auditTable.table,
-                "@title": auditTable.title,
+                ...(auditTable.title && auditTable.title.trim() !== "" ? { "@title": auditTable.title } : {}),
               },
             },
           ],
@@ -3111,7 +3100,6 @@ const generateFormattedToeSfrs = (
       };
     }
   }
-
   return formattedSfrSections;
 };
 
