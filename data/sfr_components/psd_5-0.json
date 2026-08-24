@@ -1,0 +1,3459 @@
+{
+  "FAU_GEN.1": {
+    "title": "Audit Data Generation",
+    "cc_id": "FAU_GEN.1",
+    "iteration_id": "",
+    "xml_id": "",
+    "definition": "",
+    "optional": false,
+    "objective": false,
+    "dependsComments": {},
+    "dependsExternalDocs": {},
+    "selectionBased": false,
+    "selections": {
+      "components": [],
+      "elements": [],
+      "selections": []
+    },
+    "useCaseBased": false,
+    "useCases": [],
+    "implementationDependent": true,
+    "reasons": [
+      "management"
+    ],
+    "tableOpen": false,
+    "objectives": [],
+    "extendedComponentDefinition": {
+      "audit": null,
+      "componentLeveling": null,
+      "dependencies": null,
+      "managementFunction": null,
+      "toggle": false
+    },
+    "auditEvents": {
+      "6244e519-2139-471c-8b8f-3a63a480f5c8": {
+        "items": [],
+        "optional": false
+      }
+    },
+    "open": false,
+    "elements": {
+      "c7389293-533b-4a13-aac7-ea88647ef46a": {
+        "elementXMLID": "fau-gen-1e1",
+        "selectableGroups": {},
+        "title": [
+          {
+            "description": "\n           The TSF shall be able to generate audit data of the following auditable events:\n            <ol type=\"a\"><li>Start-up and shutdown of the audit functions;</li> <li>All auditable events for the [<i>not specified</i>] level of audit;</li> <li>[<i>administrator login</i></li> <li><i>administrator logout</i></li> <li><i>self-test failures</i></li> <li><i>peripheral device acceptance and rejections</i></li> <li>"
+          },
+          {
+            "assignment": "3778ed70-9a71-4b59-83e4-922cbdaff539"
+          },
+          {
+            "description": "</li></ol>"
+          }
+        ],
+        "selectables": {
+          "3778ed70-9a71-4b59-83e4-922cbdaff539": {
+            "id": "fau_gen.1.1_1",
+            "leadingText": "",
+            "description": "all administrative functions claimed in FMT_MOF.1 and FMT_SMF.1]",
+            "trailingText": "",
+            "assignment": true,
+            "exclusive": false,
+            "notSelectable": false
+          }
+        },
+        "isManagementFunction": false,
+        "managementFunctions": {
+          "tableName": "Management Functions",
+          "statusMarkers": "",
+          "rows": [],
+          "columns": [
+            {
+              "headerName": "#",
+              "field": "rowNum",
+              "editable": false,
+              "resizable": true,
+              "type": "Index",
+              "flex": 0.5
+            },
+            {
+              "headerName": "ID",
+              "field": "id",
+              "editable": true,
+              "resizable": true,
+              "type": "Editor",
+              "flex": 1
+            },
+            {
+              "headerName": "Management Function",
+              "field": "textArray",
+              "editable": false,
+              "resizable": true,
+              "type": "Button",
+              "flex": 2
+            }
+          ]
+        },
+        "note": ""
+      },
+      "dc9adfc5-fa52-40fb-a8bb-b1ee11171a36": {
+        "elementXMLID": "fau-gen-1e2",
+        "selectableGroups": {},
+        "title": [
+          {
+            "description": "\n           The TSF shall record within the audit data at least the following information:\n           <ol  type=\"a\"><li>Date and time of the auditable event, type of event, subject identity (if applicable), and the\n               outcome (success or failure) of the event;</li> <li>For each auditable event type, based on the auditable event definitions of the functional\n               components included in the PP, PP-Module, functional package, or ST, [<i>no other\n               information</i>].</li></ol>"
+          }
+        ],
+        "selectables": {},
+        "isManagementFunction": false,
+        "managementFunctions": {
+          "tableName": "Management Functions",
+          "statusMarkers": "",
+          "rows": [],
+          "columns": [
+            {
+              "headerName": "#",
+              "field": "rowNum",
+              "editable": false,
+              "resizable": true,
+              "type": "Index",
+              "flex": 0.5
+            },
+            {
+              "headerName": "ID",
+              "field": "id",
+              "editable": true,
+              "resizable": true,
+              "type": "Editor",
+              "flex": 1
+            },
+            {
+              "headerName": "Management Function",
+              "field": "textArray",
+              "editable": false,
+              "resizable": true,
+              "type": "Button",
+              "flex": 2
+            }
+          ]
+        },
+        "note": "\n           If a peripheral device is rejected due to its incompatibility with the peripheral\n           interface, then this rejection need not be audited.\n         "
+      }
+    },
+    "invisible": false,
+    "evaluationActivities": {
+      "dc9adfc5-fa52-40fb-a8bb-b1ee11171a36": {
+        "hasLevelSet": false,
+        "tss": "The evaluator shall verify that the TSS describes the audit functionality\n           including which events are audited, what information is saved in each record\n           type, how the records are stored, the conditions in which audit records are\n           overwritten, and the means by which the audit records may be read.\n           Although the TOE may provide an interface for an administrator to view the\n           audit records, this is not a requirement.",
+        "introduction": "",
+        "guidance": "\n           The evaluator shall verify that the operational guidance provides\n           instructions on how the audit logs can be viewed as well as any information\n           needed to interpret the audit logs.\n         ",
+        "testIntroduction": "\n           The evaluator shall perform each of the auditable functions to succeed, and\n           where possible, to fail. The evaluator shall use the means described in the\n           TSS to access the audit records and verify that each of the events has been\n           recorded, with all of the expected information.\n         ",
+        "testClosing": "",
+        "testLists": {},
+        "tests": {},
+        "platformMap": null,
+        "isNoTest": false,
+        "noTest": "",
+        "customea": {
+          "text": "",
+          "nameAttribute": "Isolation"
+        }
+      }
+    },
+    "modifiedSfr": false,
+    "additionalSfr": false,
+    "consistencyRationale": null,
+    "notNew": null,
+    "xPathDetails": {},
+    "classDescription": "",
+    "sfrType": "",
+    "compUUID": "e630e230-f64a-4aee-bf2d-3ffbe65d86b3"
+  },
+  "FDP_APC_EXT.1": {
+    "title": "Active PSD Connections",
+    "cc_id": "FDP_APC_EXT.1",
+    "iteration_id": "",
+    "xml_id": "",
+    "definition": "",
+    "optional": false,
+    "objective": false,
+    "dependsComments": {},
+    "dependsExternalDocs": {},
+    "selectionBased": false,
+    "selections": {
+      "components": [],
+      "elements": [],
+      "selections": []
+    },
+    "useCaseBased": false,
+    "useCases": [],
+    "implementationDependent": false,
+    "reasons": [],
+    "tableOpen": false,
+    "objectives": [],
+    "extendedComponentDefinition": {
+      "audit": "There are no auditable events foreseen.",
+      "componentLeveling": "restricts the flow of data through the TSF.",
+      "dependencies": "No dependencies",
+      "managementFunction": "No specific management functions are identified.",
+      "toggle": true
+    },
+    "auditEvents": {
+      "e4dbed47-5fd9-4995-ae03-adeb87e24c52": {
+        "items": [],
+        "optional": false
+      }
+    },
+    "open": false,
+    "elements": {
+      "d210d969-d019-4089-aa06-6748cb4995e9": {
+        "elementXMLID": "fdp-apc-ext-1e1",
+        "selectableGroups": {},
+        "title": [
+          {
+            "text": " The TSF shall route user data only to or from the interfaces selected by the\n              user. \n            "
+          }
+        ],
+        "selectables": {},
+        "isManagementFunction": false,
+        "managementFunctions": {
+          "tableName": "Management Functions",
+          "statusMarkers": "",
+          "rows": [],
+          "columns": [
+            {
+              "headerName": "#",
+              "field": "rowNum",
+              "editable": false,
+              "resizable": true,
+              "type": "Index",
+              "flex": 0.5
+            },
+            {
+              "headerName": "ID",
+              "field": "id",
+              "editable": true,
+              "resizable": true,
+              "type": "Editor",
+              "flex": 1
+            },
+            {
+              "headerName": "Management Function",
+              "field": "textArray",
+              "editable": false,
+              "resizable": true,
+              "type": "Button",
+              "flex": 2
+            }
+          ]
+        },
+        "note": ""
+      },
+      "1b290fdc-ec0e-47d7-b016-7e66cacd4b06": {
+        "elementXMLID": "fdp-apc-ext-1e2",
+        "selectableGroups": {},
+        "title": [
+          {
+            "text": "The TSF shall ensure that no data flows between connected computers whether the\n              TOE is powered on or powered off."
+          }
+        ],
+        "selectables": {},
+        "isManagementFunction": false,
+        "managementFunctions": {
+          "tableName": "Management Functions",
+          "statusMarkers": "",
+          "rows": [],
+          "columns": [
+            {
+              "headerName": "#",
+              "field": "rowNum",
+              "editable": false,
+              "resizable": true,
+              "type": "Index",
+              "flex": 0.5
+            },
+            {
+              "headerName": "ID",
+              "field": "id",
+              "editable": true,
+              "resizable": true,
+              "type": "Editor",
+              "flex": 1
+            },
+            {
+              "headerName": "Management Function",
+              "field": "textArray",
+              "editable": false,
+              "resizable": true,
+              "type": "Button",
+              "flex": 2
+            }
+          ]
+        },
+        "note": ""
+      },
+      "6ea8948d-dacf-4cb2-b8d0-164fba79d864": {
+        "elementXMLID": "fdp-apc-ext-1e3",
+        "selectableGroups": {},
+        "title": [
+          {
+            "text": "The TSF shall ensure that no data transits the TOE when the TOE is powered off."
+          }
+        ],
+        "selectables": {},
+        "isManagementFunction": false,
+        "managementFunctions": {
+          "tableName": "Management Functions",
+          "statusMarkers": "",
+          "rows": [],
+          "columns": [
+            {
+              "headerName": "#",
+              "field": "rowNum",
+              "editable": false,
+              "resizable": true,
+              "type": "Index",
+              "flex": 0.5
+            },
+            {
+              "headerName": "ID",
+              "field": "id",
+              "editable": true,
+              "resizable": true,
+              "type": "Editor",
+              "flex": 1
+            },
+            {
+              "headerName": "Management Function",
+              "field": "textArray",
+              "editable": false,
+              "resizable": true,
+              "type": "Button",
+              "flex": 2
+            }
+          ]
+        },
+        "note": ""
+      },
+      "cce50586-0a7c-42aa-aa9a-3fcccaa09fc0": {
+        "elementXMLID": "fdp-apc-ext-1e4",
+        "selectableGroups": {},
+        "title": [
+          {
+            "text": "The TSF shall ensure that no data transits the TOE when the TOE is in a failure\n              state."
+          }
+        ],
+        "selectables": {},
+        "isManagementFunction": false,
+        "managementFunctions": {
+          "tableName": "Management Functions",
+          "statusMarkers": "",
+          "rows": [],
+          "columns": [
+            {
+              "headerName": "#",
+              "field": "rowNum",
+              "editable": false,
+              "resizable": true,
+              "type": "Index",
+              "flex": 0.5
+            },
+            {
+              "headerName": "ID",
+              "field": "id",
+              "editable": true,
+              "resizable": true,
+              "type": "Editor",
+              "flex": 1
+            },
+            {
+              "headerName": "Management Function",
+              "field": "textArray",
+              "editable": false,
+              "resizable": true,
+              "type": "Button",
+              "flex": 2
+            }
+          ]
+        },
+        "note": ""
+      }
+    },
+    "invisible": false,
+    "evaluationActivities": {
+      "cce50586-0a7c-42aa-aa9a-3fcccaa09fc0": {
+        "hasLevelSet": false,
+        "tss": "The evaluator shall verify that the TSS describes the conditions under which\n               the TOE enters a failure state.",
+        "introduction": "",
+        "guidance": "\n               The evaluator shall verify that the operational user guidance describes how a\n               user knows when the TOE enters a failure state.\n             ",
+        "testIntroduction": "",
+        "testClosing": "",
+        "testLists": {},
+        "tests": {},
+        "platformMap": null,
+        "isNoTest": false,
+        "noTest": "",
+        "customea": {
+          "text": "\n               The evaluator shall review the Isolation Documentation and Assessment as\n               described in Appendix D of this PP and ensure that it adequately describes\n               the isolation concepts and implementation in the TOE and why it can be\n               relied upon to provide proper isolation between connected computers\n               whether the TOE is powered on or powered off.\n             ",
+          "nameAttribute": "Isolation"
+        }
+      }
+    },
+    "modifiedSfr": false,
+    "additionalSfr": false,
+    "consistencyRationale": "",
+    "notNew": null,
+    "xPathDetails": {},
+    "classDescription": "",
+    "sfrType": "",
+    "compUUID": "ecca5f6b-7a71-4575-8a7a-8d4accbaa587"
+  },
+  "FDP_PDC_EXT.1": {
+    "title": "Peripheral Device Connection",
+    "cc_id": "FDP_PDC_EXT.1",
+    "iteration_id": "",
+    "xml_id": "",
+    "definition": "",
+    "optional": false,
+    "objective": false,
+    "dependsComments": {},
+    "dependsExternalDocs": {},
+    "selectionBased": false,
+    "selections": {
+      "components": [],
+      "elements": [],
+      "selections": []
+    },
+    "useCaseBased": false,
+    "useCases": [],
+    "implementationDependent": false,
+    "reasons": [],
+    "tableOpen": false,
+    "objectives": [],
+    "extendedComponentDefinition": {
+      "audit": "The following actions should be auditable if FAU_GEN.1 Audit Data Generation is included in the\n            PP/ST:<ul><li>Acceptance or rejection of a peripheral</li></ul>",
+      "componentLeveling": "requires the TSF to limit external connections to only\n            authorized devices.",
+      "dependencies": "No dependencies",
+      "managementFunction": "No specific management functions are identified.",
+      "toggle": true
+    },
+    "auditEvents": {
+      "03619bc4-9c56-4b43-87ac-cc9e8f4e0596": {
+        "description": "Self-test failures",
+        "items": [
+          {
+            "info": "None",
+            "optional": false
+          }
+        ],
+        "optional": false
+      }
+    },
+    "open": false,
+    "elements": {
+      "e91d3f91-4759-4aff-a156-cf5d67074ea4": {
+        "elementXMLID": "fdp-pdc-ext-1e1",
+        "selectableGroups": {},
+        "title": [
+          {
+            "text": "\n              The TSF shall reject connections with unauthorized devices upon TOE power up\n              and upon connection of a peripheral device to a powered\u2010on TOE.\n            "
+          }
+        ],
+        "selectables": {},
+        "isManagementFunction": false,
+        "managementFunctions": {
+          "tableName": "Management Functions",
+          "statusMarkers": "",
+          "rows": [],
+          "columns": [
+            {
+              "headerName": "#",
+              "field": "rowNum",
+              "editable": false,
+              "resizable": true,
+              "type": "Index",
+              "flex": 0.5
+            },
+            {
+              "headerName": "ID",
+              "field": "id",
+              "editable": true,
+              "resizable": true,
+              "type": "Editor",
+              "flex": 1
+            },
+            {
+              "headerName": "Management Function",
+              "field": "textArray",
+              "editable": false,
+              "resizable": true,
+              "type": "Button",
+              "flex": 2
+            }
+          ]
+        },
+        "note": ""
+      },
+      "5101f379-16eb-41f8-abcc-42e168922923": {
+        "elementXMLID": "fdp-pdc-ext-1e2",
+        "selectableGroups": {},
+        "title": [
+          {
+            "text": "\n                The TSF shall reject connections with devices presenting unauthorized\n                interface protocols upon TOE power up and upon connection of a peripheral\n                device to a powered\u2010on TOE.\n              "
+          }
+        ],
+        "selectables": {},
+        "isManagementFunction": false,
+        "managementFunctions": {
+          "tableName": "Management Functions",
+          "statusMarkers": "",
+          "rows": [],
+          "columns": [
+            {
+              "headerName": "#",
+              "field": "rowNum",
+              "editable": false,
+              "resizable": true,
+              "type": "Index",
+              "flex": 0.5
+            },
+            {
+              "headerName": "ID",
+              "field": "id",
+              "editable": true,
+              "resizable": true,
+              "type": "Editor",
+              "flex": 1
+            },
+            {
+              "headerName": "Management Function",
+              "field": "textArray",
+              "editable": false,
+              "resizable": true,
+              "type": "Button",
+              "flex": 2
+            }
+          ]
+        },
+        "note": ""
+      },
+      "1c662d93-4483-4b43-9ac1-6a60fa8e5886": {
+        "elementXMLID": "fdp-pdc-ext-1e3",
+        "selectableGroups": {},
+        "title": [
+          {
+            "text": "\n                The TOE shall have no external interfaces other than those claimed by the TSF.\n              "
+          }
+        ],
+        "selectables": {},
+        "isManagementFunction": false,
+        "managementFunctions": {
+          "tableName": "Management Functions",
+          "statusMarkers": "",
+          "rows": [],
+          "columns": [
+            {
+              "headerName": "#",
+              "field": "rowNum",
+              "editable": false,
+              "resizable": true,
+              "type": "Index",
+              "flex": 0.5
+            },
+            {
+              "headerName": "ID",
+              "field": "id",
+              "editable": true,
+              "resizable": true,
+              "type": "Editor",
+              "flex": 1
+            },
+            {
+              "headerName": "Management Function",
+              "field": "textArray",
+              "editable": false,
+              "resizable": true,
+              "type": "Button",
+              "flex": 2
+            }
+          ]
+        },
+        "note": ""
+      },
+      "41d1a503-ee4c-4719-9710-87616578e05e": {
+        "elementXMLID": "fdp-pdc-ext-1e4",
+        "selectableGroups": {},
+        "title": [
+          {
+            "text": "\n                The TOE shall not have wireless interfaces.\n              "
+          }
+        ],
+        "selectables": {},
+        "isManagementFunction": false,
+        "managementFunctions": {
+          "tableName": "Management Functions",
+          "statusMarkers": "",
+          "rows": [],
+          "columns": [
+            {
+              "headerName": "#",
+              "field": "rowNum",
+              "editable": false,
+              "resizable": true,
+              "type": "Index",
+              "flex": 0.5
+            },
+            {
+              "headerName": "ID",
+              "field": "id",
+              "editable": true,
+              "resizable": true,
+              "type": "Editor",
+              "flex": 1
+            },
+            {
+              "headerName": "Management Function",
+              "field": "textArray",
+              "editable": false,
+              "resizable": true,
+              "type": "Button",
+              "flex": 2
+            }
+          ]
+        },
+        "note": ""
+      },
+      "428afbc8-2cdc-48bf-9e5e-d39b3f9af324": {
+        "elementXMLID": "fdp-pdc-ext-1e5",
+        "selectableGroups": {},
+        "title": [
+          {
+            "text": "\n                The TOE shall provide a visual or auditory indication to the User when a\n                peripheral is rejected.\n              "
+          }
+        ],
+        "selectables": {},
+        "isManagementFunction": false,
+        "managementFunctions": {
+          "tableName": "Management Functions",
+          "statusMarkers": "",
+          "rows": [],
+          "columns": [
+            {
+              "headerName": "#",
+              "field": "rowNum",
+              "editable": false,
+              "resizable": true,
+              "type": "Index",
+              "flex": 0.5
+            },
+            {
+              "headerName": "ID",
+              "field": "id",
+              "editable": true,
+              "resizable": true,
+              "type": "Editor",
+              "flex": 1
+            },
+            {
+              "headerName": "Management Function",
+              "field": "textArray",
+              "editable": false,
+              "resizable": true,
+              "type": "Button",
+              "flex": 2
+            }
+          ]
+        },
+        "note": "The list of unauthorized devices is in Appendix E: Peripheral\n              Device Connections.<br/><br/>\n              The TSF may elect to enforce rejection of unauthorized devices connected to the PSD\n              through a USB hub by considering USB hubs as unauthorized devices.\n            "
+      }
+    },
+    "invisible": false,
+    "evaluationActivities": {
+      "428afbc8-2cdc-48bf-9e5e-d39b3f9af324": {
+        "hasLevelSet": false,
+        "tss": "The evaluator shall verify that the TSS describes the compatible devices for\n                each peripheral port type supported by the TOE. The description must\n                include sufficient detail to justify any PP\u2010Modules that extend this PP and are\n                claimed by the TOE (e.g., if the ST claims the Audio Input PP\u2010Module, then\n                the TSS shall reference one or more audio input devices as supported\n                peripherals).<br/><br/>\n                The evaluator shall verify that the TSS describes the interfaces between the\n                PSD and computers and the PSD and peripherals, and ensure that the TOE\n                does not contain wireless connections for these interfaces.<br/><br/>\n                The evaluator shall verify that the list of peripheral devices and interfaces\n                supported by the TOE does not include any prohibited peripheral devices or\n                interface protocols specified in Appendix E.<br/><br/>\n                The evaluator shall verify that the TSS describes all external physical\n                interfaces implemented by the TOE, and that there are no external\n                interfaces that are not claimed by the TSF.",
+        "introduction": "",
+        "guidance": "\n                The evaluator shall verify that the operational user guidance provides clear\n                direction for the connection of computers and peripheral devices to the TOE.<br/><br/>\n                The evaluator shall verify that the operational user guidance provides clear\n                direction for the usage and connection of TOE interfaces, including general\n                information for computer, power, and peripheral devices.<br/><br/>\n                The evaluator shall determine if interfaces that receive or transmit data to or\n                from the TOE present a risk that these interfaces could be misused to import\n                or export user data.<br/><br/>\n                The evaluator shall verify that the operational user guidance describes the\n                visual or auditory indications provided to a user when the TOE rejects the\n                connection of a device.\n              ",
+        "testIntroduction": "",
+        "testClosing": "",
+        "testLists": {
+          "2257ac64-72e6-4c62-ba9b-7380e1d4822e": {
+            "parentTestUUID": null,
+            "description": "",
+            "testUUIDs": [
+              "c0a9ef6a-a4cd-45ce-a6e1-d56f9c4eb590",
+              "6f6299d6-d92c-4fb0-86ec-7f635b23b868",
+              "59c72582-1b1d-4964-990f-10a384e87783"
+            ],
+            "conclusion": ""
+          }
+        },
+        "tests": {
+          "c0a9ef6a-a4cd-45ce-a6e1-d56f9c4eb590": {
+            "testListUUID": "2257ac64-72e6-4c62-ba9b-7380e1d4822e",
+            "id": "",
+            "objective": "The evaluator shall check the TOE and its supplied cables and accessories to ensure that there are no external wired interfaces other than computer interfaces, peripheral device interfaces, and power interfaces.",
+            "dependencies": [],
+            "nestedTestListUUIDs": [],
+            "conclusion": ""
+          },
+          "6f6299d6-d92c-4fb0-86ec-7f635b23b868": {
+            "testListUUID": "2257ac64-72e6-4c62-ba9b-7380e1d4822e",
+            "id": "",
+            "objective": "The evaluator shall check the TOE for radio frequency certification information to ensure that the TOE does not support wireless interfaces.",
+            "dependencies": [],
+            "nestedTestListUUIDs": [],
+            "conclusion": ""
+          },
+          "59c72582-1b1d-4964-990f-10a384e87783": {
+            "testListUUID": "2257ac64-72e6-4c62-ba9b-7380e1d4822e",
+            "id": "",
+            "objective": "The evaluator shall verify that the TOE ports properly reject unauthorized devices and devices with unauthorized protocols as per the Peripheral Device Connections (Appendix E). <br/>  <br/> For this test, verify device rejection through TOE user indication in accordance with the operational user guidance, an immediate cessation of traffic following device detection or enumeration, or incompatibility of the device interface with the peripheral interface, and through no such device appearing in the real\u2010time hardware information console. <ol><li>Ensure the TOE is powered off. Open a real\u2010time hardware\n                    information console on the connected computer.</li> <li>Attempt to connect a USB mass storage device to the TOE peripheral\n                    interface.</li> <li>Power on the TOE. Verify the device is rejected.</li> <li>Ensure the USB mass storage device is disconnected, and then\n                    attempt to connect it to the TOE peripheral interface again.</li> <li>Verify the device is rejected.</li> <li>Power off the TOE. Connect an unauthorized USB device to a USB\n                    hub, and attempt to connect the USB hub to the TOE peripheral interface.</li> <li>Power on the TOE. Verify the device is rejected.</li> <li>Ensure the USB hub is disconnected, and then attempt to connect it\n                    to the TOE peripheral interface again.</li> <li>Verify the device is rejected.</li> <li>Power off the TOE. Attempt to connect any Personal System/2\n                    (PS/2) device directly to the TOE peripheral interface.</li> <li>Power on the TOE. Verify the device is rejected.</li> <li>Ensure the PS/2 device is disconnected, and then attempt to\n                    connect it directly to the TOE peripheral interface again.</li> <li>Verify the device is rejected.</li></ol> ",
+            "dependencies": [],
+            "nestedTestListUUIDs": [],
+            "conclusion": ""
+          }
+        },
+        "platformMap": null,
+        "isNoTest": false,
+        "noTest": "",
+        "customea": {
+          "text": "",
+          "nameAttribute": "Isolation"
+        }
+      }
+    },
+    "modifiedSfr": false,
+    "additionalSfr": false,
+    "consistencyRationale": "",
+    "notNew": null,
+    "xPathDetails": {},
+    "classDescription": "",
+    "sfrType": "",
+    "compUUID": "48254c0b-2247-41e4-a612-dbff793f124d"
+  },
+  "FDP_RIP_EXT.1": {
+    "title": "Residual Information Protection",
+    "cc_id": "FDP_RIP_EXT.1",
+    "iteration_id": "",
+    "xml_id": "",
+    "definition": "",
+    "optional": false,
+    "objective": false,
+    "dependsComments": {},
+    "dependsExternalDocs": {},
+    "selectionBased": false,
+    "selections": {
+      "components": [],
+      "elements": [],
+      "selections": []
+    },
+    "useCaseBased": false,
+    "useCases": [],
+    "implementationDependent": false,
+    "reasons": [],
+    "tableOpen": false,
+    "objectives": [],
+    "extendedComponentDefinition": {
+      "audit": "There are no auditable events foreseen.",
+      "componentLeveling": "requires the TSF to prevent the writing of user data to\n            non\u2010volatile memory.",
+      "dependencies": "No dependencies",
+      "managementFunction": "The following actions could be considered for the management functions in\n            FMT:<ul><li>Ability to trigger the TSF's purge function</li></ul>",
+      "toggle": true
+    },
+    "auditEvents": {
+      "f26568d8-a474-40c3-9fb9-aed823bbd0d0": {
+        "items": [],
+        "optional": false
+      }
+    },
+    "open": false,
+    "elements": {
+      "909dc572-8d66-4c30-a17c-01973fee7f20": {
+        "elementXMLID": "fdp-rep-ext-1e1",
+        "selectableGroups": {},
+        "title": [
+          {
+            "text": "\n              The TSF shall ensure that no user data is written to TOE non\u2010volatile memory or\n              storage.\n            "
+          }
+        ],
+        "selectables": {},
+        "isManagementFunction": false,
+        "managementFunctions": {
+          "tableName": "Management Functions",
+          "statusMarkers": "",
+          "rows": [],
+          "columns": [
+            {
+              "headerName": "#",
+              "field": "rowNum",
+              "editable": false,
+              "resizable": true,
+              "type": "Index",
+              "flex": 0.5
+            },
+            {
+              "headerName": "ID",
+              "field": "id",
+              "editable": true,
+              "resizable": true,
+              "type": "Editor",
+              "flex": 1
+            },
+            {
+              "headerName": "Management Function",
+              "field": "textArray",
+              "editable": false,
+              "resizable": true,
+              "type": "Button",
+              "flex": 2
+            }
+          ]
+        },
+        "note": ""
+      }
+    },
+    "invisible": false,
+    "evaluationActivities": {
+      "909dc572-8d66-4c30-a17c-01973fee7f20": {
+        "hasLevelSet": false,
+        "tss": "The evaluator shall verify that the TSS includes a Letter of Volatility that\n                provides the following information:<ul><li>Which TOE components have non\u2010volatile memory, the non\u2010volatile\n                memory technology, manufacturer/part number, and memory sizes;</li> <li>Any data and data types that the TOE may store on each one of\n                these components;</li> <li>Whether or not each one of these parts is used to store user data\n                and how this data may remain in the TOE after power down; and</li> <li>Whether the specific component may be independently powered by\n                something other than the TOE (e.g., by a connected computer).</li></ul>\n                Note that user configuration and TOE settings are not considered user data\n                for purposes of this requirement.<br/><br/>\n                The evaluator shall verify that the Letter of Volatility provides assurance that\n                user data is not stored in TOE non\u2010volatile memory or storage.",
+        "introduction": "",
+        "guidance": "",
+        "testIntroduction": "",
+        "testClosing": "",
+        "testLists": {},
+        "tests": {},
+        "platformMap": null,
+        "isNoTest": false,
+        "noTest": "",
+        "customea": {
+          "text": "",
+          "nameAttribute": "Isolation"
+        }
+      }
+    },
+    "modifiedSfr": false,
+    "additionalSfr": false,
+    "consistencyRationale": "",
+    "notNew": null,
+    "xPathDetails": {},
+    "classDescription": "",
+    "sfrType": "",
+    "compUUID": "bd7e8cab-1286-418f-9337-d8d5be6dd462"
+  },
+  "FDP_RIP_EXT.2": {
+    "title": "Purge of Residual Information",
+    "cc_id": "FDP_RIP_EXT.2",
+    "iteration_id": "",
+    "xml_id": "",
+    "definition": "",
+    "optional": false,
+    "objective": false,
+    "dependsComments": {},
+    "dependsExternalDocs": {},
+    "selectionBased": false,
+    "selections": {
+      "components": [],
+      "elements": [],
+      "selections": []
+    },
+    "useCaseBased": false,
+    "useCases": [],
+    "implementationDependent": true,
+    "reasons": [
+      "management"
+    ],
+    "tableOpen": false,
+    "objectives": [],
+    "extendedComponentDefinition": {
+      "audit": "The following actions should be auditable if FAU_GEN.1 Audit Data Generation is included in the\n          PP/ST:<ul><li>Purging of the TSF's memory</li></ul>",
+      "componentLeveling": "requires the TSF to have a purge function to clear its\n          memory of all stored non\u2010audit data.",
+      "dependencies": "No dependencies",
+      "managementFunction": "The following actions could be considered for the management functions in\n          FMT:<ul><li>Ability to trigger the TSF's purge function</li></ul>",
+      "toggle": true
+    },
+    "auditEvents": {
+      "dd01527d-635e-47c3-9761-197d216faeb2": {
+        "items": [],
+        "optional": false
+      }
+    },
+    "open": false,
+    "elements": {
+      "36e88459-eb97-4cb6-bf43-2cfc775b8252": {
+        "elementXMLID": "fdp-rip-ext-2e1",
+        "selectableGroups": {},
+        "title": [
+          {
+            "text": "\n            The TOE shall have a purge memory or restore factory defaults function\n            accessible to the administrator to delete all TOE stored configuration and\n            settings except for logging.\n          "
+          }
+        ],
+        "selectables": {},
+        "isManagementFunction": false,
+        "managementFunctions": {
+          "tableName": "Management Functions",
+          "statusMarkers": "",
+          "rows": [],
+          "columns": [
+            {
+              "headerName": "#",
+              "field": "rowNum",
+              "editable": false,
+              "resizable": true,
+              "type": "Index",
+              "flex": 0.5
+            },
+            {
+              "headerName": "ID",
+              "field": "id",
+              "editable": true,
+              "resizable": true,
+              "type": "Editor",
+              "flex": 1
+            },
+            {
+              "headerName": "Management Function",
+              "field": "textArray",
+              "editable": false,
+              "resizable": true,
+              "type": "Button",
+              "flex": 2
+            }
+          ]
+        },
+        "note": ""
+      }
+    },
+    "invisible": false,
+    "evaluationActivities": {
+      "36e88459-eb97-4cb6-bf43-2cfc775b8252": {
+        "hasLevelSet": false,
+        "tss": "The evaluator shall verify that the TSS describes the TOE\u2019s reaction to\n              memory purge or restore factory defaults.<br/><br/>\n              The evaluator shall verify that the Letter of Volatility included in the TSS\n              describes the effect that the TOE Restore Factory Default function has on\n              each component listed in the Letter of Volatility.",
+        "introduction": "",
+        "guidance": "\n              The evaluator shall verify that the Letter of Volatility included in the TSS\n              describes the effect that the TOE Restore Factory Default function has on\n              each component listed in the Letter of Volatility.\n            ",
+        "testIntroduction": "\n              Perform the TOE memory purge or restore factory defaults according\n              to the guidance and verify that the TOE enters a desirable secure state. <br/> <br/>\n              The evaluator shall check that the log record is not deleted if a logging\n              function is supported by the TOE.\n            ",
+        "testClosing": "",
+        "testLists": {},
+        "tests": {},
+        "platformMap": null,
+        "isNoTest": false,
+        "noTest": "",
+        "customea": {
+          "text": "",
+          "nameAttribute": "Isolation"
+        }
+      }
+    },
+    "modifiedSfr": false,
+    "additionalSfr": false,
+    "consistencyRationale": "",
+    "notNew": null,
+    "xPathDetails": {},
+    "classDescription": "",
+    "sfrType": "",
+    "compUUID": "ff3f75bd-48be-457b-abde-8808a00a6070"
+  },
+  "FDP_SWI_EXT.1": {
+    "title": "PSD Switching",
+    "cc_id": "FDP_SWI_EXT.1",
+    "iteration_id": "",
+    "xml_id": "",
+    "definition": "",
+    "optional": false,
+    "objective": false,
+    "dependsComments": {},
+    "dependsExternalDocs": {},
+    "selectionBased": false,
+    "selections": {
+      "components": [],
+      "elements": [],
+      "selections": []
+    },
+    "useCaseBased": false,
+    "useCases": [],
+    "implementationDependent": false,
+    "reasons": [],
+    "tableOpen": false,
+    "objectives": [],
+    "extendedComponentDefinition": {
+      "audit": "There are no auditable events foreseen.",
+      "componentLeveling": "requires action on the part of a user in order for the TSF\u2019s switching\n            mechanisms to be activated.",
+      "dependencies": "No dependencies",
+      "managementFunction": "No specific management functions are identified.",
+      "toggle": true
+    },
+    "auditEvents": {
+      "be3c3a32-50a5-4dae-b838-a166db2cdb6d": {
+        "items": [],
+        "optional": false
+      }
+    },
+    "open": false,
+    "elements": {
+      "9ee08e50-f134-4fee-a1e0-e2d96fdeb2ac": {
+        "elementXMLID": "fdp-swi-ext-1e1",
+        "selectableGroups": {
+          "group-1": {
+            "onlyOne": false,
+            "linebreak": false,
+            "groups": [
+              "b266baab-a2d1-40f5-b22b-47eafee582f6",
+              "6fe8d6db-ef7f-4572-9298-c7c41712c3a9"
+            ]
+          }
+        },
+        "title": [
+          {
+            "text": "\n              The TSF shall ensure that "
+          },
+          {
+            "selections": "group-1"
+          },
+          {
+            "text": ".\n            "
+          }
+        ],
+        "selectables": {
+          "b266baab-a2d1-40f5-b22b-47eafee582f6": {
+            "type": "selectable",
+            "uuid": "b266baab-a2d1-40f5-b22b-47eafee582f6",
+            "id": "fdp_swi_ext.1.1_1",
+            "description": "the TOE supports only one connected computer",
+            "exclusive": false,
+            "nestedGroups": []
+          },
+          "6fe8d6db-ef7f-4572-9298-c7c41712c3a9": {
+            "type": "selectable",
+            "uuid": "6fe8d6db-ef7f-4572-9298-c7c41712c3a9",
+            "id": "notisolator",
+            "description": "switching can be initiated only through express user action",
+            "exclusive": false,
+            "nestedGroups": []
+          }
+        },
+        "isManagementFunction": false,
+        "managementFunctions": {
+          "tableName": "Management Functions",
+          "statusMarkers": "",
+          "rows": [],
+          "columns": [
+            {
+              "headerName": "#",
+              "field": "rowNum",
+              "editable": false,
+              "resizable": true,
+              "type": "Index",
+              "flex": 0.5
+            },
+            {
+              "headerName": "ID",
+              "field": "id",
+              "editable": true,
+              "resizable": true,
+              "type": "Editor",
+              "flex": 1
+            },
+            {
+              "headerName": "Management Function",
+              "field": "textArray",
+              "editable": false,
+              "resizable": true,
+              "type": "Button",
+              "flex": 2
+            }
+          ]
+        },
+        "note": "\n              If \"switching can be initiated only through express user action\" is selected, the\n              ST must include the selection\u2010based requirements FDP_SWI_EXT.2 and FTA_CIN_EXT.1.\n            "
+      }
+    },
+    "invisible": false,
+    "evaluationActivities": {
+      "9ee08e50-f134-4fee-a1e0-e2d96fdeb2ac": {
+        "hasLevelSet": false,
+        "tss": "If the ST includes the selection the \"TOE supports only one connected\n                computer\", the evaluator shall verify that the TSS indicates that the TOE\n                supports only one connected computer.<br/><br/>\n                If the ST includes the selection \"switching can be initiated only through\n                express user action\", the evaluator shall verify that the TSS describes the TOE\n                supported switching mechanisms and that those mechanisms can be\n                initiated only through express user action.",
+        "introduction": "",
+        "guidance": "\n                If the ST includes the selection \"switching can be initiated only through\n                express user action\", the evaluator shall verify that the operational user\n                guidance describes the TOE supported switching mechanisms.\n              ",
+        "testIntroduction": "",
+        "testClosing": "",
+        "testLists": {},
+        "tests": {},
+        "platformMap": null,
+        "isNoTest": false,
+        "noTest": "",
+        "customea": {
+          "text": "",
+          "nameAttribute": "Isolation"
+        }
+      }
+    },
+    "modifiedSfr": false,
+    "additionalSfr": false,
+    "consistencyRationale": "",
+    "notNew": null,
+    "xPathDetails": {},
+    "classDescription": "",
+    "sfrType": "",
+    "compUUID": "64bf0d99-4b24-4566-a754-f8a6d2b729af"
+  },
+  "FDP_SWI_EXT.2": {
+    "title": "PSD Switching Methods",
+    "cc_id": "FDP_SWI_EXT.2",
+    "iteration_id": "",
+    "xml_id": "",
+    "definition": "",
+    "optional": false,
+    "objective": false,
+    "dependsComments": {},
+    "dependsExternalDocs": {},
+    "selectionBased": true,
+    "selections": {
+      "components": [],
+      "elements": [
+        "9ee08e50-f134-4fee-a1e0-e2d96fdeb2ac"
+      ],
+      "selections": [
+        "notisolator"
+      ]
+    },
+    "useCaseBased": false,
+    "useCases": [],
+    "implementationDependent": false,
+    "reasons": [],
+    "tableOpen": false,
+    "objectives": [],
+    "extendedComponentDefinition": {
+      "audit": "There are no auditable events foreseen.",
+      "componentLeveling": "places restrictions on how the TSF\u2019s switching mechanisms can\n        be controlled.",
+      "dependencies": "FDP_SWI_EXT.1 PSD Switching",
+      "managementFunction": "No specific management functions are identified.",
+      "toggle": true
+    },
+    "auditEvents": {
+      "5ee298f7-4ac5-46e6-82dc-52a964043881": {
+        "items": [],
+        "optional": false
+      }
+    },
+    "open": false,
+    "elements": {
+      "f788ec8f-b5c8-4a51-882a-05a41835cfd6": {
+        "elementXMLID": "fdp-swi-ext-2e1",
+        "selectableGroups": {},
+        "title": [
+          {
+            "text": "\n          The TSF shall ensure that no switching can be initiated through automatic port\n          scanning, control through a connected computer, or control through keyboard\n          shortcuts.\n        "
+          }
+        ],
+        "selectables": {},
+        "isManagementFunction": false,
+        "managementFunctions": {
+          "tableName": "Management Functions",
+          "statusMarkers": "",
+          "rows": [],
+          "columns": [
+            {
+              "headerName": "#",
+              "field": "rowNum",
+              "editable": false,
+              "resizable": true,
+              "type": "Index",
+              "flex": 0.5
+            },
+            {
+              "headerName": "ID",
+              "field": "id",
+              "editable": true,
+              "resizable": true,
+              "type": "Editor",
+              "flex": 1
+            },
+            {
+              "headerName": "Management Function",
+              "field": "textArray",
+              "editable": false,
+              "resizable": true,
+              "type": "Button",
+              "flex": 2
+            }
+          ]
+        },
+        "note": ""
+      },
+      "c62b3fe5-f427-4f74-b520-704d4ec37686": {
+        "elementXMLID": "fdp-swi-ext-2e2",
+        "selectableGroups": {
+          "group-2": {
+            "onlyOne": false,
+            "linebreak": false,
+            "groups": [
+              "5d356e3c-f5ce-4f5a-9677-d93bd6ff23c7",
+              "cf7273c9-959f-46ac-910d-70d9a391ee76",
+              "7019c9b8-e0ff-4a25-b693-42bbb1eecbdf",
+              "51497349-8c92-48d1-9e22-1cfeeb01e481",
+              "26d42548-ccc7-4168-b6ce-84fddea92126"
+            ]
+          }
+        },
+        "title": [
+          {
+            "text": "\n          The TSF shall ensure that switching can be initiated only through express user\n          action using "
+          },
+          {
+            "selections": "group-2"
+          },
+          {
+            "text": ".\n        "
+          }
+        ],
+        "selectables": {
+          "5d356e3c-f5ce-4f5a-9677-d93bd6ff23c7": {
+            "type": "selectable",
+            "uuid": "5d356e3c-f5ce-4f5a-9677-d93bd6ff23c7",
+            "id": "fdp_swi_ext.2.2_1",
+            "description": "console buttons",
+            "exclusive": false,
+            "nestedGroups": []
+          },
+          "cf7273c9-959f-46ac-910d-70d9a391ee76": {
+            "type": "selectable",
+            "uuid": "cf7273c9-959f-46ac-910d-70d9a391ee76",
+            "id": "fdp_swi_ext.2.2_2",
+            "description": "console switches",
+            "exclusive": false,
+            "nestedGroups": []
+          },
+          "7019c9b8-e0ff-4a25-b693-42bbb1eecbdf": {
+            "type": "selectable",
+            "uuid": "7019c9b8-e0ff-4a25-b693-42bbb1eecbdf",
+            "id": "fdp_swi_ext.2.2_3",
+            "description": "console touch screen",
+            "exclusive": false,
+            "nestedGroups": []
+          },
+          "51497349-8c92-48d1-9e22-1cfeeb01e481": {
+            "type": "selectable",
+            "uuid": "51497349-8c92-48d1-9e22-1cfeeb01e481",
+            "id": "fdp_swi_ext.2.2_4",
+            "description": "wired remote control",
+            "exclusive": false,
+            "nestedGroups": []
+          },
+          "26d42548-ccc7-4168-b6ce-84fddea92126": {
+            "type": "selectable",
+            "uuid": "26d42548-ccc7-4168-b6ce-84fddea92126",
+            "id": "fdp_swi_ext.2.2_5",
+            "description": "peripheral devices using a guard",
+            "exclusive": false,
+            "nestedGroups": []
+          }
+        },
+        "isManagementFunction": false,
+        "managementFunctions": {
+          "tableName": "Management Functions",
+          "statusMarkers": "",
+          "rows": [],
+          "columns": [
+            {
+              "headerName": "#",
+              "field": "rowNum",
+              "editable": false,
+              "resizable": true,
+              "type": "Index",
+              "flex": 0.5
+            },
+            {
+              "headerName": "ID",
+              "field": "id",
+              "editable": true,
+              "resizable": true,
+              "type": "Editor",
+              "flex": 1
+            },
+            {
+              "headerName": "Management Function",
+              "field": "textArray",
+              "editable": false,
+              "resizable": true,
+              "type": "Button",
+              "flex": 2
+            }
+          ]
+        },
+        "note": "\n          This SFR must be claimed if \"switching can be initiated only through express user\n          action\" is chosen as the selection for FDP_SWI_EXT.1.1.<br/><br/>\n          If the TOE also claims conformance to the PP\u2010Module for Video/Display Devices\n          (Video Module) and if \"peripheral devices using a guard\" is selected here, the\n          TOE must claim the selection\u2010based requirement FDP_CDS_EXT.1 in the Video\n          Module and select \"multiple connected displays\" in FDP_CDS_EXT.1.1.\n        "
+      }
+    },
+    "invisible": false,
+    "evaluationActivities": {
+      "c62b3fe5-f427-4f74-b520-704d4ec37686": {
+        "hasLevelSet": false,
+        "tss": "The evaluator shall verify that the TSS describes the TOE supported\n            switching mechanisms. The evaluator shall verify that the TSS does not\n            include automatic port scanning, control through a connected computer,\n            and control through keyboard shortcuts as TOE supported switching\n            mechanisms. The evaluator shall verify that the described switching\n            mechanisms can be initiated only through express user action according to\n            the selections.",
+        "introduction": "",
+        "guidance": "\n            The evaluator shall verify that the operational user guidance describes the\n            TOE supported switching mechanisms. The evaluator shall verify that the\n            operational user guidance does not include automatic port scanning, control\n            through a connected computer, and control through keyboard shortcuts as\n            TOE supported switching mechanisms.\n          ",
+        "testIntroduction": "",
+        "testClosing": "",
+        "testLists": {},
+        "tests": {},
+        "platformMap": null,
+        "isNoTest": false,
+        "noTest": "",
+        "customea": {
+          "text": "",
+          "nameAttribute": "Isolation"
+        }
+      }
+    },
+    "modifiedSfr": false,
+    "additionalSfr": false,
+    "consistencyRationale": "",
+    "notNew": null,
+    "xPathDetails": {},
+    "classDescription": "",
+    "sfrType": "",
+    "compUUID": "45a7e420-06e3-40c8-a1c9-eceec1c834f7"
+  },
+  "FIA_UAU.2": {
+    "title": "User Authentication Before Any Action",
+    "cc_id": "FIA_UAU.2",
+    "iteration_id": "",
+    "xml_id": "",
+    "definition": "",
+    "optional": false,
+    "objective": false,
+    "dependsComments": {},
+    "dependsExternalDocs": {},
+    "selectionBased": false,
+    "selections": {
+      "components": [],
+      "elements": [],
+      "selections": []
+    },
+    "useCaseBased": false,
+    "useCases": [],
+    "implementationDependent": true,
+    "reasons": [
+      "management"
+    ],
+    "tableOpen": false,
+    "objectives": [],
+    "extendedComponentDefinition": {
+      "audit": null,
+      "componentLeveling": null,
+      "dependencies": null,
+      "managementFunction": null,
+      "toggle": false
+    },
+    "auditEvents": {
+      "0060a331-3eeb-49c4-9e0a-5adb7d637abd": {
+        "description": "Use of the authentication mechanism",
+        "items": [
+          {
+            "info": "None",
+            "optional": false
+          }
+        ],
+        "optional": false
+      }
+    },
+    "open": false,
+    "elements": {
+      "bf241381-67bf-482a-ac29-8431bebdf771": {
+        "elementXMLID": "fia-uau-2e1",
+        "selectableGroups": {},
+        "title": [
+          {
+            "description": "\n            The TSF shall require each <b >administrator</b> to be successfully authenticated\n            before allowing any other TSF-mediated actions on behalf of that <b >administrator</b>.\n          "
+          }
+        ],
+        "selectables": {},
+        "isManagementFunction": false,
+        "managementFunctions": {
+          "tableName": "Management Functions",
+          "statusMarkers": "",
+          "rows": [],
+          "columns": [
+            {
+              "headerName": "#",
+              "field": "rowNum",
+              "editable": false,
+              "resizable": true,
+              "type": "Index",
+              "flex": 0.5
+            },
+            {
+              "headerName": "ID",
+              "field": "id",
+              "editable": true,
+              "resizable": true,
+              "type": "Editor",
+              "flex": 1
+            },
+            {
+              "headerName": "Management Function",
+              "field": "textArray",
+              "editable": false,
+              "resizable": true,
+              "type": "Button",
+              "flex": 2
+            }
+          ]
+        },
+        "note": "\n            This requirement expects that the authentication methods be described (e.g.,\n            logon credential, specially assigned key, etc.).\n          "
+      }
+    },
+    "invisible": false,
+    "evaluationActivities": {
+      "bf241381-67bf-482a-ac29-8431bebdf771": {
+        "hasLevelSet": false,
+        "tss": "",
+        "introduction": "",
+        "guidance": "",
+        "testIntroduction": "",
+        "testClosing": "",
+        "testLists": {},
+        "tests": {},
+        "platformMap": null,
+        "isNoTest": true,
+        "noTest": "This SFR is evaluated by the Evaluation Activities in FMT_MOF.1 below."
+      }
+    },
+    "modifiedSfr": false,
+    "additionalSfr": false,
+    "consistencyRationale": null,
+    "notNew": null,
+    "xPathDetails": {},
+    "classDescription": "",
+    "sfrType": "",
+    "compUUID": "43dcaed0-0c29-4ac8-a662-7de40f63cb63"
+  },
+  "FIA_UID.2": {
+    "title": "User Identification Before Any Action",
+    "cc_id": "FIA_UID.2",
+    "iteration_id": "",
+    "xml_id": "",
+    "definition": "",
+    "optional": false,
+    "objective": false,
+    "dependsComments": {},
+    "dependsExternalDocs": {},
+    "selectionBased": false,
+    "selections": {
+      "components": [],
+      "elements": [],
+      "selections": []
+    },
+    "useCaseBased": false,
+    "useCases": [],
+    "implementationDependent": true,
+    "reasons": [
+      "management"
+    ],
+    "tableOpen": false,
+    "objectives": [],
+    "extendedComponentDefinition": {
+      "audit": null,
+      "componentLeveling": null,
+      "dependencies": null,
+      "managementFunction": null,
+      "toggle": false
+    },
+    "auditEvents": {
+      "5effde98-0835-4f97-8ff2-8c647c9e3bbd": {
+        "description": "Use of the user identification mechanism",
+        "items": [
+          {
+            "info": "None",
+            "optional": false
+          }
+        ],
+        "optional": false
+      }
+    },
+    "open": false,
+    "elements": {
+      "ff97a345-1239-4761-a390-2876dedb7279": {
+        "elementXMLID": "fia-uid-2e1",
+        "selectableGroups": {},
+        "title": [
+          {
+            "description": "\n            The TSF shall require each <b >administrator</b> to be successfully identified before\n            allowing any other TSF-mediated actions on behalf of that <b >administrator</b>.\n          "
+          }
+        ],
+        "selectables": {},
+        "isManagementFunction": false,
+        "managementFunctions": {
+          "tableName": "Management Functions",
+          "statusMarkers": "",
+          "rows": [],
+          "columns": [
+            {
+              "headerName": "#",
+              "field": "rowNum",
+              "editable": false,
+              "resizable": true,
+              "type": "Index",
+              "flex": 0.5
+            },
+            {
+              "headerName": "ID",
+              "field": "id",
+              "editable": true,
+              "resizable": true,
+              "type": "Editor",
+              "flex": 1
+            },
+            {
+              "headerName": "Management Function",
+              "field": "textArray",
+              "editable": false,
+              "resizable": true,
+              "type": "Button",
+              "flex": 2
+            }
+          ]
+        },
+        "note": ""
+      }
+    },
+    "invisible": false,
+    "evaluationActivities": {
+      "ff97a345-1239-4761-a390-2876dedb7279": {
+        "hasLevelSet": false,
+        "tss": "",
+        "introduction": "",
+        "guidance": "",
+        "testIntroduction": "",
+        "testClosing": "",
+        "testLists": {},
+        "tests": {},
+        "platformMap": null,
+        "isNoTest": true,
+        "noTest": "This SFR is evaluated by the Evaluation Activities in FMT_MOF.1 below."
+      }
+    },
+    "modifiedSfr": false,
+    "additionalSfr": false,
+    "consistencyRationale": null,
+    "notNew": null,
+    "xPathDetails": {},
+    "classDescription": "",
+    "sfrType": "",
+    "compUUID": "1aa96732-c2db-4098-a6c2-5135e1d37038"
+  },
+  "FMT_MOF.1": {
+    "title": "Management of Security Functions Behavior",
+    "cc_id": "FMT_MOF.1",
+    "iteration_id": "",
+    "xml_id": "",
+    "definition": "",
+    "optional": false,
+    "objective": false,
+    "dependsComments": {},
+    "dependsExternalDocs": {},
+    "selectionBased": false,
+    "selections": {
+      "components": [],
+      "elements": [],
+      "selections": []
+    },
+    "useCaseBased": false,
+    "useCases": [],
+    "implementationDependent": true,
+    "reasons": [
+      "management"
+    ],
+    "tableOpen": false,
+    "objectives": [],
+    "extendedComponentDefinition": {
+      "audit": null,
+      "componentLeveling": null,
+      "dependencies": null,
+      "managementFunction": null,
+      "toggle": false
+    },
+    "auditEvents": {
+      "0e6b48e2-b071-43c9-8d42-1770cbbba542": {
+        "description": "Modifications in the behaviour of functions",
+        "items": [
+          {
+            "info": "None",
+            "optional": false
+          }
+        ],
+        "optional": false
+      }
+    },
+    "open": false,
+    "elements": {
+      "d7d005f6-6990-4423-b3bc-8366a68d1274": {
+        "elementXMLID": "fmt-mof-1e1",
+        "selectableGroups": {},
+        "title": [
+          {
+            "description": "\n            The TSF shall restrict the ability to [<i >modify the behavior of</i>] the functions\n            "
+          },
+          {
+            "assignment": "792616a9-0164-4607-bd17-a2ef1727739f"
+          },
+          {
+            "description": " to [<i >the authorized administrators</i>].\n          "
+          }
+        ],
+        "selectables": {
+          "792616a9-0164-4607-bd17-a2ef1727739f": {
+            "id": "fmt_mof.1.1_1",
+            "leadingText": "",
+            "description": "list of functions",
+            "trailingText": "",
+            "assignment": true,
+            "exclusive": false,
+            "notSelectable": false
+          }
+        },
+        "isManagementFunction": false,
+        "managementFunctions": {
+          "tableName": "Management Functions",
+          "statusMarkers": "",
+          "rows": [],
+          "columns": [
+            {
+              "headerName": "#",
+              "field": "rowNum",
+              "editable": false,
+              "resizable": true,
+              "type": "Index",
+              "flex": 0.5
+            },
+            {
+              "headerName": "ID",
+              "field": "id",
+              "editable": true,
+              "resizable": true,
+              "type": "Editor",
+              "flex": 1
+            },
+            {
+              "headerName": "Management Function",
+              "field": "textArray",
+              "editable": false,
+              "resizable": true,
+              "type": "Button",
+              "flex": 2
+            }
+          ]
+        },
+        "note": ""
+      }
+    },
+    "invisible": false,
+    "evaluationActivities": {
+      "d7d005f6-6990-4423-b3bc-8366a68d1274": {
+        "hasLevelSet": false,
+        "tss": "The evaluator shall verify that the TSS describes the mechanism for preventing\n              non\u2010administrators from accessing the administrative functions stated above.<br/><br/>\n              If the TSF provides multiple administrative roles, the evaluator shall verify that the\n              authorized behavior for each separate administrative role is described.<br/><br/>\n              The evaluator shall check the TSS to verify that it describes at least the following:<ul><li>Administrator name limitations and syntax requirements;</li> <li>Administrator password limitations and syntax requirements;</li> <li>Restoring lost name or password;</li> <li>Initial setting of administrator credentials;</li> <li>Logon success, fail limitations, and logging; and</li> <li>All functions identified in the above assignment.</li></ul>",
+        "introduction": "",
+        "guidance": "\n              The evaluator shall check the user and administrative guidance to verify that the\n              administrative functions described above are only available to identified\n              administrators. If the TSF provides multiple administrative roles, the evaluator\n              shall verify that the authorized behavior for each separate administrative role is\n              described.\n            ",
+        "testIntroduction": "",
+        "testClosing": "",
+        "testLists": {
+          "2063c47d-d89f-42aa-819b-6606907f4b8b": {
+            "parentTestUUID": null,
+            "description": "",
+            "testUUIDs": [
+              "618bd851-e303-49f5-8036-452ccf053f21"
+            ],
+            "conclusion": ""
+          }
+        },
+        "tests": {
+          "618bd851-e303-49f5-8036-452ccf053f21": {
+            "testListUUID": "2063c47d-d89f-42aa-819b-6606907f4b8b",
+            "id": "",
+            "objective": " <ol><li>Set up the TOE to enable administrator access per applicable TOE\n                      administrative guidance. Verify that the TOE is in factory default format.</li> <li>Attempt to set the initial administrator user name and password.</li> <li>Logon as a valid administrator and perform all authorized administrative\n                      functions to assure the logon was successful.</li> <li>Log off from the TOE.</li> <li>Attempt to logon with an incorrect administrator name. Verify that the\n                      logon is failing as expected and that administrative functions are unavailable.</li> <li>Attempt to access administrative functions while there is no logged on\n                      administrator. Verify that all attempts fail.</li> <li>If the TOE provides multiple administrative roles, repeat this test for each\n                      defined role to ensure that the authorizations for each role are consistent with\n                      what is described in the operational guidance.</li></ol> ",
+            "dependencies": [],
+            "nestedTestListUUIDs": [],
+            "conclusion": ""
+          }
+        },
+        "platformMap": null,
+        "isNoTest": false,
+        "noTest": "",
+        "customea": {
+          "text": "",
+          "nameAttribute": "Isolation"
+        }
+      }
+    },
+    "modifiedSfr": false,
+    "additionalSfr": false,
+    "consistencyRationale": null,
+    "notNew": null,
+    "xPathDetails": {},
+    "classDescription": "",
+    "sfrType": "",
+    "compUUID": "e4b830ef-33c3-47ce-913b-4a90a0df8adf"
+  },
+  "FMT_SMF.1": {
+    "title": "Specification of Management Functions",
+    "cc_id": "FMT_SMF.1",
+    "iteration_id": "",
+    "xml_id": "",
+    "definition": "",
+    "optional": false,
+    "objective": false,
+    "dependsComments": {},
+    "dependsExternalDocs": {},
+    "selectionBased": false,
+    "selections": {
+      "components": [],
+      "elements": [],
+      "selections": []
+    },
+    "useCaseBased": false,
+    "useCases": [],
+    "implementationDependent": true,
+    "reasons": [
+      "management"
+    ],
+    "tableOpen": false,
+    "objectives": [],
+    "extendedComponentDefinition": {
+      "audit": null,
+      "componentLeveling": null,
+      "dependencies": null,
+      "managementFunction": null,
+      "toggle": false
+    },
+    "auditEvents": {
+      "c4bad617-fda8-4409-a7c4-4e5e4365baf7": {
+        "description": "Use of management functions",
+        "items": [
+          {
+            "info": "None",
+            "optional": false
+          }
+        ],
+        "optional": false
+      }
+    },
+    "open": false,
+    "elements": {
+      "faba54e8-9cb5-47e1-aa9c-f71e98ee1ae1": {
+        "elementXMLID": "fmt-smf-1e1",
+        "selectableGroups": {},
+        "title": [
+          {
+            "text": "\n          The TOE shall be capable of performing the following management functions:\n          "
+          },
+          {
+            "assignment": "d10d3038-aa33-48e8-a678-18d7e17076d9"
+          },
+          {
+            "text": ".\n        "
+          }
+        ],
+        "selectables": {
+          "d10d3038-aa33-48e8-a678-18d7e17076d9": {
+            "id": "fmt_smf.1.1_1",
+            "leadingText": "",
+            "description": "list of management functions to be provided by the TSF",
+            "trailingText": "",
+            "assignment": true,
+            "exclusive": false,
+            "notSelectable": false
+          }
+        },
+        "isManagementFunction": false,
+        "managementFunctions": {
+          "tableName": "Management Functions",
+          "statusMarkers": "",
+          "rows": [],
+          "columns": [
+            {
+              "headerName": "#",
+              "field": "rowNum",
+              "editable": false,
+              "resizable": true,
+              "type": "Index",
+              "flex": 0.5
+            },
+            {
+              "headerName": "ID",
+              "field": "id",
+              "editable": true,
+              "resizable": true,
+              "type": "Editor",
+              "flex": 1
+            },
+            {
+              "headerName": "Management Function",
+              "field": "textArray",
+              "editable": false,
+              "resizable": true,
+              "type": "Button",
+              "flex": 2
+            }
+          ]
+        },
+        "note": "\n          Supported management functions may depend on the PP\u2010Modules that are\n          claimed by the TOE alongside this PP. This could include Configurable Device\n          Filtration (CDF) for one or more supported peripheral types not defined in this\n          PP. A management function should also be included if the optional\n          FDP_RIP_EXT.2.1 requirement is included which specifies that the TOE shall\n          have a purge memory or restore factory defaults function accessible to the\n          administrator.\n        "
+      }
+    },
+    "invisible": false,
+    "evaluationActivities": {
+      "faba54e8-9cb5-47e1-aa9c-f71e98ee1ae1": {
+        "hasLevelSet": false,
+        "tss": "The evaluator shall check to ensure the TSS describes the management functions\n            available to the administrators and user TOE configurations and how they are\n            used by the TOE.",
+        "introduction": "",
+        "guidance": "\n            The evaluator shall check that every management function mandated in the ST for\n            this requirement is described in the operational user guidance and that the\n            description contains the information required to perform the management duties\n            associated with each management function.\n          ",
+        "testIntroduction": "\n            The evaluator shall test the TOE\u2019s ability to provide the management functions by\n            configuring the TOE and testing each option assigned from above. The evaluator is\n            expected to test these functions in all the ways in which the ST and guidance\n            documentation state the configuration can be managed.\n          ",
+        "testClosing": "",
+        "testLists": {},
+        "tests": {},
+        "platformMap": null,
+        "isNoTest": false,
+        "noTest": "",
+        "customea": {
+          "text": "",
+          "nameAttribute": "Isolation"
+        }
+      }
+    },
+    "modifiedSfr": false,
+    "additionalSfr": false,
+    "consistencyRationale": null,
+    "notNew": null,
+    "xPathDetails": {},
+    "classDescription": "",
+    "sfrType": "",
+    "compUUID": "4c3f22ef-2e95-4a5a-afbe-0eddcaf80379"
+  },
+  "FMT_SMR.1": {
+    "title": "Security Roles",
+    "cc_id": "FMT_SMR.1",
+    "iteration_id": "",
+    "xml_id": "",
+    "definition": "",
+    "optional": false,
+    "objective": false,
+    "dependsComments": {},
+    "dependsExternalDocs": {},
+    "selectionBased": false,
+    "selections": {
+      "components": [],
+      "elements": [],
+      "selections": []
+    },
+    "useCaseBased": false,
+    "useCases": [],
+    "implementationDependent": true,
+    "reasons": [
+      "management"
+    ],
+    "tableOpen": false,
+    "objectives": [],
+    "extendedComponentDefinition": {
+      "audit": null,
+      "componentLeveling": null,
+      "dependencies": null,
+      "managementFunction": null,
+      "toggle": false
+    },
+    "auditEvents": {
+      "2fb95572-9089-4b8a-b6e9-8ece3b2f7118": {
+        "description": "Modifications to the group of users",
+        "items": [
+          {
+            "info": "None",
+            "optional": false
+          }
+        ],
+        "optional": false
+      },
+      "28594d97-a3dc-4d5a-aaa1-d3328bb6d58e": {
+        "description": "Unsuccessful attempts to use a role",
+        "items": [
+          {
+            "info": "Due to the given conditions on the roles",
+            "optional": false
+          }
+        ],
+        "optional": false
+      }
+    },
+    "open": false,
+    "elements": {
+      "0b860aeb-bcd1-4302-9548-5ca1f4dffc92": {
+        "elementXMLID": "fmt-smr-1e1",
+        "selectableGroups": {},
+        "title": [
+          {
+            "description": "\n          The TSF shall maintain the roles [<i >administrators</i>].\n        "
+          }
+        ],
+        "selectables": {},
+        "isManagementFunction": false,
+        "managementFunctions": {
+          "tableName": "Management Functions",
+          "statusMarkers": "",
+          "rows": [],
+          "columns": [
+            {
+              "headerName": "#",
+              "field": "rowNum",
+              "editable": false,
+              "resizable": true,
+              "type": "Index",
+              "flex": 0.5
+            },
+            {
+              "headerName": "ID",
+              "field": "id",
+              "editable": true,
+              "resizable": true,
+              "type": "Editor",
+              "flex": 1
+            },
+            {
+              "headerName": "Management Function",
+              "field": "textArray",
+              "editable": false,
+              "resizable": true,
+              "type": "Button",
+              "flex": 2
+            }
+          ]
+        },
+        "note": ""
+      },
+      "24509e58-2cc4-4f70-af52-d78cf7461f9c": {
+        "elementXMLID": "fmt-smf-1e2",
+        "selectableGroups": {},
+        "title": [
+          {
+            "text": "\n            The TSF shall be able to associate users with roles.\n          "
+          }
+        ],
+        "selectables": {},
+        "isManagementFunction": false,
+        "managementFunctions": {
+          "tableName": "Management Functions",
+          "statusMarkers": "",
+          "rows": [],
+          "columns": [
+            {
+              "headerName": "#",
+              "field": "rowNum",
+              "editable": false,
+              "resizable": true,
+              "type": "Index",
+              "flex": 0.5
+            },
+            {
+              "headerName": "ID",
+              "field": "id",
+              "editable": true,
+              "resizable": true,
+              "type": "Editor",
+              "flex": 1
+            },
+            {
+              "headerName": "Management Function",
+              "field": "textArray",
+              "editable": false,
+              "resizable": true,
+              "type": "Button",
+              "flex": 2
+            }
+          ]
+        },
+        "note": "\n          The intent of this SFR is to make clear the fact that the TSF is expected to\n          provide some sort of controlled access to administrative functions such that\n          ordinary users are not able to execute them without authorization. It does not\n          mandate that the TSF provide a single administrative role named\n          \u201cadministrator\u201d; if multiple administrative roles with different authorizations\n          are provided, then the behavior can be described in the ST and tested\n          accordingly.\n        "
+      }
+    },
+    "invisible": false,
+    "evaluationActivities": {
+      "24509e58-2cc4-4f70-af52-d78cf7461f9c": {
+        "hasLevelSet": false,
+        "tss": "",
+        "introduction": "",
+        "guidance": "",
+        "testIntroduction": "",
+        "testClosing": "",
+        "testLists": {},
+        "tests": {},
+        "platformMap": null,
+        "isNoTest": true,
+        "noTest": "Refer to the Evaluation Activities of FMT_MOF.1.1 above."
+      }
+    },
+    "modifiedSfr": false,
+    "additionalSfr": false,
+    "consistencyRationale": null,
+    "notNew": null,
+    "xPathDetails": {},
+    "classDescription": "",
+    "sfrType": "",
+    "compUUID": "1383210b-52f9-4a71-bfa8-51830235fcb5"
+  },
+  "FPT_FLS_EXT.1": {
+    "title": "Failure with Preservation of Secure State",
+    "cc_id": "FPT_FLS_EXT.1",
+    "iteration_id": "",
+    "xml_id": "",
+    "definition": "",
+    "optional": false,
+    "objective": false,
+    "dependsComments": {},
+    "dependsExternalDocs": {},
+    "selectionBased": false,
+    "selections": {
+      "components": [],
+      "elements": [],
+      "selections": []
+    },
+    "useCaseBased": false,
+    "useCases": [],
+    "implementationDependent": false,
+    "reasons": [],
+    "tableOpen": false,
+    "objectives": [],
+    "extendedComponentDefinition": {
+      "audit": "There are no auditable events foreseen.",
+      "componentLeveling": "requires the TSF to go into a secure state upon\n             the detection of selected failures.",
+      "dependencies": "\n             FPT_TST.1 TSF Testing <br/><br/>\n             FPT_PHP.3 Resistance to Physical Attack\n           ",
+      "managementFunction": "No specific management functions are identified.",
+      "toggle": true
+    },
+    "auditEvents": {
+      "b8a9ef17-5e72-4492-b89a-6ca364c5bf87": {
+        "items": [],
+        "optional": false
+      }
+    },
+    "open": false,
+    "elements": {
+      "5cda210b-b93b-470a-8498-05f51134ff8e": {
+        "elementXMLID": "fpt-fls-ext-1e1",
+        "selectableGroups": {
+          "group-3": {
+            "onlyOne": false,
+            "linebreak": false,
+            "groups": [
+              "f7a791f2-a172-432f-acb3-b90ff56b650c",
+              "b7d83adf-50c9-48e6-9fbc-76c53f7b980d"
+            ]
+          }
+        },
+        "title": [
+          {
+            "text": "The TSF shall preserve a secure state when the following types of failures\n              occur: failure of the power\u2010on self\u2010test and "
+          },
+          {
+            "selections": "group-3"
+          },
+          {
+            "text": ". \n            "
+          }
+        ],
+        "selectables": {
+          "f7a791f2-a172-432f-acb3-b90ff56b650c": {
+            "type": "selectable",
+            "uuid": "f7a791f2-a172-432f-acb3-b90ff56b650c",
+            "id": "fpt_fls_ext.1.1_1",
+            "description": "failure of the anti-tamper function",
+            "exclusive": false,
+            "nestedGroups": []
+          },
+          "b7d83adf-50c9-48e6-9fbc-76c53f7b980d": {
+            "type": "selectable",
+            "uuid": "b7d83adf-50c9-48e6-9fbc-76c53f7b980d",
+            "id": "fpt_fls_ext.1.1_2",
+            "description": "no other failures",
+            "exclusive": false,
+            "nestedGroups": []
+          }
+        },
+        "isManagementFunction": false,
+        "managementFunctions": {
+          "tableName": "Management Functions",
+          "statusMarkers": "",
+          "rows": [],
+          "columns": [
+            {
+              "headerName": "#",
+              "field": "rowNum",
+              "editable": false,
+              "resizable": true,
+              "type": "Index",
+              "flex": 0.5
+            },
+            {
+              "headerName": "ID",
+              "field": "id",
+              "editable": true,
+              "resizable": true,
+              "type": "Editor",
+              "flex": 1
+            },
+            {
+              "headerName": "Management Function",
+              "field": "textArray",
+              "editable": false,
+              "resizable": true,
+              "type": "Button",
+              "flex": 2
+            }
+          ]
+        },
+        "note": "\n              In the context of this PP, a 'secure state' is defined by the TOE disabling all\n              peripheral and connected computer interfaces when the correctness of its own\n              functions cannot be assured.<br/><br/>\n              Failure of the anti\u2010tamper function should be selected if FPT_PHP.3 is included\n              in the ST.\n            "
+      }
+    },
+    "invisible": false,
+    "evaluationActivities": {
+      "5cda210b-b93b-470a-8498-05f51134ff8e": {
+        "hasLevelSet": false,
+        "tss": "",
+        "introduction": "",
+        "guidance": "",
+        "testIntroduction": "",
+        "testClosing": "",
+        "testLists": {},
+        "tests": {},
+        "platformMap": null,
+        "isNoTest": true,
+        "noTest": "This SFR is evaluated in conjunction with FPT_TST.1"
+      }
+    },
+    "modifiedSfr": false,
+    "additionalSfr": false,
+    "consistencyRationale": "",
+    "notNew": null,
+    "xPathDetails": {},
+    "classDescription": "",
+    "sfrType": "",
+    "compUUID": "8aad4c0d-3ce3-4e12-a00d-07e71c22318a"
+  },
+  "FPT_NTA_EXT.1": {
+    "title": "No Access to TOE",
+    "cc_id": "FPT_NTA_EXT.1",
+    "iteration_id": "",
+    "xml_id": "",
+    "definition": "",
+    "optional": false,
+    "objective": false,
+    "dependsComments": {},
+    "dependsExternalDocs": {},
+    "selectionBased": false,
+    "selections": {
+      "components": [],
+      "elements": [],
+      "selections": []
+    },
+    "useCaseBased": false,
+    "useCases": [],
+    "implementationDependent": false,
+    "reasons": [],
+    "tableOpen": false,
+    "objectives": [],
+    "extendedComponentDefinition": {
+      "audit": "There are no auditable events foreseen.",
+      "componentLeveling": "requires the TSF to block access to non\u2010authorized TSF data via\n             external ports.",
+      "dependencies": "No dependencies",
+      "managementFunction": "No specific management functions are identified.",
+      "toggle": true
+    },
+    "auditEvents": {
+      "78f16ca5-3719-4378-a396-d805c089e528": {
+        "items": [],
+        "optional": false
+      }
+    },
+    "open": false,
+    "elements": {
+      "144ccea2-df21-494a-8433-dba3540835f6": {
+        "elementXMLID": "fpt-nta-ext-1e1",
+        "selectableGroups": {
+          "group-4": {
+            "onlyOne": false,
+            "linebreak": false,
+            "groups": [
+              "5e58d575-8bc7-44e2-9524-ee66d3aefa22",
+              "e7eab5eb-4da3-4332-86fb-8ee97aa09f9f",
+              "d9f456da-34d1-4048-8b3f-57aa0c03a800"
+            ]
+          }
+        },
+        "title": [
+          {
+            "text": "\n               TOE firmware, software, and memory shall not be accessible via the TOE\u2019s\n               external ports, with the following exceptions: "
+          },
+          {
+            "selections": "group-4"
+          }
+        ],
+        "selectables": {
+          "5e58d575-8bc7-44e2-9524-ee66d3aefa22": {
+            "type": "selectable",
+            "uuid": "5e58d575-8bc7-44e2-9524-ee66d3aefa22",
+            "id": "fpt_nta_ext.1.1_1",
+            "description": "the Extended Display Identification Data (EDID) memory of Video TOEs may be accessible from connected computers;",
+            "exclusive": false,
+            "nestedGroups": []
+          },
+          "e7eab5eb-4da3-4332-86fb-8ee97aa09f9f": {
+            "type": "selectable",
+            "uuid": "e7eab5eb-4da3-4332-86fb-8ee97aa09f9f",
+            "id": "fpt_nta_ext.1.1_2",
+            "description": "the configuration data, settings, and logging data that may be accessible by authorized administrators",
+            "exclusive": false,
+            "nestedGroups": []
+          },
+          "d9f456da-34d1-4048-8b3f-57aa0c03a800": {
+            "type": "selectable",
+            "uuid": "d9f456da-34d1-4048-8b3f-57aa0c03a800",
+            "id": "fpt_nta_ext.1.1_3",
+            "description": "no other exceptions",
+            "exclusive": false,
+            "nestedGroups": []
+          }
+        },
+        "isManagementFunction": false,
+        "managementFunctions": {
+          "tableName": "Management Functions",
+          "statusMarkers": "",
+          "rows": [],
+          "columns": [
+            {
+              "headerName": "#",
+              "field": "rowNum",
+              "editable": false,
+              "resizable": true,
+              "type": "Index",
+              "flex": 0.5
+            },
+            {
+              "headerName": "ID",
+              "field": "id",
+              "editable": true,
+              "resizable": true,
+              "type": "Editor",
+              "flex": 1
+            },
+            {
+              "headerName": "Management Function",
+              "field": "textArray",
+              "editable": false,
+              "resizable": true,
+              "type": "Button",
+              "flex": 2
+            }
+          ]
+        },
+        "note": ""
+      }
+    },
+    "invisible": false,
+    "evaluationActivities": {
+      "144ccea2-df21-494a-8433-dba3540835f6": {
+        "hasLevelSet": false,
+        "tss": "The evaluator shall examine the TSS to ensure that the TSS documents that\n                 connected computers and peripherals do not have access to TOE software,\n                 firmware, and TOE memory, except as described above.",
+        "introduction": "",
+        "guidance": "\n                 The evaluator shall check the operational user guidance to ensure any\n                 configurations required to comply with this SFR are defined.\n               ",
+        "testIntroduction": "",
+        "testClosing": "",
+        "testLists": {},
+        "tests": {},
+        "platformMap": null,
+        "isNoTest": false,
+        "noTest": "",
+        "customea": {
+          "text": "",
+          "nameAttribute": "Isolation"
+        }
+      }
+    },
+    "modifiedSfr": false,
+    "additionalSfr": false,
+    "consistencyRationale": "",
+    "notNew": null,
+    "xPathDetails": {},
+    "classDescription": "",
+    "sfrType": "",
+    "compUUID": "6a33c92a-edeb-4efd-b264-ccd7646a5c61"
+  },
+  "FPT_PHP.1": {
+    "title": "Passive Detection of Physical Attack",
+    "cc_id": "FPT_PHP.1",
+    "iteration_id": "",
+    "xml_id": "",
+    "definition": "",
+    "optional": false,
+    "objective": false,
+    "dependsComments": {},
+    "dependsExternalDocs": {},
+    "selectionBased": false,
+    "selections": {
+      "components": [],
+      "elements": [],
+      "selections": []
+    },
+    "useCaseBased": false,
+    "useCases": [],
+    "implementationDependent": false,
+    "reasons": [],
+    "tableOpen": false,
+    "objectives": [],
+    "extendedComponentDefinition": {
+      "audit": null,
+      "componentLeveling": null,
+      "dependencies": null,
+      "managementFunction": null,
+      "toggle": false
+    },
+    "auditEvents": {
+      "33ee7413-9e71-4c73-900c-f2e264165a52": {
+        "description": "Detection of intrusion.",
+        "items": [
+          {
+            "info": "None",
+            "optional": false
+          }
+        ],
+        "optional": false
+      }
+    },
+    "open": false,
+    "elements": {
+      "b01e20e5-c06e-4b78-b7b8-ffc99e63e248": {
+        "elementXMLID": "fpt-php-1e1",
+        "selectableGroups": {},
+        "title": [
+          {
+            "text": "\n               The TSF shall provide unambiguous detection of physical tampering that might\n               compromise the TSF.\n             "
+          }
+        ],
+        "selectables": {},
+        "isManagementFunction": false,
+        "managementFunctions": {
+          "tableName": "Management Functions",
+          "statusMarkers": "",
+          "rows": [],
+          "columns": [
+            {
+              "headerName": "#",
+              "field": "rowNum",
+              "editable": false,
+              "resizable": true,
+              "type": "Index",
+              "flex": 0.5
+            },
+            {
+              "headerName": "ID",
+              "field": "id",
+              "editable": true,
+              "resizable": true,
+              "type": "Editor",
+              "flex": 1
+            },
+            {
+              "headerName": "Management Function",
+              "field": "textArray",
+              "editable": false,
+              "resizable": true,
+              "type": "Button",
+              "flex": 2
+            }
+          ]
+        },
+        "note": ""
+      },
+      "cccd83fa-015c-487f-8f7f-8669f3601cab": {
+        "elementXMLID": "fpt-php-1e2",
+        "selectableGroups": {},
+        "title": [
+          {
+            "text": "\n               The TSF shall provide the capability to determine whether physical tampering\n               with the TSF\u2019s devices or TSF\u2019s elements has occurred.\n             "
+          }
+        ],
+        "selectables": {},
+        "isManagementFunction": false,
+        "managementFunctions": {
+          "tableName": "Management Functions",
+          "statusMarkers": "",
+          "rows": [],
+          "columns": [
+            {
+              "headerName": "#",
+              "field": "rowNum",
+              "editable": false,
+              "resizable": true,
+              "type": "Index",
+              "flex": 0.5
+            },
+            {
+              "headerName": "ID",
+              "field": "id",
+              "editable": true,
+              "resizable": true,
+              "type": "Editor",
+              "flex": 1
+            },
+            {
+              "headerName": "Management Function",
+              "field": "textArray",
+              "editable": false,
+              "resizable": true,
+              "type": "Button",
+              "flex": 2
+            }
+          ]
+        },
+        "note": "\n               FPT_PHP.1.1 include indications generated from application of optional SFR\n               FPT_PHP.3\n             "
+      }
+    },
+    "invisible": false,
+    "evaluationActivities": {
+      "cccd83fa-015c-487f-8f7f-8669f3601cab": {
+        "hasLevelSet": false,
+        "tss": "The evaluator shall verify that the TSS indicates that the TOE provides\n                 unambiguous detection of physical tampering of the TOE enclosure and TOE\n                 remote controller (if applicable). The evaluator shall verify that the TSS\n                 provides information that describes how the TOE indicates that it has been\n                 tampered with.",
+        "introduction": "",
+        "guidance": "\n                 The evaluator shall verify that the operational user guidance describes the\n                 mechanism by which the TOE provides unambiguous detection of physical tampering and\n                 provides the user with instructions for verifying that the TOE has not been\n                 tampered with.\n               ",
+        "testIntroduction": "",
+        "testClosing": "",
+        "testLists": {
+          "8c935298-6465-4714-b8ca-dea8931f7fbe": {
+            "parentTestUUID": null,
+            "description": "",
+            "testUUIDs": [
+              "0ce9451f-3187-4797-a5e7-2408f667312e",
+              "e4f5362e-4be7-43e0-bfaa-81a29882f05a"
+            ],
+            "conclusion": ""
+          }
+        },
+        "tests": {
+          "0ce9451f-3187-4797-a5e7-2408f667312e": {
+            "testListUUID": "8c935298-6465-4714-b8ca-dea8931f7fbe",
+            "id": "",
+            "objective": "The evaluator shall verify, for each tamper evident seal or label affixed to the TOE enclosure and TOE remote controller (if applicable), that any attempts to open the enclosure or remove the seal results in the seal being damaged in a manner that is consistent with the operational user guidance.",
+            "dependencies": [],
+            "nestedTestListUUIDs": [],
+            "conclusion": ""
+          },
+          "e4f5362e-4be7-43e0-bfaa-81a29882f05a": {
+            "testListUUID": "8c935298-6465-4714-b8ca-dea8931f7fbe",
+            "id": "",
+            "objective": "The evaluator shall verify that it is not possible to administratively disable or otherwise prevent the display of any tampering indicators.",
+            "dependencies": [],
+            "nestedTestListUUIDs": [],
+            "conclusion": ""
+          }
+        },
+        "platformMap": null,
+        "isNoTest": false,
+        "noTest": "",
+        "customea": {
+          "text": "",
+          "nameAttribute": "Isolation"
+        }
+      }
+    },
+    "modifiedSfr": false,
+    "additionalSfr": false,
+    "consistencyRationale": null,
+    "notNew": null,
+    "xPathDetails": {},
+    "classDescription": "",
+    "sfrType": "",
+    "compUUID": "eb1decfa-e6bb-445d-8497-2d4754c0d552"
+  },
+  "FPT_PHP.3": {
+    "title": "Resistance to Physical Attack",
+    "cc_id": "FPT_PHP.3",
+    "iteration_id": "",
+    "xml_id": "",
+    "definition": "",
+    "optional": false,
+    "objective": false,
+    "dependsComments": {},
+    "dependsExternalDocs": {},
+    "selectionBased": false,
+    "selections": {
+      "components": [],
+      "elements": [],
+      "selections": []
+    },
+    "useCaseBased": false,
+    "useCases": [],
+    "implementationDependent": true,
+    "reasons": [
+      "tamperresponse"
+    ],
+    "tableOpen": false,
+    "objectives": [],
+    "extendedComponentDefinition": {
+      "audit": null,
+      "componentLeveling": null,
+      "dependencies": null,
+      "managementFunction": null,
+      "toggle": false
+    },
+    "auditEvents": {
+      "8d9d6d0e-e7dc-45b9-a9b3-59ad39ff266f": {
+        "items": [],
+        "optional": false
+      }
+    },
+    "open": false,
+    "elements": {
+      "a485c2ac-d464-4f74-bf1e-790b9e588b83": {
+        "elementXMLID": "fpt-php-3e1",
+        "selectableGroups": {},
+        "title": [
+          {
+            "description": "\n               The TSF shall resist [<i >a physical attack for the purpose of gaining access to the\n               internal components, to damage the anti\u2010tamper battery, to drain or exhaust\n               the anti\u2010tamper battery</i>] to the [<i >TOE enclosure and any remote controllers</i>]\n               by <b >the attacked component becoming permanently disabled</b>.\n             "
+          }
+        ],
+        "selectables": {},
+        "isManagementFunction": false,
+        "managementFunctions": {
+          "tableName": "Management Functions",
+          "statusMarkers": "",
+          "rows": [],
+          "columns": [
+            {
+              "headerName": "#",
+              "field": "rowNum",
+              "editable": false,
+              "resizable": true,
+              "type": "Index",
+              "flex": 0.5
+            },
+            {
+              "headerName": "ID",
+              "field": "id",
+              "editable": true,
+              "resizable": true,
+              "type": "Editor",
+              "flex": 1
+            },
+            {
+              "headerName": "Management Function",
+              "field": "textArray",
+              "editable": false,
+              "resizable": true,
+              "type": "Button",
+              "flex": 2
+            }
+          ]
+        },
+        "note": "\n               \"By the attacked component becoming permanently disabled\" is interpreted to mean that\n               if the TOE enclosure is attacked, the TOE is disabled so that the connected peripheral\n               devices will cease to function; however, if the remote controller is attacked, only\n               the remote controller needs to be disabled so that switching through the remote\n               control functionality will cease to function.               \n             "
+      }
+    },
+    "invisible": false,
+    "evaluationActivities": {
+      "a485c2ac-d464-4f74-bf1e-790b9e588b83": {
+        "hasLevelSet": false,
+        "tss": "The evaluator shall verify that the TSS describes the TOE\u2019s reaction to\n                 opening the device enclosure or damaging and exhausting the anti\u2010tampering\n                 battery associated with the enclosure.",
+        "introduction": "",
+        "guidance": "\n                 The evaluator shall examine the operational user guidance and verify that\n                 the guidance provides users with information on how to recognize a device\n                 where the anti\u2010tampering functionality has been activated.<br/><br/>\n                 The evaluator shall verify that the operational user guidance warns the user\n                 of the actions that will cause the anti\u2010tampering functionality to disable the\n                 device.\n               ",
+        "testIntroduction": "\n                 In the following testing the evaluator shall attempt to gain physical access to\n                 the TOE internal circuitry (enough access to allow the insertion of tools to\n                 tamper with the internal circuitry). The TOE anti\u2010 tampering function is\n                 expected to trigger, causing an irreversible change to the TOE functionality.\n                 The evaluator then shall verify that the anti\u2010tampering triggering provides\n                 the expected user indications and also disables the TOE. <br/> <br/>\n                 TOE disabling means that the user would not be able to use the TOE for any\n                 purpose \u2013 all peripheral devices and computers are isolated. <br/> <br/>\n                 Note that it is obvious that if the TOE was physically tampered with, then the\n                 attacker may easily circumvent the tamper indication means (for example\n                 cut the relevant TOE front panel wires). Nevertheless, the following test\n                 verifies that the user would be unable to ignore the TOE tampering\n                 indications and resume normal work. <br/> <br/>\n                 The evaluator shall perform the following steps:  <ol><li>[conditional: this step is applicable for TOEs having a remote\n                 controller] The evaluator shall attempt to open the PSD remote controller\n                 enclosure enough to gain access to its internal circuitry and observe that the\n                 TOE is both permanently disabled and provides the proper indication that it\n                 has been tampered with in accordance with the operational user guidance.</li> <li>The evaluator shall attempt to open the PSD enclosure enough to\n                 gain access to its internal circuitry and observe that the TOE is both\n                 permanently disabled and provides the proper indication that it has been\n                 tampered with in accordance with the operational user guidance.</li> <li>The evaluator shall attempt to access the TOE settings to reset the\n                 tampering state and verify that it is not possible to recover from the\n                 tampered state.</li> <li>The evaluator shall acquire a copy of the TOE that has been\n                 previously tampered with.</li> <li>The evaluator shall power on the TOE and verify that the tampering\n                 indicator is displayed.</li></ol>",
+        "testClosing": "",
+        "testLists": {},
+        "tests": {},
+        "platformMap": null,
+        "isNoTest": false,
+        "noTest": "",
+        "customea": {
+          "text": "",
+          "nameAttribute": "Isolation"
+        }
+      }
+    },
+    "modifiedSfr": false,
+    "additionalSfr": false,
+    "consistencyRationale": null,
+    "notNew": null,
+    "xPathDetails": {},
+    "classDescription": "",
+    "sfrType": "",
+    "compUUID": "12d973e6-5cdb-48c3-9c65-2d85fbb8be10"
+  },
+  "FPT_STM.1": {
+    "title": "Reliable Time Stamps",
+    "cc_id": "FPT_STM.1",
+    "iteration_id": "",
+    "xml_id": "",
+    "definition": "",
+    "optional": false,
+    "objective": false,
+    "dependsComments": {},
+    "dependsExternalDocs": {},
+    "selectionBased": false,
+    "selections": {
+      "components": [],
+      "elements": [],
+      "selections": []
+    },
+    "useCaseBased": false,
+    "useCases": [],
+    "implementationDependent": true,
+    "reasons": [
+      "management"
+    ],
+    "tableOpen": false,
+    "objectives": [],
+    "extendedComponentDefinition": {
+      "audit": null,
+      "componentLeveling": null,
+      "dependencies": null,
+      "managementFunction": null,
+      "toggle": false
+    },
+    "auditEvents": {
+      "14b6ef71-1b62-486f-89e0-ed7fc1be8e68": {
+        "description": "Changes to the time",
+        "items": [
+          {
+            "info": "None",
+            "optional": false
+          }
+        ],
+        "optional": false
+      }
+    },
+    "open": false,
+    "elements": {
+      "bedafed4-f277-4d88-b343-7813e2ddaa28": {
+        "elementXMLID": "fpt-stm-1e1",
+        "selectableGroups": {},
+        "title": [
+          {
+            "text": "\n               The TSF shall be able to provide reliable time stamps.\n             "
+          }
+        ],
+        "selectables": {},
+        "isManagementFunction": false,
+        "managementFunctions": {
+          "tableName": "Management Functions",
+          "statusMarkers": "",
+          "rows": [],
+          "columns": [
+            {
+              "headerName": "#",
+              "field": "rowNum",
+              "editable": false,
+              "resizable": true,
+              "type": "Index",
+              "flex": 0.5
+            },
+            {
+              "headerName": "ID",
+              "field": "id",
+              "editable": true,
+              "resizable": true,
+              "type": "Editor",
+              "flex": 1
+            },
+            {
+              "headerName": "Management Function",
+              "field": "textArray",
+              "editable": false,
+              "resizable": true,
+              "type": "Button",
+              "flex": 2
+            }
+          ]
+        },
+        "note": "\n               Reliable time stamps are expected to be used with other TSF, e.g., for the\n               generation of audit data, to allow the Administrator to investigate incidents by\n               checking the order of events and to determine the actual local time when events\n               occurred. The decision about the required level of accuracy of that information is\n               up to the Administrator.\n             "
+      }
+    },
+    "invisible": false,
+    "evaluationActivities": {
+      "bedafed4-f277-4d88-b343-7813e2ddaa28": {
+        "hasLevelSet": false,
+        "tss": "The evaluator shall check to ensure the TSS describes how the TOE provides\n                 reliable timestamps.",
+        "introduction": "",
+        "guidance": "\n                 The evaluator shall check that the operational user guidance describes how the\n                 TOE provides reliable timestamps and if there are any management functions for\n                 configuring the time.\n               ",
+        "testIntroduction": "\n                 The evaluator shall test the TOE\u2019s ability to provide time stamps. It is expected\n                 that this test be performed in conjunction with FAU_GEN.1.\n               ",
+        "testClosing": "",
+        "testLists": {},
+        "tests": {},
+        "platformMap": null,
+        "isNoTest": false,
+        "noTest": "",
+        "customea": {
+          "text": "",
+          "nameAttribute": "Isolation"
+        }
+      }
+    },
+    "modifiedSfr": false,
+    "additionalSfr": false,
+    "consistencyRationale": null,
+    "notNew": null,
+    "xPathDetails": {},
+    "classDescription": "",
+    "sfrType": "",
+    "compUUID": "b5b3f37b-20a3-4e96-8e16-fbdf0040188a"
+  },
+  "FPT_TST.1": {
+    "title": "TSF Testing",
+    "cc_id": "FPT_TST.1",
+    "iteration_id": "",
+    "xml_id": "",
+    "definition": "",
+    "optional": false,
+    "objective": false,
+    "dependsComments": {},
+    "dependsExternalDocs": {},
+    "selectionBased": false,
+    "selections": {
+      "components": [],
+      "elements": [],
+      "selections": []
+    },
+    "useCaseBased": false,
+    "useCases": [],
+    "implementationDependent": false,
+    "reasons": [],
+    "tableOpen": false,
+    "objectives": [],
+    "extendedComponentDefinition": {
+      "audit": null,
+      "componentLeveling": null,
+      "dependencies": null,
+      "managementFunction": null,
+      "toggle": false
+    },
+    "auditEvents": {
+      "e822d3e7-9ca4-4b5c-9d31-2d0b69d19107": {
+        "description": "Execution of the TSF self-tests",
+        "items": [
+          {
+            "info": "Results of the tests",
+            "optional": false
+          }
+        ],
+        "optional": false
+      }
+    },
+    "open": false,
+    "elements": {
+      "d27e08b3-4992-49a0-a01d-98daf4d4e944": {
+        "elementXMLID": "fpt-tst-1e1",
+        "selectableGroups": {
+          "group-5": {
+            "onlyOne": false,
+            "linebreak": false,
+            "groups": [
+              "6e095ea1-83ec-4a1a-896a-26ca24c672c5",
+              "3d2e8752-6223-4e35-aa8a-1d69e4e188fa"
+            ]
+          },
+          "group-6": {
+            "onlyOne": false,
+            "linebreak": false,
+            "groups": [
+              "046c4a2b-5a6e-4ba2-8d2c-e6c8f34093ca",
+              "2420a061-5613-4b59-af17-4a32ca907340"
+            ]
+          }
+        },
+        "title": [
+          {
+            "description": "\n               The TSF shall run a suite of the following self\u2010tests [<i >during initial start\u2010up and at the\n               conditions</i>"
+          },
+          {
+            "selections": "group-5"
+          },
+          {
+            "description": "] to demonstrate the correct operation of [<i >user control functions\n                 and </i>"
+          },
+          {
+            "selections": "group-6"
+          },
+          {
+            "text": "].\n             "
+          }
+        ],
+        "selectables": {
+          "6e095ea1-83ec-4a1a-896a-26ca24c672c5": {
+            "type": "selectable",
+            "uuid": "6e095ea1-83ec-4a1a-896a-26ca24c672c5",
+            "id": "fpt_tst.1.1_1",
+            "description": "upon reset button activation",
+            "exclusive": false,
+            "nestedGroups": []
+          },
+          "3d2e8752-6223-4e35-aa8a-1d69e4e188fa": {
+            "type": "selectable",
+            "uuid": "3d2e8752-6223-4e35-aa8a-1d69e4e188fa",
+            "id": "fpt_tst.1.1_2",
+            "description": "no other conditions",
+            "exclusive": false,
+            "nestedGroups": []
+          },
+          "046c4a2b-5a6e-4ba2-8d2c-e6c8f34093ca": {
+            "type": "selectable",
+            "uuid": "046c4a2b-5a6e-4ba2-8d2c-e6c8f34093ca",
+            "id": "fpt_tst.1.1_3",
+            "description": "active anti-tamper functionality",
+            "exclusive": false,
+            "nestedGroups": []
+          },
+          "2420a061-5613-4b59-af17-4a32ca907340": {
+            "type": "selectable",
+            "uuid": "2420a061-5613-4b59-af17-4a32ca907340",
+            "id": "fpt_tst.1.1_4",
+            "description": "no other functions",
+            "exclusive": false,
+            "nestedGroups": []
+          }
+        },
+        "isManagementFunction": false,
+        "managementFunctions": {
+          "tableName": "Management Functions",
+          "statusMarkers": "",
+          "rows": [],
+          "columns": [
+            {
+              "headerName": "#",
+              "field": "rowNum",
+              "editable": false,
+              "resizable": true,
+              "type": "Index",
+              "flex": 0.5
+            },
+            {
+              "headerName": "ID",
+              "field": "id",
+              "editable": true,
+              "resizable": true,
+              "type": "Editor",
+              "flex": 1
+            },
+            {
+              "headerName": "Management Function",
+              "field": "textArray",
+              "editable": false,
+              "resizable": true,
+              "type": "Button",
+              "flex": 2
+            }
+          ]
+        },
+        "note": ""
+      },
+      "0b473161-f05d-4755-9a55-5bdbb610a553": {
+        "elementXMLID": "fpt-tst-1e2",
+        "selectableGroups": {
+          "group-7": {
+            "onlyOne": false,
+            "linebreak": false,
+            "groups": [
+              "17e76e90-bf48-4159-a229-60aff67ef304",
+              "ebb8be42-3007-4bdc-8906-ade5246c0531"
+            ]
+          }
+        },
+        "title": [
+          {
+            "text": "\n               The TSF shall provide authorized users with the capability to verify the integrity\n               of "
+          },
+          {
+            "selections": "group-7"
+          },
+          {
+            "text": ".\n             "
+          }
+        ],
+        "selectables": {
+          "17e76e90-bf48-4159-a229-60aff67ef304": {
+            "id": "fpt_tst.1.2_1",
+            "description": "parts of TSF data",
+            "assignment": true,
+            "exclusive": false,
+            "notSelectable": false
+          },
+          "ebb8be42-3007-4bdc-8906-ade5246c0531": {
+            "type": "selectable",
+            "uuid": "ebb8be42-3007-4bdc-8906-ade5246c0531",
+            "id": "fpt_tst.1.2_3",
+            "description": "TSF data",
+            "exclusive": false,
+            "nestedGroups": []
+          }
+        },
+        "isManagementFunction": false,
+        "managementFunctions": {
+          "tableName": "Management Functions",
+          "statusMarkers": "",
+          "rows": [],
+          "columns": [
+            {
+              "headerName": "#",
+              "field": "rowNum",
+              "editable": false,
+              "resizable": true,
+              "type": "Index",
+              "flex": 0.5
+            },
+            {
+              "headerName": "ID",
+              "field": "id",
+              "editable": true,
+              "resizable": true,
+              "type": "Editor",
+              "flex": 1
+            },
+            {
+              "headerName": "Management Function",
+              "field": "textArray",
+              "editable": false,
+              "resizable": true,
+              "type": "Button",
+              "flex": 2
+            }
+          ]
+        },
+        "note": ""
+      },
+      "5f18b5de-cf14-4fca-b91c-9a2e8cc64921": {
+        "elementXMLID": "fpt-tst-1e3",
+        "selectableGroups": {
+          "group-8": {
+            "onlyOne": false,
+            "linebreak": false,
+            "groups": [
+              "ef0e6328-266b-420e-9458-1d030ffc20ee",
+              "39215a2f-13f7-42a1-b65e-f652ee47302c"
+            ]
+          }
+        },
+        "title": [
+          {
+            "text": "\n                 The TSF shall provide authorized users with the capability to verify the integrity\n                 of "
+          },
+          {
+            "selections": "group-8"
+          },
+          {
+            "text": ".\n               "
+          }
+        ],
+        "selectables": {
+          "ef0e6328-266b-420e-9458-1d030ffc20ee": {
+            "id": "fpt_tst.1.3_1",
+            "description": "parts of TSF",
+            "assignment": true,
+            "exclusive": false,
+            "notSelectable": false
+          },
+          "39215a2f-13f7-42a1-b65e-f652ee47302c": {
+            "type": "selectable",
+            "uuid": "39215a2f-13f7-42a1-b65e-f652ee47302c",
+            "id": "fpt_tst.1.3_3",
+            "description": "TSF",
+            "exclusive": false,
+            "nestedGroups": []
+          }
+        },
+        "isManagementFunction": false,
+        "managementFunctions": {
+          "tableName": "Management Functions",
+          "statusMarkers": "",
+          "rows": [],
+          "columns": [
+            {
+              "headerName": "#",
+              "field": "rowNum",
+              "editable": false,
+              "resizable": true,
+              "type": "Index",
+              "flex": 0.5
+            },
+            {
+              "headerName": "ID",
+              "field": "id",
+              "editable": true,
+              "resizable": true,
+              "type": "Editor",
+              "flex": 1
+            },
+            {
+              "headerName": "Management Function",
+              "field": "textArray",
+              "editable": false,
+              "resizable": true,
+              "type": "Button",
+              "flex": 2
+            }
+          ]
+        },
+        "note": "\n               Reset button activation should be selected if the TOE includes such\n               functionality.<br/><br/>\n               If \"active anti\u2010tamper functionality\" is selected, portions of the evaluation\n               activities will test functions from the optional active anti\u2010tamper SFR\n               FPT_PHP.3.<br/><br/>\n               Anyone with physical access to the TOE can be considered an authorized user.\n             "
+      }
+    },
+    "invisible": false,
+    "evaluationActivities": {
+      "5f18b5de-cf14-4fca-b91c-9a2e8cc64921": {
+        "hasLevelSet": false,
+        "tss": "The evaluator shall verify that the TSS describes the self\u2010 tests that are\n                 performed on start up or on reset (if \"upon reset button activation\" is\n                 selected). The evaluator shall verify that the self\u2010tests cover at least the\n                 following:<ul><li>\n                     a test of the user interface \u2013 in particular, tests of the user control\n                     mechanism (e.g., checking that the front panel push\u2010buttons are not\n                     jammed) and\n                   </li> <li>\n                     if \"active anti\u2010tamper functionality\" is selected, a test of any anti-tampering\n                     mechanism (e.g., checking that the backup battery is functional).\n                   </li></ul>\n                 The evaluator shall verify that the TSS describes how the TOE ensures a\n                 shutdown upon a self\u2010test failure or a failed anti\u2010tampering function, if\n                 present. If there are instances when a shutdown does not occur (e.g., a\n                 failure is deemed non\u2010security relevant), those cases are identified and a\n                 rationale is provided explaining why the TOE\u2019s ability to enforce its security\n                 policies is not affected.<br/><br/>\n                 The evaluator shall check the TSS to verify that it describes the TOE behavior\n                 in case of self\u2010test failure. The evaluator shall verify that the described TOE\n                 behavior includes shutting down the PSD functionality once the failure is\n                 detected.<br/><br/>\n                 The evaluator shall examine the TSS to verify that it describes how users\n                 verify the integrity of the selections in FPT_TST.1.2 and FPT_TST.1.3. This\n                 method can include restarting the TOE, a dedicated self\u2010test, or some other\n                 method.",
+        "introduction": "",
+        "guidance": "\n                 The evaluators shall verify that the operational user guidance describes how\n                 users verify the integrity of the selections in FPT_TST.1.2 and FPT_TST.1.3.\n                 This method can include restarting the TOE, a dedicated self\u2010test, or some\n                 other method.\n               ",
+        "testIntroduction": "\n                 The evaluator shall trigger the conditions specified in the TSS that are used\n                 to initiate TSF self\u2010testing and verify that successful completion of the self-tests\n                 can be determined by following the corresponding steps in the\n                 operational guidance.\n               ",
+        "testClosing": "",
+        "testLists": {},
+        "tests": {},
+        "platformMap": null,
+        "isNoTest": false,
+        "noTest": "",
+        "customea": {
+          "text": "",
+          "nameAttribute": "Isolation"
+        }
+      }
+    },
+    "modifiedSfr": false,
+    "additionalSfr": false,
+    "consistencyRationale": null,
+    "notNew": null,
+    "xPathDetails": {},
+    "classDescription": "",
+    "sfrType": "",
+    "compUUID": "0074ce5a-b82a-42c4-b7b3-47b6905e08ab"
+  },
+  "FPT_TST_EXT.1": {
+    "title": "TSF Testing",
+    "cc_id": "FPT_TST_EXT.1",
+    "iteration_id": "",
+    "xml_id": "",
+    "definition": "",
+    "optional": false,
+    "objective": false,
+    "dependsComments": {},
+    "dependsExternalDocs": {},
+    "selectionBased": false,
+    "selections": {
+      "components": [],
+      "elements": [],
+      "selections": []
+    },
+    "useCaseBased": false,
+    "useCases": [],
+    "implementationDependent": false,
+    "reasons": [],
+    "tableOpen": false,
+    "objectives": [],
+    "extendedComponentDefinition": {
+      "audit": "The following actions should be auditable if FAU_GEN.1 Audit Data Generation is included in the\n             PP/ST: <ul><li>Indication that the TSF self-test was completed</li><li>Failure of self-test</li></ul>",
+      "componentLeveling": "requires the TSF to shutdown normal functions and provide a visual or\n             auditory indication that a self\u2010test has failed.",
+      "dependencies": "FPT_TST.1 TSF Testing",
+      "managementFunction": "No specific management functions are identified.",
+      "toggle": true
+    },
+    "auditEvents": {
+      "6e26d9e1-1553-49e4-baba-8b3f2b6b8d48": {
+        "description": "Execution of self-tests.",
+        "items": [
+          {
+            "info": "None.",
+            "optional": false
+          }
+        ],
+        "optional": false
+      }
+    },
+    "open": false,
+    "elements": {
+      "4491d3ef-84bb-491e-88e8-80715dda5b5c": {
+        "elementXMLID": "fpt-tst-ext-1e1",
+        "selectableGroups": {
+          "group-9": {
+            "onlyOne": false,
+            "linebreak": false,
+            "groups": [
+              "f37946f1-7344-4fb5-820f-0008a248dee1",
+              "1a20499b-1b8d-448f-ad91-44ef333abc70"
+            ]
+          }
+        },
+        "title": [
+          {
+            "text": "\n               The TSF shall respond to a self\u2010test failure by providing users with a "
+          },
+          {
+            "selections": "group-9"
+          },
+          {
+            "text": " indication of failure and by shutdown of normal TSF functions.\n             "
+          }
+        ],
+        "selectables": {
+          "f37946f1-7344-4fb5-820f-0008a248dee1": {
+            "type": "selectable",
+            "uuid": "f37946f1-7344-4fb5-820f-0008a248dee1",
+            "id": "fpt_tst_ext.1.1_1",
+            "description": "visual",
+            "exclusive": false,
+            "nestedGroups": []
+          },
+          "1a20499b-1b8d-448f-ad91-44ef333abc70": {
+            "type": "selectable",
+            "uuid": "1a20499b-1b8d-448f-ad91-44ef333abc70",
+            "id": "fpt_tst_ext.1.1_2",
+            "description": "auditory",
+            "exclusive": false,
+            "nestedGroups": []
+          }
+        },
+        "isManagementFunction": false,
+        "managementFunctions": {
+          "tableName": "Management Functions",
+          "statusMarkers": "",
+          "rows": [],
+          "columns": [
+            {
+              "headerName": "#",
+              "field": "rowNum",
+              "editable": false,
+              "resizable": true,
+              "type": "Index",
+              "flex": 0.5
+            },
+            {
+              "headerName": "ID",
+              "field": "id",
+              "editable": true,
+              "resizable": true,
+              "type": "Editor",
+              "flex": 1
+            },
+            {
+              "headerName": "Management Function",
+              "field": "textArray",
+              "editable": false,
+              "resizable": true,
+              "type": "Button",
+              "flex": 2
+            }
+          ]
+        },
+        "note": ""
+      }
+    },
+    "invisible": false,
+    "evaluationActivities": {
+      "4491d3ef-84bb-491e-88e8-80715dda5b5c": {
+        "hasLevelSet": false,
+        "tss": "The evaluator shall check the TSS to verify that it describes the TOE behavior\n                 in case of self\u2010test failure. The evaluator shall verify that the described TOE\n                 behavior includes shutting down the PSD functionality once the failure is\n                 detected.",
+        "introduction": "",
+        "guidance": "\n                 The evaluator shall verify that the operational user guidance: <ul><li>describes how the results of self-tests are indicated to the user</li> <li>provides the user with a clear indication of how to recognize a failed\n                     self-test; and</li> <li>details the appropriate actions to be completed in the event of a failed\n                     self-test.</li></ul>\n                 The evaluator shall verify that the operational user guidance provides adequate\n                 information on TOE self-test failures, their causes, and their indications.\n               ",
+        "testIntroduction": "\n                 The evaluator shall cause a TOE self-test failure and verify that the TOE responds by\n                 disabling normal functions and provides proper indications to the user.\n               ",
+        "testClosing": "",
+        "testLists": {},
+        "tests": {},
+        "platformMap": null,
+        "isNoTest": false,
+        "noTest": "",
+        "customea": {
+          "text": "",
+          "nameAttribute": "Isolation"
+        }
+      }
+    },
+    "modifiedSfr": false,
+    "additionalSfr": false,
+    "consistencyRationale": "",
+    "notNew": null,
+    "xPathDetails": {},
+    "classDescription": "",
+    "sfrType": "",
+    "compUUID": "941c2b9d-1771-421f-bd44-e68a79c51259"
+  },
+  "FTA_CIN_EXT.1": {
+    "title": "Continuous Indications",
+    "cc_id": "FTA_CIN_EXT.1",
+    "iteration_id": "",
+    "xml_id": "",
+    "definition": "",
+    "optional": false,
+    "objective": false,
+    "dependsComments": {},
+    "dependsExternalDocs": {},
+    "selectionBased": true,
+    "selections": {
+      "components": [],
+      "elements": [
+        "9ee08e50-f134-4fee-a1e0-e2d96fdeb2ac"
+      ],
+      "selections": [
+        "notisolator"
+      ]
+    },
+    "useCaseBased": false,
+    "useCases": [],
+    "implementationDependent": false,
+    "reasons": [],
+    "tableOpen": false,
+    "objectives": [],
+    "extendedComponentDefinition": {
+      "audit": "There are no auditable events foreseen.",
+      "componentLeveling": "requires the TSF to display a visual indication of what computers are selected.",
+      "dependencies": "FDP_APC_EXT.1 Active PSD Connections",
+      "managementFunction": "No specific management functions are identified.",
+      "toggle": true
+    },
+    "auditEvents": {
+      "5adccb90-f61e-4279-8924-4f7c6e32b8f7": {
+        "items": [],
+        "optional": false
+      }
+    },
+    "open": false,
+    "elements": {
+      "a22a8d30-126c-49d4-8d31-eea90b18920a": {
+        "elementXMLID": "fta-cin-ext-1e1",
+        "selectableGroups": {},
+        "title": [
+          {
+            "text": "\n            The TSF shall display a visible indication of the selected computers at all times\n            when the TOE is powered.\n          "
+          }
+        ],
+        "selectables": {},
+        "isManagementFunction": false,
+        "managementFunctions": {
+          "tableName": "Management Functions",
+          "statusMarkers": "",
+          "rows": [],
+          "columns": [
+            {
+              "headerName": "#",
+              "field": "rowNum",
+              "editable": false,
+              "resizable": true,
+              "type": "Index",
+              "flex": 0.5
+            },
+            {
+              "headerName": "ID",
+              "field": "id",
+              "editable": true,
+              "resizable": true,
+              "type": "Editor",
+              "flex": 1
+            },
+            {
+              "headerName": "Management Function",
+              "field": "textArray",
+              "editable": false,
+              "resizable": true,
+              "type": "Button",
+              "flex": 2
+            }
+          ]
+        },
+        "note": ""
+      },
+      "b654a195-c9bc-4d5d-9beb-c274c4ed49c9": {
+        "elementXMLID": "fta-cin-ext-1e2",
+        "selectableGroups": {
+          "group-10": {
+            "onlyOne": false,
+            "linebreak": false,
+            "groups": [
+              "7b4b997f-21c2-4874-972c-dbaaf7c4c0f2",
+              "be237f80-4cce-49ea-96b3-6c8c6aa53571",
+              "a3632418-23d8-486e-a41e-fe0a7624b919",
+              "4c2cc132-b5e6-49db-8d5a-3bae2f1a5e29",
+              "faef5266-7f2b-45cd-8a4d-87701465b454"
+            ]
+          }
+        },
+        "title": [
+          {
+            "text": "\n            The TSF shall implement the visible indication using the following mechanism: "
+          },
+          {
+            "selections": "group-10"
+          },
+          {
+            "text": ".            \n          "
+          }
+        ],
+        "selectables": {
+          "7b4b997f-21c2-4874-972c-dbaaf7c4c0f2": {
+            "type": "selectable",
+            "uuid": "7b4b997f-21c2-4874-972c-dbaaf7c4c0f2",
+            "id": "fta_cin_ext.1.2_1",
+            "description": "a button",
+            "exclusive": false,
+            "nestedGroups": []
+          },
+          "be237f80-4cce-49ea-96b3-6c8c6aa53571": {
+            "type": "selectable",
+            "uuid": "be237f80-4cce-49ea-96b3-6c8c6aa53571",
+            "id": "fta_cin_ext.1.2_2",
+            "description": "a panel with lights",
+            "exclusive": false,
+            "nestedGroups": []
+          },
+          "a3632418-23d8-486e-a41e-fe0a7624b919": {
+            "type": "selectable",
+            "uuid": "a3632418-23d8-486e-a41e-fe0a7624b919",
+            "id": "fta_cin_ext.1.2_3",
+            "description": "a screen with dimming function",
+            "exclusive": false,
+            "nestedGroups": []
+          },
+          "4c2cc132-b5e6-49db-8d5a-3bae2f1a5e29": {
+            "type": "selectable",
+            "uuid": "4c2cc132-b5e6-49db-8d5a-3bae2f1a5e29",
+            "id": "fta_cin_ext.1.2_4",
+            "description": "a screen with no dimming function",
+            "exclusive": false,
+            "nestedGroups": []
+          },
+          "faef5266-7f2b-45cd-8a4d-87701465b454": {
+            "id": "fta_cin_ext.1.2_5",
+            "description": "description of visible indication",
+            "assignment": true,
+            "exclusive": false,
+            "notSelectable": false
+          }
+        },
+        "isManagementFunction": false,
+        "managementFunctions": {
+          "tableName": "Management Functions",
+          "statusMarkers": "",
+          "rows": [],
+          "columns": [
+            {
+              "headerName": "#",
+              "field": "rowNum",
+              "editable": false,
+              "resizable": true,
+              "type": "Index",
+              "flex": 0.5
+            },
+            {
+              "headerName": "ID",
+              "field": "id",
+              "editable": true,
+              "resizable": true,
+              "type": "Editor",
+              "flex": 1
+            },
+            {
+              "headerName": "Management Function",
+              "field": "textArray",
+              "editable": false,
+              "resizable": true,
+              "type": "Button",
+              "flex": 2
+            }
+          ]
+        },
+        "note": ""
+      },
+      "f12199b0-600e-4e17-87d2-f6e0421da466": {
+        "elementXMLID": "fta-cin-ext-1e3",
+        "selectableGroups": {
+          "group-11": {
+            "onlyOne": false,
+            "linebreak": false,
+            "groups": [
+              "516bc9ad-7e4c-4403-ab33-b3764f521d78",
+              "bbe166d5-281c-4f4f-8c9a-5436d9ce384b"
+            ]
+          }
+        },
+        "title": [
+          {
+            "text": "\n            The TSF shall ensure that while the TOE is powered the current switching status\n            is reflected by "
+          },
+          {
+            "selections": "group-11"
+          },
+          {
+            "text": ".\n          "
+          }
+        ],
+        "selectables": {
+          "516bc9ad-7e4c-4403-ab33-b3764f521d78": {
+            "type": "selectable",
+            "uuid": "516bc9ad-7e4c-4403-ab33-b3764f521d78",
+            "id": "fta_cin_ext.1.3_1",
+            "description": "the indicator",
+            "exclusive": false,
+            "nestedGroups": []
+          },
+          "bbe166d5-281c-4f4f-8c9a-5436d9ce384b": {
+            "type": "selectable",
+            "uuid": "bbe166d5-281c-4f4f-8c9a-5436d9ce384b",
+            "id": "fta_cin_ext.1.3_2",
+            "description": "multiple indicators that never display conflicting information",
+            "exclusive": false,
+            "nestedGroups": []
+          }
+        },
+        "isManagementFunction": false,
+        "managementFunctions": {
+          "tableName": "Management Functions",
+          "statusMarkers": "",
+          "rows": [],
+          "columns": [
+            {
+              "headerName": "#",
+              "field": "rowNum",
+              "editable": false,
+              "resizable": true,
+              "type": "Index",
+              "flex": 0.5
+            },
+            {
+              "headerName": "ID",
+              "field": "id",
+              "editable": true,
+              "resizable": true,
+              "type": "Editor",
+              "flex": 1
+            },
+            {
+              "headerName": "Management Function",
+              "field": "textArray",
+              "editable": false,
+              "resizable": true,
+              "type": "Button",
+              "flex": 2
+            }
+          ]
+        },
+        "note": "\n            This SFR must be claimed if \"switching can be initiated only through express user\n            action\" is chosen as the selection for FDP_SWI_EXT.1.1.<br/><br/>\n            FTA_CIN_EXT.1.3\u2019s selection of \"multiple indicators which never display\n            conflicting information' should be selected when the TOE has multiple\n            indicators, and concerns TOEs with multiple authorized switching mechanisms\n            that have distinct switching status indicators. Such indicators must never\n            convey conflicting information to the user regarding the currently selected\n            interfaces. In general, all indicators must always reflect the same status. It is\n            permissible for the most recently used switching mechanism to reflect the\n            current status while all other indicators to reflect no status. It is also permissible\n            for a TOE that supports split control (i.e., different peripherals pointing to\n            different computers) to have separate indicators for individual peripherals.\n            Note however that a TOE that supports keyboard and mouse peripherals is not\n            permitted to have the keyboard and mouse peripherals split in this manner, as\n            per the requirements in the PP\u2010Module for Keyboard/Mouse (KM) Devices.<br/><br/>\n            If multiple products with single and multiple indicators are part of the TOE, then\n            it is recommended that FTA_CIN_EXT.1.3 be iterated for each selection rather\n            than do a different evaluation for each model.\n          "
+      }
+    },
+    "invisible": false,
+    "evaluationActivities": {
+      "f12199b0-600e-4e17-87d2-f6e0421da466": {
+        "hasLevelSet": false,
+        "tss": "The evaluator shall verify that the TSS describes how the TOE behaves on\n              power up and on reset, if applicable, regarding which computer interfaces\n              are active, if any.<br/><br/>\n              The evaluator shall verify that the TSS documents the behavior of all\n              indicators when each switching mechanism is in use, and that no conflicting\n              information is displayed by any indicators.",
+        "introduction": "",
+        "guidance": "\n              The evaluator shall verify that the operational user guidance notes which\n              computer connection is active on TOE power up or on recovery from reset, if\n              applicable. If a reset option is available, use of this feature must be described\n              in the operational user guidance.<br/><br/>\n              The evaluator shall verify that the operational user guidance documents the\n              behavior of all indicators when each switching mechanism is in use, and that\n              no conflicting information is displayed by any indicators.\n            ",
+        "testIntroduction": " <ol><li>The evaluator shall configure the TOE and its operational\n                  environment in accordance with the operational user guidance.</li> <li>The evaluator shall select a connected computer and power down\n                  the TOE, then power up the TOE and verify that the expected selected\n                  computer is indicated in accordance with the TSS and that the connection is\n                  active.</li> <li>The evaluator shall repeat this process for every possible selected\n                  TOE configuration.</li> <li>[Conditional] If \"upon reset button activation\" is selected in\n                  FPT_TST.1.1, then the evaluator shall repeat this process for each TOE\n                  configuration using the reset function rather than power\u2010down and power-up.</li> <li>The evaluator shall verify that the TOE selected computer indications\n                  are always on (i.e., continuous) and fully visible to the TOE user.</li> <li>[Conditional] If the TOE allows peripherals to have active interfaces\n                  with different computers at the same time, the evaluator shall verify that\n                  each permutation has its own selection indications.</li> <li>[Conditional] If \"a screen with dimming function\" is selected, the\n                  evaluator shall verify that indications are visible at minimum brightness\n                  settings in standard room illumination conditions.</li> <li>[Conditional] If \"multiple indicators which never display conflicting\n                  information\" is selected, the evaluator shall verify that either all indicators\n                  reflect the same status at all times, or the indicator for the most recently\n                  used switching mechanism displays the correct switching status and that all\n                  other indicators display the correct status or no status.</li></ol>",
+        "testClosing": "",
+        "testLists": {},
+        "tests": {},
+        "platformMap": null,
+        "isNoTest": false,
+        "noTest": ""
+      }
+    },
+    "modifiedSfr": false,
+    "additionalSfr": false,
+    "consistencyRationale": "",
+    "notNew": null,
+    "xPathDetails": {},
+    "classDescription": "",
+    "sfrType": "",
+    "compUUID": "1c8a0ac9-4cdc-4745-a3d2-5ed99a91329e"
+  }
+}

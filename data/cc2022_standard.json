@@ -107,7 +107,12 @@
         "formItems": [
           {
             "uuid": "c0dbc61b-cf58-4db6-985b-5539ae2f7455",
-            "contentType": "threats"
+            "contentType": "threats",
+            "xmlTagMeta": {
+              "tagName": "sec:Threats",
+              "childTagName": "threats",
+              "attributes": {}
+            }
           },
           {
             "uuid": "3a8ef499-784b-485c-8321-a02083aafda8",
