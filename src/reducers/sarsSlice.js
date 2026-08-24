@@ -238,6 +238,7 @@ export const sarsSlice = createSlice({
           type: elementType,
           title: element && element.title ? element.title : "",
           note: element && element.note ? element.note : "",
+          noteRole: element && element.noteRole ? element.noteRole : "application",
           aactivity: element && element.aactivity ? element.aactivity : "",
         };
       }

@@ -188,7 +188,7 @@
 				"sec:Security_Objectives_Rationale": {}
 			},
 			"!3": " 5.0 Security Requirements ",
-			"sec:req": {
+			"sec:Security_Requirements": {
 				"@title": "Security Requirements",
 				"!1": " 5.1 Security Functional Requirements ",
 				"sec:SFRs": {

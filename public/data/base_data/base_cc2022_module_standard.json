@@ -61,14 +61,8 @@
               ]
             },
             {
-              "uuid": "d68577d1-5737-4074-a700-764ca6a9189f",
-              "contentType": "editor",
-              "formItems": [
-                {
-                  "uuid": "4fe05e05-3d61-47a6-b4c0-ccc1fcd29391",
-                  "contentType": "terms"
-                }
-              ]
+              "uuid": "4fe05e05-3d61-47a6-b4c0-ccc1fcd29391",
+              "contentType": "useCases"
             }
           ]
         },
@@ -104,6 +98,15 @@
               "xmlTagMeta": {
                 "tagName": "sec:Assumptions",
                 "childTagName": "assumptions",
+                "attributes": {}
+              }
+            },
+            {
+              "uuid": "d9eda4f8-a023-4732-9db8-17ab31e58c12",
+              "contentType": "threats",
+              "xmlTagMeta": {
+                "tagName": "sec:Organizational_Security_Policies",
+                "childTagName": "OSPs",
                 "attributes": {}
               }
             }
@@ -261,6 +264,7 @@
     },
     "4fe05e05-3d61-47a6-b4c0-ccc1fcd29391": {
       "title": "Use Cases",
+      "useCaseIntro": "",
       "open": false
     }
   },
@@ -287,15 +291,6 @@
           "title": "Compliant Targets of Evaluation",
           "id": "TOEdescription"
         }
-      },
-      "text": "",
-      "open": false
-    },
-    "d68577d1-5737-4074-a700-764ca6a9189f": {
-      "title": "TOE Usage",
-      "xmlTagMeta": {
-        "tagName": "sec:Use_Cases",
-        "attributes": {}
       },
       "text": "",
       "open": false
@@ -339,6 +334,17 @@
       "xmlTagMeta": {
         "tagName": "sec:Assumptions",
         "childTagName": "assumptions",
+        "attributes": {}
+      },
+      "definition": "",
+      "open": false,
+      "terms": {}
+    },
+    "d9eda4f8-a023-4732-9db8-17ab31e58c12": {
+      "title": "Organizational Security Policies",
+      "xmlTagMeta": {
+        "tagName": "sec:Organizational_Security_Policies",
+        "childTagName": "OSPs",
         "attributes": {}
       },
       "definition": "",

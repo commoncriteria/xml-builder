@@ -19,6 +19,9 @@ import {
 } from "../../../../../../utils/securityComponents.jsx";
 import Modal from "../../../../../modalComponents/Modal.jsx";
 import ResetDataConfirmation from "../../../../../modalComponents/ResetDataConfirmation.jsx";
+import TipTapEditor from "../../../../TipTapEditor.jsx";
+
+const EmptySelectIcon = () => null;
 
 /**
  * The EditTabularizeDefinitionModal class that displays the higher level tabularize table data
@@ -190,7 +193,7 @@ function EditTabularizeDefinitionModal(props) {
    */
   const handleDefinitionText = (event, index, type) => {
     try {
-      const newText = event.target.value;
+      const newText = typeof event === "string" ? event : event.target.value;
 
       // Update definition
       updateDefinition({
@@ -446,6 +449,7 @@ function EditTabularizeDefinitionModal(props) {
     const currentDefinition = deepCopy(definition);
     const { error, helperText, selectDisabled } = currentDefinition[index];
     const isError = error ? error : false;
+    const columnTypeDisabled = editingDisabled || isError || selectDisabled;
 
     return (
       <span className='min-w-full inline-flex items-baseline'>
@@ -473,7 +477,8 @@ function EditTabularizeDefinitionModal(props) {
               value={type}
               label='Column Type'
               autoWidth
-              disabled={editingDisabled || isError || selectDisabled}
+              disabled={columnTypeDisabled}
+              IconComponent={columnTypeDisabled ? EmptySelectIcon : undefined}
               onChange={(event) => {
                 handleDefinitionSelectionType(event, index);
               }}>
@@ -502,23 +507,31 @@ function EditTabularizeDefinitionModal(props) {
     const helperText = definition[index].helperText ? definition[index].helperText : "";
 
     return (
-      <span className='min-w-full inline-flex items-baseline'>
+      <span className='min-w-full inline-flex items-start'>
         <div className='w-[96%]'>
-          <FormControl fullWidth>
-            <TextField
-              required
-              key={"requirementsText" + index}
-              label='Requirements Text'
-              onBlur={(event) => {
-                handleSnackbarTextUpdates(handleDefinitionText, event, index, type);
-              }}
-              defaultValue={value}
-              error={error}
-              helperText={helperText}
-            />
-          </FormControl>
+          <div className='border border-[#BDBDBD] rounded-lg bg-gray-50 mb-3 overflow-hidden' style={{ borderColor: error ? "#d32f2f" : "#BDBDBD" }}>
+            <div className='flex items-center px-3 py-1.5 border-b border-[#BDBDBD] bg-white' style={{ borderColor: error ? "#d32f2f" : "#BDBDBD" }}>
+              <Typography style={{ fontSize: "11px", fontWeight: 700, color: error ? "#d32f2f" : "#6b7280", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                Requirements Text&nbsp;<span style={{ color: "#d32f2f" }}>*</span>
+              </Typography>
+            </div>
+            <div className='mb-[-8px]'>
+              <TipTapEditor
+                key={"requirementsText" + index}
+                className='w-full'
+                contentType={"term"}
+                handleTextUpdate={(event) => {
+                  handleDefinitionText(event, index, type);
+                }}
+                text={value || ""}
+              />
+            </div>
+          </div>
+          {helperText && (
+            <Typography style={{ fontSize: "12px", color: error ? "#d32f2f" : "#4d4d4d", marginTop: "-8px", marginBottom: "8px" }}>{helperText}</Typography>
+          )}
         </div>
-        <div className='w-[4%] pl-2'>{getDeleteIcon("Delete Requirements Text", index)}</div>
+        <div className='w-[4%] pl-2 pt-4'>{getDeleteIcon("Delete Requirements Text", index)}</div>
       </span>
     );
   };

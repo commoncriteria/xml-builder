@@ -27,6 +27,7 @@ import preferenceReducer from "../reducers/ppPreferenceSlice.js";
 import conformanceClaimsReducer from "../reducers/conformanceClaimsSlice.js";
 import distributedTOE from "../reducers/distributedToeSlice.js";
 import compliantTargetsOfEvaluationReducer from "../reducers/compliantTargetsOfEvaluationSlice.js";
+import featuresReducer from "../reducers/featuresSlice.js";
 import sfrWorksheetUIReducer from "../reducers/SFRs/sfrWorksheetUI.js";
 import sfrBasePPsReducer from "../reducers/SFRs/sfrBasePPsSlice.js";
 
@@ -63,18 +64,29 @@ const reducer = combineReducers({
   conformanceClaims: conformanceClaimsReducer,
   distributedTOE: distributedTOE,
   compliantTargetsOfEvaluation: compliantTargetsOfEvaluationReducer,
+  features: featuresReducer,
   sfrWorksheetUI: sfrWorksheetUIReducer,
   sfrBasePPs: sfrBasePPsReducer,
 });
 
 const persistedReducer = persistReducer(persistConfig, reducer);
 
+// Action type used to restore a previously saved project state in full (see FileLoader/SideBar "Load Project")
+export const LOAD_PROJECT_STATE = "project/loadState";
+
+const rootReducer = (state, action) => {
+  if (action.type === LOAD_PROJECT_STATE) {
+    state = action.payload;
+  }
+  return persistedReducer(state, action);
+};
+
 const store = configureStore({
-  reducer: persistedReducer,
+  reducer: rootReducer,
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: {
-        ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
+        ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER, LOAD_PROJECT_STATE],
       },
     }),
 });

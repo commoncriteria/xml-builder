@@ -438,6 +438,7 @@ function EditorSection({ accordionUUID, uuid, section, tooltip }) {
               <span />
               <IconButton sx={{ marginTop: "-8px" }} onClick={handleCollapse} variant='contained'>
                 <Tooltip
+                  key={isOpen ? "open" : "closed"}
                   id={(isOpen ? "collapse" : "expand") + uuid + (isSfr ? "SfrSection" : isSar ? "SarSection" : "TextEditor")}
                   title={`${isOpen ? "Collapse " : "Expand "} ${isSfr ? "SFR Section" : isSar ? "SAR Section" : "Text Editor"}`}>
                   {isOpen ? <RemoveIcon htmlColor={primary} sx={icons.large} /> : <AddIcon htmlColor={primary} sx={icons.large} />}

@@ -3,10 +3,12 @@ import PropTypes from "prop-types";
 import React, { useEffect, useMemo } from "react";
 import { useDispatch } from "react-redux";
 import { useSelector } from "react-redux";
+import { v4 as uuidv4 } from "uuid";
 import { FormControl, IconButton, Input, InputLabel, MenuItem, Select, Tooltip } from "@mui/material";
 import AddCircleRoundedIcon from "@mui/icons-material/AddCircleRounded";
 import { CREATE_EDITOR } from "../../reducers/editorSlice.js";
-import { CREATE_ACCORDION_FORM_ITEM } from "../../reducers/accordionPaneSlice.js";
+import { CREATE_ACCORDION_FORM_ITEM, UPDATE_ACCORDION_FORM_ITEM_CONTENT_TYPE } from "../../reducers/accordionPaneSlice.js";
+import { UPDATE_FEATURES } from "../../reducers/featuresSlice.js";
 import { CREATE_SFR_BASE_PP_SECTION } from "../../reducers/SFRs/sfrBasePPsSlice.js";
 import { CREATE_TERM_ITEM, CREATE_TERMS_LIST } from "../../reducers/termsSlice.js";
 import { CREATE_THREAT_SECTION } from "../../reducers/threatsSlice.js";
@@ -30,9 +32,10 @@ function AccordionSection({ uuid, index }) {
 
   // Constants
   const dispatch = useDispatch();
-  const { ppTemplateVersion, ppType } = useSelector((state) => state.accordionPane.metadata);
+  const { ppType } = useSelector((state) => state.accordionPane.metadata);
   const { grayText, secondary, icons } = useSelector((state) => state.styling);
   const accordions = useSelector((state) => state.accordionPane.sections);
+  const implementationData = useSelector((state) => state.features);
   let [selectedType, setSelectedType] = React.useState("");
   let [selectedName, setSelectedName] = React.useState("");
   let [disabled, setDisabled] = React.useState(true);
@@ -81,7 +84,8 @@ function AccordionSection({ uuid, index }) {
         type !== "Terms" &&
         type !== "SFRs" &&
         type !== "SARs" &&
-        type !== "Base PP") ||
+        type !== "Base PP" &&
+        type !== "Implementation-dependent Requirements") ||
       name === null ||
       name === "" ||
       name === undefined
@@ -154,6 +158,50 @@ function AccordionSection({ uuid, index }) {
                 accordionUUID: uuid,
                 uuid: baseSfrUUID,
                 contentType: "sfrBasePPs",
+              })
+            );
+          }
+          break;
+        }
+        case "Implementation-dependent Requirements": {
+          const formItems = accordions[uuid]?.formItems || [];
+          const implementationUUID = implementationData.uuid || uuidv4();
+          const existingImplementationFormItem = formItems.find(
+            (formItem) => formItem.uuid === implementationUUID || formItem.contentType === "implementations"
+          );
+          const xmlTagMeta = {
+            tagName: "section",
+            attributes: {
+              title: name,
+              id: "sec-features",
+            },
+          };
+
+          dispatch(
+            UPDATE_FEATURES({
+              itemMap: {
+                uuid: implementationUUID,
+                title: name,
+                xmlTagMeta,
+              },
+            })
+          );
+
+          if (existingImplementationFormItem) {
+            dispatch(
+              UPDATE_ACCORDION_FORM_ITEM_CONTENT_TYPE({
+                accordionUUID: uuid,
+                uuid: existingImplementationFormItem.uuid,
+                newUUID: implementationUUID,
+                contentType: "implementations",
+              })
+            );
+          } else {
+            dispatch(
+              CREATE_ACCORDION_FORM_ITEM({
+                accordionUUID: uuid,
+                uuid: implementationUUID,
+                contentType: "implementations",
               })
             );
           }
@@ -243,6 +291,10 @@ function AccordionSection({ uuid, index }) {
         if (ppType === "Module") {
           selectMenuOptions.push({ key: "sfrBasePPs", value: "Base PP" });
         }
+        break;
+      }
+      case "Introduction": {
+        selectMenuOptions.push({ key: "implementations", value: "Implementation-dependent Requirements" });
         break;
       }
       default:

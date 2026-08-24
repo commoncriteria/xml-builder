@@ -27,6 +27,8 @@ import EditableTable from "../editorComponents/EditableTable.jsx";
 import MultiSelectDropdown from "../editorComponents/securityComponents/MultiSelectDropdown.jsx";
 import SwitchWarning from "../modalComponents/SwitchWarning.jsx";
 import ResetDataConfirmation from "../modalComponents/ResetDataConfirmation.jsx";
+import { COMMON_REGEX } from "../../utils/regexUtils.js";
+import { mapTechnicalDecisionAffectsForDisplay, normalizeTechnicalDecisionAffects } from "../../utils/technicalDecisionHistory.js";
 
 /**
  * The MetadataSection class that the metadata section of the content pane
@@ -39,17 +41,27 @@ function MetadataSection() {
   const currentAccordionPane = useSelector((state) => state.accordionPane);
   const { metadata: metadataSection, sections: accordionSections } = currentAccordionPane;
   const currentEditorSections = useSelector((state) => state.editors);
+  const sfrSections = useSelector((state) => state.sfrSections);
   const { ppTemplateVersion, ppType } = metadataSection;
   const sars = useSelector((state) => state.sars);
   const columnData = [
-    { headerName: "Version", field: "version", editable: true, resizable: true, type: "Number", flex: 1 },
+    { headerName: "Version", field: "version", editable: true, resizable: true, type: "Editor", flex: 1 },
     { headerName: "Date", field: "date", editable: true, resizable: true, type: "Date", flex: 1 },
     { headerName: "Comments", field: "comment", editable: true, resizable: true, type: "Large Editor", flex: 3 },
+  ];
+  const technicalDecisionColumnData = [
+    { headerName: "Number", field: "number", editable: true, resizable: true, type: "Editor", flex: 1 },
+    { headerName: "Date", field: "date", editable: true, resizable: true, type: "Date", flex: 1 },
+    { headerName: "Subject", field: "subject", editable: true, resizable: true, type: "Editor", flex: 3 },
+    { headerName: "URL", field: "url", editable: true, resizable: true, type: "Editor", flex: 3 },
+    { headerName: "SFR(s) Affected", field: "affects", editable: false, resizable: true, type: "Large Editor", flex: 2 },
   ];
   const editable = { addColumn: false, addRow: true, removeColumn: false, removeRow: true };
   const [openSwitchWarning, handleOpenSwitchWarning] = useToggle(false);
   const [openPPTypeSwitchWarning, handleOpenPPTypeSwitchWarning] = useToggle(false);
   const [openResetDataMenu, setOpenResetDataMenu] = useState(false);
+  const [openTechnicalDecisionDeleteConfirmation, setOpenTechnicalDecisionDeleteConfirmation] = useState(false);
+  const [pendingTechnicalDecisionRows, setPendingTechnicalDecisionRows] = useState(null);
   const [targetPPTemplate, handleTargetPPTemplate] = useState("");
   const [targetPPType, handleTargetPPType] = useState("");
   const isLoading = sessionStorage.getItem("isLoading");
@@ -220,6 +232,113 @@ function MetadataSection() {
     }
   };
   /**
+   * Handles adding a new technical decision history table row
+   */
+  const handleNewTechnicalDecisionTableRow = () => {
+    const type = "technicalDecisionHistory";
+    let technicalDecisionHistory = metadataSection.technicalDecisionHistory ? deepCopy(metadataSection.technicalDecisionHistory) : [];
+
+    technicalDecisionHistory.push({
+      number: "",
+      date: "",
+      subject: "",
+      url: "",
+      affects: [],
+    });
+
+    dispatch(
+      updateMetaDataItem({
+        type,
+        item: technicalDecisionHistory,
+      })
+    );
+  };
+  /**
+   * Handles updating a technical decision history table row
+   * @param updatedRow the updated row
+   */
+  const handleUpdateTechnicalDecisionTableRow = (updatedRow) => {
+    const type = "technicalDecisionHistory";
+    const { number, date, subject, url, index } = updatedRow.data;
+    let technicalDecisionHistory = metadataSection.technicalDecisionHistory ? deepCopy(metadataSection.technicalDecisionHistory) : [];
+
+    if (technicalDecisionHistory[index]) {
+      technicalDecisionHistory[index] = {
+        number,
+        date: date && date !== "" ? date : "",
+        subject,
+        url,
+        affects: normalizeTechnicalDecisionAffects(technicalDecisionHistory[index].affects),
+      };
+
+      dispatch(
+        updateMetaDataItem({
+          type,
+          item: technicalDecisionHistory,
+        })
+      );
+    }
+  };
+  /**
+   * Handles delete requests for technical decision history rows.
+   * @param updatedRows the updated rows
+   * @param removedRows the removed rows
+   * @returns {boolean|undefined}
+   */
+  const handleDeleteTechnicalDecisionTableRows = (updatedRows, removedRows = []) => {
+    const removesMappedTechnicalDecision = removedRows.some((row) => normalizeTechnicalDecisionAffects(row.rawAffects ?? row.affects).length > 0);
+
+    if (removesMappedTechnicalDecision) {
+      setPendingTechnicalDecisionRows(updatedRows);
+      setOpenTechnicalDecisionDeleteConfirmation(true);
+      return false;
+    }
+
+    deleteTechnicalDecisionTableRows(updatedRows);
+  };
+  /**
+   * Deletes the pending technical decision rows after confirmation.
+   */
+  const handleSubmitTechnicalDecisionDeleteConfirmation = () => {
+    deleteTechnicalDecisionTableRows(pendingTechnicalDecisionRows);
+    setPendingTechnicalDecisionRows(null);
+    setOpenTechnicalDecisionDeleteConfirmation(false);
+    handleSnackBarSuccess("Selected Row Successfully Removed");
+  };
+  /**
+   * Handles opening the technical decision delete confirmation modal.
+   */
+  const handleOpenTechnicalDecisionDeleteConfirmation = () => {
+    setOpenTechnicalDecisionDeleteConfirmation(!openTechnicalDecisionDeleteConfirmation);
+    setPendingTechnicalDecisionRows(null);
+  };
+  /**
+   * Deletes technical decision history table rows.
+   * @param updatedRows the updated rows
+   */
+  const deleteTechnicalDecisionTableRows = (updatedRows) => {
+    if (updatedRows) {
+      const type = "technicalDecisionHistory";
+      const technicalDecisionHistory = updatedRows.map((row) => {
+        const { number, date, subject, url, affects, rawAffects } = row;
+        return {
+          number,
+          date: date && date !== "" ? date : "",
+          subject,
+          url,
+          affects: normalizeTechnicalDecisionAffects(rawAffects ?? affects),
+        };
+      });
+
+      dispatch(
+        updateMetaDataItem({
+          type,
+          item: technicalDecisionHistory,
+        })
+      );
+    }
+  };
+  /**
    * Handles opening the reset data menu
    */
   const handleOpenResetDataMenu = () => {
@@ -246,12 +365,35 @@ function MetadataSection() {
    * @returns {unknown[] | undefined}
    */
   const generateMetaDataTableValues = () => {
-    return metadataSection.revisionHistory?.map((revision, index) => {
+    const revisionHistory = Array.isArray(metadataSection.revisionHistory) ? metadataSection.revisionHistory : [];
+
+    return revisionHistory.map((revision, index) => {
       const { version, date, comment } = revision;
       return {
         version,
         date,
         comment,
+        index,
+      };
+    });
+  };
+  /**
+   * Generates the technical decision history table values
+   * @returns {unknown[] | undefined}
+   */
+  const generateTechnicalDecisionTableValues = () => {
+    const technicalDecisionHistory = Array.isArray(metadataSection.technicalDecisionHistory) ? metadataSection.technicalDecisionHistory : [];
+
+    return technicalDecisionHistory.map((technicalDecision, index) => {
+      const { number, date, subject, url, affects } = technicalDecision;
+      const rawAffects = normalizeTechnicalDecisionAffects(affects);
+      return {
+        number,
+        date,
+        subject,
+        url,
+        affects: mapTechnicalDecisionAffectsForDisplay(rawAffects, sfrSections).join("\n"),
+        rawAffects,
         index,
       };
     });
@@ -623,8 +765,8 @@ function MetadataSection() {
      */
     function compareSarTitles(string1, string2) {
       // Remove excess whitespace and compare the sar title strings
-      const normalized1 = string1.split(/\s+/).join(" ").trim();
-      const normalized2 = string2.split(/\s+/).join(" ").trim();
+      const normalized1 = string1.split(COMMON_REGEX.singleWhitespaceRun).join(" ").trim();
+      const normalized2 = string2.split(COMMON_REGEX.singleWhitespaceRun).join(" ").trim();
 
       // Compare the normalized strings
       return normalized1 === normalized2;
@@ -781,7 +923,6 @@ function MetadataSection() {
                           required
                           color={"primary"}
                           label={"Version"}
-                          type={"number"}
                           key={metadataSection.version}
                           defaultValue={metadataSection.version}
                           inputProps={{ style: { fontSize: 13 } }}
@@ -822,6 +963,18 @@ function MetadataSection() {
                   tableInstructions={`To edit a cell, double-click on it.`}
                 />
               </div>
+              <div className='mt-2 mb-[-8px]'>
+                <EditableTable
+                  title={"Technical Decision History"}
+                  editable={editable}
+                  columnData={technicalDecisionColumnData}
+                  rowData={generateTechnicalDecisionTableValues()}
+                  handleNewTableRow={handleNewTechnicalDecisionTableRow}
+                  handleUpdateTableRow={handleUpdateTechnicalDecisionTableRow}
+                  handleDeleteTableRows={handleDeleteTechnicalDecisionTableRows}
+                  tableInstructions={`To edit a cell, double-click on it.`}
+                />
+              </div>
             </div>
             <SwitchWarning
               type={"ppTemplateVersion"}
@@ -849,6 +1002,14 @@ function MetadataSection() {
         open={openResetDataMenu}
         handleOpen={handleOpenResetDataMenu}
         handleSubmit={() => handleSubmitResetDataMenu(handleOpenResetDataMenu)}
+      />
+      <ResetDataConfirmation
+        title={"Technical Decision Mapping Confirmation"}
+        text={"TD mapping will be removed from SFR(s)"}
+        open={openTechnicalDecisionDeleteConfirmation}
+        closeButtonText={"Cancel"}
+        handleOpen={handleOpenTechnicalDecisionDeleteConfirmation}
+        handleSubmit={handleSubmitTechnicalDecisionDeleteConfirmation}
       />
     </div>
   );

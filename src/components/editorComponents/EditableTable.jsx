@@ -4,9 +4,12 @@ import { useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import { AgGridReact } from "ag-grid-react";
 import { Checkbox, Chip, IconButton, ListItemIcon, ListItemText, Menu, MenuItem, MenuList, Select, Tooltip } from "@mui/material";
+import ArrowDownwardRoundedIcon from "@mui/icons-material/ArrowDownwardRounded";
+import ArrowUpwardRoundedIcon from "@mui/icons-material/ArrowUpwardRounded";
 import MenuIcon from "@mui/icons-material/Menu";
 import { deepCopy } from "../../utils/deepCopy.js";
 import { handleSnackBarError, handleSnackBarSuccess, handleSnackbarTextUpdates } from "../../utils/securityComponents.jsx";
+import { COMMON_REGEX, UI_REGEX } from "../../utils/regexUtils.js";
 import AddColumnIcon from "../../icons/AddColumnIcon.svg";
 import AddRowIcon from "../../icons/AddRowIcon.svg";
 import DeleteColumnIcon from "../../icons/DeleteColumnIcon.svg";
@@ -37,6 +40,7 @@ function EditableTable(props) {
     buttonTooltip: PropTypes.string,
     isManagementFunction: PropTypes.bool,
     isTabularizeTable: PropTypes.bool,
+    disableColumnSorting: PropTypes.bool,
     isBasePP: PropTypes.bool,
     editFullRow: PropTypes.bool,
     showPreview: PropTypes.func,
@@ -53,11 +57,13 @@ function EditableTable(props) {
     handleAddNewTableColumn: PropTypes.func,
     handleRemoveTableColumn: PropTypes.func,
     handleCellButtonClick: PropTypes.func,
+    handleCellDoubleClick: PropTypes.func,
     handleUpdateTitle: PropTypes.func,
     handleCheckboxClick: PropTypes.func,
     handleCollapseInnerTableSection: PropTypes.func,
     handleEditFullRow: PropTypes.func,
     handleDropdownMenuSelect: PropTypes.func,
+    handleMoveTableRows: PropTypes.func,
     handleMultiSelectDropdown: PropTypes.func,
     handleCollapse: PropTypes.func,
   };
@@ -70,6 +76,7 @@ function EditableTable(props) {
   const [anchorEl, setAnchorEl] = useState(null);
   const openMenu = Boolean(anchorEl);
   const [rowData, setRowData] = useState([]);
+  const [selectedRowCount, setSelectedRowCount] = useState(0);
   const [columnDefs, setColumnDefs] = useState([]);
   const [editable, setEditable] = useState(false);
   const [innerStyling, setInnerStyling] = useState({
@@ -123,11 +130,24 @@ function EditableTable(props) {
     // Set column data
     if (props.columnData && props.columnData.length > 0) {
       const colDefs = props.columnData.map((column) => {
-        const { headerName, field, editable, resizable, flex, type } = column;
+        const { headerName, field, editable, resizable, flex, type, dropdownMenuOptions, disabled = false, maxLength } = column;
         const headerTooltip = column.hasOwnProperty("headerTooltip") ? column.headerTooltip : null;
         const children = column.hasOwnProperty("children") ? column.children : null;
         const style = Object.keys(newStyling).length > 0 ? newStyling : styling;
-        return getColumnDataByType(headerName, field, editable, resizable, flex, type, headerTooltip, children, style);
+        return getColumnDataByType(
+          headerName,
+          field,
+          editable,
+          resizable,
+          flex,
+          type,
+          headerTooltip,
+          children,
+          style,
+          dropdownMenuOptions,
+          disabled,
+          maxLength
+        );
       });
       if (JSON.stringify(columnDefs) !== JSON.stringify(colDefs)) {
         setColumnDefs(colDefs);
@@ -137,11 +157,12 @@ function EditableTable(props) {
     // Set row data
     if (JSON.stringify(props.rowData) !== JSON.stringify(rowData)) {
       setRowData(props.rowData);
+      setSelectedRowCount(0);
     }
 
     // Set editable
-    const { addColumn, addRow, removeColumn, removeRow } = props.editable;
-    if (addColumn || addRow || removeColumn || removeRow) {
+    const { addColumn, addRow, moveRow, removeColumn, removeRow } = props.editable;
+    if (addColumn || addRow || moveRow || removeColumn || removeRow) {
       setEditable(true);
     }
   };
@@ -166,6 +187,13 @@ function EditableTable(props) {
   const handleRemoveSelectedRow = () => {
     const selectedNodes = gridRef.current.api.getSelectedNodes();
     const selectedData = selectedNodes.map((node) => node.data);
+
+    if (selectedData.length === 0) {
+      handleSnackBarError("Select at least one row to remove");
+      handleMenuClose();
+      return;
+    }
+
     let newData = rowData.filter((row) => !selectedData.includes(row));
     newData.forEach((obj) => {
       delete obj["index"];
@@ -175,15 +203,70 @@ function EditableTable(props) {
     handleMenuClose();
 
     // Delete the table rows
-    props.handleDeleteTableRows(newData, selectedData);
+    const shouldShowDeleteSuccess = props.handleDeleteTableRows(newData, selectedData) !== false;
 
     // Update snackbar
-    if (!props.isTabularizeTable) {
+    if (!props.isTabularizeTable && shouldShowDeleteSuccess) {
       const dataLength = selectedData.length;
       const message = dataLength > 1 ? `Selected ${dataLength} Rows were Successfully Removed` : "Selected Row Successfully Removed";
 
       // Update snackbar
       handleSnackBarSuccess(message);
+    }
+  };
+  /**
+   * Handles moving selected rows up or down
+   * @param {"up"|"down"} direction the direction to move selected rows
+   */
+  const handleMoveSelectedRows = (direction) => {
+    const selectedNodes = gridRef.current.api.getSelectedNodes();
+    const selectedIndexes = selectedNodes
+      .map((node) => {
+        const rowIndex = rowData.findIndex((row) => row === node.data);
+        return rowIndex >= 0 ? rowIndex : node.rowIndex;
+      })
+      .filter((rowIndex) => rowIndex >= 0)
+      .sort((a, b) => a - b);
+
+    if (selectedIndexes.length === 0) {
+      handleSnackBarError("Select at least one row to move");
+      handleMenuClose();
+      return;
+    }
+
+    let newData = deepCopy(rowData);
+    const selectedIndexSet = new Set(selectedIndexes);
+    let moved = false;
+
+    if (direction === "up") {
+      selectedIndexes.forEach((rowIndex) => {
+        if (rowIndex === 0 || selectedIndexSet.has(rowIndex - 1)) return;
+
+        [newData[rowIndex - 1], newData[rowIndex]] = [newData[rowIndex], newData[rowIndex - 1]];
+        selectedIndexSet.delete(rowIndex);
+        selectedIndexSet.add(rowIndex - 1);
+        moved = true;
+      });
+    } else {
+      [...selectedIndexes].reverse().forEach((rowIndex) => {
+        if (rowIndex === rowData.length - 1 || selectedIndexSet.has(rowIndex + 1)) return;
+
+        [newData[rowIndex + 1], newData[rowIndex]] = [newData[rowIndex], newData[rowIndex + 1]];
+        selectedIndexSet.delete(rowIndex);
+        selectedIndexSet.add(rowIndex + 1);
+        moved = true;
+      });
+    }
+
+    handleMenuClose();
+
+    if (!moved) {
+      handleSnackBarError(`Selected row(s) cannot be moved ${direction}`);
+      return;
+    }
+
+    if (props.handleMoveTableRows(newData) !== false) {
+      handleSnackBarSuccess("Selected Row(s) Successfully Moved");
     }
   };
   /**
@@ -253,6 +336,13 @@ function EditableTable(props) {
     setAnchorEl(null);
   };
   /**
+   * Handles row selection updates.
+   */
+  const handleSelectionChanged = () => {
+    const selectedNodes = gridRef.current?.api?.getSelectedNodes() || [];
+    setSelectedRowCount(selectedNodes.length);
+  };
+  /**
    * Handles the table collapse
    */
   const handleCollapseTable = () => {
@@ -296,10 +386,7 @@ function EditableTable(props) {
    * @returns {string}
    */
   const createFieldValue = (originalString) => {
-    originalString = originalString
-      .trim()
-      .replace(/\s+/g, "")
-      .replace(/[^a-zA-Z]/g, "");
+    originalString = originalString.trim().replace(COMMON_REGEX.allWhitespace, "").replace(UI_REGEX.nonLetter, "");
     return originalString.charAt(0).toLowerCase() + originalString.slice(1);
   };
 
@@ -312,14 +399,19 @@ function EditableTable(props) {
    * @param iconSize the icon size
    * @returns {JSX.Element}
    */
-  const getMenuItem = (handler, label, icon, iconSize) => {
+  const getMenuItem = (handler, label, icon, iconSize, disabled = false) => {
     const { color } = icons;
     const iconColor = innerStyling.primaryColor === primary ? color.primary : color.secondary;
+    const IconComponent = icon;
 
     return (
-      <MenuItem key={label} value={label} onClick={handler}>
+      <MenuItem key={label} value={label} onClick={handler} disabled={disabled}>
         <ListItemIcon>
-          <img src={icon} style={{ ...iconSize, ...iconColor }} />
+          {typeof icon === "string" ? (
+            <img src={icon} style={{ ...iconSize, ...iconColor, opacity: disabled ? 0.38 : 1 }} />
+          ) : (
+            <IconComponent htmlColor={innerStyling.primaryColor} sx={{ ...iconSize, opacity: disabled ? 0.38 : 1 }} />
+          )}
         </ListItemIcon>
         <ListItemText>{label}</ListItemText>
       </MenuItem>
@@ -338,13 +430,27 @@ function EditableTable(props) {
    * @param style the style
    * @returns {{autoHeight: boolean, headerName: *, field: *, resizable: *, editable: *, flex: *|number, cellStyle: {paddingBottom: string, textAlign: string, lineHeight: string, paddingTop: string}}}
    */
-  const getColumnDataByType = (headerName, field, editable, resizable, flex, type, headerTooltip, children, style) => {
+  const getColumnDataByType = (
+    headerName,
+    field,
+    editable,
+    resizable,
+    flex,
+    type,
+    headerTooltip,
+    children,
+    style,
+    dropdownMenuOptions,
+    disabled,
+    maxLength
+  ) => {
     let columnData = {
       headerName: headerName,
       field: field,
       editable: editable,
       resizable: resizable,
       flex: flex ? flex : resizable ? 1 : 0,
+      ...(props.disableColumnSorting ? { sortable: false } : {}),
       autoHeight: true,
       cellStyle: {
         lineHeight: "1.5",
@@ -353,7 +459,7 @@ function EditableTable(props) {
         textAlign: "start",
       },
     };
-    let dropdownMenu = props.dropdownMenuOptions ? deepCopy(props.dropdownMenuOptions) : [];
+    let dropdownMenu = deepCopy(dropdownMenuOptions ?? props.dropdownMenuOptions ?? []);
 
     // Add header tooltip if one was provided
     if (headerTooltip) {
@@ -362,7 +468,6 @@ function EditableTable(props) {
 
     // Remove cell border on click if the edit full row has been selected
     if (props.editFullRow) {
-      columnData.suppressCellFocus = true;
       columnData.cellClass = "no-border";
     }
 
@@ -441,9 +546,9 @@ function EditableTable(props) {
           cellEditor: "agLargeTextCellEditor",
           cellEditorPopup: true,
           cellEditorParams: {
-            maxLength: 500,
+            maxLength: maxLength || 500,
           },
-          tooltipValueGetter: () => 'Double click to edit. \nHold "Shift + Enter" \nto add a new line.',
+          tooltipValueGetter: () => (editable === false ? "This cell is read-only" : 'Double click to edit. \nHold "Shift + Enter" \nto add a new line.'),
           cellRenderer: (params) => {
             const { value } = params;
             return <div style={{ whiteSpace: "pre-wrap" }} dangerouslySetInnerHTML={{ __html: value }} />;
@@ -542,6 +647,7 @@ function EditableTable(props) {
                   onChange={(event) => {
                     props.handleCheckboxClick(event, type, uuid);
                   }}
+                  disabled={disabled}
                 />
               </div>
             );
@@ -551,7 +657,6 @@ function EditableTable(props) {
       }
       case "Select": {
         additionalColumnData = {
-          dropdownMenu: dropdownMenu,
           autoHeight: true,
           cellRenderer: (params) => {
             const type = params.colDef.field;
@@ -579,25 +684,27 @@ function EditableTable(props) {
                     props.handleDropdownMenuSelect(event, type, uuid);
                   }}
                   color={color}>
-                  {dropdownMenu.map((value) => {
-                    if (typeof value === "string") {
-                      return (
-                        <MenuItem key={value} value={value} sx={props.styling.primaryMenu}>
-                          {value}
-                        </MenuItem>
-                      );
-                    } else {
-                      let { key, label, disabled } = value;
+                  {dropdownMenu.map((item) => {
+                    const label = typeof item === "string" ? item : item.label;
+                    const key = typeof item === "string" ? item : item.key;
+                    const disabled = typeof item === "string" ? false : item.disabled;
 
-                      return (
-                        <MenuItem key={key} value={label} sx={props.styling.primaryMenu} disabled={disabled}>
-                          {label}
-                        </MenuItem>
-                      );
-                    }
+                    const isSelected = label === selectValue;
+
+                    return (
+                      <MenuItem
+                        key={key}
+                        value={label}
+                        sx={{
+                          ...props.styling.primaryMenu,
+                          ...(isSelected ? { display: "none" } : {}), // hide only in the menu
+                        }}
+                        disabled={disabled}>
+                        {label}
+                      </MenuItem>
+                    );
                   })}
                 </Select>
-                );
               </div>
             );
           },
@@ -606,6 +713,7 @@ function EditableTable(props) {
       }
       case "Multiselect": {
         additionalColumnData = {
+          cellDataType: false,
           autoHeight: true,
           cellRenderer: (params) => {
             const { uuid, disabled, multiselect } = params.data;
@@ -632,7 +740,25 @@ function EditableTable(props) {
       default:
         break;
     }
-    return { ...columnData, ...additionalColumnData };
+    const readOnlyCellStyle =
+      editable === false
+        ? {
+            backgroundColor: "#e9ecef",
+            color: grayText,
+          }
+        : {};
+    const cellClass = [columnData.cellClass, additionalColumnData.cellClass].filter(Boolean).join(" ");
+
+    return {
+      ...columnData,
+      ...additionalColumnData,
+      ...(cellClass ? { cellClass } : {}),
+      cellStyle: {
+        ...columnData.cellStyle,
+        ...additionalColumnData.cellStyle,
+        ...readOnlyCellStyle,
+      },
+    };
   };
   /**
    * Gets the cell renderer
@@ -665,6 +791,7 @@ function EditableTable(props) {
       return <div style={{ whiteSpace: "pre-wrap" }} dangerouslySetInnerHTML={{ __html: value }} />;
     }
   };
+  const canMoveRows = Boolean(props.editable.moveRow && props.handleMoveTableRows);
   const getAgGrid = () => {
     const maxHeight = props.disableCard === true ? "400px" : "500px";
     return (
@@ -676,13 +803,14 @@ function EditableTable(props) {
           overflowX: "auto",
           "--ag-header-foreground-color": innerStyling.secondaryColor,
         }}
-        className={`ag-theme-quartz`}>
+        className={`ag-theme-quartz ${canMoveRows ? "ag-row-selection-highlight" : "ag-no-row-selection-highlight"}`}>
         <AgGridReact
           ref={gridRef}
           columnDefs={columnDefs}
           rowData={rowData}
           groupSelectsChildren={true}
           rowSelection='multiple'
+          rowMultiSelectWithClick={true}
           domLayout='autoHeight'
           enableBrowserToolips={true}
           tooltipShowDelay={200}
@@ -690,15 +818,32 @@ function EditableTable(props) {
           defaultColDef={{ editable: true }}
           popupParent={document.querySelector("body") || undefined}
           onCellValueChanged={(event) => {
-            props.handleUpdateTableRow(event);
+            try {
+              props.handleUpdateTableRow(event);
+              handleSnackBarSuccess("Successfully Updated");
+            } catch (e) {
+              handleSnackBarError(e);
+            }
           }}
           onRowDoubleClicked={handleOnRowDoubleClicked}
+          onCellDoubleClicked={(event) => {
+            const shouldContinue = props.handleCellDoubleClick ? props.handleCellDoubleClick(event) : true;
+            if (shouldContinue === false) {
+              return;
+            }
+            if (!props.editFullRow && event.colDef.editable) {
+              event.api.startEditingCell({ rowIndex: event.rowIndex, colKey: event.column.getId() });
+            }
+          }}
+          onSelectionChanged={handleSelectionChanged}
           editType={props.editFullRow ? "fullRow" : ""}
           stopEditingWhenCellsLoseFocus={true}
+          suppressClickEdit={true}
         />
       </div>
     );
   };
+  const isMoveRowsDisabled = selectedRowCount === 0 || selectedRowCount === rowData.length;
 
   // Return Method
   return (
@@ -730,17 +875,19 @@ function EditableTable(props) {
                     )}
                   </div>
                   <div className='flex justify-end pr-4 w-full'>
-                    <IconButton
-                      sx={{ marginTop: "-8px", display: !collapseTable || !editable ? "none" : null }}
-                      variant='contained'
-                      aria-controls={openMenu ? "basic-menu" : undefined}
-                      aria-haspopup='true'
-                      aria-expanded={openMenu ? "true" : undefined}
-                      onClick={handleMenuClick}>
+                    {collapseTable && editable ? (
                       <Tooltip title={`Edit Table`} id={"editTableButton"}>
-                        <MenuIcon htmlColor={innerStyling.primaryColor} sx={icons.large} />
+                        <IconButton
+                          sx={{ marginTop: "-8px" }}
+                          variant='contained'
+                          aria-controls={openMenu ? "basic-menu" : undefined}
+                          aria-haspopup='true'
+                          aria-expanded={openMenu ? "true" : undefined}
+                          onClick={handleMenuClick}>
+                          <MenuIcon htmlColor={innerStyling.primaryColor} sx={icons.large} />
+                        </IconButton>
                       </Tooltip>
-                    </IconButton>
+                    ) : null}
                   </div>
                 </span>
               </div>
@@ -760,8 +907,21 @@ function EditableTable(props) {
                   <MenuList className='m-0 p-0'>
                     {props.editable.addColumn && getMenuItem(handleOpenNewColumnDialog, "Add Column", AddColumnIcon, icons.medium)}
                     {props.editable.addRow && getMenuItem(handleAddRow, "Add Row", AddRowIcon, icons.medium)}
+                    {props.editable.moveRow &&
+                      props.handleMoveTableRows &&
+                      getMenuItem(() => handleMoveSelectedRows("up"), "Move Selected Row(s) Up", ArrowUpwardRoundedIcon, icons.medium, isMoveRowsDisabled)}
+                    {props.editable.moveRow &&
+                      props.handleMoveTableRows &&
+                      getMenuItem(
+                        () => handleMoveSelectedRows("down"),
+                        "Move Selected Row(s) Down",
+                        ArrowDownwardRoundedIcon,
+                        icons.medium,
+                        isMoveRowsDisabled
+                      )}
                     {props.editable.removeColumn && getMenuItem(handleRemoveLastColumn, "Remove Last Column", DeleteColumnIcon, icons.large)}
-                    {props.editable.removeRow && getMenuItem(handleRemoveSelectedRow, "Remove Selected Row", DeleteRowIcon, icons.extraLarge)}
+                    {props.editable.removeRow &&
+                      getMenuItem(handleRemoveSelectedRow, "Remove Selected Row", DeleteRowIcon, icons.extraLarge, selectedRowCount === 0)}
                   </MenuList>
                 </Menu>
                 {props.tableInstructions && (

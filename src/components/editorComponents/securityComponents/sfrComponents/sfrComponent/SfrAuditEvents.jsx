@@ -1,13 +1,14 @@
 // Imports
 import { v4 as uuidv4 } from "uuid";
 import { useDispatch, useSelector } from "react-redux";
-import { Checkbox, IconButton, Stack, TextField, Tooltip, Typography } from "@mui/material";
+import { Checkbox, IconButton, Stack, Tooltip, Typography } from "@mui/material";
 import AddCircleRoundedIcon from "@mui/icons-material/AddCircleRounded";
 import DeleteForeverRoundedIcon from "@mui/icons-material/DeleteForeverRounded";
 import { UPDATE_SFR_COMPONENT_ITEMS } from "../../../../../reducers/SFRs/sfrSectionSlice.js";
 import { deepCopy } from "../../../../../utils/deepCopy.js";
-import { handleSnackBarSuccess, handleSnackbarTextUpdates } from "../../../../../utils/securityComponents.jsx";
+import { handleSnackBarSuccess } from "../../../../../utils/securityComponents.jsx";
 import CardTemplate from "../../CardTemplate.jsx";
+import TipTapEditor from "../../../TipTapEditor.jsx";
 
 /**
  * The SfrAuditEvents class that displays the sfr audit events section
@@ -20,8 +21,7 @@ function SfrAuditEvents() {
   const { sfrUUID, componentUUID, component } = useSelector((state) => state.sfrWorksheetUI);
 
   // Methods
-  const handleAuditEventDescription = (event, auditEvents, uuid) => {
-    let description = event.target.value;
+  const handleAuditEventDescription = (description, auditEvents, uuid) => {
     if (auditEvents.hasOwnProperty(uuid)) {
       auditEvents[uuid].description = description;
     } else {
@@ -82,9 +82,9 @@ function SfrAuditEvents() {
     if (auditEvents.hasOwnProperty(uuid)) {
       if (auditEvents[uuid].items && auditEvents[uuid].items[index]) {
         if (type === "description") {
-          auditEvents[uuid].items[index].description = event.target.value;
+          auditEvents[uuid].items[index].description = event;
         } else if (type === "info") {
-          auditEvents[uuid].items[index].info = event.target.value;
+          auditEvents[uuid].items[index].info = event;
         } else if (type === "optional") {
           auditEvents[uuid].items[index].optional = event.target.checked;
         }
@@ -116,47 +116,49 @@ function SfrAuditEvents() {
       }
 
       return (
-        <div className='mb-5' key={`${uuid}-audit-event-item-${index}`}>
-          <span className='flex justify-center min-w-full'>
-            <div className='w-[100%]'>
-              <TextField
+        <div className='mb-3' key={`${uuid}-audit-event-item-${index}`}>
+          <div className='border border-[#BDBDBD] rounded-lg bg-gray-50 overflow-hidden'>
+            {/* Card header */}
+            <div className='flex items-center justify-between px-3 py-1.5 border-b border-[#BDBDBD] bg-white'>
+              <Typography style={{ fontSize: "11px", fontWeight: 700, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                Info
+              </Typography>
+              <div className='flex items-center gap-2'>
+                <Stack direction='row' component='label' alignItems='center' gap={0.5}>
+                  <Typography noWrap style={{ fontSize: "11px", fontWeight: 600, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                    Optional
+                  </Typography>
+                  <Checkbox
+                    sx={checkboxSecondaryNoPad}
+                    size={"small"}
+                    checked={item.optional}
+                    onChange={(event) => {
+                      handleUpdateAuditEventItem(event, "optional", index, auditEvents, uuid);
+                    }}
+                  />
+                </Stack>
+                <IconButton
+                  variant='contained'
+                  sx={{ margin: 0, padding: 0 }}
+                  onClick={() => {
+                    handleDeleteAuditEventItem(index, auditEvents, uuid);
+                  }}>
+                  <Tooltip title={"Delete Info"} id={componentUUID + "deleteInfoTooltip" + index}>
+                    <DeleteForeverRoundedIcon htmlColor={secondary} sx={icons.small} />
+                  </Tooltip>
+                </IconButton>
+              </div>
+            </div>
+            {/* Card body */}
+            <div className='mb-[-8px]'>
+              <TipTapEditor
                 className='w-full'
-                key={item.info}
-                label='Info'
-                defaultValue={item.info}
-                onBlur={(event) => {
-                  handleSnackbarTextUpdates(handleUpdateAuditEventItem, event, "info", index, auditEvents, uuid);
-                }}
+                contentType={"term"}
+                handleTextUpdate={(event) => handleUpdateAuditEventItem(event, "info", index, auditEvents, uuid)}
+                text={item.info || ""}
               />
             </div>
-            <div className='pt-2 ml-3 border-[#BDBDBD] border-[1px] rounded-[5px]'>
-              <Stack direction='row' component='label' alignItems='center' justifyContent='center' sx={{ paddingX: 1 }}>
-                <Typography noWrap style={{ fontSize: "11px", fontWeight: 500, color: "#4d4d4d" }}>
-                  Optional
-                </Typography>
-                <Checkbox
-                  sx={checkboxSecondaryNoPad}
-                  size={"small"}
-                  checked={item.optional}
-                  onChange={(event) => {
-                    handleUpdateAuditEventItem(event, "optional", index, auditEvents, uuid);
-                  }}
-                />
-              </Stack>
-            </div>
-            <div className='mt-4 ml-3'>
-              <IconButton
-                variant='contained'
-                sx={{ margin: 0, padding: 0 }}
-                onClick={() => {
-                  handleDeleteAuditEventItem(index, auditEvents, uuid);
-                }}>
-                <Tooltip title={`Delete Info`} id={componentUUID + "deleteInfoTooltip" + index}>
-                  <DeleteForeverRoundedIcon htmlColor={secondary} sx={icons.medium} />
-                </Tooltip>
-              </IconButton>
-            </div>
-          </span>
+          </div>
         </div>
       );
     }
@@ -176,11 +178,11 @@ function SfrAuditEvents() {
               header={
                 <div className='p-0 m-0 my-[-6px]'>
                   <span className='flex justify-stretch min-w-full'>
-                    <div className='flex justify-center w-[100%]'>
-                      <label className='resize-none font-bold text-[13px] p-0 m-0 text-secondary pr-1 mt-[10px]'>{`Audit Event ${index + 1}`}</label>
+                    <div className='flex justify-center items-center w-[100%]'>
+                      <label className='resize-none font-bold text-[13px] p-0 m-0 text-secondary pr-1'>{`Audit Event ${index + 1}`}</label>
                       <IconButton
                         variant='contained'
-                        sx={{ marginTop: "-8px", margin: 0, padding: 0 }}
+                        sx={{ margin: 0, padding: 0 }}
                         onClick={() => {
                           handleDeleteAuditEvent(auditEvents, key);
                         }}>
@@ -189,9 +191,9 @@ function SfrAuditEvents() {
                         </Tooltip>
                       </IconButton>
                     </div>
-                    <div className='flex justify-end w-[1%]'>
-                      <Stack direction='row' component='label' alignItems='center' justifyContent='center' sx={{ paddingX: 1 }}>
-                        <Typography noWrap style={{ fontSize: "13px", fontWeight: 500, color: "#4d4d4d" }}>
+                    <div className='flex justify-end items-center shrink-0'>
+                      <Stack direction='row' component='label' alignItems='center' gap={0.5} sx={{ paddingX: 1 }}>
+                        <Typography noWrap style={{ fontSize: "11px", fontWeight: 600, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.04em" }}>
                           Optional
                         </Typography>
                         <Checkbox
@@ -210,16 +212,22 @@ function SfrAuditEvents() {
               body={
                 <div className='w-full p-0 m-0 mt-[-8px] mb-[2px]'>
                   <div className='pt-3 px-2'>
-                    <div className={"pb-5"}>
-                      <TextField
-                        className='w-full'
-                        key={description}
-                        label='Audit Event Description'
-                        defaultValue={description}
-                        onBlur={(event) => {
-                          handleSnackbarTextUpdates(handleAuditEventDescription, event, auditEvents, key);
-                        }}
-                      />
+                    <div className={"pb-4"}>
+                      <div className='border border-[#BDBDBD] rounded-lg bg-gray-50 overflow-hidden'>
+                        <div className='flex items-center px-3 py-1.5 border-b border-[#BDBDBD] bg-white'>
+                          <Typography style={{ fontSize: "11px", fontWeight: 700, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                            Audit Event Description
+                          </Typography>
+                        </div>
+                        <div className='mb-[-8px]'>
+                          <TipTapEditor
+                            className='w-full'
+                            contentType={"term"}
+                            handleTextUpdate={(event) => handleAuditEventDescription(event, auditEvents, key)}
+                            text={description || ""}
+                          />
+                        </div>
+                      </div>
                     </div>
                     {items?.map((item, index) => {
                       return getAuditItems(item, index, auditEvents, key);

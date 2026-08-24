@@ -90,7 +90,7 @@ function SelectionBased() {
         itemMap.selections.selections = includedSelectables;
       }
     } else if (title.toLowerCase() === "selections") {
-      itemMap.selections.selections = getSelectedSelectionsByUUID(selections);
+      itemMap.selections.selections = getSelectedSelectionsByID(selections);
     }
 
     // Update selection based selections
@@ -153,12 +153,12 @@ function SelectionBased() {
     return getSelectionBasedArrayByType(allSfrOptionsMap, currentlySelected, "selections", "name");
   };
   /**
-   * Gets the selected selections by uuid
+   * Gets the selected selection dependency IDs
    * @param selectedSelections the selected selections
    * @returns {*[]}
    */
-  const getSelectedSelectionsByUUID = (selectedSelections) => {
-    return getSelectionBasedArrayByType(allSfrOptionsMap, selectedSelections, "selections", "uuid");
+  const getSelectedSelectionsByID = (selectedSelections) => {
+    return getSelectionBasedArrayByType(allSfrOptionsMap, selectedSelections, "selections", "id");
   };
   /**
    * Gets the selection options

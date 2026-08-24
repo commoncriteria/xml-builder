@@ -139,7 +139,9 @@ export const sfrSlice = createSlice({
         extendedComponentDefinition.push({
           famId: "",
           title: "New ECD Title",
+          definitionType: "fam-behavior",
           famBehavior: "",
+          modDef: "",
         });
       }
     },
@@ -163,7 +165,7 @@ export const sfrSlice = createSlice({
         if (extendedComponentDefinition[index]) {
           let currentEcdItem = extendedComponentDefinition[index];
 
-          if (currentEcdItem.hasOwnProperty(type)) {
+          if (Object.prototype.hasOwnProperty.call(currentEcdItem, type) || ["definitionType", "famBehavior", "modDef"].includes(type)) {
             currentEcdItem[type] = value;
           }
         }

@@ -3,17 +3,13 @@ import { current, createSlice, original } from "@reduxjs/toolkit";
 import validator from "validator";
 import { defaultAudit } from "./SFRs/sfrBasePPsSlice.js";
 import { deepCopy } from "../utils/deepCopy";
-import { getComponentXmlID, getElementId } from "../utils/securityComponents.jsx";
+import { getComponentXmlID, getElementId, handleSnackBarError } from "../utils/securityComponents.jsx";
 import basePPExport from "../../public/data/base_data/base_export_pp_fp.json";
-import app from "../../public/data/sfr_components/app_cc2022.json";
-import mdm from "../../public/data/sfr_components/mdm.json";
-import gpcp from "../../public/data/sfr_components/gpcp_cc2022.json";
-import gpos from "../../public/data/sfr_components/gpos_cc2022.json";
-import mdf from "../../public/data/sfr_components/mdf.json";
-import tls from "../../public/data/sfr_components/tls_cc2022.json";
-import virtualization from "../../public/data/sfr_components/virtualization_cc2022.json";
-import sfrSections from "../components/editorComponents/securityComponents/sfrComponents/SfrSections.jsx";
-import { data } from "autoprefixer";
+import { dataMap } from "../utils/ppData.js";
+import { formatEvaluationActivityDependencies, getEvaluationActivitySectionContent } from "../utils/evaluationActivityDependencies.js";
+import { COMMON_REGEX, EXPORT_REGEX } from "../utils/regexUtils.js";
+import { mapTechnicalDecisionAffectsForExport } from "../utils/technicalDecisionHistory.js";
+import { applySelectionFormatting, mergeSelectionFormatting } from "../utils/selectionFormatting.js";
 
 const initialPPState = basePPExport;
 
@@ -43,6 +39,52 @@ const moduleSfrPriority = {
   "selection-based": 6,
 };
 
+const defaultMandatoryAuditSection = {
+  section: {
+    "@id": "ss-audit-table",
+    "@title": "Auditable Events for Mandatory SFRs",
+    "audit-table": {
+      "@id": "t-audit-mandatory",
+      "@table": "mandatory",
+    },
+  },
+};
+
+const hasAuditSection = (auditSection) => {
+  if (!auditSection) return false;
+  if (typeof auditSection === "string") return auditSection.trim() !== "";
+  if (Array.isArray(auditSection)) return auditSection.length > 0;
+  return typeof auditSection === "object" && Object.keys(auditSection).length > 0;
+};
+
+const getAuditSectionForExport = (auditSection) => {
+  return hasAuditSection(auditSection) ? auditSection : deepCopy(defaultMandatoryAuditSection);
+};
+
+const getNoChangeXPathDetail = () => ({
+  type: "no-change",
+  subType: "no-change",
+  isComponentReplacement: false,
+  replacementElements: null,
+  f_element_id: null,
+});
+
+const getXPathDetailsArray = (xPathDetails, noChange = undefined) => {
+  let xPathDetailsArray = Array.isArray(xPathDetails)
+    ? deepCopy(xPathDetails)
+    : xPathDetails && Object.keys(xPathDetails).length > 0
+      ? Object.entries(xPathDetails).map(([type, detail]) => ({ type, ...(detail || {}) }))
+      : [];
+
+  if (noChange === false) {
+    xPathDetailsArray = xPathDetailsArray.filter((detail) => detail.type !== "no-change");
+  } else if (noChange === true && !xPathDetailsArray.some((detail) => detail.type === "no-change")) {
+    xPathDetailsArray.push(getNoChangeXPathDetail());
+  }
+
+  return xPathDetailsArray;
+};
+
 // Populated normally, and then run XML export serialization
 export const exportSlice = createSlice({
   name: "export",
@@ -67,8 +109,8 @@ export const exportSlice = createSlice({
             if (validator.isUUID(key)) {
               const term = action.payload.techTerms[key];
               return {
-                "@full": getTitle(term.title),
-                ...(term?.xmlTagMeta?.attributes.abbr && { "@abbr": term.xmlTagMeta.attributes.abbr }),
+                "@full": term.title,
+                ...(term?.abbr && { "@abbr": term.abbr }),
                 "#": term.definition,
               };
             }
@@ -79,7 +121,7 @@ export const exportSlice = createSlice({
         if (action.payload.hasOwnProperty("suppressedTerms")) {
           Object.entries(action.payload.suppressedTerms).forEach(([key, value]) => {
             if (validator.isUUID(key)) {
-              suppressArray.push(getTitle(value.title));
+              suppressArray.push(value.title);
             }
           });
         }
@@ -94,15 +136,19 @@ export const exportSlice = createSlice({
       const reformatted = Object.values(action.payload.useCases)
         .map((term) => {
           if (term) {
-            const { title, definition, xmlTagMeta } = term;
-
+            // useCaseConfig replaces metaData and is now an array of ref-id strings
+            const { title, definition, xmlTagMeta, useCaseConfig } = term;
             // Ignore if not an object (Use Case slice has title and open keys which are string and bool)
             if (term && definition && term.xmlTagMeta) {
+              // Build <config><ref-id>...</ref-id></config> when useCaseConfig is provided
+              const configBlock = Array.isArray(useCaseConfig) && useCaseConfig.length > 0 ? { config: { "ref-id": useCaseConfig } } : {};
+
               if (title.length != 0) {
                 return {
                   "@title": title,
                   "@id": xmlTagMeta.attributes.id,
                   description: definition,
+                  ...configBlock,
                 };
               } else {
                 return {
@@ -149,7 +195,7 @@ export const exportSlice = createSlice({
 
       // If all the sections are empty, remove the Security Problem Definition Section
       if (Object.keys(reformattedThreats).length === 0 && Object.keys(reformattedAssumptions).length === 0 && Object.keys(reformattedOSPs).length === 0) {
-        delete state.overallObject[docType]["sec:Security_Problem_Definition"];
+        state.overallObject[docType] = removeTopLevelSections(state.overallObject[docType], isSecurityProblemDefinitionSection);
       } else {
         // Organizational Security Policies section is needed for PPs/Modules, even when empty
         if ((docType === "PP" || docType === "Module") && Object.keys(reformattedOSPs).length === 0) {
@@ -159,48 +205,51 @@ export const exportSlice = createSlice({
         }
         const { tagName, attributes } = accordionSection.xmlTagMeta;
 
-        if (tagName === "sec:Security_Problem_Definition") {
-          state.overallObject[docType][tagName] = {
-            "#": securityProblemDefinition,
-            "!1": " 3.1 Threats ",
-            "sec:Threats": reformattedThreats,
-            "!2": " 3.2 Assumptions ",
-            "sec:Assumptions": reformattedAssumptions,
-            "!3": " 3.3 Organizational Security Policies ",
-            "sec:Organizational_Security_Policies": {
-              ...(boilerplate ? { "@": { boilerplate } } : {}),
-              "#": reformattedOSPs,
+        const hasOSPs = Object.keys(reformattedOSPs).length > 0 && reformattedOSPs.hasOwnProperty("OSPs");
+
+        // Determine OSP section format
+        let ospSection;
+
+        if (boilerplate === "no") {
+          // boilerplate="no" -> ALWAYS use <section> format
+          // https://github.com/commoncriteria/pp-template/wiki/Organizational-Security-Policies-Section
+          ospSection = {
+            section: {
+              "@title": "Organizational Security Policies",
+              "@id": "sec-osp",
+              "@boilerplate": "no",
+              ...(hasOSPs ? { "#": reformattedOSPs } : { OSPs: {} }),
             },
           };
         } else {
-          // If the import has a different tag name
-          // Build the new section
-          const newSection = {
-            ...(Object.keys(attributes).length > 0 ? { "@": attributes } : {}),
-            "#": securityProblemDefinition,
-            "!1": " 3.1 Threats ",
-            "sec:Threats": reformattedThreats,
-            "!2": " 3.2 Assumptions ",
-            "sec:Assumptions": reformattedAssumptions,
-            "!3": " 3.3 Organizational Security Policies ",
+          // boilerplate is not "no" -> use sec:Organizational_Security_Policies
+          ospSection = {
             "sec:Organizational_Security_Policies": {
-              ...(boilerplate ? { "@": { boilerplate } } : {}),
-              "#": reformattedOSPs,
+              ...(hasOSPs ? { "#": reformattedOSPs } : { OSPs: {} }),
             },
           };
-
-          // Work on the entries array to preserve order
-          let entries = Object.entries(state.overallObject[docType]);
-
-          // Find index of the old SPD section and replace it
-          const idx = entries.findIndex(([k]) => k === "sec:Security_Problem_Definition");
-          if (idx !== -1) {
-            entries[idx] = [tagName, newSection];
-          }
-
-          // Rebuild object, preserving order
-          state.overallObject[docType] = Object.fromEntries(entries);
         }
+
+        // Build the section content
+        const sectionContent = {
+          "#": securityProblemDefinition,
+          "!1": " 3.1 Threats ",
+          "sec:Threats": reformattedThreats,
+          "!2": " 3.2 Assumptions ",
+          "sec:Assumptions": reformattedAssumptions,
+          "!3": " 3.3 Organizational Security Policies ",
+          ...ospSection,
+        };
+
+        const isDefaultTag = tagName === "sec:Security_Problem_Definition";
+        const newSection = isDefaultTag
+          ? sectionContent
+          : {
+              ...(Object.keys(attributes).length > 0 ? { "@": attributes } : {}),
+              ...sectionContent,
+            };
+
+        state.overallObject[docType] = setSecurityProblemDefinitionSection(state.overallObject[docType], tagName, newSection);
       }
     },
     SET_SECURITY_OBJECTIVES_SECTION: (state, action) => {
@@ -211,7 +260,7 @@ export const exportSlice = createSlice({
 
         // Remove section if there is no content
         if (!(toe || operationalEnvironment) && Object.keys(objectivesToSFRs).length === 0) {
-          delete state.overallObject[docType]["sec:Security_Objectives"];
+          state.overallObject[docType] = removeTopLevelSections(state.overallObject[docType], isSecurityObjectivesSection);
           return;
         }
 
@@ -291,13 +340,26 @@ export const exportSlice = createSlice({
         } else {
           delete state.overallObject[docType]["sec:Security_Objectives"]["sec:Security_Objectives_for_the_Operational_Environment"];
         }
+
+        state.overallObject[docType] = orderSecurityObjectivesSection(state.overallObject[docType]);
       } catch (e) {
         console.log(e);
       }
     },
     SET_META_DATA: (state, action) => {
-      const { ppName, author, keywords, releaseDate, version, revisionHistory, xmlTagMeta, customCSS } = action.payload.metaData;
+      const {
+        ppName,
+        author,
+        keywords,
+        releaseDate,
+        version,
+        revisionHistory = [],
+        technicalDecisionHistory = [],
+        xmlTagMeta,
+        customCSS,
+      } = action.payload.metaData;
       const ppType = action.payload.ppType;
+      const sfrSections = action.payload.sfrSections;
 
       const docType = getDocType(ppType);
 
@@ -324,20 +386,52 @@ export const exportSlice = createSlice({
           };
         }),
       };
+      const reformattedTechnicalDecisionHistory = {
+        TD: Object.values(technicalDecisionHistory).map((td) => {
+          const affects = mapTechnicalDecisionAffectsForExport(td.affects, sfrSections);
+          return {
+            number: td.number || "",
+            date: td.date || "",
+            subject: {
+              "#": String(td.subject || "")
+                .split("\n")
+                .map((item, index, array) => {
+                  item = item.trim();
+                  if (index !== array.length - 1) {
+                    item += " ";
+                  }
+                  return item;
+                }),
+            },
+            url: td.url || "",
+            ...(affects.length > 0 && {
+              affects: {
+                "ref-id": affects,
+              },
+            }),
+          };
+        }),
+      };
 
+      // Version, author, pubdate, and keywords are required in the schema
       const reformattedReference = {
         ReferenceTable: {
           ...(ppName && { PPTitle: ppName }),
-          ...(version && { PPVersion: version }),
-          ...(author && { PPAuthor: author }),
-          ...(releaseDate && { PPPubDate: releaseDate }),
-          ...(keywords && { Keywords: keywords }),
+          PPVersion: version || "",
+          PPAuthor: author || "",
+          PPPubDate: releaseDate || "",
+          Keywords: keywords || "",
         },
       };
 
       // TODO: Revision history clipping off a number on import
       state.overallObject[docType].PPReference = reformattedReference;
       state.overallObject[docType].RevisionHistory = reformattedRevisionHistory;
+      if (reformattedTechnicalDecisionHistory.TD.length > 0) {
+        state.overallObject[docType].TechnicalDecisionHistory = reformattedTechnicalDecisionHistory;
+      } else {
+        delete state.overallObject[docType].TechnicalDecisionHistory;
+      }
 
       // Set initial main PP or Functional Package tags
       if (xmlTagMeta.hasOwnProperty("attributes")) {
@@ -379,6 +473,8 @@ export const exportSlice = createSlice({
       } else {
         delete state.overallObject[docType]["extra-css"];
       }
+
+      state.overallObject[docType] = orderTechnicalDecisionHistorySection(state.overallObject[docType]);
     },
     SET_PACKAGES: (state, action) => {
       const packages = action.payload.packages;
@@ -451,10 +547,10 @@ export const exportSlice = createSlice({
 
       for (const [key, value] of Object.entries(oldObject)) {
         newObject[key] = value;
-        if (key.startsWith("sec:") && key.slice(4).replace(/_/g, " ") === selectedSection) {
-          newObject[`sec:${title.replace(/\s+/g, "_")}`] = {
+        if (topLevelSectionMatchesSelectedSection(key, value, selectedSection)) {
+          newObject[`sec:${title.replace(COMMON_REGEX.allWhitespace, "_")}`] = {
             "#": text,
-            "@previous_section": selectedSection,
+            ...(selectedSection ? { "@previous_section": selectedSection } : {}),
           };
         }
       }
@@ -464,66 +560,104 @@ export const exportSlice = createSlice({
       const intro = action.payload.introduction.formItems;
       const ctoeData = action.payload.compliantTargets;
       const { xml: platformXML } = action.payload.platformData;
+      const implementationData = action.payload.implementationData || {};
       const sec_overview_section = intro.find((formItem) => formItem.title === "Objectives of Document").xmlTagMeta.tagName || "section";
       const sec_overview_id = intro.find((formItem) => formItem.title === "Objectives of Document").xmlTagMeta.attributes?.id || "intro-overview";
-      const sec_overview_title = intro.find((formItem) => formItem.title === "Objectives of Document").xmlTagMeta.attributes?.title || "Overview";
+      const sec_overview_title = intro.find((formItem) => formItem.title === "Objectives of Document").xmlTagMeta.attributes?.title;
       const sec_overview_text = intro.find((formItem) => formItem.title === "Objectives of Document").text;
+      const sec_scope_of_document = intro.find((formItem) => formItem.title === "Scope of Document")?.text;
+      const sec_intended_readership = intro.find((formItem) => formItem.title === "Intended Readership")?.text;
+
       const ppType = action.payload.ppType;
       const docType = getDocType(ppType);
-      const createToe = (title, intro, subTitle = "") => {
+      const createToe = (title, intro) => {
         let formItem = intro.find((item) => item.title === title);
 
-        if (formItem) {
-          let name = "";
-
-          switch (title) {
-            case "TOE Overview":
-              if (subTitle.length != 0) {
-                if (subTitle === "TOE Boundary") {
-                  name = "sec:TOE_Boundary";
-                } else if (subTitle === "TOE Platform") {
-                  name = "sec:TOE_Platform";
-                } else if (subTitle === "TOE Operational Environment") {
-                  name = "sec:TOE_Operational_Environment";
-                }
-
-                let toeOverview = intro.find((item) => item.title === "TOE Overview");
-
-                if (toeOverview && toeOverview.hasOwnProperty("nestedFormItems") && toeOverview.nestedFormItems.hasOwnProperty("formItems")) {
-                  const section = toeOverview.nestedFormItems.formItems.find((item) => item.title === subTitle);
-                  const toeText = section ? section.text : "";
-                  const toeXmlTagMeta = section && section.xmlTagMeta ? section.xmlTagMeta : { tagName: name, attributes: {} };
-
-                  if (toeText.length != 0) {
-                    if (toeXmlTagMeta.tagName === "section") {
-                      return {
-                        section: {
-                          ...toeXmlTagMeta.attributes,
-                          "#": toeText,
-                        },
-                      };
-                    } else {
-                      return {
-                        [name]: {
-                          "#": toeText,
-                        },
-                      };
-                    }
-                  }
-                }
-              } else {
-                return {
-                  "#": formItem.text,
-                };
-              }
-              break;
-            case "TOE Usage":
-              return { "#": formItem.text };
-          }
+        if (formItem && title === "TOE Overview") {
+          return {
+            "#": formItem.text,
+          };
         }
       };
 
-      const toe_usage = createToe("TOE Usage", intro);
+      const getToeSubsectionTagName = (section) => {
+        if (section.xmlTagMeta?.tagName) {
+          return section.xmlTagMeta.tagName;
+        }
+
+        if (section.title === "TOE Boundary") {
+          return "sec:TOE_Boundary";
+        }
+
+        if (section.title === "TOE Platform") {
+          return "sec:TOE_Platform";
+        }
+
+        if (section.title === "TOE Operational Environment") {
+          return "sec:TOE_Operational_Environment";
+        }
+
+        return "section";
+      };
+
+      const getFormattedAttributes = (attributes = {}) => {
+        return Object.entries(attributes).reduce((result, [key, value]) => {
+          if (value !== undefined && value !== null && value !== "") {
+            result[`@${key}`] = value;
+          }
+          return result;
+        }, {});
+      };
+
+      const createToeSubsection = (section) => {
+        const toeText = section?.text || "";
+
+        if (toeText.length === 0) {
+          return null;
+        }
+
+        const tagName = getToeSubsectionTagName(section);
+        const attributes = {
+          ...(tagName === "section" ? { title: section.title } : {}),
+          ...(section.xmlTagMeta?.attributes || {}),
+        };
+
+        return {
+          [tagName]: {
+            ...getFormattedAttributes(attributes),
+            "#": toeText,
+          },
+        };
+      };
+
+      const createImplementationSection = () => {
+        const { text = "", featureList = [], xmlTagMeta = {}, title = "Product Features Mapped to Implementation-dependent Requirements" } = implementationData;
+        const hasText = text && text !== "<p><br></p>";
+        const hasFeatures = featureList.length > 0;
+
+        if (!hasText && !hasFeatures) {
+          return null;
+        }
+
+        const formattedFeatures = formatImplementSection(featureList);
+        const tagName = xmlTagMeta.tagName || "section";
+        const attributes = {
+          ...(tagName === "section" ? { title, id: "sec-features" } : {}),
+          ...(xmlTagMeta.attributes || {}),
+        };
+
+        if (tagName === "section" && !attributes.title) {
+          attributes.title = title;
+        }
+
+        return {
+          [tagName]: {
+            ...getFormattedAttributes(attributes),
+            "#": [text, formattedFeatures].filter((item) => item !== "" && item !== null && item !== undefined && !(Array.isArray(item) && item.length === 0)),
+          },
+        };
+      };
+
       const useCaseState = current(state.useCases);
 
       // Refactor this so that we're looping through the loop items and using their embedded tags
@@ -532,7 +666,7 @@ export const exportSlice = createSlice({
         [sec_overview_section]: {
           "#": sec_overview_text,
           ...(sec_overview_section === "section" ? { "@id": sec_overview_id } : {}), // id attr is only allowed with section tag
-          "@title": sec_overview_title,
+          ...(sec_overview_section === "section" || sec_overview_title !== undefined ? { "@title": sec_overview_title || "Overview" } : {}),
         },
         "#": [],
       };
@@ -542,25 +676,53 @@ export const exportSlice = createSlice({
         "tech-terms": current(state.techTerms),
       });
 
+      if (sec_scope_of_document) {
+        formattedIntroduction["#"].push({
+          section: {
+            "@title": "Scope of Document",
+            "@id": "scope",
+            "#": sec_scope_of_document,
+          },
+        });
+      }
+
+      if (sec_intended_readership) {
+        formattedIntroduction["#"].push({
+          section: {
+            "@title": "Intended Readership",
+            "@id": "intread",
+            "#": sec_intended_readership,
+          },
+        });
+      }
+
       if (ppType === "Protection Profile" || ppType === "Module") {
+        const toeOverview = intro.find((item) => item.title === "TOE Overview");
         const toe_overview = createToe("TOE Overview", intro);
-        const toe_boundary = createToe("TOE Overview", intro, "TOE Boundary");
-        const toe_platform = createToe("TOE Overview", intro, "TOE Platform");
-        const toe_oe = createToe("TOE Overview", intro, "TOE Operational Environment");
-        const xmlTagMeta = intro.find((item) => item.title === "TOE Overview").xmlTagMeta;
+        const toe_subsections =
+          toeOverview?.nestedFormItems?.formItems?.map((section) => createToeSubsection(section)).filter((section) => section !== null) || [];
+        const toeContent = [toe_overview, ...toe_subsections].filter(Boolean);
+        const xmlTagMeta = toeOverview?.xmlTagMeta || {
+          tagName: "section",
+          attributes: { title: "Compliant Targets of Evaluation" },
+        };
+        const toeSectionAttributes = {
+          ...(xmlTagMeta.attributes || {}),
+          ...(xmlTagMeta.tagName === "section" && !xmlTagMeta.attributes?.title ? { title: "Compliant Targets of Evaluation" } : {}),
+        };
 
         const sectionObject =
           xmlTagMeta.tagName === "section"
             ? {
                 section: {
-                  "@title": xmlTagMeta.attributes.title,
-                  "@id": xmlTagMeta.attributes.id,
-                  "#": [toe_overview, toe_boundary, toe_oe, toe_platform],
+                  ...getFormattedAttributes(toeSectionAttributes),
+                  "#": toeContent,
                 },
               }
             : {
                 [xmlTagMeta.tagName]: {
-                  "#": [toe_overview, toe_boundary, toe_oe, toe_platform],
+                  ...getFormattedAttributes(xmlTagMeta.attributes),
+                  "#": toeContent,
                 },
               };
 
@@ -587,13 +749,23 @@ export const exportSlice = createSlice({
 
       // Add Use Cases
       if (Object.keys(useCaseState).length > 0) {
-        formattedIntroduction["#"].push({
-          "sec:Use_Cases": {
-            "#": [toe_usage, useCaseState.usecase?.length > 0 ? { usecases: useCaseState } : ""],
-          },
-        });
-      } else {
-        delete formattedIntroduction["sec:Use_Cases"];
+        if (useCaseState.usecase?.length > 0) {
+          const useCaseIntro = action.payload.useCaseIntro;
+          const useCasesObj = {
+            "sec:Use_Cases": {
+              "#": useCaseIntro,
+              usecases: useCaseState,
+            },
+          };
+
+          const existingIndex = formattedIntroduction["#"].findIndex((item) => item["sec:Use_Cases"]);
+
+          if (existingIndex !== -1) {
+            formattedIntroduction["#"][existingIndex] = useCasesObj;
+          } else {
+            formattedIntroduction["#"].push(useCasesObj);
+          }
+        }
       }
 
       // Add Platforms after Use Cases
@@ -606,6 +778,11 @@ export const exportSlice = createSlice({
             "#": platformXML,
           },
         });
+      }
+
+      const implementationSection = createImplementationSection();
+      if (implementationSection) {
+        formattedIntroduction["#"].push(implementationSection);
       }
 
       // insert custom intro sections
@@ -661,17 +838,16 @@ export const exportSlice = createSlice({
         sectionContent = setConformanceClaimsToCC2022(action.payload.conformanceClaims, action.payload.ppTemplateVersion);
       }
 
-      // Add xmlTagMeta attributes
-      if (conformanceClaims.xmlTagMeta?.attributes) {
-        for (const [attrName, attrValue] of Object.entries(conformanceClaims.xmlTagMeta.attributes)) {
-          sectionContent[`@${attrName}`] = attrValue;
-        }
+      // sec:Conformance_Claims only accepts boilerplate attribute
+      if (conformanceClaims.xmlTagMeta?.attributes?.boilerplate) {
+        sectionContent["@boilerplate"] = conformanceClaims.xmlTagMeta?.attributes?.boilerplate;
       }
 
       state.overallObject[docType]["sec:Conformance_Claims"] = sectionContent;
     },
     SET_SECURITY_REQUIREMENTS: (state, action) => {
       const sfrSections = action.payload.securityRequirements ? deepCopy(action.payload.securityRequirements) : {};
+      const sfrXmlTagMeta = action.payload.securityRequirements.xmlTagMeta;
       const useCases = action.payload.useCases ? deepCopy(action.payload.useCases) : {};
       const { sars, platforms, auditSection, ppType } = action.payload;
       const { title, definition, formItems } = sfrSections;
@@ -682,6 +858,7 @@ export const exportSlice = createSlice({
         // Get selectable ids from uuid
         const { selectableUUIDtoID, componentMap } = getSelectableMapFromFormItems(formItems);
         const useCaseMap = getUseCaseMap(useCases);
+        const importedAuditSectionExists = hasAuditSection(auditSection);
         let auditTableExists = false;
 
         // Get sfr sections
@@ -706,14 +883,13 @@ export const exportSlice = createSlice({
                       })
                     : []
                 );
-                auditTableExists = ccIds.includes("fau_gen.1") || docType === "Package";
+                auditTableExists = ccIds.includes("fau_gen.1") || ccIds.includes("fau_gen_ext.1") || docType === "Package" || importedAuditSectionExists;
 
                 // Get section values
                 innerSections = formItems.map((section, sfrSectionIndex) => {
                   const sectionID = `5.${sfrIndex + 1}.${sfrSectionIndex + 1}`;
                   const { title, definition, extendedComponentDefinition, components } = section;
-                  let findValues = title.split(/\(([^)]+)\)/);
-                  const id = findValues && findValues.length > 1 ? findValues[1].trim().toLowerCase() : "";
+                  const id = getSfrSectionId(section);
                   const formattedExtendedComponentDefinition = getFamilyExtendedComponentDefinition(extendedComponentDefinition);
                   let { formattedComponents, implementSection } = getSfrComponents(
                     components,
@@ -732,7 +908,7 @@ export const exportSlice = createSlice({
                     { "!": ` ${sectionID} ${title ? title : ""} ` },
                     {
                       section: {
-                        "@id": id,
+                        ...(id && { "@id": id }),
                         "@title": title ? title : "",
                         "#": [definition, formattedExtendedComponentDefinition, formattedComponents],
                       },
@@ -753,7 +929,7 @@ export const exportSlice = createSlice({
                 innerSections = formItems.map((section, _sfrSectionIndex) => {
                   const { title, summary, components } = section;
 
-                  let formattedComponents = getSARComponents(sars.elements, components);
+                  let formattedComponents = getSARComponents(sars.elements, components, selectableUUIDtoID, platforms);
 
                   return [
                     {
@@ -780,22 +956,49 @@ export const exportSlice = createSlice({
           delete state.overallObject[docType]["sec:req"];
         }
 
-        if (sfrSections.find((section) => section && section["@title"] === "Security Assurance Requirements")) {
-          state.overallObject[docType][state.fileType === "General-Purpose Computing Platforms" ? "sec:Security_Requirements" : "sec:req"] = {
-            "@title": title,
-            "#": definition ? definition : "",
-            "!1": " 5.1 Security Functional Requirements",
-            "sec:SFRs": {
-              "#": [auditTableExists ? auditSection : "", sfrSections.find((section) => section["@title"] === "Security Functional Requirements")],
-            },
-            "!2": " 5.2 Security Assurance Requirements ",
-            [sars.xmlTagMeta.tagName]: {
-              "@title": sars.xmlTagMeta.attributes.hasOwnProperty("title") ? sars.xmlTagMeta.attributes.title : "Security Assurance Requirements",
-              "#": [sfrSections.find((section) => section["@title"] === "Security Assurance Requirements")],
-              // Conditionally add id if there is one (not setting a default as transforms doesn't expect the attribute for all PPs)
-              ...(sars.xmlTagMeta.attributes.hasOwnProperty("id") && { "@id": sars.xmlTagMeta.attributes.id }),
-            },
+        const sarSectionCandidate = sfrSections.find((section) => section && section["@title"] === "Security Assurance Requirements");
+        const sarHasContent =
+          sarSectionCandidate &&
+          Array.isArray(sarSectionCandidate["#"]) &&
+          sarSectionCandidate["#"].some((item) => (Array.isArray(item) ? item.length > 0 : item && item !== ""));
+        const auditSectionForExport = auditTableExists ? getAuditSectionForExport(auditSection) : "";
+
+        if (docType !== "Package" && sarHasContent) {
+          const sfrFunctionalSection = sfrSections.find((section) => section && section["@title"] === "Security Functional Requirements");
+          const sarSection = sfrSections.find((section) => section && section["@title"] === "Security Assurance Requirements");
+          const securityRequirementsAttributes = sfrXmlTagMeta?.attributes || {};
+          const useSectionTag = sfrXmlTagMeta?.tagName === "section" && securityRequirementsAttributes.id && securityRequirementsAttributes.title === title;
+          const securityRequirementsTagName = useSectionTag ? sfrXmlTagMeta.tagName : "sec:Security_Requirements";
+          const sfrSectionAttributes =
+            sfrXmlTagMeta?.sfrAttributes || (sfrXmlTagMeta?.attributes?.title === "Security Functional Requirements" ? sfrXmlTagMeta.attributes : {});
+          const sfrSectionTagName = sfrXmlTagMeta?.sfrTagName === "section" ? "section" : "sec:SFRs";
+
+          const securityRequirementsSection = {
+            "@title": useSectionTag ? securityRequirementsAttributes.title : title,
+            ...(useSectionTag ? { "@id": securityRequirementsAttributes.id } : {}),
+            "#": [
+              definition ? definition : "",
+              { "!": " 5.1 Security Functional Requirements" },
+              {
+                [sfrSectionTagName]: {
+                  "@title": sfrSectionAttributes.title || "Security Functional Requirements",
+                  ...(sfrSectionAttributes.id ? { "@id": sfrSectionAttributes.id } : {}),
+                  "#": [auditSectionForExport, sfrFunctionalSection],
+                },
+              },
+              { "!": " 5.2 Security Assurance Requirements " },
+              {
+                [sars.xmlTagMeta.tagName]: {
+                  "@title": sars.xmlTagMeta.attributes.hasOwnProperty("title") ? sars.xmlTagMeta.attributes.title : "Security Assurance Requirements",
+                  "#": [sarSection],
+                  // Conditionally add id if there is one (not setting a default as transforms doesn't expect the attribute for all PPs)
+                  ...(sars.xmlTagMeta.attributes.hasOwnProperty("id") && { "@id": sars.xmlTagMeta.attributes.id }),
+                },
+              },
+            ],
           };
+
+          state.overallObject[docType] = setSecurityRequirementsSection(state.overallObject[docType], securityRequirementsTagName, securityRequirementsSection);
         } else {
           // Packages normally won't have SARs, and will not have a parent <sec:req>, but solely the <sec:Security_Functional_Requirements>
           // Creating a new object to replace overallObject with, since we need to preserve order and replace the sec:req key with sec:Security_Functional_Requirements
@@ -803,14 +1006,14 @@ export const exportSlice = createSlice({
           const newPackage = {};
 
           Object.keys(originalPackage).forEach((key) => {
-            if (key === "sec:req") {
+            if (isPackageSecurityRequirementsKey(key)) {
               const sfrSection = sfrSections.find((section) => section && section["@title"] === "Security Functional Requirements");
 
               if (sfrSection) {
                 const { ["@title"]: _, ...cleanedSfrSection } = sfrSection; // Remove @title
 
                 newPackage["sec:Security_Functional_Requirements"] = {
-                  "#": [auditTableExists ? auditSection : "", cleanedSfrSection],
+                  "#": [auditSectionForExport, cleanedSfrSection],
                 };
               }
             } else {
@@ -837,8 +1040,40 @@ export const exportSlice = createSlice({
           const basePPs = formItems?.filter((obj) => obj.hasOwnProperty("declarationAndRef"));
           const { toeSfrs, toeSars } = getToeSecurityRequirements(formItems);
 
-          let formattedSfrBasePPs = getSFRBasePPs(basePPs, sfrSections, useCaseMap, platforms, state.fileType);
-          let formattedSfrSections = getToeSfrs(state, toeSfrs, toeAuditData, useCaseMap, platforms, state.fileType, formattedSfrBasePPs.length);
+          // Build shared selectable map from all sources (Module SFRs + SFRs from external base PP's)
+          const sharedSelectableUUIDtoID = {};
+          const sharedComponentMap = {};
+
+          // TOE SFRs
+          const { selectableUUIDtoID: toeMap, componentMap: toeComponentMap } = getSelectableMapFromFormItems(toeSfrs);
+          Object.assign(sharedSelectableUUIDtoID, toeMap);
+          Object.assign(sharedComponentMap, toeComponentMap);
+
+          // Base PP modified + additional SFR sections
+          basePPs?.forEach((basePP) => {
+            const { modifiedSfrs = {}, additionalSfrs = {} } = basePP || {};
+            const { sfrSections: modSections = {} } = modifiedSfrs;
+            const { sfrSections: addSections = {} } = additionalSfrs;
+
+            [...Object.keys(modSections), ...Object.keys(addSections)].forEach((uuid) => {
+              const section = sfrSections[uuid];
+              if (section) {
+                getSelectableUUIDMapFromComponents(section, sharedSelectableUUIDtoID, sharedComponentMap);
+              }
+            });
+          });
+
+          let formattedSfrBasePPs = getSFRBasePPs(basePPs, sfrSections, useCaseMap, platforms, state.fileType, sharedSelectableUUIDtoID, sharedComponentMap);
+          let formattedSfrSections = getToeSfrs(
+            toeSfrs,
+            toeAuditData,
+            useCaseMap,
+            platforms,
+            state.fileType,
+            formattedSfrBasePPs.length,
+            sharedSelectableUUIDtoID,
+            sharedComponentMap
+          );
           let formattedSarSections = [];
 
           // Remove sec:req and add sec:Security_Requirements
@@ -935,21 +1170,20 @@ export const exportSlice = createSlice({
       const targetSectionKey = `sec:${targetSectionTitle.replaceAll(" ", "_")}`; // e.g. "sec:Conformance_Claims"
 
       const targetSection = ([k, v]) =>
-        k === targetSectionKey ||
-        (k === "section" &&
-          v &&
-          ((Array.isArray(v) && v.some((o) => o && o["@title"] === targetSectionTitle)) || (typeof v === "object" && v["@title"] === targetSectionTitle)));
+        getTopLevelElementName(k, v) === targetSectionKey || (getTopLevelElementName(k, v) === "section" && topLevelEntryHasTitle(k, v, targetSectionTitle));
 
-      // Remove any previous section with the same name
-      const filtered = Object.entries(state.overallObject[docType]).filter(([k]) => k !== sectionName);
+      // Remove only previous Distributed TOE sections. Other top-level generic <section> entries are distinct XML nodes.
+      const distributedToeTitle = introFormatted["@title"];
+      const filtered = Object.entries(state.overallObject[docType]).filter(([k, v]) => !isDistributedToeSection(k, v, distributedToeTitle));
+      const distributedToeEntry = createTopLevelElementEntry(sectionName, distributedToeBlock, "distributedToe");
 
       const idx = filtered.findIndex(targetSection);
 
       // Insert after the target section if found, otherwise append
       if (idx !== -1) {
-        filtered.splice(idx + 1, 0, [sectionName, distributedToeBlock]);
+        filtered.splice(idx + 1, 0, distributedToeEntry);
       } else {
-        filtered.push([sectionName, distributedToeBlock]);
+        filtered.push(distributedToeEntry);
       }
 
       state.overallObject[docType] = Object.fromEntries(filtered);
@@ -958,16 +1192,12 @@ export const exportSlice = createSlice({
       let appendices = [];
       const ppType = action.payload.ppType;
       const docType = getDocType(ppType);
-      const valGuideAppendix = action.payload.state.validationGuidelinesAppendix.xmlContent;
-      if (valGuideAppendix) {
+      const valGuideAppendix = action.payload.state.validationGuidelinesAppendix;
+      if (valGuideAppendix.xmlContent != "" || Object.keys(valGuideAppendix.xmlTagMeta).length !== 0) {
         const valGuideAppendixFormatted = {
-          "@title": action.payload.state.valGuideAppendix.xmlTagMeta.attributes.hasOwnProperty("title")
-            ? action.payload.state.valGuideAppendix.xmlTagMeta.attributes.title
-            : "Validation Guidelines",
-          "@id": action.payload.state.valGuideAppendix.xmlTagMeta.attributes.hasOwnProperty("id")
-            ? action.payload.state.valGuideAppendix.xmlTagMeta.attributes.id
-            : "validation_guidelines",
-          "#": valGuideAppendix,
+          "@title": valGuideAppendix.xmlTagMeta?.attributes?.title ?? "Validation Guidelines",
+          "@id": valGuideAppendix.xmlTagMeta?.attributes?.id ?? "validation_guidelines",
+          "#": valGuideAppendix.xmlContent,
         };
         appendices.push(valGuideAppendixFormatted);
       }
@@ -1014,16 +1244,12 @@ export const exportSlice = createSlice({
         appendices.push(equivGuidelinesAppendixFormatted);
       }
 
-      const vectorAppendix = action.payload.state.vectorAppendix.xmlContent.payload;
-      if (vectorAppendix) {
+      const vectorAppendix = action.payload.state.vectorAppendix;
+      if (vectorAppendix.xmlContent != "" || Object.keys(vectorAppendix.xmlTagMeta).length !== 0) {
         const vectorAppendixFormatted = {
-          "@title": action.payload.state.vectorAppendix.xmlTagMeta.attributes.hasOwnProperty("title")
-            ? action.payload.state.vectorAppendix.xmlTagMeta.attributes.title
-            : "Initialization Vector Requirements for NIST-Approved Cipher Modes",
-          "@id": action.payload.state.vectorAppendix.xmlTagMeta.attributes.hasOwnProperty("id")
-            ? action.payload.state.vectorAppendix.xmlTagMeta.attributes.id
-            : "vector",
-          "#": vectorAppendix,
+          "@title": vectorAppendix.xmlTagMeta?.attributes?.title ?? "Initialization Vector Requirements for NIST-Approved Cipher Modes",
+          "@id": vectorAppendix.xmlTagMeta?.attributes?.id ?? "vector",
+          "#": vectorAppendix.xmlContent,
         };
         appendices.push(vectorAppendixFormatted);
       }
@@ -1082,33 +1308,33 @@ export const exportSlice = createSlice({
 });
 
 // Local Methods
-const formatImplementSection = (_state, implementSection) => {
-  let features = new Set([]);
-
+const formatImplementSection = (implementSection) => {
   try {
-    // Get features
     if (implementSection && implementSection.length > 0) {
-      implementSection.forEach((feature) => {
-        const { id, title, description } = feature;
-        features.add({
-          "@id": id,
-          "@title": title,
-          description: description,
-        });
-      });
+      const formattedFeatures = implementSection
+        .filter((feature) => feature && (feature.id || feature.title || feature.description))
+        .map((feature) => {
+          const { id, title, description } = feature;
 
-      // Add to state
-      const formattedFeatures = Array.from(features);
-      return {
-        implements: {
-          feature: formattedFeatures,
-        },
-      };
+          return {
+            "@id": id,
+            "@title": title,
+            description: description || "",
+          };
+        });
+
+      if (formattedFeatures.length > 0) {
+        return {
+          implements: {
+            feature: formattedFeatures,
+          },
+        };
+      }
     }
   } catch (e) {
     console.log(e);
   }
-  return {};
+  return "";
 };
 
 const constructDirectRationaleThreats = (threats, sfrSections, ppType, sfrMaps) => {
@@ -1142,6 +1368,11 @@ const constructDirectRationaleThreats = (threats, sfrSections, ppType, sfrMaps) 
     // Add sfr type
     const updatedSFRs = terms[key].sfrs
       .map((sfr) => {
+        // External PP SFRs — pass through directly, no lookup needed
+        if (sfr.uuid?.includes("::")) {
+          return { ...sfr, sfrType: "external", stateSFR: null };
+        }
+
         if (!isModule) {
           const stateSFR = findSFRByCcId(sfrSections, sfr.name);
           const sfrType = stateSFR ? getSfrType(stateSFR) : null;
@@ -1177,8 +1408,12 @@ const constructDirectRationaleThreats = (threats, sfrSections, ppType, sfrMaps) 
         return a.name.localeCompare(b.name);
       });
 
-    updatedSFRs.forEach(({ name, rationale, sfrType }) => {
-      if (!isModule) {
+    updatedSFRs.forEach(({ name, rationale, sfrType, uuid }) => {
+      const isExternalPP = uuid?.includes("::");
+
+      if (isExternalPP) {
+        output += `<addressed-by>${name}</addressed-by>`;
+      } else if (!isModule) {
         output += sfrType && sfrType !== "mandatory" ? `<addressed-by>${name} (${sfrTypeMap[sfrType]})</addressed-by>` : `<addressed-by>${name}</addressed-by>`;
       } else {
         output += `<addressed-by>${name}</addressed-by>`;
@@ -1323,12 +1558,12 @@ const getFamilyExtendedComponentDefinition = (extendedComponentDefinition) => {
   try {
     if (extendedComponentDefinition && extendedComponentDefinition.length > 0) {
       formattedExtendedComponentDefinition = extendedComponentDefinition.map((def) => {
-        const { title, famId, famBehavior } = def;
+        const { title, famId } = def;
         return {
           "ext-comp-def": {
             "@title": title ? title : "",
             "@fam-id": famId ? famId : "",
-            "fam-behavior": famBehavior ? famBehavior : "",
+            ...getExtendedComponentDefinitionChild(def),
           },
         };
       });
@@ -1339,6 +1574,238 @@ const getFamilyExtendedComponentDefinition = (extendedComponentDefinition) => {
 
   return formattedExtendedComponentDefinition;
 };
+
+const getExtendedComponentDefinitionChild = (def = {}) => {
+  const definitionChild = {
+    "fam-behavior": def.famBehavior ? def.famBehavior : "",
+  };
+
+  if (def.modDef) {
+    definitionChild["mod-def"] = def.modDef;
+  }
+
+  return definitionChild;
+};
+
+function getSfrSectionId(section = {}) {
+  if (section.id) {
+    return section.id;
+  }
+
+  const title = section.title || "";
+  const titleAcronym = title.match(COMMON_REGEX.parentheticalContent)?.[1] || title.match(COMMON_REGEX.classTitleAcronym)?.[1];
+
+  return titleAcronym ? titleAcronym.trim().toLowerCase() : "";
+}
+
+function isPackageSecurityRequirementsKey(key) {
+  return ["sec:req", "sec:Security_Requirements", "sec:Security_Functional_Requirements"].includes(key);
+}
+
+function setSecurityProblemDefinitionSection(overallObject, tagName, sectionContent) {
+  const entries = removeTopLevelSectionEntries(Object.entries(overallObject), isSecurityProblemDefinitionSection);
+  const sectionEntry = createTopLevelElementEntry(tagName, sectionContent, "securityProblemDefinition");
+  const insertIndex = entries.findIndex(([key, value]) => isSecurityObjectivesSection(key, value) || isSecurityRequirementsSection(key, value));
+
+  if (insertIndex !== -1) {
+    entries.splice(insertIndex, 0, sectionEntry);
+  } else {
+    insertAfterLast(entries, isConformanceClaimsSection, sectionEntry);
+  }
+
+  return Object.fromEntries(entries);
+}
+
+function orderTechnicalDecisionHistorySection(overallObject) {
+  if (!overallObject?.TechnicalDecisionHistory || !overallObject?.RevisionHistory) {
+    return overallObject;
+  }
+
+  const technicalDecisionHistory = overallObject.TechnicalDecisionHistory;
+  const entries = Object.entries(overallObject).filter(([key]) => key !== "TechnicalDecisionHistory");
+  const revisionHistoryIndex = entries.findIndex(([key]) => key === "RevisionHistory");
+
+  if (revisionHistoryIndex === -1) {
+    return overallObject;
+  }
+
+  entries.splice(revisionHistoryIndex + 1, 0, ["TechnicalDecisionHistory", technicalDecisionHistory]);
+  return Object.fromEntries(entries);
+}
+
+function orderSecurityObjectivesSection(overallObject) {
+  const entries = Object.entries(overallObject);
+  const objectiveEntry = entries.find(([key, value]) => isSecurityObjectivesSection(key, value));
+
+  if (!objectiveEntry) {
+    return overallObject;
+  }
+
+  const withoutObjectives = removeTopLevelSectionEntries(entries, isSecurityObjectivesSection);
+  const securityRequirementsIndex = withoutObjectives.findIndex(([key, value]) => isSecurityRequirementsSection(key, value));
+
+  if (securityRequirementsIndex !== -1) {
+    withoutObjectives.splice(securityRequirementsIndex, 0, objectiveEntry);
+  } else {
+    insertAfterLast(withoutObjectives, isSecurityProblemDefinitionSection, objectiveEntry);
+  }
+
+  return Object.fromEntries(withoutObjectives);
+}
+
+function setSecurityRequirementsSection(overallObject, tagName, sectionContent) {
+  const entries = removeTopLevelSectionEntries(Object.entries(overallObject), isSecurityRequirementsSection);
+  const sectionEntry = createTopLevelElementEntry(tagName, sectionContent, "securityRequirements");
+  const objectivesIndex = findLastIndex(entries, ([key, value]) => isSecurityObjectivesSection(key, value));
+  const spdIndex = findLastIndex(entries, ([key, value]) => isSecurityProblemDefinitionSection(key, value));
+  const claimsIndex = findLastIndex(entries, ([key, value]) => isConformanceClaimsSection(key, value));
+  const insertIndex = Math.max(objectivesIndex, spdIndex, claimsIndex);
+
+  if (insertIndex !== -1) {
+    entries.splice(insertIndex + 1, 0, sectionEntry);
+  } else {
+    entries.push(sectionEntry);
+  }
+
+  return Object.fromEntries(entries);
+}
+
+function createTopLevelElementEntry(tagName, sectionContent, entryName) {
+  if (tagName === "section") {
+    return [`#${entryName}`, { [tagName]: sectionContent }];
+  }
+
+  return [tagName, sectionContent];
+}
+
+function removeTopLevelSections(overallObject, predicate) {
+  return Object.fromEntries(removeTopLevelSectionEntries(Object.entries(overallObject), predicate));
+}
+
+function removeTopLevelSectionEntries(entries, predicate) {
+  return entries.filter(([key, value]) => !predicate(key, value));
+}
+
+function insertAfterLast(entries, predicate, entry) {
+  const targetIndex = findLastIndex(entries, ([key, value]) => predicate(key, value));
+
+  if (targetIndex !== -1) {
+    entries.splice(targetIndex + 1, 0, entry);
+  } else {
+    entries.push(entry);
+  }
+}
+
+function findLastIndex(items, predicate) {
+  for (let index = items.length - 1; index >= 0; index -= 1) {
+    if (predicate(items[index], index)) {
+      return index;
+    }
+  }
+
+  return -1;
+}
+
+function isSecurityRequirementsSection(key, value) {
+  const tagName = getTopLevelElementName(key, value);
+  return (
+    tagName === "sec:req" || tagName === "sec:Security_Requirements" || (tagName === "section" && topLevelEntryHasTitle(key, value, "Security Requirements"))
+  );
+}
+
+function isSecurityProblemDefinitionSection(key, value) {
+  const tagName = getTopLevelElementName(key, value);
+  return (
+    tagName === "sec:Security_Problem_Definition" ||
+    tagName === "sec:Security_Problem_Description" ||
+    tagName === "spd" ||
+    tagName === "sec:spd" ||
+    (tagName === "section" && topLevelEntryHasTitle(key, value, "Security Problem Definition"))
+  );
+}
+
+function isSecurityObjectivesSection(key, value) {
+  const tagName = getTopLevelElementName(key, value);
+  return tagName === "sec:Security_Objectives" || (tagName === "section" && topLevelEntryHasTitle(key, value, "Security Objectives"));
+}
+
+function isConformanceClaimsSection(key, value) {
+  const tagName = getTopLevelElementName(key, value);
+  return tagName === "sec:Conformance_Claims" || (tagName === "section" && topLevelEntryHasTitle(key, value, "Conformance Claims"));
+}
+
+function isDistributedToeSection(key, value, distributedToeTitle) {
+  return getTopLevelElementName(key, value) === "section" && topLevelEntryHasTitle(key, value, distributedToeTitle);
+}
+
+function topLevelSectionMatchesSelectedSection(key, value, selectedSection) {
+  if (!selectedSection) {
+    return false;
+  }
+
+  const tagName = getTopLevelElementName(key, value);
+  const content = getTopLevelElementContent(key, value);
+  const title = getTopLevelTitle(content);
+
+  return (
+    title === selectedSection ||
+    tagNameToSectionTitle(tagName) === selectedSection ||
+    (selectedSection === "Distributed TOE" && title === "Introduction to Distributed TOEs")
+  );
+}
+
+function tagNameToSectionTitle(tagName) {
+  if (!tagName || tagName === "section") {
+    return "";
+  }
+
+  return tagName.replace(EXPORT_REGEX.secPrefix, "").replace(COMMON_REGEX.underscore, " ");
+}
+
+function topLevelEntryHasTitle(key, value, title) {
+  const content = getTopLevelElementContent(key, value);
+
+  if (Array.isArray(content)) {
+    return content.some((item) => getTopLevelTitle(item) === title);
+  }
+
+  return getTopLevelTitle(content) === title;
+}
+
+function getTopLevelElementName(key, value) {
+  const wrappedEntry = getWrappedTopLevelElementEntry(key, value);
+  return wrappedEntry ? wrappedEntry[0] : key;
+}
+
+function getTopLevelElementContent(key, value) {
+  const wrappedEntry = getWrappedTopLevelElementEntry(key, value);
+  return wrappedEntry ? wrappedEntry[1] : value;
+}
+
+function getWrappedTopLevelElementEntry(key, value) {
+  if (!key.startsWith("#") || !value || typeof value !== "object" || Array.isArray(value)) {
+    return null;
+  }
+
+  const elementEntries = Object.entries(value).filter(([childKey]) => !childKey.startsWith("@") && !childKey.startsWith("#") && !childKey.startsWith("!"));
+  return elementEntries.length === 1 ? elementEntries[0] : null;
+}
+
+function getTopLevelTitle(value) {
+  if (!value || typeof value !== "object") {
+    return undefined;
+  }
+
+  if (value["@title"] || value["@"]?.title) {
+    return value["@title"] || value["@"]?.title;
+  }
+
+  if (value["#"] && !Array.isArray(value["#"]) && typeof value["#"] === "object") {
+    return value["#"]["@title"] || value["#"]["@"]?.title;
+  }
+
+  return undefined;
+}
 
 const getSfrComponents = (initialComponents, selectableUUIDtoID, componentMap, useCaseMap, platforms, fileType, auditTableExists, isModule = false) => {
   let formattedComponents = new Set([]);
@@ -1356,6 +1823,8 @@ const getSfrComponents = (initialComponents, selectableUUIDtoID, componentMap, u
           fromPkgData = {},
           optional,
           objective,
+          dependsComments = {},
+          dependsExternalDocs = {},
           invisible,
           selectionBased,
           selections,
@@ -1369,6 +1838,7 @@ const getSfrComponents = (initialComponents, selectableUUIDtoID, componentMap, u
           evaluationActivities,
           modifiedSfr = false,
           additionalSfr = false,
+          noChange,
           notNew,
           xPathDetails,
         } = initialComponent;
@@ -1376,42 +1846,130 @@ const getSfrComponents = (initialComponents, selectableUUIDtoID, componentMap, u
         let formattedExtendedComponentDefinition =
           extendedComponentDefinition && !modifiedSfr ? getExtendedComponentDefinition(extendedComponentDefinition) : [];
         let { formattedCcId, formattedIterationId, componentXmlId } = getComponentXmlID(cc_id, iteration_id, false, true);
-        let formattedConsistencyRationale = modifiedSfr || additionalSfr || isModule ? { "consistency-rationale": consistencyRationale } : "";
+        const hasConsistencyRationale = consistencyRationale !== undefined && consistencyRationale !== null;
+        const shouldExportConsistencyRationale = modifiedSfr || additionalSfr || isModule || hasConsistencyRationale;
+        let formattedConsistencyRationale = shouldExportConsistencyRationale ? { "consistency-rationale": consistencyRationale || "" } : "";
         let formattedFromPackage = modifiedSfr && Object.keys(fromPkgData).length > 0 ? getFromPackage(fromPkgData) : "";
-        let titleTag = modifiedSfr ? "base-sfr-spec" : "f-component";
+        // Modified SFRs always export as base-sfr-spec; xPathDetails only determines directive handling.
+        const xPathDetailsArray = getXPathDetailsArray(xPathDetails, noChange);
+
+        const hasXPathDetails = modifiedSfr && xPathDetailsArray.length > 0;
+        const hasComponentReplacement = xPathDetailsArray.some((x) => x.isComponentReplacement);
+        const titleTag = modifiedSfr ? "base-sfr-spec" : "f-component";
         const includeAuditTable = auditTableExists && !invisible;
-        let component = [
-          { "!": componentName },
-          {
-            [titleTag]: {
-              "@cc-id": cc_id ? cc_id.toLowerCase() : "",
-              "@id": xml_id ? xml_id : componentXmlId,
-              ...(modifiedSfr ? { "@title": title || "" } : { "@name": title || "" }),
-              ...(notNew ? { "@notnew": notNew } : {}),
-              depends: [],
-              "#": [
-                iteration_id && iteration_id !== "" ? { "@iteration": iteration_id } : "",
-                fileType === "Virtualization System" && formattedExtendedComponentDefinition.length > 0 ? { "consistency-rationale": "" } : "",
-                formattedConsistencyRationale,
-                formattedExtendedComponentDefinition,
-                definition && definition !== "" ? { description: definition } : "",
-                formattedFromPackage,
-                getSfrElements(
-                  elements ? elements : {},
-                  selectableUUIDtoID,
-                  componentUUID,
-                  formattedCcId,
-                  formattedIterationId,
-                  evaluationActivities,
-                  platforms,
-                  modifiedSfr,
-                  xPathDetails
-                ),
-                includeAuditTable ? getAuditEvents(auditEvents, auditTableExists) : [],
-              ],
+
+        let component;
+
+        if (hasXPathDetails && hasComponentReplacement) {
+          const compReplacement = xPathDetailsArray.find((x) => x.isComponentReplacement);
+
+          // Bare f-component for inside replace/xpath-specified — just elements
+          const replacementFComponent = {
+            "@cc-id": cc_id ? cc_id.toLowerCase() : "",
+            "@name": title || "",
+            "#": [
+              getSfrElements(
+                elements ? elements : {},
+                selectableUUIDtoID,
+                componentUUID,
+                formattedCcId,
+                formattedIterationId,
+                evaluationActivities,
+                platforms,
+                modifiedSfr,
+                xPathDetailsArray
+              ),
+            ],
+          };
+
+          component = [
+            { "!": componentName },
+            {
+              "base-sfr-spec": {
+                "@cc-id": cc_id ? cc_id.toLowerCase() : "",
+                "@id": xml_id ? xml_id : componentXmlId,
+                "@title": title || "",
+                ...(notNew ? { "@notnew": notNew } : {}),
+                depends: [],
+                "#": [
+                  iteration_id && iteration_id !== "" ? { "@iteration": iteration_id } : "",
+                  formattedConsistencyRationale,
+                  definition && definition !== "" ? { description: definition } : "",
+
+                  // <replace> wrapper around the f-component
+                  {
+                    replace: {
+                      "xpath-specified": {
+                        "@xpath": compReplacement.xpath,
+                        "#": {
+                          "f-component": replacementFComponent, // bare, no consistency-rationale/description, etc
+                        },
+                      },
+                    },
+                  },
+                  // Handle app note replacements
+                  ...xPathDetailsArray
+                    .filter((x) => x.subType === "note")
+                    .map((x) => ({
+                      replace: {
+                        "xpath-specified": {
+                          "@xpath": x.xpath,
+                          "#": {
+                            note: {
+                              "@role": "application",
+                              "#": x.noteContent || "",
+                            },
+                          },
+                        },
+                      },
+                    })),
+                ],
+              },
             },
-          },
-        ];
+          ];
+        } else {
+          // Standard component or f-element level replacements
+          const setStatusDetail = xPathDetailsArray.find((x) => x.type === "set-status");
+          const formattedVirtualizationConsistencyRationale =
+            fileType === "Virtualization System" && formattedExtendedComponentDefinition.length > 0 && !formattedConsistencyRationale
+              ? { "consistency-rationale": "" }
+              : "";
+          component = [
+            { "!": componentName },
+            {
+              [titleTag]: {
+                "@cc-id": cc_id ? cc_id.toLowerCase() : "",
+                "@id": xml_id ? xml_id : componentXmlId,
+                ...(titleTag === "base-sfr-spec" ? { "@title": title || "" } : { "@name": title || "" }),
+                ...(notNew ? { "@notnew": notNew } : {}),
+                depends: [],
+                "#": [
+                  iteration_id && iteration_id !== "" ? { "@iteration": iteration_id } : "",
+                  formattedVirtualizationConsistencyRationale,
+                  formattedConsistencyRationale,
+                  formattedExtendedComponentDefinition,
+                  definition && definition !== "" ? { description: definition } : "",
+                  formattedFromPackage,
+                  setStatusDetail ? { "set-status": { "@status": setStatusDetail.status } } : "",
+                  setStatusDetail
+                    ? []
+                    : getSfrElements(
+                        elements ? elements : {},
+                        selectableUUIDtoID,
+                        componentUUID,
+                        formattedCcId,
+                        formattedIterationId,
+                        evaluationActivities,
+                        platforms,
+                        modifiedSfr,
+                        xPathDetailsArray
+                      ),
+                  includeAuditTable ? getAuditEvents(auditEvents, auditTableExists) : [],
+                ],
+              },
+            },
+          ];
+        }
 
         // Get component selections
         if (!modifiedSfr) {
@@ -1428,6 +1986,8 @@ const getSfrComponents = (initialComponents, selectableUUIDtoID, componentMap, u
             useCaseMap,
             optional,
             objective,
+            dependsComments,
+            dependsExternalDocs,
             invisible,
             extendedComponentDefinition,
             isModule
@@ -1492,6 +2052,17 @@ const getSfrElements = (
   let elements = [];
   try {
     if (initialElements) {
+      // xPathDetails can have multiple directives (eg. more than one replace)
+      const xPathDetailsArray = getXPathDetailsArray(xPathDetails);
+
+      const hasNoChange = xPathDetailsArray.some((x) => x.type === "no-change");
+      const hasComponentReplacement = xPathDetailsArray.some((x) => x.isComponentReplacement);
+
+      if (modifiedSfr && hasNoChange) {
+        elements.push({ "no-change": {} });
+        return elements;
+      }
+
       if (Object.keys(initialElements).length > 0) {
         Object.entries(initialElements).forEach(([elementUUID, element], index) => {
           // Get evaluation activities
@@ -1525,14 +2096,8 @@ const getSfrElements = (
               "f-element": {
                 "@id": elementXMLID,
                 "#": [
-                  {
-                    title: parseElement(element),
-                  },
-                  element.extCompDefTitle
-                    ? {
-                        "ext-comp-def-title": element.extCompDefTitle,
-                      }
-                    : null,
+                  { title: parseElement(element) },
+                  element.extCompDefTitle ? { "ext-comp-def-title": element.extCompDefTitle } : null,
                   note ? { note: getNote(note) } : "",
                   formattedEvaluationActivities,
                 ],
@@ -1541,18 +2106,41 @@ const getSfrElements = (
 
             // Add in additional fields for the modified sfr element
             if (modifiedSfr) {
-              let formattedModifiedElement = {
-                replace: {
-                  "xpath-specified": {
-                    "@xpath": `*//cc:f-element[@id='${elementXMLID}']`,
-                    "#": formattedElement,
-                  },
-                },
-              };
+              if (!xPathDetailsArray || xPathDetailsArray.length === 0) {
+                // Old modified sfrs format — no xPathDetails
+                if (!elements.includes(formattedElement)) {
+                  elements.push(formattedElement);
+                }
+              } else if (hasNoChange) {
+                // no-change — skip element serialization, handled below
+              } else if (hasComponentReplacement) {
+                // Full f-component replacement — replace all elements
+                // (the base-sfr-spec wrapper with replace/xpath-specified is handled at component level)
+                if (!elements.includes(formattedElement)) {
+                  elements.push(formattedElement);
+                }
+              } else {
+                // Mod reform format — find matching xPathDetail for this element
+                const matchingDetail = xPathDetailsArray.find((x) => x.subType === "f-element" && x.f_element_id === elementXMLID);
 
-              // Add formatted modified sfr element to the elements
-              if (!elements.includes(formattedModifiedElement)) {
-                elements.push(formattedModifiedElement);
+                if (matchingDetail) {
+                  let formattedModifiedElement = {
+                    replace: {
+                      "xpath-specified": {
+                        "@xpath": `*//cc:f-element[@id='${elementXMLID}']`,
+                        "#": formattedElement,
+                      },
+                    },
+                  };
+                  if (!elements.includes(formattedModifiedElement)) {
+                    elements.push(formattedModifiedElement);
+                  }
+                } else {
+                  // Element not modified — still serialize as plain f-element
+                  if (!elements.includes(formattedElement)) {
+                    elements.push(formattedElement);
+                  }
+                }
               }
             } else {
               // Add formatted element to the elements
@@ -1561,25 +2149,27 @@ const getSfrElements = (
               }
             }
           } catch (e) {
+            handleSnackBarError("SFR Element Generation Error");
             console.log(e);
           }
         });
       } else {
-        // TODO: eventually remove this condition, once all possibilities are covered on import (currently only management function
-        // status marker updates exist)
-        // likely an insert-before/insert-after which has no f-element
-        const modifiedType = Object.keys(xPathDetails)[0]; // "insert-after", "insert-before"
-
-        let formattedModifiedElement = {
-          [Object.keys(xPathDetails)[0]]: {
-            "xpath-specified": {
-              "@xpath": xPathDetails[modifiedType].xpath,
-              "#": xPathDetails[modifiedType].xPathContent,
-            },
-          },
-        };
-
-        elements.push(formattedModifiedElement);
+        if (hasNoChange) {
+          elements.push({ "no-change": {} });
+        } else {
+          xPathDetailsArray
+            .filter((x) => x.type === "insert-after" || x.type === "insert-before")
+            .forEach((x) => {
+              elements.push({
+                [x.type]: {
+                  "xpath-specified": {
+                    "@xpath": x.xpath,
+                    "#": x.xPathContent,
+                  },
+                },
+              });
+            });
+        }
       }
     }
   } catch (e) {
@@ -1588,9 +2178,9 @@ const getSfrElements = (
   return elements;
 };
 
-const getNote = (note) => {
+const getNote = (note, role = "application") => {
   return {
-    "@role": "application",
+    "@role": role || "application",
     "#": `${note}`,
   };
 };
@@ -1599,7 +2189,14 @@ const parseElement = (element) => {
   let finalResult = "";
   const { title, selectables, selectableGroups, isManagementFunction, managementFunctions, tabularize } = element;
 
-  function parseTitleOrDescriptionArray(titleOrDescription) {
+  const isWrappedSelectableGroup = (group) =>
+    Array.isArray(group?.description) &&
+    group.description.every((item) => {
+      const keys = Object.keys(item);
+      return keys.length === 1 && keys[0] === "groups" && Array.isArray(item.groups);
+    });
+
+  function parseTitleOrDescriptionArray(titleOrDescription, inheritedFormatting = {}) {
     if (!titleOrDescription) return;
 
     let result = "";
@@ -1623,14 +2220,28 @@ const parseElement = (element) => {
       const assignmentEdgeCase = item.groups && item.groups.length === 1 && selectables[item.groups[0]] && selectables[item.groups[0]].assignment;
 
       if (item.text) {
-        result = removeSpace(result, item.text);
+        // Structural closing tags (e.g. "</li></ul>") are stored as { text } items so
+        // TipTap doesn't strip them. Strip any preceding trailing space so we don't emit
+        // " </li></ul>" in the title XML — the space would become a text node inside the
+        // element that was just closed.
+        const textVal = item.text;
+        if (textVal.trimStart().startsWith("</") && result.endsWith(" ")) {
+          result = result.trimEnd() + textVal;
+        } else {
+          result = removeSpace(result, textVal);
+        }
       } else if (item.description) {
-        result = removeSpace(result, item.description);
+        result = removeSpace(result, applySelectionFormatting(item.description, inheritedFormatting));
       } else if (item.assignment) {
-        result += ` <assignable>${selectables[item.assignment].description}</assignable> `;
+        const assignable = selectables[item.assignment];
+        if (!assignable) return;
+        const assignmentFormatting = mergeSelectionFormatting(inheritedFormatting, assignable);
+        const formattedDescription = applySelectionFormatting(assignable.description, assignmentFormatting);
+        result += ` <assignable>${formattedDescription}</assignable> `;
       } else if (item.selections) {
         const group = selectableGroups[item.selections];
-        const onlyone = group.onlyOne ? ` onlyone="yes"` : "";
+        if (!group) return;
+        const onlyone = group.onlyOne || (group.exclusive && isWrappedSelectableGroup(group)) ? ` choose-one-of="yes"` : "";
         const linebreak = group.linebreak ? ` linebreak="yes"` : "";
 
         const formattedSelectables = ` <selectables${onlyone}${linebreak}>${parseSelections(item.selections)}</selectables> `;
@@ -1639,15 +2250,19 @@ const parseElement = (element) => {
         const validKey = item.groups[0];
         if (!selectables[validKey]) return;
 
-        const { description } = selectables[validKey];
+        const selectable = selectables[validKey];
+        const { description, readable } = selectable;
+        const readableTag = readable ? `<readable>${readable}</readable>` : "";
+        const assignmentFormatting = mergeSelectionFormatting(inheritedFormatting, selectable);
+        const formattedDescription = applySelectionFormatting(description, assignmentFormatting);
 
-        result += ` <assignable>${description}</assignable> `;
+        result += ` ${readableTag}<assignable>${formattedDescription}</assignable> `;
       } else if (item.tabularize) {
         result += parseTabularize(tabularize);
       } else {
         if (item.groups) {
           const group = selectableGroups[item.groups];
-          const onlyone = group?.onlyOne ? ` onlyone="yes"` : "";
+          const onlyone = group?.onlyOne ? ` choose-one-of="yes"` : "";
           const linebreak = group?.linebreak ? ` linebreak="yes"` : "";
           result += ` <selectables${onlyone}${linebreak}>`;
           item.groups.forEach((groupKey) => {
@@ -1659,56 +2274,75 @@ const parseElement = (element) => {
     });
 
     if (isManagementFunction) {
-      result.replace(/\]\.$/, "");
+      result.replace(EXPORT_REGEX.managementFunctionTrailingPeriod, "");
     }
 
-    return result.replace(/\^\s+/g, "^").replace(/(<\/[a-zA-Z0-9]+>)\s*(<\/[a-zA-Z0-9]+>\])/g, "$1$2");
+    return result.replace(EXPORT_REGEX.caretWhitespace, "^").replace(EXPORT_REGEX.closingTagsBeforeSelectionBracket, "$1$2");
   }
 
   // Within the 'selections' field of a title array, one or two things can happen
   // 1. We have a singular selectable
   // 2. We have a group
-  function parseSelections(selectionKey) {
+  function parseSelections(selectionKey, inheritedFormatting = {}) {
     let nestedResults = "";
     const group = selectableGroups[selectionKey];
 
+    const parseSelectableKey = (validKey, formatting = inheritedFormatting) => {
+      if (selectables[validKey]) {
+        const selectable = selectables[validKey];
+        const { description, exclusive, id, assignment, readable } = selectable;
+        const selectableFormatting = mergeSelectionFormatting(formatting, selectable);
+        const isExclusive = exclusive ? 'exclusive="yes"' : "";
+        const attributes = `id="${id}" ${isExclusive}`;
+        const assignableOpeningTag = assignment ? "<assignable>" : "";
+        const assignableClosingTag = assignment ? "</assignable>" : "";
+        const readableTag = readable ? `<readable>${readable}</readable>` : "";
+        const formattedDescription = applySelectionFormatting(description, selectableFormatting);
+
+        return `<selectable ${attributes}>${readableTag}${assignableOpeningTag}${formattedDescription}${assignableClosingTag}</selectable>`;
+      } else if (selectableGroups[validKey]) {
+        const readableTag = selectableGroups[validKey].readable ? `<readable>${selectableGroups[validKey].readable}</readable>` : "";
+        return `<selectable id="${validKey}">${readableTag}${parseGroup(validKey, mergeSelectionFormatting(formatting, selectableGroups[validKey]))}</selectable>`;
+      }
+
+      return "";
+    };
+
     if (group === undefined) {
-      const { description, exclusive, id, assignment } = selectables[selectionKey];
-      const isExclusive = exclusive ? 'exclusive="yes"' : "";
-      const attributes = `id="${id}" ${isExclusive}`;
-      const assignableOpeningTag = assignment ? "<assignable>" : "";
-      const assignableClosingTag = assignment ? "</assignable>" : "";
-
-      nestedResults += `<selectable ${attributes}>${assignableOpeningTag}${description}${assignableClosingTag}</selectable>`;
-    } else {
+      nestedResults += parseSelectableKey(selectionKey, inheritedFormatting);
+    } else if (Array.isArray(group.groups)) {
+      const groupFormatting = mergeSelectionFormatting(inheritedFormatting, group);
       group.groups.forEach((validKey) => {
-        if (selectables[validKey]) {
-          const { description, exclusive, id, assignment } = selectables[validKey];
-          const isExclusive = exclusive ? 'exclusive="yes"' : "";
-          const attributes = `id="${id}" ${isExclusive}`;
-          const assignableOpeningTag = assignment ? "<assignable>" : "";
-          const assignableClosingTag = assignment ? "</assignable>" : "";
-
-          nestedResults += `<selectable ${attributes}>${assignableOpeningTag}${description}${assignableClosingTag}</selectable>`;
-        } else if (selectableGroups[validKey]) {
-          nestedResults += `<selectable id="${validKey}">`;
-          nestedResults += parseGroup(validKey);
-          nestedResults += `</selectable>`;
-        }
+        nestedResults += parseSelectableKey(validKey, groupFormatting);
       });
+    } else if (Array.isArray(group.description)) {
+      const groupFormatting = mergeSelectionFormatting(inheritedFormatting, group);
+      // If a complex selectable only wraps group references, export it like the selectable group
+      // the user likely intended to create.
+      if (isWrappedSelectableGroup(group)) {
+        group.description.forEach((item) => {
+          item.groups.forEach((validKey) => {
+            nestedResults += parseSelectableKey(validKey, groupFormatting);
+          });
+        });
+      } else {
+        const readableTag = group.readable ? `<readable>${group.readable}</readable>` : "";
+        nestedResults += `<selectable id="${selectionKey}">${readableTag}${parseGroup(selectionKey, groupFormatting)}</selectable>`;
+      }
     }
 
     return nestedResults;
   }
 
   // Complex selectable
-  function parseGroup(groupKey) {
+  function parseGroup(groupKey, inheritedFormatting = {}) {
     let nestedResults = "";
     const group = selectableGroups[groupKey];
+    const groupFormatting = mergeSelectionFormatting(inheritedFormatting, group);
     if (group.description) {
-      nestedResults += parseTitleOrDescriptionArray(group.description);
+      nestedResults += parseTitleOrDescriptionArray(group.description, groupFormatting);
     } else {
-      nestedResults += parseSelections(groupKey);
+      nestedResults += parseSelections(groupKey, groupFormatting);
     }
 
     return nestedResults;
@@ -1755,14 +2389,23 @@ const parseElement = (element) => {
 
   // Management Functions Table
   function parseManagementFunctionsTable(managementFunctions) {
-    const { statusMarkers, rows, columns } = managementFunctions;
+    const { statusMarkers, rows, columns, attributes } = managementFunctions;
     let result = statusMarkers !== "" ? `Status Markers:<br/> ${statusMarkers}<br/>` : "";
 
     // Construct the management function set
     const { columnResult, fields } = parseManagementFunctionColumns(columns);
     const rowResult = parseManagementFunctionRows(rows, fields);
 
-    result += `<management-function-set default="O">${columnResult}${rowResult}</management-function-set>`;
+    // Convert attributes object → string like: key="value" key2="value2"
+    const attributesString =
+      attributes && Object.keys(attributes).length
+        ? " " +
+          Object.entries(attributes)
+            .map(([key, value]) => `${key}="${value}"`)
+            .join(" ")
+        : "";
+
+    result += `<management-function-set ${attributesString}>${columnResult}${rowResult}</management-function-set>`;
 
     return result;
   }
@@ -1810,8 +2453,22 @@ const parseElement = (element) => {
     return result;
   }
 
-  function createAActivityAndNote(evaluationActivity, notes) {
-    const { tss, guidance, testIntroduction, testClosing, testLists, tests, isNoTest, noTest, refIds } = evaluationActivity;
+  function createAActivityAndNote(evaluationActivity, notes, selectableUUIDtoID = {}, platforms = []) {
+    const {
+      tss = "",
+      guidance = "",
+      testIntroduction = "",
+      testClosing = "",
+      testLists = {},
+      tests = {},
+      isNoTest = false,
+      noTest = "",
+      refIds = [],
+      tssDependencies = [],
+      tssDependencySections = [],
+      guidanceDependencies = [],
+      guidanceDependencySections = [],
+    } = evaluationActivity;
     let result = "";
 
     // Create application notes
@@ -1830,20 +2487,48 @@ const parseElement = (element) => {
       });
     }
 
+    const formattedRefIds = createRefIdTags(refIds);
+
     // Add in no test if present
     if (isNoTest) {
-      result += `<no-tests>${noTest}</no-tests>`;
+      result += `<aactivity>${formattedRefIds}<no-tests>${noTest}</no-tests></aactivity>`;
     } else {
       // Add in evaluation activity
       // Create formatted test list
       let formattedTestList = "";
 
+      const createDependsTags = (dependencies = []) => {
+        return formatEvaluationActivityDependencies(dependencies, selectableUUIDtoID, platforms)
+          .map(({ depends }) => {
+            const attr = Object.keys(depends)[0];
+            return `<depends ${attr.slice(1)}="${depends[attr]}"/>`;
+          })
+          .join("");
+      };
+      const createRawDependsTags = (depends = []) => {
+        return depends
+          .filter(Boolean)
+          .map((depend) => {
+            const attributes = Object.entries(depend)
+              .map(([key, value]) => `${key.startsWith("@") ? key.slice(1) : key}="${value}"`)
+              .join(" ");
+            return attributes ? `<depends ${attributes}/>` : "";
+          })
+          .join("");
+      };
+      const createTestListDependsTags = (testList = {}) => {
+        const rawDepends = Array.isArray(testList.depends) ? testList.depends : [];
+        if (rawDepends.length > 0) {
+          return createRawDependsTags(rawDepends);
+        }
+
+        return createDependsTags(testList.dependencies || []);
+      };
       const createTestList = (testListUUID) => {
         const testList = testLists[testListUUID];
         if (!testList) return "";
 
-        let xml = testList.description || "";
-        xml += "<testlist>";
+        let xml = `<testlist>${createTestListDependsTags(testList)}${testList.description || ""}`;
 
         testList.testUUIDs?.forEach((testUUID) => {
           const test = tests[testUUID];
@@ -1870,15 +2555,46 @@ const parseElement = (element) => {
         }
       });
 
-      const formattedRefIds = createRefIdTags(refIds);
+      const createActivitySection = (tagName, content = "", dependencies = [], dependencySections = []) => {
+        const validDependencySections = Array.isArray(dependencySections) ? dependencySections : [];
 
-      if (formattedRefIds.length !== 0 && tss.length !== 0 && guidance.length !== 0 && testIntroduction.length !== 0 && formattedTestList.length !== 0) {
+        if (validDependencySections.length > 0) {
+          const sectionContent = validDependencySections
+            .map((dependencySection) => {
+              const sectionDependencies = Array.isArray(dependencySection?.dependencies) ? dependencySection.dependencies : [];
+              return `<div>${createDependsTags(sectionDependencies)}${dependencySection?.text || ""}</div>`;
+            })
+            .join("");
+
+          if (dependencies.length > 0) {
+            return `<${tagName}><div>${createDependsTags(dependencies)}${content || ""}</div>${sectionContent}</${tagName}>`;
+          }
+
+          return `<${tagName}>${content || ""}${sectionContent}</${tagName}>`;
+        }
+
+        if (dependencies.length > 0) {
+          return `<${tagName}><div>${createDependsTags(dependencies)}${content || ""}</div></${tagName}>`;
+        }
+
+        return content && content.length !== 0 ? `<${tagName}>${content}</${tagName}>` : `<${tagName}/>`;
+      };
+      const tssDependencyList = Array.isArray(tssDependencies) ? tssDependencies : [];
+      const guidanceDependencyList = Array.isArray(guidanceDependencies) ? guidanceDependencies : [];
+      const tssDependencySectionList = Array.isArray(tssDependencySections) ? tssDependencySections : [];
+      const guidanceDependencySectionList = Array.isArray(guidanceDependencySections) ? guidanceDependencySections : [];
+      const hasTss = tss.length !== 0 || tssDependencyList.length > 0 || tssDependencySectionList.length > 0;
+      const hasGuidance = guidance.length !== 0 || guidanceDependencyList.length > 0 || guidanceDependencySectionList.length > 0;
+      const hasTests = testIntroduction.length !== 0 || formattedTestList.length !== 0 || testClosing.length !== 0;
+      const hasEvaluationActivity = hasTss || hasGuidance || hasTests;
+
+      if (hasEvaluationActivity) {
         result += `
           <aactivity>
             ${formattedRefIds}
-            <TSS>${tss}</TSS>
-            <Guidance>${guidance}</Guidance>
-            <Tests>${testIntroduction}${formattedTestList}</Tests>
+            ${createActivitySection("TSS", tss, tssDependencyList, tssDependencySectionList)}
+            ${createActivitySection("Guidance", guidance, guidanceDependencyList, guidanceDependencySectionList)}
+            ${hasTests ? `<Tests>${testIntroduction}${formattedTestList}${testClosing}</Tests>` : "<Tests/>"}
           </aactivity>
 			  `;
       }
@@ -1918,7 +2634,6 @@ const parseElement = (element) => {
   if (isManagementFunction && managementFunctions && Object.keys(managementFunctions).length > 0) {
     const managementResult = parseManagementFunctionsTable(managementFunctions);
     finalResult += managementResult;
-    finalResult += "].";
   }
   return finalResult;
 };
@@ -1931,8 +2646,8 @@ const getExtendedComponentDefinition = (extendedComponentDefinition) => {
 
   // Helper function to collapse multiple if statements
   function addFormattedDefinition(key, value) {
-    if (value && value !== "") {
-      let formattedValue = { [key]: value };
+    if (value !== undefined && value !== null) {
+      let formattedValue = { [key]: value || "" };
       if (!formattedExtendedComponentDefinition.includes(formattedValue)) formattedExtendedComponentDefinition.push(formattedValue);
     }
   }
@@ -1960,12 +2675,40 @@ const getComponentSelections = (
   useCaseMap,
   optional,
   objective,
+  dependsComments,
+  dependsExternalDocs,
   invisible,
-  extendedComponentDefinition,
+  extendedComponentDefinition, // TODO: check why this is unused
   isModule
 ) => {
   if (component && component[1]) {
     let fComponent = component[1]["f-component"];
+    let dependsNodes = [];
+    const commentMap = dependsComments || {};
+    const extneralDocMap = dependsExternalDocs || {};
+    const addDependsNode = (dependsValue, key) => {
+      const formattedDepends = extneralDocMap[key]
+        ? { depends: { ...dependsValue, "external-doc": { "@ref": extneralDocMap[key] } } }
+        : { depends: dependsValue };
+      const hasMatch = dependsNodes.some((node) => node.depends && JSON.stringify(node.depends) === JSON.stringify(dependsValue));
+
+      if (!hasMatch) {
+        dependsNodes.push(formattedDepends);
+        if (commentMap[key]) {
+          dependsNodes.push({ "!": commentMap[key] });
+        }
+      }
+    };
+
+    const finalizeDependsNodes = () => {
+      if (dependsNodes.length > 0) {
+        const existingChildren = Array.isArray(fComponent["#"]) ? fComponent["#"] : [fComponent["#"]].filter(Boolean);
+
+        fComponent["#"] = [...dependsNodes, ...existingChildren];
+      }
+
+      delete fComponent["depends"];
+    };
 
     // Add implementation dependent
     if (implementationDependent && reasons && reasons.length > 0) {
@@ -1973,14 +2716,18 @@ const getComponentSelections = (
         fComponent["@status"] = "feat-based";
       }
       reasons.forEach((reason) => {
+        const reasonId = typeof reason === "string" ? reason : reason?.id;
+
+        if (!reasonId) {
+          return;
+        }
+
         let formattedReason = {
-          "@on": reason,
+          "@on": reasonId,
         };
 
         // Add formatted reason
-        if (!fComponent["depends"].includes(formattedReason)) {
-          fComponent["depends"].push(formattedReason);
-        }
+        addDependsNode(formattedReason, `reason:${reasonId}`);
       });
     }
 
@@ -1998,9 +2745,7 @@ const getComponentSelections = (
 
               if (id) {
                 const formattedID = { [!isModule ? "@on-incl" : "@on-fcomp"]: id };
-                if (!fComponent["depends"].includes(formattedID)) {
-                  fComponent["depends"].push(formattedID);
-                }
+                addDependsNode(formattedID, `component:${id}`);
               }
             });
           }
@@ -2010,11 +2755,8 @@ const getComponentSelections = (
             // if the dependency ID doesn't map back to a selectable, it could be a complex selectable, so
             // just retain the name
             const id = selectableUUIDtoID[selection] ? selectableUUIDtoID[selection] : selection;
-
             const formattedID = { "@on-sel": id };
-            if (!fComponent["depends"].includes(formattedID)) {
-              fComponent["depends"].push(formattedID);
-            }
+            addDependsNode(formattedID, `selection:${id}`);
           });
         }
       }
@@ -2026,9 +2768,7 @@ const getComponentSelections = (
       useCases.forEach((useCase) => {
         if (useCaseMap.hasOwnProperty(useCase)) {
           let formattedUseCase = { "@on-use": useCaseMap[useCase] };
-          if (!fComponent["depends"].includes(formattedUseCase)) {
-            fComponent["depends"].push(formattedUseCase);
-          }
+          addDependsNode(formattedUseCase, `useCase:${useCaseMap[useCase]}`);
         }
       });
     }
@@ -2041,34 +2781,28 @@ const getComponentSelections = (
     // Add optional
     if (optional) {
       let formatted = { optional: {} };
-      if (
-        fComponent.hasOwnProperty("@status") &&
-        (fComponent["@status"] === "sel-based" || fComponent["@status"] === "feat-based") &&
-        !fComponent["depends"].includes(formatted)
-      ) {
-        fComponent["depends"].push(formatted);
+      if (fComponent.hasOwnProperty("@status") && (fComponent["@status"] === "sel-based" || fComponent["@status"] === "feat-based")) {
+        addDependsNode(formatted, "child:optional");
       } else if (!isModule) {
         fComponent["@status"] = "optional";
       } else if (isModule) {
-        fComponent["depends"].push(formatted);
+        addDependsNode(formatted, "child:optional");
       }
     }
 
     // Add objective
     else if (objective) {
       let formatted = { objective: {} };
-      if (
-        fComponent.hasOwnProperty("@status") &&
-        (fComponent["@status"] === "sel-based" || fComponent["@status"] === "feat-based") &&
-        !fComponent["depends"].includes(formatted)
-      ) {
-        fComponent["depends"].push(formatted);
+      if (fComponent.hasOwnProperty("@status") && (fComponent["@status"] === "sel-based" || fComponent["@status"] === "feat-based")) {
+        addDependsNode(formatted, "child:objective");
       } else if (!isModule) {
         fComponent["@status"] = "objective";
       } else if (isModule) {
-        fComponent["depends"].push(formatted);
+        addDependsNode(formatted, "child:objective");
       }
     }
+
+    finalizeDependsNodes();
   }
 };
 
@@ -2085,7 +2819,7 @@ const getAuditEvents = (auditEvents, auditData) => {
             auditEvent["audit-event-descr"] = {
               selectables: {
                 "@onlyone": "yes",
-                selectable: [description ? description : "", "none"],
+                selectable: [description ? description : "", "None"],
               },
             };
           } else {
@@ -2109,6 +2843,8 @@ const getAuditEvents = (auditEvents, auditData) => {
                   },
                 });
               } else {
+                // `info` can include preserved XHTML from imported audit-event-info content
+                // such as <h:ul>/<h:li>. Keep it as the node payload for XMLExporter.
                 auditEvent["#"].push({ "audit-event-info": info ? info : "" });
               }
             }
@@ -2140,7 +2876,11 @@ const getSfrEvaluationActivities = (evaluationActivity, formattedEvaluationActiv
         introduction = "",
         hasLevelSet = false,
         tss = "",
+        tssDependencies = [],
+        tssDependencySections = [],
         guidance = "",
+        guidanceDependencies = [],
+        guidanceDependencySections = [],
         testIntroduction = "",
         testClosing = "",
         testLists = {},
@@ -2148,6 +2888,22 @@ const getSfrEvaluationActivities = (evaluationActivity, formattedEvaluationActiv
         isNoTest,
         noTest,
       } = evaluationActivity;
+
+      const formatDependsAttributes = (depends = []) => {
+        return depends.filter(Boolean).map((depend) => ({ depends: depend }));
+      };
+      const getFormattedTestListDependencies = (testList = {}) => {
+        const rawDepends = Array.isArray(testList.depends) ? testList.depends : [];
+        if (rawDepends.length > 0) {
+          return formatDependsAttributes(rawDepends);
+        }
+
+        return formatEvaluationActivityDependencies(testList.dependencies || [], selectableUUIDtoID, platforms);
+      };
+      const tssDependencyList = Array.isArray(tssDependencies) ? tssDependencies : [];
+      const guidanceDependencyList = Array.isArray(guidanceDependencies) ? guidanceDependencies : [];
+      const tssDependencySectionList = Array.isArray(tssDependencySections) ? tssDependencySections : [];
+      const guidanceDependencySectionList = Array.isArray(guidanceDependencySections) ? guidanceDependencySections : [];
 
       formattedEvaluationActivity.aactivity = {
         ...(hasLevelSet ? { "@level": isComponent ? "component" : "element" } : {}),
@@ -2157,7 +2913,18 @@ const getSfrEvaluationActivities = (evaluationActivity, formattedEvaluationActiv
         formattedEvaluationActivity.aactivity["no-tests"] = noTest;
       } else {
         let isAactivity =
-          evaluationActivity && Object.keys(evaluationActivity).length > 0 && (introduction || tss || guidance || testIntroduction || testLists || tests);
+          evaluationActivity &&
+          Object.keys(evaluationActivity).length > 0 &&
+          (introduction ||
+            tss ||
+            guidance ||
+            tssDependencyList.length > 0 ||
+            tssDependencySectionList.length > 0 ||
+            guidanceDependencyList.length > 0 ||
+            guidanceDependencySectionList.length > 0 ||
+            testIntroduction ||
+            testLists ||
+            tests);
 
         // Get evaluation activity values
         if (isAactivity) {
@@ -2167,10 +2934,29 @@ const getSfrEvaluationActivities = (evaluationActivity, formattedEvaluationActiv
           }
 
           // Get TSS (Ensuring empty tag is present if there is no TSS)
-          formattedEvaluationActivity.aactivity.TSS = tss && tss !== "" ? tss : "";
+          formattedEvaluationActivity.aactivity.TSS = getEvaluationActivitySectionContent(
+            tss,
+            tssDependencyList,
+            selectableUUIDtoID,
+            platforms,
+            tssDependencySectionList
+          );
 
           // Get Guidance (Ensuring empty tag is present if no Guidance)
-          formattedEvaluationActivity.aactivity.Guidance = guidance && guidance !== "" ? guidance : "";
+          formattedEvaluationActivity.aactivity.Guidance = getEvaluationActivitySectionContent(
+            guidance,
+            guidanceDependencyList,
+            selectableUUIDtoID,
+            platforms,
+            guidanceDependencySectionList
+          );
+
+          if ("customea" in evaluationActivity) {
+            formattedEvaluationActivity.aactivity.CustomEA = {
+              "@name": evaluationActivity.customea.nameAttribute,
+              "#": evaluationActivity.customea.text,
+            };
+          }
 
           // Get Tests
           if (testIntroduction || (testLists && Object.keys(testLists).length > 0)) {
@@ -2197,31 +2983,7 @@ const getSfrEvaluationActivities = (evaluationActivity, formattedEvaluationActiv
 
                     const { id, dependencies, objective, conclusion: testConclusion, nestedTestListUUIDs } = test;
 
-                    let formattedDependencies = [];
-                    if (dependencies?.length > 0) {
-                      dependencies.forEach((dependency) => {
-                        if (dependency) {
-                          let formattedDependency = {};
-
-                          if (selectableUUIDtoID.hasOwnProperty(dependency)) {
-                            formattedDependency = {
-                              depends: {
-                                "@on": selectableUUIDtoID[dependency],
-                              },
-                            };
-                          } else {
-                            const platformObject = platforms.find((p) => p.name === dependency);
-                            formattedDependency = {
-                              depends: {
-                                "@ref": platformObject ? platformObject.id : dependency,
-                              },
-                            };
-                          }
-
-                          formattedDependencies.push(formattedDependency);
-                        }
-                      });
-                    }
+                    const formattedDependencies = formatEvaluationActivityDependencies(dependencies, selectableUUIDtoID, platforms);
 
                     const formatTest = (test) => {
                       let nested = [];
@@ -2229,12 +2991,17 @@ const getSfrEvaluationActivities = (evaluationActivity, formattedEvaluationActiv
                       if (Array.isArray(test.nestedTestListUUIDs) && test.nestedTestListUUIDs.length > 0) {
                         test.nestedTestListUUIDs.forEach((nestedListUUID) => {
                           const nestedList = testLists[nestedListUUID];
-                          const nestedListConclusion = nestedList["conclusion"];
                           if (!nestedList) return;
 
-                          const nestedTests = nestedList.testUUIDs.map((nestedUUID) => formatTest(tests[nestedUUID]));
+                          const nestedTests = nestedList.testUUIDs
+                            .map((nestedUUID) => (tests[nestedUUID] ? formatTest(tests[nestedUUID]) : null))
+                            .filter(Boolean);
 
-                          nested.push({ testlist: { test: nestedTests, "#": nestedListConclusion } });
+                          nested.push({
+                            testlist: {
+                              "#": [getFormattedTestListDependencies(nestedList), nestedList.description || "", nestedTests, nestedList.conclusion || ""],
+                            },
+                          });
                         });
                       }
 
@@ -2252,11 +3019,19 @@ const getSfrEvaluationActivities = (evaluationActivity, formattedEvaluationActiv
                   });
                 }
 
-                formattedTestLists.push({
+                // Insert an <h:br/> after every test except the last
+                const formattedTestsWithBreaks =
+                  formattedTests && formattedTests.length > 1
+                    ? formattedTests.flatMap((t, idx) => (idx < formattedTests.length - 1 ? [t, { "h:br": {} }] : [t]))
+                    : formattedTests;
+
+                const formattedTestList = {
                   testlist: {
-                    "#": [description, formattedTests, conclusion],
+                    "#": [getFormattedTestListDependencies(testList), description, formattedTestsWithBreaks, conclusion],
                   },
-                });
+                };
+
+                formattedTestLists.push(formattedTestList);
               }
             }
 
@@ -2372,7 +3147,7 @@ const getUseCaseMap = (useCases) => {
   return useCaseMap;
 };
 
-const getSARComponents = (allSARElements, initialComponents) => {
+const getSARComponents = (allSARElements, initialComponents, selectableUUIDtoID = {}, platforms = []) => {
   let components = [];
   try {
     if (initialComponents && Object.keys(initialComponents).length > 0) {
@@ -2386,7 +3161,8 @@ const getSARComponents = (allSARElements, initialComponents) => {
               "@cc-id": ccID ? ccID.toLowerCase() : "",
               "@name": name ? name : "",
               ...(optional && { "@status": "optional" }), // Dynamically add status attribute if optional is true
-              "#": [summary, getSARElements(elements)],
+              ...(summary && summary.length > 0 && { summary: summary }),
+              "#": [getSARElements(elements, selectableUUIDtoID, platforms)],
             },
           },
         ];
@@ -2518,18 +3294,25 @@ const setConformanceClaimsToCC2022 = (conformanceClaims, ppTemplateVersion) => {
   return formattedConformance;
 };
 
-const getSARElements = (initialElements) => {
+const getSARElements = (initialElements, selectableUUIDtoID = {}, platforms = []) => {
   let elements = [];
   try {
     initialElements.forEach((element) => {
       // Get SAR element
-      const { aactivity, note, title, type } = element;
+      const { aactivity, note, noteRole, title, type } = element;
       try {
+        let formattedAActivity = aactivity;
+        if (aactivity && typeof aactivity === "object") {
+          const formattedEvaluationActivities = [];
+          getSfrEvaluationActivities(aactivity, formattedEvaluationActivities, selectableUUIDtoID, false, platforms);
+          formattedAActivity = formattedEvaluationActivities[0]?.aactivity || "";
+        }
+
         // Return elements here
         let formattedElement = {
           "a-element": {
             "@type": type,
-            "#": [{ title: title }, note ? { note: getNote(note) } : "", ...(aactivity !== "" ? [{ aactivity }] : [])],
+            "#": [{ title: title }, note ? { note: getNote(note, noteRole) } : "", ...(formattedAActivity !== "" ? [{ aactivity: formattedAActivity }] : [])],
           },
         };
 
@@ -2546,13 +3329,16 @@ const getSARElements = (initialElements) => {
   return elements;
 };
 
-const getTitle = (input) => {
-  return String(input)
-    .replace(/\s*\([^)]*\)\s*$/, "") // Remove the last () portion, since sometimes the term can have () which we don't want to remove
-    .trim();
-};
-
-const createAdditionalSfrs = (additionalSfrs, sfrSections, useCaseMap, platforms, fileType, sectionIndex) => {
+const createAdditionalSfrs = (
+  additionalSfrs,
+  sfrSections,
+  useCaseMap,
+  platforms,
+  fileType,
+  sectionIndex,
+  sharedSelectableUUIDtoID = null,
+  sharedComponentMap = null
+) => {
   // If there is nothing, then include an empty <additional-sfrs/> tag
   if (Object.keys(additionalSfrs.sfrSections).length === 0) {
     return {
@@ -2584,8 +3370,8 @@ const createAdditionalSfrs = (additionalSfrs, sfrSections, useCaseMap, platforms
   let exportedAdditionalSfrs = [];
 
   try {
-    const selectableUUIDtoID = {};
-    const componentMap = {};
+    const selectableUUIDtoID = sharedSelectableUUIDtoID ? { ...sharedSelectableUUIDtoID } : {};
+    const componentMap = sharedComponentMap ? { ...sharedComponentMap } : {};
 
     // Populate the maps without formItems
     Object.keys(addSfrSections).forEach((uuid) => {
@@ -2610,7 +3396,7 @@ const createAdditionalSfrs = (additionalSfrs, sfrSections, useCaseMap, platforms
         "ext-comp-def": {
           "@title": def.title,
           "@fam-id": def.famId,
-          "fam-behavior": def.famBehavior,
+          ...getExtendedComponentDefinitionChild(def),
         },
       }));
 
@@ -2640,7 +3426,17 @@ const createAdditionalSfrs = (additionalSfrs, sfrSections, useCaseMap, platforms
   return formattedAdditionalSfrs;
 };
 
-const createModifiedSfrs = (modifiedSfrs, sfrSections, short, useCaseMap, platforms, fileType, sectionIndex) => {
+const createModifiedSfrs = (
+  modifiedSfrs,
+  sfrSections,
+  short,
+  useCaseMap,
+  platforms,
+  fileType,
+  sectionIndex,
+  sharedSelectableUUIDtoID = null,
+  sharedComponentMap = null
+) => {
   const { introduction = "", sfrSections: modifiedSfrSections = {} } = modifiedSfrs || {};
   let formattedSfrSections = [];
 
@@ -2648,8 +3444,8 @@ const createModifiedSfrs = (modifiedSfrs, sfrSections, short, useCaseMap, platfo
     // Generate modified sfr sections
     if (modifiedSfrSections && Object.keys(modifiedSfrSections)?.length > 0) {
       let filteredSections = {};
-      let selectableUUIDtoID = {};
-      let componentMap = {};
+      const selectableUUIDtoID = sharedSelectableUUIDtoID ? { ...sharedSelectableUUIDtoID } : {};
+      const componentMap = sharedComponentMap ? { ...sharedComponentMap } : {};
 
       Object.entries(modifiedSfrSections).forEach(([sfrSectionUUID, sfrSection]) => {
         getModifiedSfrFilteredSections(filteredSections, selectableUUIDtoID, componentMap, sfrSections, sfrSection, sfrSectionUUID, short);
@@ -2668,7 +3464,7 @@ const createModifiedSfrs = (modifiedSfrs, sfrSections, short, useCaseMap, platfo
               const formattedSfrSection = {
                 section: {
                   "@title": title,
-                  "@id": id || (title.match(/\(([^)]+)\)/) || [])[1].toLowerCase() || `id-${Math.floor(Math.random() * 100000)}`, // generate random ID
+                  "@id": id || `mod-${(title.match(COMMON_REGEX.parentheticalContent) || [])[1].toLowerCase()}` || `id-${Math.floor(Math.random() * 100000)}`, // generate random ID
                   "#": [definition, formattedComponents],
                 },
               };
@@ -2728,7 +3524,7 @@ const getModifiedSfrFilteredSections = (filteredSections, selectableUUIDtoID, co
 
     if (currentSfrSection && Object.keys(currentSfrSection)?.length > 0) {
       Object.entries(currentSfrSection).forEach(([componentUUID, component]) => {
-        const { elements = {}, cc_id = "", iteration_id = "", xPathDetails = {} } = component || {};
+        const { elements = {}, cc_id = "", iteration_id = "", noChange, xPathDetails = {} } = component || {};
         const originalComponent = getOriginalComponent(cc_id.toUpperCase(), iteration_id, short.toLowerCase());
         const elementsValid = elements && Object.keys(elements).length > 0;
 
@@ -2738,6 +3534,8 @@ const getModifiedSfrFilteredSections = (filteredSections, selectableUUIDtoID, co
 
         let hasModifiedElements = false;
         let hasInsertionDirectives = false;
+        const directiveKeys = getXPathDetailsArray(xPathDetails, noChange);
+        const hasNoChange = directiveKeys.some((key) => key.type === "no-change");
 
         // Filter components down based on changed elements
         if (originalComponent && elementsValid) {
@@ -2753,8 +3551,6 @@ const getModifiedSfrFilteredSections = (filteredSections, selectableUUIDtoID, co
 
           // Run through each element to check for any updates from the original element
           Object.entries(elements).forEach(([elementUUID, element]) => {
-            // const isElementUpdated = originalElements.hasOwnProperty(elementUUID) && JSON.stringify(element) !== JSON.stringify(originalElements[elementUUID]);
-
             // Check for modified elements based on mod reform structure
             let isElementUpdated = originalElements.hasOwnProperty(elementUUID) && JSON.stringify(element) !== JSON.stringify(originalElements[elementUUID]);
 
@@ -2771,10 +3567,16 @@ const getModifiedSfrFilteredSections = (filteredSections, selectableUUIDtoID, co
           });
         }
 
-        // Check for <insert-after> or <insert-before>
-        if (xPathDetails && typeof xPathDetails === "object") {
-          const directiveKeys = Object.keys(xPathDetails);
-          hasInsertionDirectives = directiveKeys.some((key) => key === "insert-after" || key === "insert-before");
+        // Check for <insert-after>, <insert-before>, <no-change>
+        if (directiveKeys.length > 0) {
+          if (hasNoChange) {
+            newComponent.elements = {};
+            hasModifiedElements = false;
+          }
+
+          hasInsertionDirectives = directiveKeys.some(
+            (key) => key.type === "insert-after" || key.type === "insert-before" || key.type === "no-change" || key.type === "set-status"
+          );
         }
 
         // Include the component if anything has changed
@@ -2788,7 +3590,6 @@ const getModifiedSfrFilteredSections = (filteredSections, selectableUUIDtoID, co
   }
 
   function getOriginalComponent(cc_id, iteration_id, short) {
-    const dataMap = { app, gpcp, gpos, mdf, mdm, tls, virtualization };
     if (iteration_id.length !== 0) {
       cc_id += `/${iteration_id}`;
     }
@@ -2814,7 +3615,7 @@ const createConsistencyRationale = (consistencyRationale) => {
   return exportedPayload;
 };
 
-const getSFRBasePPs = (basePPs, sfrSections, useCaseMap, platforms, fileType) => {
+const getSFRBasePPs = (basePPs, sfrSections, useCaseMap, platforms, fileType, sharedSelectableUUIDtoID = null, sharedComponentMap = null) => {
   let formattedBasePPs = [];
 
   try {
@@ -2841,8 +3642,27 @@ const getSFRBasePPs = (basePPs, sfrSections, useCaseMap, platforms, fileType) =>
           secFuncReqDir = { text: "" },
         } = declarationAndRef || {};
         const sectionIndex = index + 1;
-        const formattedModifiedSfrs = createModifiedSfrs(modifiedSfrs, sfrSections, short, useCaseMap, platforms, fileType, sectionIndex);
-        const formattedAdditionalSfrs = createAdditionalSfrs(additionalSfrs, sfrSections, useCaseMap, platforms, fileType, sectionIndex);
+        const formattedModifiedSfrs = createModifiedSfrs(
+          modifiedSfrs,
+          sfrSections,
+          short,
+          useCaseMap,
+          platforms,
+          fileType,
+          sectionIndex,
+          sharedSelectableUUIDtoID,
+          sharedComponentMap
+        );
+        const formattedAdditionalSfrs = createAdditionalSfrs(
+          additionalSfrs,
+          sfrSections,
+          useCaseMap,
+          platforms,
+          fileType,
+          sectionIndex,
+          sharedSelectableUUIDtoID,
+          sharedComponentMap
+        );
         const formattedConsistencyRationale = createConsistencyRationale(consistencyRationale);
         const sanitizedGit = removeUIOnlyKeys(git, ["open"]); // Strip out any keys which are only for UI triggers
         const formattedBasePP = {
@@ -2853,10 +3673,11 @@ const getSFRBasePPs = (basePPs, sfrSections, useCaseMap, platforms, fileType) =>
             "@product": product,
             "@short": short,
             "@version": version,
+            ...(declarationAndRef.plural ? { "@plural": declarationAndRef.plural } : {}),
             ...(sanitizedGit.url && sanitizedGit.branch ? { git: sanitizedGit } : {}),
-            ...(cPP ? { cPP: {} } : {}),
             url,
-            "sec-func-req-dir": secFuncReqDir.text,
+            ...(cPP ? { cPP: {} } : {}),
+            ...(secFuncReqDir.text ? { "sec-func-req-dir": secFuncReqDir.text } : {}), // only include if it has content, omission of this triggers boilerplate from transforms
             "#": [formattedModifiedSfrs, formattedAdditionalSfrs, formattedConsistencyRationale],
           },
         };
@@ -2874,11 +3695,23 @@ const getSFRBasePPs = (basePPs, sfrSections, useCaseMap, platforms, fileType) =>
   return formattedBasePPs;
 };
 
-const getToeSfrs = (state, toeSfrs, toeAuditTables, useCaseMap, platforms, fileType, parentSectionIndex) => {
+const getToeSfrs = (
+  toeSfrs,
+  toeAuditTables,
+  useCaseMap,
+  platforms,
+  fileType,
+  parentSectionIndex,
+  sharedSelectableUUIDtoID = null,
+  sharedComponentMap = null
+) => {
   let formattedToeSfrs = [];
 
   try {
-    const { selectableUUIDtoID, componentMap } = getSelectableMapFromFormItems(toeSfrs);
+    // Use shared map if provided, otherwise build from formItems
+    const { selectableUUIDtoID, componentMap } = sharedSelectableUUIDtoID
+      ? { selectableUUIDtoID: sharedSelectableUUIDtoID, componentMap: sharedComponentMap }
+      : getSelectableMapFromFormItems(toeSfrs);
     let formattedMandatory = [];
     let formattedOptional = [];
     let formattedObjective = [];
@@ -2901,7 +3734,7 @@ const getToeSfrs = (state, toeSfrs, toeAuditTables, useCaseMap, platforms, fileT
             formItems.map((section, sfrSectionIndex) => {
               const isModule = true;
               const innerSectionID = `${sfrSectionID}.${sfrSectionIndex + 1}`;
-              const { title, definition, classDescription, extendedComponentDefinition, components, sfrType = "mandatory" } = section;
+              const { id: family_id, title, definition, classDescription, extendedComponentDefinition, components, sfrType = "mandatory" } = section;
               const formattedClassDescription =
                 classDescription.length !== 0
                   ? {
@@ -2911,8 +3744,8 @@ const getToeSfrs = (state, toeSfrs, toeAuditTables, useCaseMap, platforms, fileT
                     }
                   : {};
               let auditTableExists = auditEventMap.hasOwnProperty(sfrType) ? auditEventMap[sfrType] : null;
-              let findValues = title.split(/\(([^)]+)\)/);
-              const id = findValues && findValues.length > 1 ? `${findValues[1].trim().toLowerCase()}-${sfrType}` : "";
+              let findValues = title.split(COMMON_REGEX.parentheticalContent);
+              const id = family_id ? family_id : findValues && findValues.length > 1 ? `${findValues[1].trim().toLowerCase()}-${sfrType}` : "";
               const formattedExtendedComponentDefinition = getFamilyExtendedComponentDefinition(extendedComponentDefinition);
               let { formattedComponents, implementSection } = getSfrComponents(
                 components,
@@ -3056,6 +3889,7 @@ const generateFormattedToeSfrs = (
     formattedSfrSections = [
       formattedComment,
       generateSectionByType("man-sfrs", toeAuditTables.mandatory || {}, formattedMandatory),
+      { "mod-sars": "" },
       generateSectionByType("opt-sfrs", toeAuditTables.optional || {}, formattedOptional),
       generateSectionByType("sel-sfrs", toeAuditTables.selectionBased || {}, formattedSelectionBased),
       generateSectionByType("obj-sfrs", toeAuditTables.objective || {}, formattedObjective),
@@ -3139,7 +3973,7 @@ const getToeSecurityRequirements = (formItems) => {
  * @returns
  */
 function getSfrType(sfrObject) {
-  const sfrTypes = ["implementationDependent", "objective", "optional", "selectionBased", "useCaseBased"];
+  const sfrTypes = ["selectionBased", "implementationDependent", "objective", "optional", "useCaseBased"];
 
   for (const type of sfrTypes) {
     if (sfrObject[type]) return type;

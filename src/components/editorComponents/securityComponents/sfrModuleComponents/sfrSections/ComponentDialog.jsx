@@ -4,15 +4,10 @@ import PropTypes from "prop-types";
 import { useSelector } from "react-redux";
 import { FormControl, InputLabel, MenuItem, Select } from "@mui/material";
 import { deepCopy } from "../../../../../utils/deepCopy.js";
-import app from "../../../../../../public/data/sfr_components/app_cc2022.json";
-import mdm from "../../../../../../public/data/sfr_components/mdm.json";
-import gpcp from "../../../../../../public/data/sfr_components/gpcp_cc2022.json";
-import gpos from "../../../../../../public/data/sfr_components/gpos_cc2022.json";
-import mdf from "../../../../../../public/data/sfr_components/mdf.json";
-import tls from "../../../../../../public/data/sfr_components/tls_cc2022.json";
-import virtualization from "../../../../../../public/data/sfr_components/virtualization_cc2022.json";
 import Modal from "../../../../modalComponents/Modal.jsx";
 import ToggleSwitch from "../../../../ToggleSwitch.jsx";
+import { dataMap } from "../../../../../utils/ppData.js";
+import { COMMON_REGEX } from "../../../../../utils/regexUtils.js";
 
 /**
  * The ComponentDialog class that sends a pop-up confirmation for selecting a sfr component for the module type
@@ -46,7 +41,6 @@ function ComponentDialog({ sfrUUID, title, open, handleOpen, handleSubmit }) {
   const [sfrList, setSfrList] = useState({});
   const [selectedSfr, setSelectedSfr] = useState("");
   const [isEmptySfr, setIsEmptySfr] = useState(false);
-  const dataMap = { app, gpcp, gpos, mdf, mdm, tls, virtualization };
 
   // Use Effects
   useEffect(() => {
@@ -180,7 +174,7 @@ function ComponentDialog({ sfrUUID, title, open, handleOpen, handleSubmit }) {
    */
   const extractInnerString = (inputString) => {
     // Regular expression to find text within parentheses
-    const match = inputString.match(/\(([^)]+)\)/);
+    const match = inputString.match(COMMON_REGEX.parentheticalContent);
 
     // Return the matched group or an empty string if no match
     return match ? match[1] : "";

@@ -31,6 +31,7 @@ const initialState = {
     version: "",
     releaseDate: "",
     revisionHistory: [],
+    technicalDecisionHistory: [],
     xmlTagMeta: {},
     customCSS: "",
     prologTags: {},
@@ -107,6 +108,16 @@ export const accordionPaneSlice = createSlice({
             contentType: contentType,
           });
         }
+      }
+    },
+    UPDATE_ACCORDION_FORM_ITEM_CONTENT_TYPE: (state, action) => {
+      const { accordionUUID, uuid, newUUID, contentType } = action.payload;
+      const formItems = state.sections[accordionUUID]?.formItems;
+      const formItem = formItems?.find((item) => item.uuid === uuid);
+
+      if (formItem) {
+        formItem.uuid = newUUID || uuid;
+        formItem.contentType = contentType;
       }
     },
     CREATE_ACCORDION_SUB_FORM_ITEM: (state, action) => {
@@ -425,6 +436,7 @@ export const {
   UPDATE_ACCORDION_XMLTAGMETA,
   DELETE_ACCORDION,
   CREATE_ACCORDION_FORM_ITEM,
+  UPDATE_ACCORDION_FORM_ITEM_CONTENT_TYPE,
   DELETE_ACCORDION_FORM_ITEM,
   DELETE_ALL_ACCORDION_FORM_ITEMS,
   CREATE_ACCORDION_SUB_FORM_ITEM,

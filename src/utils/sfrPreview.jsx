@@ -1,4 +1,6 @@
 import { style_tags } from "./fileParser.js";
+import { EXPORT_REGEX, UI_REGEX } from "./regexUtils.js";
+import { applySelectionFormatting, mergeSelectionFormatting } from "./selectionFormatting.js";
 
 // Methods
 /**
@@ -13,7 +15,7 @@ export const getSfrPreviewTextString = (inputs) => {
 
   try {
     if (currentTextArray && currentTextArray.length > 0) {
-      currentTextArray.forEach((section, index) => {
+      currentTextArray.forEach((section) => {
         const key = Object.keys(section)[0];
         let value = Object.values(section)[0];
 
@@ -43,7 +45,7 @@ export const getSfrPreviewTextString = (inputs) => {
             if (tabularize && tabularize.hasOwnProperty(value)) {
               try {
                 const tabularizeObject = tabularize[value];
-                const formatted = getTabularizedSection(tabularizeObject, selectables, selectableGroups, index);
+                const formatted = getTabularizedSection(tabularizeObject, selectables, selectableGroups);
 
                 if (!textArray.includes(formatted)) {
                   textArray.push(formatted);
@@ -76,17 +78,19 @@ export const getSfrPreviewTextString = (inputs) => {
 export const getComplexSelectableTextString = (inputs) => {
   let selectableString = "";
   let selectable = [];
-  const { selectables, selectableGroups, currentSelectable } = inputs;
+  const { selectables, selectableGroups, currentSelectable, inheritedFormatting = {} } = inputs;
 
   try {
     if (currentSelectable && Object.keys(currentSelectable).length > 0) {
       const { description, notSelectable, exclusive } = currentSelectable;
+      const currentFormatting = mergeSelectionFormatting(inheritedFormatting, currentSelectable);
 
       if (description && description.length > 0) {
         description.forEach((item) => {
           if (item.hasOwnProperty("text") && item.text) {
-            if (!selectable.includes(item.text)) {
-              selectable.push(item.text);
+            const formattedText = applySelectionFormatting(item.text, currentFormatting);
+            if (!selectable.includes(formattedText)) {
+              selectable.push(formattedText);
             }
           } else if (item.hasOwnProperty("groups")) {
             let groups = item.groups;
@@ -95,12 +99,12 @@ export const getComplexSelectableTextString = (inputs) => {
               let isBullet = groups.length <= 1 ? false : true;
               groups?.forEach((selectableItem) => {
                 if (selectableGroups.hasOwnProperty(selectableItem)) {
-                  let selectableGroup = getGroupItemsByType(selectableItem, selectables, selectableGroups, isBullet, notSelectable);
+                  let selectableGroup = getGroupItemsByType(selectableItem, selectables, selectableGroups, isBullet, notSelectable, currentFormatting);
                   if (selectableGroup && !groupArray.includes(selectableGroup)) {
                     groupArray.push(selectableGroup);
                   }
                 } else if (selectables.hasOwnProperty(selectableItem)) {
-                  let selectable = getSelectable(selectables[selectableItem], isBullet);
+                  let selectable = getSelectable(selectables[selectableItem], isBullet, currentFormatting);
                   if (selectable && !groupArray.includes(selectable)) {
                     groupArray.push(selectable);
                   }
@@ -158,11 +162,11 @@ export const getComplexSelectableTextString = (inputs) => {
  * @param isBullet the is bullet (boolean)
  * @returns {string}
  */
-const getSelectable = (currentSelectable, isBullet) => {
+const getSelectable = (currentSelectable, isBullet, inheritedFormatting = {}) => {
   let formattedSelectable = "";
   try {
     if (currentSelectable && Object.keys(currentSelectable).length > 0 && currentSelectable.hasOwnProperty("description")) {
-      formattedSelectable = currentSelectable.description;
+      formattedSelectable = applySelectionFormatting(currentSelectable.description, mergeSelectionFormatting(inheritedFormatting, currentSelectable));
       if (currentSelectable.notSelectable) {
         formattedSelectable = `<i><s>${formattedSelectable}</i></s>`;
       }
@@ -188,13 +192,13 @@ const getSelectable = (currentSelectable, isBullet) => {
  * @param notSelectable the not selectable (boolean)
  * @returns {string}
  */
-const getGroupItemsByType = (currentID, selectables, selectableGroups, isBullet, notSelectable = false) => {
+const getGroupItemsByType = (currentID, selectables, selectableGroups, isBullet, notSelectable = false, inheritedFormatting = {}) => {
   let selectableGroupArray = [];
   let selectableGroupString = "";
   try {
     // Check if item is a selectable
     if (selectables.hasOwnProperty(currentID)) {
-      let selectable = getSelectable(selectables[currentID], false);
+      let selectable = getSelectable(selectables[currentID], false, inheritedFormatting);
       if (!selectableGroupArray.includes(selectable)) {
         selectableGroupArray.push(selectable);
       }
@@ -208,6 +212,7 @@ const getGroupItemsByType = (currentID, selectables, selectableGroups, isBullet,
           selectables,
           selectableGroups,
           currentSelectable: selectableGroup,
+          inheritedFormatting,
         });
         if (!selectableGroupArray.includes(complexSelectable)) {
           selectableGroupArray.push(complexSelectable);
@@ -215,7 +220,7 @@ const getGroupItemsByType = (currentID, selectables, selectableGroups, isBullet,
       }
       // Check if the current item is a group
       else if (selectableGroup.hasOwnProperty("groups")) {
-        let group = getSelectablesGroup(selectables, selectableGroups, selectableGroup, notSelectable);
+        let group = getSelectablesGroup(selectables, selectableGroups, selectableGroup, notSelectable, inheritedFormatting);
         if (!selectableGroupArray.includes(group)) {
           selectableGroupArray.push(group);
         }
@@ -245,15 +250,16 @@ const getGroupItemsByType = (currentID, selectables, selectableGroups, isBullet,
  * @param notSelectable the is not selectable (boolean)
  * @returns {string}
  */
-const getSelectablesGroup = (selectables, selectableGroups, currentGroup, notSelectable) => {
+const getSelectablesGroup = (selectables, selectableGroups, currentGroup, notSelectable, inheritedFormatting = {}) => {
   let selectableGroupArray = [];
   let selectableGroupString = "";
   try {
     const { onlyOne, groups } = currentGroup;
+    const groupFormatting = mergeSelectionFormatting(inheritedFormatting, currentGroup);
     let isBullet = groups.length <= 1 ? false : true;
     if (groups && groups.length > 0) {
       groups.forEach((item) => {
-        let itemString = getGroupItemsByType(item, selectables, selectableGroups, isBullet);
+        let itemString = getGroupItemsByType(item, selectables, selectableGroups, isBullet, false, groupFormatting);
         if (!selectableGroupArray.includes(itemString)) {
           selectableGroupArray.push(itemString);
         }
@@ -286,15 +292,12 @@ const getSelectablesGroup = (selectables, selectableGroups, currentGroup, notSel
  * @param tabularize the tabularize
  * @param selectables the selectables
  * @param selectableGroups the selectables groups
- * @param index the index
  * @returns {string}
  */
-const getTabularizedSection = (tabularize, selectables, selectableGroups, index) => {
+const getTabularizedSection = (tabularize, selectables, selectableGroups) => {
   const { title = "", definitionString = "", columns = [], rows = [] } = tabularize;
-  const padding = index > 0 ? `<div class="pt-5"/>` : "";
 
   const tableString = `
-        ${padding}
         ${definitionString}
         <br/><br/>
         <div class="text-center font-bold">Table: ${title}</div>
@@ -378,9 +381,9 @@ const getTabularizedRows = (columns, rows, selectables, selectableGroups) => {
 const cleanUpStringHelper = (originalString) => {
   originalString = originalString.trim();
   return originalString
-    .replace(/^[/\s+]/g, " ")
-    .replace(/\^\s+/g, "^")
-    .replace(/\]\s*(<\/[a-zA-Z0-9]+>\])/g, "]$1");
+    .replace(UI_REGEX.leadingSlashOrWhitespace, " ")
+    .replace(EXPORT_REGEX.caretWhitespace, "^")
+    .replace(UI_REGEX.closingTagBeforeSelectionBracket, "]$1");
 };
 /**
  * Checks if text is a rich text element
@@ -392,7 +395,7 @@ const precededByRichText = (htmlEnd) => {
   const tail = htmlEnd.trimEnd();
 
   // capture the last HTML tag at the end of the string
-  const m = tail.match(/<\s*(\/?)([a-zA-Z0-9:_-]+)[^>]*>\s*$/);
+  const m = tail.match(UI_REGEX.trailingHtmlTag);
   if (!m) return false;
 
   const isClosing = m[1] === "/";

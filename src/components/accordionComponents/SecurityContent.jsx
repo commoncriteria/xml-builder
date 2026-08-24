@@ -423,7 +423,10 @@ function SecurityContent({ uuid, accordionUUID, title, definition, sfrList, sarL
             </IconButton>
             <span />
             <IconButton sx={{ marginTop: "-8px" }} onClick={handleSectionCollapse} variant='contained'>
-              <Tooltip id={(open ? "collapse" : "expand") + uuid + "SecurityContentTooltip"} title={`${open ? "Collapse " : "Expand "} Section`}>
+              <Tooltip
+                key={open ? "open" : "closed"}
+                id={(open ? "collapse" : "expand") + uuid + "SecurityContentTooltip"}
+                title={`${open ? "Collapse " : "Expand "} Section`}>
                 {open ? <RemoveIcon htmlColor={primary} sx={icons.large} /> : <AddIcon htmlColor={primary} sx={icons.large} />}
               </Tooltip>
             </IconButton>

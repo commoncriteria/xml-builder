@@ -2,14 +2,23 @@
 import { useEffect, useMemo, useState } from "react";
 import PropTypes from "prop-types";
 import { useDispatch, useSelector } from "react-redux";
-import { Checkbox, FormControl, IconButton, InputLabel, MenuItem, Select, Stack, TextField, Tooltip, Typography } from "@mui/material";
+import { Button, Checkbox, FormControl, IconButton, InputLabel, MenuItem, Select, Stack, TextField, Tooltip, Typography } from "@mui/material";
 import AddCircleRoundedIcon from "@mui/icons-material/AddCircleRounded";
 import DeleteForeverRoundedIcon from "@mui/icons-material/DeleteForeverRounded";
 import { CREATE_SAR_ELEMENT, DELETE_SAR_ELEMENT, UPDATE_SAR_COMPONENT_ITEMS, UPDATE_SAR_ELEMENT } from "../../../../reducers/sarsSlice.js";
 import { handleSnackBarSuccess, handleSnackbarTextUpdates } from "../../../../utils/securityComponents.jsx";
+import {
+  convertDependenciesFromStoredIds,
+  convertDependenciesToStoredIds,
+  EA_SECTION_DEPENDENCY_FIELDS,
+  EA_SECTION_DEPENDENCY_SECTION_FIELDS,
+  getAllSfrDependencyDropdown,
+  getAllSfrDependencyMap,
+} from "../../../../utils/evaluationActivityDependencies.js";
 import CardTemplate from "../CardTemplate.jsx";
 import Modal from "../../../modalComponents/Modal.jsx";
 import TipTapEditor from "../../TipTapEditor.jsx";
+import MultiSelectDropdown from "../MultiSelectDropdown.jsx";
 
 /**
  * The SarWorksheet class that displays the data for the sar worksheet as a modal
@@ -29,6 +38,8 @@ function SarWorksheet(props) {
   // Constants
   const dispatch = useDispatch();
   const sarElements = useSelector((state) => state.sars.elements);
+  const platforms = useSelector((state) => state.accordionPane.platformData.platforms);
+  const sfrSections = useSelector((state) => state.sfrSections);
   const { primary, secondary, primaryMenu, checkboxSecondary, secondaryToggleTypography, icons } = useSelector((state) => state.styling);
 
   // The element values
@@ -50,6 +61,8 @@ function SarWorksheet(props) {
   // Collapse card values
   const [openSarComponent, setOpenSarComponent] = useState(true);
   const [openSarElement, setOpenSarElement] = useState(true);
+  const sarDependencyMenuOptions = useMemo(() => getAllSfrDependencyDropdown({ sfrSections, platforms }), [sfrSections, platforms]);
+  const sarDependencyMap = useMemo(() => getAllSfrDependencyMap(sfrSections), [sfrSections]);
 
   // Use Effects
   useEffect(() => {
@@ -259,6 +272,59 @@ function SarWorksheet(props) {
       setAactivity(event);
     }
   };
+  const updateAactivityField = (field, value) => {
+    const updatedAactivity = {
+      ...getStructuredAactivity(),
+      [field]: value,
+    };
+
+    updateAactivity(updatedAactivity);
+  };
+  const updateAactivityDependency = (field, selections) => {
+    const selectionList = (Array.isArray(selections) ? selections : [selections]).filter(Boolean).slice(-1);
+    const dependencies = convertDependenciesToStoredIds(selectionList, sarDependencyMap);
+    const updatedAactivity = {
+      ...getStructuredAactivity(),
+      [field]: dependencies,
+    };
+
+    updateAactivity(updatedAactivity);
+  };
+  const getAactivityDependencySections = (field) => {
+    const structuredAactivity = getStructuredAactivity();
+    return Array.isArray(structuredAactivity[field]) ? structuredAactivity[field] : [];
+  };
+  const updateAactivityDependencySection = (field, index, selections) => {
+    const selectionList = (Array.isArray(selections) ? selections : [selections]).filter(Boolean).slice(-1);
+    const dependencies = convertDependenciesToStoredIds(selectionList, sarDependencyMap);
+    const dependencySections = [...getAactivityDependencySections(field)];
+
+    dependencySections[index] = {
+      dependencies,
+      text: dependencySections[index]?.text || "",
+    };
+
+    updateAactivityField(field, dependencySections);
+  };
+  const updateAactivityDependencySectionText = (field, index, value) => {
+    const dependencySections = [...getAactivityDependencySections(field)];
+
+    dependencySections[index] = {
+      dependencies: Array.isArray(dependencySections[index]?.dependencies) ? dependencySections[index].dependencies : [],
+      text: value,
+    };
+
+    updateAactivityField(field, dependencySections);
+  };
+  const addAactivityDependencySection = (field) => {
+    updateAactivityField(field, [...getAactivityDependencySections(field), { dependencies: [], text: "" }]);
+  };
+  const deleteAactivityDependencySection = (field, index) => {
+    updateAactivityField(
+      field,
+      getAactivityDependencySections(field).filter((_, sectionIndex) => sectionIndex !== index)
+    );
+  };
 
   // Helper Methods
   /**
@@ -339,6 +405,126 @@ function SarWorksheet(props) {
 
     return "";
   };
+  const getStructuredAactivity = () => {
+    if (aactivity && typeof aactivity === "object" && !Array.isArray(aactivity)) {
+      return {
+        introduction: "",
+        tss: "",
+        tssDependencies: [],
+        tssDependencySections: [],
+        guidance: "",
+        guidanceDependencies: [],
+        guidanceDependencySections: [],
+        testIntroduction: "",
+        testClosing: "",
+        testLists: {},
+        tests: {},
+        isNoTest: false,
+        noTest: "",
+        ...aactivity,
+      };
+    }
+
+    return {
+      introduction: typeof aactivity === "string" ? aactivity : "",
+      tss: "",
+      tssDependencies: [],
+      tssDependencySections: [],
+      guidance: "",
+      guidanceDependencies: [],
+      guidanceDependencySections: [],
+      testIntroduction: "",
+      testClosing: "",
+      testLists: {},
+      tests: {},
+      isNoTest: false,
+      noTest: "",
+    };
+  };
+  const getAactivityDependencies = (field) => {
+    const structuredAactivity = getStructuredAactivity();
+    return convertDependenciesFromStoredIds(structuredAactivity[field] || [], sarDependencyMap, sarDependencyMenuOptions);
+  };
+  const hasAactivityDependencyOptions = () => Object.values(sarDependencyMenuOptions).some((options) => Array.isArray(options) && options.length > 0);
+  const getAactivitySection = (field, cardTitle, dependencyField = null) => {
+    const structuredAactivity = getStructuredAactivity();
+    const dependencySectionField = EA_SECTION_DEPENDENCY_SECTION_FIELDS[field];
+    const dependencySections = dependencySectionField ? getAactivityDependencySections(dependencySectionField) : [];
+    const hasLegacyDependencies = dependencyField && Array.isArray(structuredAactivity[dependencyField]) && structuredAactivity[dependencyField].length > 0;
+
+    return (
+      <CardTemplate
+        type={"section"}
+        header={<label className='resize-none font-bold text-[14px] p-0 pr-4 text-accent'>{cardTitle}</label>}
+        body={
+          <div>
+            {dependencyField && hasAactivityDependencyOptions() && hasLegacyDependencies && dependencySections.length === 0 && (
+              <div className='w-full pb-4 pt-2'>
+                <MultiSelectDropdown
+                  selectionOptions={sarDependencyMenuOptions}
+                  selections={getAactivityDependencies(dependencyField)}
+                  title={"Dependencies"}
+                  handleSelections={(...args) => updateAactivityDependency(dependencyField, args[1])}
+                  multiple={false}
+                  style={"primary"}
+                />
+              </div>
+            )}
+            <TipTapEditor
+              className='w-full'
+              uuid={selectedElementUUID || props.componentUUID}
+              title={`sar-${field}`}
+              text={structuredAactivity[field] || ""}
+              contentType={"term"}
+              handleTextUpdate={(event) => updateAactivityField(field, event)}
+            />
+            {dependencySectionField && hasAactivityDependencyOptions() && (
+              <div className='w-full pt-2'>
+                {dependencySections.map((dependencySection, index) => (
+                  <div className='mb-4 rounded-md border border-gray-200 bg-white p-3' key={`${dependencySectionField}-${index}`}>
+                    <div className='flex w-full items-center gap-2 pb-3'>
+                      <MultiSelectDropdown
+                        selectId={`${dependencySectionField}-${index}`}
+                        selectionOptions={sarDependencyMenuOptions}
+                        selections={convertDependenciesFromStoredIds(dependencySection.dependencies || [], sarDependencyMap, sarDependencyMenuOptions)}
+                        title={"Dependencies"}
+                        handleSelections={(...args) => updateAactivityDependencySection(dependencySectionField, index, args[1])}
+                        multiple={false}
+                        style={"primary"}
+                      />
+                      <IconButton onClick={() => deleteAactivityDependencySection(dependencySectionField, index)} variant='contained'>
+                        <Tooltip title={"Delete Dependency Section"} id={`${dependencySectionField}-${index}-delete-tooltip`}>
+                          <DeleteForeverRoundedIcon htmlColor={secondary} sx={icons.medium} />
+                        </Tooltip>
+                      </IconButton>
+                    </div>
+                    <TipTapEditor
+                      className='w-full'
+                      uuid={`${selectedElementUUID || props.componentUUID}-${dependencySectionField}-${index}`}
+                      title={`${dependencySectionField}-${index}`}
+                      text={dependencySection.text || ""}
+                      contentType={"term"}
+                      handleTextUpdate={(event) => updateAactivityDependencySectionText(dependencySectionField, index, event)}
+                    />
+                  </div>
+                ))}
+                <div className='flex justify-start pb-2'>
+                  <Button
+                    color='secondary'
+                    size='small'
+                    startIcon={<AddCircleRoundedIcon htmlColor={primary} sx={icons.small} />}
+                    onClick={() => addAactivityDependencySection(dependencySectionField)}
+                    variant='text'>
+                    Add Dependency Section
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        }
+      />
+    );
+  };
 
   // Use Memos
   /**
@@ -374,8 +560,14 @@ function SarWorksheet(props) {
    * @type {Element}
    */
   const AActivityEditor = useMemo(() => {
-    return <TipTapEditor uuid={props.componentUUID} text={aactivity ? aactivity : ""} contentType={"term"} handleTextUpdate={updateAactivity} />;
-  }, [props.componentUUID, aactivity]);
+    return (
+      <>
+        {getAactivitySection("introduction", "Evaluation Activity Introduction")}
+        {getAactivitySection("tss", "TSS", EA_SECTION_DEPENDENCY_FIELDS.tss)}
+        {getAactivitySection("guidance", "Guidance", EA_SECTION_DEPENDENCY_FIELDS.guidance)}
+      </>
+    );
+  }, [props.componentUUID, selectedElementUUID, aactivity, sarDependencyMenuOptions, sarDependencyMap]);
 
   // Return Method
   return (
@@ -517,11 +709,7 @@ function SarWorksheet(props) {
                             header={<label className='resize-none font-bold text-[14px] p-0 pr-4 text-accent'>Application Note</label>}
                             body={NoteEditor}
                           />
-                          <CardTemplate
-                            type={"section"}
-                            header={<label className='resize-none font-bold text-[14px] p-0 pr-4 text-accent'>Evaluation Activity</label>}
-                            body={AActivityEditor}
-                          />
+                          {AActivityEditor}
                         </div>
                       </div>
                     </div>

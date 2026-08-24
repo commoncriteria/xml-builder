@@ -3,6 +3,7 @@ import PropTypes from "prop-types";
 import { useSelector } from "react-redux";
 import { deepCopy } from "../../../../../utils/deepCopy.js";
 import { getRefIdDropdown, updateRefIds } from "../../../../../utils/securityComponents.jsx";
+import { getEvaluationActivityDependencyDropdown } from "../../../../../utils/evaluationActivityDependencies.js";
 import SfrTestListSection from "./SfrTestListSection.jsx";
 import MultiSelectDropdown from "../../MultiSelectDropdown.jsx";
 import SfrEvaluationActivityCard from "./SfrEvaluationActivityCard.jsx";
@@ -20,9 +21,18 @@ function SfrEvaluationActivitySection({ isManagementFunction }) {
   };
 
   // Constants
-  const { activities, refIdOptions, evaluationActivitiesUI, managementFunctionUI } = useSelector((state) => state.sfrWorksheetUI);
-  const { selectedUUID } = evaluationActivitiesUI;
+  const platforms = useSelector((state) => state.accordionPane.platformData.platforms);
+  const { activities, refIdOptions, evaluationActivitiesUI, managementFunctionUI, selectedSfrElement, elementMaps } = useSelector((state) => state.sfrWorksheetUI);
+  const { selectedUUID, selectedEvaluationActivity, dependencyMap } = evaluationActivitiesUI;
   const { activity, rowIndex } = managementFunctionUI;
+  const selectedDependencyContext = isManagementFunction ? [selectedSfrElement] : selectedEvaluationActivity;
+  const dependencyMenuOptions = getEvaluationActivityDependencyDropdown({
+    selected: selectedDependencyContext,
+    isManagementFunction,
+    dependencyMap,
+    platforms,
+    elementMaps,
+  });
 
   // Helper Methods
   /**
@@ -92,6 +102,7 @@ function SfrEvaluationActivitySection({ isManagementFunction }) {
             isManagementFunction={isManagementFunction}
             sectionType={"tss"}
             cardTitle={"TSS"}
+            dependencyMenuOptions={dependencyMenuOptions}
             tooltip={`Taken directly from the WIki: ASE_TSS.1 requires that the developer provide a TOE Summary 
                              Specification (TSS) that describes how the TOE meets each SFR. Other SARs require that the 
                              TSS describe how the TOE protects itself against interference, logical tampering, and 
@@ -103,11 +114,21 @@ function SfrEvaluationActivitySection({ isManagementFunction }) {
             isManagementFunction={isManagementFunction}
             sectionType={"guidance"}
             cardTitle={"Guidance"}
+            dependencyMenuOptions={dependencyMenuOptions}
             tooltip={`Taken directly from the Wiki: The CC:2022 requires at least two types of Guidance documentation: 
                              Operational Guidance and Administrator Guidance. Administrator Guidance contains of instructions 
                              for putting the TOE into the evaluated configuration. The Operational Guidance is documentation 
                              for users of the system. This activity concerns the Operational Guidance, or the Guidance in general. 
                              It is sometimes referred to as "AGD."`}
+          />
+          <SfrEvaluationActivityCard
+            isManagementFunction={isManagementFunction}
+            sectionType={"customea"}
+            cardTitle={"Custom Evaluation Activity"}
+            tooltip={`Taken directly from the Wiki: Custom EAs are categories of EAs that are not part of the CC, 
+              but rather are defined by a Technical Community as specific their technology area. Typically, the 
+              purpose of custom EAs is to require specification of potentially proprietary information in a 
+              non-public document rather than in the TSS or AAR.`}
           />
           <SfrTestListSection isManagementFunction={isManagementFunction} />
         </div>

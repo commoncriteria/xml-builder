@@ -388,7 +388,10 @@ function Definition({ accordionTitle, termUUID, index, uuid, title, from = [], d
             </IconButton>
             <span />
             <IconButton sx={{ marginTop: "-8px" }} onClick={handleCollapseSection} variant='contained'>
-              <Tooltip id={(open ? "collapse" : "expand") + termUUID + "ItemTooltip"} title={`${open ? "Collapse " : "Expand "} Item`}>
+              <Tooltip
+                key={open ? "open" : "closed"}
+                id={(open ? "collapse" : "expand") + termUUID + "ItemTooltip"}
+                title={`${open ? "Collapse " : "Expand "} Item`}>
                 {open ? <RemoveIcon htmlColor={secondary} sx={icons.large} /> : <AddIcon htmlColor={secondary} sx={icons.large} />}
               </Tooltip>
             </IconButton>

@@ -1,8 +1,16 @@
 // Imports
 import { useMemo } from "react";
-import { useSelector } from "react-redux";
-import { FormControl, TextField, Tooltip } from "@mui/material";
-import { getComponentXmlID, handleSnackbarTextUpdates, setSfrWorksheetUIItems, updateComponentItems } from "../../../../../utils/securityComponents.jsx";
+import { useDispatch, useSelector } from "react-redux";
+import { Alert, Box, Checkbox, FormControl, TextField, Tooltip, Typography } from "@mui/material";
+import { updateMetaDataItem } from "../../../../../reducers/accordionPaneSlice.js";
+import {
+  getComponentXmlID,
+  handleSnackBarError,
+  handleSnackbarTextUpdates,
+  setSfrWorksheetUIItems,
+  updateComponentItems,
+} from "../../../../../utils/securityComponents.jsx";
+import { areTechnicalDecisionHistoriesEqual, moveTechnicalDecisionComponentReferences } from "../../../../../utils/technicalDecisionHistory.js";
 import CardTemplate from "../../CardTemplate.jsx";
 import ExtendedComponentDefinition from "./selections/ExtendedComponentDefinition.jsx";
 import FromPackage from "../../sfrModuleComponents/sfrSections/FromPackage.jsx";
@@ -10,8 +18,50 @@ import ImplementationDependent from "./selections/ImplementationDependent.jsx";
 import SelectionBased from "./selections/SelectionBased.jsx";
 import SfrAuditEvents from "./SfrAuditEvents.jsx";
 import SfrCheckBox from "../SfrCheckBox.jsx";
+import TechnicalDecisionAffectsDropdown from "../TechnicalDecisionAffectsDropdown.jsx";
 import TipTapEditor from "../../../TipTapEditor.jsx";
 import UseCaseBased from "./selections/UseCaseBased.jsx";
+
+// type directive can be replace, no-change, insert-before/after
+// subType is what the directive applies to (f-element, note, etc)
+const getNoChangeXPathDetail = () => ({
+  type: "no-change",
+  subType: "no-change",
+  isComponentReplacement: false,
+  replacementElements: null,
+  f_element_id: null,
+});
+
+const getXPathDetailsArray = (xPathDetails) => {
+  if (Array.isArray(xPathDetails)) {
+    return xPathDetails;
+  }
+
+  if (xPathDetails && Object.keys(xPathDetails).length > 0) {
+    return Object.entries(xPathDetails).map(([type, detail]) => ({ type, ...(detail || {}) }));
+  }
+
+  return [];
+};
+
+const hasNoChangeXPathDetail = (xPathDetails) => {
+  return getXPathDetailsArray(xPathDetails).some((detail) => detail.type === "no-change");
+};
+
+const updateNoChangeXPathDetails = (xPathDetails, checked) => {
+  const details = getXPathDetailsArray(xPathDetails).filter((detail) => detail.type !== "no-change");
+  return checked ? [...details, getNoChangeXPathDetail()] : details;
+};
+
+const normalizeCcId = (ccID) => ccID?.trim().toLowerCase() || "";
+
+const getBasePPSfrSectionIds = (basePP) => {
+  if (!basePP || typeof basePP !== "object") {
+    return [];
+  }
+
+  return [...Object.keys(basePP.modifiedSfrs?.sfrSections || {}), ...Object.keys(basePP.additionalSfrs?.sfrSections || {})];
+};
 
 /**
  * The SfrComponent class that displays the data for the sfr component
@@ -19,10 +69,18 @@ import UseCaseBased from "./selections/UseCaseBased.jsx";
  */
 function SfrComponent() {
   // Constants
-  const { secondary } = useSelector((state) => state.styling);
-  const { sfrWorksheetUI } = useSelector((state) => state);
-  const { component, openSfrComponent } = sfrWorksheetUI;
+  const dispatch = useDispatch();
+  const { secondary, grayTitle, checkboxPrimaryNoPad } = useSelector((state) => state.styling);
+  const technicalDecisionHistory = useSelector((state) => state.accordionPane.metadata.technicalDecisionHistory);
+  const sfrWorksheetUI = useSelector((state) => state.sfrWorksheetUI);
+  const sfrSections = useSelector((state) => state.sfrSections);
+  const sfrBasePPs = useSelector((state) => state.sfrBasePPs);
+  const moduleSfrSections = useSelector((state) => state.sfrs.sections);
+  const { ppType } = useSelector((state) => state.accordionPane.metadata);
+  const { component, componentUUID, openSfrComponent, sfrUUID } = sfrWorksheetUI;
   const { extendedComponentDefinition } = component;
+  const noChangeChecked = component.noChange ?? hasNoChangeXPathDetail(component.xPathDetails);
+  const showNoChangeExportNotice = component.modifiedSfr && !noChangeChecked;
 
   // Methods
   /**
@@ -41,7 +99,7 @@ function SfrComponent() {
    *             Options: title, definition
    */
   const updateComponentTextByType = (event, type) => {
-    const value = type === "title" ? event.target.value : event;
+    const value = event?.target ? event.target.value : event;
     const itemMap = {
       [type]: value,
     };
@@ -64,9 +122,126 @@ function SfrComponent() {
       [type]: type === "cc_id" ? ccID : iterationID,
       xml_id: xmlID,
     };
+    const updatedComponent = {
+      ...component,
+      ...itemMap,
+    };
+
+    moveTechnicalDecisionReferences(component, updatedComponent);
 
     // Update id by type
     updateComponentItems(itemMap);
+  };
+  const getCurrentBasePPSfrSectionIds = () => {
+    for (const basePP of Object.values(sfrBasePPs || {})) {
+      const sectionIds = getBasePPSfrSectionIds(basePP);
+
+      if (sectionIds.includes(sfrUUID)) {
+        return sectionIds;
+      }
+    }
+
+    return [];
+  };
+
+  const hasDuplicateCcIdInSections = (sectionIds, normalizedCcId) => {
+    const uniqueSectionIds = [...new Set(sectionIds.filter(Boolean))];
+
+    return uniqueSectionIds.some((sectionId) =>
+      Object.entries(sfrSections?.[sectionId] || {}).some(
+        ([uuid, sfrComponent]) => uuid !== componentUUID && normalizeCcId(sfrComponent?.cc_id) === normalizedCcId
+      )
+    );
+  };
+
+  const hasDuplicateCcIdInModule = (normalizedCcId) => {
+    const moduleSfrSectionIds = Object.keys(moduleSfrSections || {});
+
+    if (moduleSfrSectionIds.includes(sfrUUID)) {
+      return hasDuplicateCcIdInSections(moduleSfrSectionIds, normalizedCcId);
+    }
+
+    const basePPSfrSectionIds = getCurrentBasePPSfrSectionIds();
+
+    if (basePPSfrSectionIds.length > 0) {
+      return hasDuplicateCcIdInSections(basePPSfrSectionIds, normalizedCcId);
+    }
+
+    return hasDuplicateCcIdInSections(Object.keys(sfrSections || {}), normalizedCcId);
+  };
+
+  /**
+   * Checks whether another component already uses the supplied CC-ID.
+   * @param {string} ccID candidate CC-ID
+   * @returns {boolean}
+   */
+  const hasDuplicateCcId = (ccID) => {
+    const normalizedCcId = normalizeCcId(ccID);
+
+    if (!normalizedCcId) {
+      return false;
+    }
+
+    if (ppType === "Module") {
+      return hasDuplicateCcIdInModule(normalizedCcId);
+    }
+
+    return hasDuplicateCcIdInSections(Object.keys(sfrSections || {}), normalizedCcId);
+  };
+
+  /**
+   * Handles component ID blur with CC-ID uniqueness validation.
+   * @param event the updated value
+   * @param type the component id by type
+   */
+  const handleComponentIdBlur = (event, type) => {
+    const updatedValue = event.target.value;
+
+    if (type === "cc_id" && hasDuplicateCcId(updatedValue)) {
+      handleSnackBarError(`CC-ID "${updatedValue}" already exists. CC-IDs must be unique.`);
+      event.target.value = component.cc_id || "";
+      return;
+    }
+
+    handleSnackbarTextUpdates(updateComponentIdByType, event, type);
+  };
+  /**
+   * Updates the xml_id directly from user input
+   * @param event the dom event
+   */
+  const updateXmlId = (event) => {
+    const updatedXmlId = event.target.value;
+
+    updateComponentItems({ xml_id: updatedXmlId });
+  };
+  /**
+   * Updates whether a modified SFR should export as no-change.
+   * @param event the checkbox change event
+   */
+  const updateNoChange = (event) => {
+    const checked = event.target.checked;
+
+    updateComponentItems({
+      noChange: checked,
+      xPathDetails: updateNoChangeXPathDetails(component.xPathDetails, checked),
+    });
+  };
+  /**
+   * Moves the component and generated element references in technical decision affects metadata.
+   * @param oldComponent the previous component
+   * @param newComponent the updated component
+   */
+  const moveTechnicalDecisionReferences = (oldComponent, newComponent) => {
+    const updatedHistory = moveTechnicalDecisionComponentReferences(technicalDecisionHistory, oldComponent, newComponent);
+
+    if (!areTechnicalDecisionHistoriesEqual(technicalDecisionHistory, updatedHistory)) {
+      dispatch(
+        updateMetaDataItem({
+          type: "technicalDecisionHistory",
+          item: updatedHistory,
+        })
+      );
+    }
   };
 
   // Components
@@ -134,20 +309,14 @@ function SfrComponent() {
       collapseHandler={handleSetOpenSfrComponent}
       body={
         <div className='min-w-full mt-4 justify-items-left grid grid-flow-row auto-rows-max'>
-          <div className='w-screen sm:max-w-screen-sm md:max-w-screen-sm lg:max-w-screen-lg grid grid-flow-col columns-2 gap-4 p-2 px-4'>
+          <div className='w-screen sm:max-w-screen-sm md:max-w-screen-sm lg:max-w-screen-lg grid grid-cols-2 gap-4 p-2 px-4'>
             <FormControl fullWidth>
               <Tooltip
                 arrow
                 id={"ccIDTooltip"}
                 title={`Full ID of the SFR Component. Should follow the following format: 
-                                     (3 letter Family)_(3 Letter Class)_(Optional EXT).(Number representing 
-                                     the component)`}>
-                <TextField
-                  key={component.cc_id}
-                  label='CC-ID'
-                  onBlur={(event) => handleSnackbarTextUpdates(updateComponentIdByType, event, "cc_id")}
-                  defaultValue={component.cc_id}
-                />
+                                     (Class Name)_(Family Name)_(Optional EXT).(Component Number)`}>
+                <TextField key={component.cc_id} label='CC-ID' onBlur={(event) => handleComponentIdBlur(event, "cc_id")} defaultValue={component.cc_id} />
               </Tooltip>
             </FormControl>
             <FormControl fullWidth>
@@ -161,23 +330,50 @@ function SfrComponent() {
               </Tooltip>
             </FormControl>
           </div>
-          <div className='w-screen sm:max-w-screen-sm md:max-w-screen-sm lg:max-w-screen-lg grid grid-flow-col columns-2 gap-4 p-2 px-4'>
+          <div
+            className={`w-screen sm:max-w-screen-sm md:max-w-screen-sm lg:max-w-screen-lg grid ${
+              component.modifiedSfr ? "grid-cols-3" : "grid-cols-2"
+            } gap-4 p-2 px-4`}>
             <FormControl fullWidth>
               <Tooltip arrow title={"Optional iteration abbreviation (Used in ID creation)."} id={"iterationIDTooltip"}>
                 <TextField
                   key={component.iteration_id}
                   label='Iteration ID'
-                  onBlur={(event) => handleSnackbarTextUpdates(updateComponentIdByType, event, "iteration_id")}
+                  onBlur={(event) => handleComponentIdBlur(event, "iteration_id")}
                   defaultValue={component.iteration_id}
                 />
               </Tooltip>
             </FormControl>
             <FormControl fullWidth>
               <Tooltip arrow title={"ID that will be used when the document is translated to XML."} id={"xmlIDTooltip"}>
-                <TextField key={component.xml_id} label='XML ID' defaultValue={component.xml_id} />
+                <TextField
+                  key={component.xml_id}
+                  label='XML ID'
+                  onBlur={(event) => handleSnackbarTextUpdates(updateXmlId, event)}
+                  defaultValue={component.xml_id}
+                />
               </Tooltip>
             </FormControl>
+            {component.modifiedSfr && (
+              <div className='w-full min-h-[46px] px-2 border-[1px] border-[#bdbdbd] rounded-[4px] flex items-center'>
+                <div style={grayTitle}>
+                  <Box display='flex' alignItems={"center"}>
+                    <Tooltip title={"Export this modified SFR with a <no-change/> directive."} id={"modifiedSfrNoChangeTooltip"} arrow>
+                      <Checkbox checked={noChangeChecked} onChange={updateNoChange} sx={checkboxPrimaryNoPad} size='small' />
+                    </Tooltip>
+                    <Typography sx={{ fontSize: 13, paddingLeft: 0.5, paddingTop: 0.1 }}>No Change</Typography>
+                  </Box>
+                </div>
+              </div>
+            )}
           </div>
+          {showNoChangeExportNotice && (
+            <div className='w-screen sm:max-w-screen-sm md:max-w-screen-sm lg:max-w-screen-lg px-4 pb-2'>
+              <Alert severity='warning' sx={{ py: 0, alignItems: "center", fontSize: 13 }}>
+                If export detects no modified SFR changes, this SFR will be omitted. Check No Change to export a no-change declaration.
+              </Alert>
+            </div>
+          )}
           {component.modifiedSfr && (
             <div className='w-screen sm:max-w-screen-sm md:max-w-screen-sm lg:max-w-screen-lg p-2 px-4 mb-[-16px]'>
               <FromPackage />
@@ -196,6 +392,9 @@ function SfrComponent() {
                 />
               </FormControl>
             )}
+            <div className='p-2 px-4'>
+              <TechnicalDecisionAffectsDropdown refId={component.cc_id} selectId={`${componentUUID || "sfr-component"}-technical-decision`} />
+            </div>
             {EditorCard("consistencyRationale")}
           </div>
           <div className='w-screen sm:max-w-screen-sm md:max-w-screen-sm lg:max-w-screen-lg'>

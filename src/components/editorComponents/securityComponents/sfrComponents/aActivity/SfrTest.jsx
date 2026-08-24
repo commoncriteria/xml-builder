@@ -2,7 +2,7 @@
 import PropTypes from "prop-types";
 import { useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
-import { IconButton, Tooltip } from "@mui/material";
+import { IconButton, Tooltip, Typography } from "@mui/material";
 import AddCircleRoundedIcon from "@mui/icons-material/AddCircleRounded";
 import DeleteForeverRoundedIcon from "@mui/icons-material/DeleteForeverRounded";
 import store from "../../../../../app/store.js";
@@ -13,6 +13,10 @@ import {
   updateEvaluationActivities,
   updateManagementFunctionItems,
 } from "../../../../../utils/securityComponents.jsx";
+import {
+  convertDependenciesToStoredIds,
+  getValidDependencyDropdownSelections,
+} from "../../../../../utils/evaluationActivityDependencies.js";
 import CardTemplate from "../../CardTemplate.jsx";
 import MultiSelectDropdown from "../../MultiSelectDropdown.jsx";
 import SfrTestList from "./SfrTestList.jsx";
@@ -28,17 +32,22 @@ function SfrTest(props) {
   SfrTest.propTypes = {
     test: PropTypes.object.isRequired,
     dependencyMenuOptions: PropTypes.object.isRequired,
+    dependencyMap: PropTypes.object,
     isManagementFunction: PropTypes.bool,
     testUUID: PropTypes.string.isRequired,
     handleNewTestList: PropTypes.func.isRequired,
+    testNumberPrefix: PropTypes.string,
     testListUUID: PropTypes.string,
+    testListDepends: PropTypes.array,
+    dependencyDisabled: PropTypes.bool,
   };
 
   // Constants
   const { elementUUID, element, activities, evaluationActivitiesUI, managementFunctionUI } = useSelector((state) => state.sfrWorksheetUI);
   const { managementFunctions } = element;
   const { rowIndex } = managementFunctionUI;
-  const { dependencyMap, selectedUUID } = evaluationActivitiesUI;
+  const { dependencyMap: uiDependencyMap, selectedUUID } = evaluationActivitiesUI;
+  const dependencyMap = props.dependencyMap || uiDependencyMap;
   const { secondary, icons } = useSelector((state) => state.styling);
   const [selected, setSelected] = useState([]);
   const uuid = props.isManagementFunction ? elementUUID : selectedUUID;
@@ -111,27 +120,15 @@ function SfrTest(props) {
    */
   const handleSelect = (title, selections) => {
     try {
+      if (props.dependencyDisabled) return;
+
       const { isManagementFunction, testUUID, dependencyMenuOptions } = props;
 
-      const isValid = selections && activities?.hasOwnProperty(uuid) && dependencyMenuOptions;
+      const isValid = activities?.hasOwnProperty(uuid) && dependencyMenuOptions;
 
       if ((isManagementFunction && dependencyMenuOptions) || isValid) {
-        let validSelections = [];
-        const menuProperties = ["Platforms", "Selectables", "ComplexSelectablesEA"];
-
-        selections?.forEach((selection) => {
-          menuProperties.forEach((menuProperty) => {
-            if (
-              dependencyMenuOptions.hasOwnProperty(menuProperty) &&
-              dependencyMenuOptions[menuProperty].includes(selection) &&
-              !validSelections.includes(selection)
-            ) {
-              validSelections.push(selection);
-            }
-          });
-        });
-
-        const newSelections = [...new Set(convertDependenciesToUUID(validSelections))];
+        const validSelections = getValidDependencyDropdownSelections(selections, dependencyMap, dependencyMenuOptions);
+        const newSelections = [...new Set(convertDependenciesToStoredIds(validSelections, dependencyMap))];
         let dependencies = deepCopy(props.test.dependencies);
 
         if (JSON.stringify(dependencies) !== JSON.stringify(newSelections)) {
@@ -169,7 +166,7 @@ function SfrTest(props) {
               console.error(`Test with UUID ${testUUID} not found.`);
             }
           }
-          setSelected(selections);
+          setSelected(validSelections);
         }
       }
     } catch (e) {
@@ -257,29 +254,8 @@ function SfrTest(props) {
   const updateDependencyDropdown = (selected) => {
     const { dependencyMenuOptions, test } = props;
 
-    if (test && test.hasOwnProperty("dependencies")) {
-      let newSelectables = [...new Set(convertDependenciesFromUUID(test.dependencies))];
-      let validSelections = [];
-
-      newSelectables?.forEach((selection) => {
-        const isNewSelection = !validSelections.includes(selection);
-        const isValidPlatform = dependencyMenuOptions.hasOwnProperty("Platforms") && dependencyMenuOptions.Platforms.includes(selection) && isNewSelection;
-        const isValidSelectables =
-          dependencyMenuOptions.hasOwnProperty("Selectables") && dependencyMenuOptions.Selectables.includes(selection) && isNewSelection;
-        const isValidComplexSelectablesEA =
-          dependencyMenuOptions.hasOwnProperty("ComplexSelectablesEA") && dependencyMenuOptions.ComplexSelectablesEA.includes(selection) && isNewSelection;
-
-        // Add new valid selections
-        if (isValidPlatform) {
-          validSelections.push(selection);
-        }
-        if (isValidSelectables) {
-          validSelections.push(selection);
-        }
-        if (isValidComplexSelectablesEA) {
-          validSelections.push(selection);
-        }
-      });
+    if (test) {
+      const validSelections = getValidDependencyDropdownSelections(getDropdownDependencies(test), dependencyMap, dependencyMenuOptions);
 
       if (JSON.stringify(validSelections) !== JSON.stringify(selected)) {
         setSelected(validSelections);
@@ -287,62 +263,12 @@ function SfrTest(props) {
     }
   };
   /**
-   * Converts the dependencies to uuid
-   * @param dependencies the dependencies
+   * Gets test dependencies.
+   * @param test the test
    * @returns {*[]}
    */
-  const convertDependenciesToUUID = (dependencies) => {
-    let convertedDependencies = [];
-    try {
-      if (dependencies && dependencies.length > 0) {
-        dependencies.forEach((dependency) => {
-          if (dependencyMap && dependencyMap.hasOwnProperty("selectablesToUUID")) {
-            let newDependency = dependency;
-
-            if (dependencyMap.selectablesToUUID.hasOwnProperty(dependency)) {
-              newDependency = dependencyMap.selectablesToUUID[dependency];
-            }
-            if (!convertedDependencies.includes(newDependency)) {
-              convertedDependencies.push(newDependency);
-            }
-          }
-        });
-      }
-    } catch (e) {
-      console.log(e);
-      handleSnackBarError(e);
-    }
-    return convertedDependencies;
-  };
-  /**
-   * Converts the dependencies from uuid
-   * @param dependencies the dependencies
-   * @returns {*[]}
-   */
-  const convertDependenciesFromUUID = (dependencies) => {
-    let convertedDependencies = [];
-
-    try {
-      if (dependencies && dependencies.length > 0) {
-        dependencies.forEach((dependency) => {
-          if (dependencyMap && dependencyMap.hasOwnProperty("uuidToSelectables")) {
-            let newDependency = dependency.valueOf();
-
-            if (dependencyMap.uuidToSelectables.hasOwnProperty(dependency)) {
-              newDependency = dependencyMap.uuidToSelectables[dependency];
-            }
-            if (!convertedDependencies.includes(newDependency)) {
-              convertedDependencies.push(newDependency);
-            }
-          }
-        });
-      }
-    } catch (e) {
-      console.log(e);
-      handleSnackBarError(e);
-    }
-
-    return convertedDependencies;
+  const getDropdownDependencies = (test) => {
+    return test?.dependencies || [];
   };
   /**
    * Gets the nested test lists
@@ -355,6 +281,7 @@ function SfrTest(props) {
    * The TestIndex value
    */
   const TestIndex = useMemo(() => getTestIndex(), [props.testListUUID, props.testUUID, JSON.stringify(activityData)]);
+  const testNumber = props.testNumberPrefix ? `${props.testNumberPrefix}.${TestIndex + 1}` : `${TestIndex + 1}`;
 
   /**
    * The TestEditor component
@@ -388,15 +315,25 @@ function SfrTest(props) {
 
     return (
       <div>
-        <TipTapEditor
-          className='w-full'
-          contentType={"term"}
-          title={"objective"}
-          index={TestIndex}
-          uuid={uuid}
-          text={props.test.objective || ""}
-          handleTextUpdate={(event) => handleTextUpdate(event, "objective")}
-        />
+        {/* Test Intro Text card */}
+        <div className='border border-[#BDBDBD] rounded-lg bg-gray-50 mb-3 overflow-hidden'>
+          <div className='flex items-center px-3 py-1.5 border-b border-[#BDBDBD] bg-white'>
+            <Typography style={{ fontSize: "11px", fontWeight: 700, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+              Test Intro Text
+            </Typography>
+          </div>
+          <div className='mb-[-8px]'>
+            <TipTapEditor
+              className='w-full'
+              contentType={"term"}
+              title={"objective"}
+              index={TestIndex}
+              uuid={uuid}
+              text={props.test.objective || ""}
+              handleTextUpdate={(event) => handleTextUpdate(event, "objective")}
+            />
+          </div>
+        </div>
         <div className='mt-2 mb-[-8px]'>
           {nestedTestLists.length > 0 ? (
             nestedTestLists.map(([testListUUID, testList]) => (
@@ -404,9 +341,13 @@ function SfrTest(props) {
                 key={"TestListSection_" + testListUUID}
                 testListDescription={testList.description || ""}
                 testListConclusion={testList.conclusion}
+                testListDependencies={testList.dependencies || []}
                 testUUIDs={testList.testUUIDs}
+                testListDepends={testList.depends || []}
+                dependencyMap={dependencyMap}
                 dependencyDropdown={props.dependencyMenuOptions}
                 isManagementFunction={props.isManagementFunction}
+                parentTestNumber={testNumber}
                 testListUUID={testListUUID}
                 handleNewTestList={props.handleNewTestList}
               />
@@ -429,19 +370,28 @@ function SfrTest(props) {
             <div className='mb-4' />
           )}
         </div>
-        {/* Test Conclusion RTE */}
-        <TipTapEditor
-          className='w-full'
-          contentType={"term"}
-          title={"testConclusion"}
-          index={TestIndex}
-          uuid={uuid}
-          text={props.test.conclusion || ""}
-          handleTextUpdate={(event) => handleTextUpdate(event, "conclusion")}
-        />
+        {/* Test Conclusion Text card */}
+        <div className='border border-[#BDBDBD] rounded-lg bg-gray-50 mt-3 overflow-hidden'>
+          <div className='flex items-center px-3 py-1.5 border-b border-[#BDBDBD] bg-white'>
+            <Typography style={{ fontSize: "11px", fontWeight: 700, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+              Test Conclusion Text
+            </Typography>
+          </div>
+          <div className='mb-[-8px]'>
+            <TipTapEditor
+              className='w-full'
+              contentType={"term"}
+              title={"testConclusion"}
+              index={TestIndex}
+              uuid={uuid}
+              text={props.test.conclusion || ""}
+              handleTextUpdate={(event) => handleTextUpdate(event, "conclusion")}
+            />
+          </div>
+        </div>
       </div>
     );
-  }, [props.test.objective, props.test.conclusion, props.testUUID, JSON.stringify(activityData)]);
+  }, [props.test.objective, props.test.conclusion, props.testUUID, testNumber, JSON.stringify(activityData)]);
 
   // Return Method
   return (
@@ -451,9 +401,9 @@ function SfrTest(props) {
         <div className='w-full p-0 m-0 my-[-6px]'>
           <span className='flex justify-stretch min-w-full'>
             <div className='flex justify-center w-full pl-4'>
-              <label className='resize-none font-bold text-[13px] p-0 m-0 text-accent pr-1 mt-[6px]'>{`Test ${TestIndex + 1}`}</label>
+              <label className='resize-none font-bold text-[13px] p-0 m-0 text-accent pr-1 mt-[6px]'>{`Test ${testNumber}`}</label>
               <IconButton variant='contained' sx={{ marginTop: "-8px", margin: 0, padding: 0 }} onClick={() => handleDeleteTest()}>
-                <Tooltip title={`Delete Test ${TestIndex + 1}`} id={"deleteTestTooltip" + (TestIndex + 1)}>
+                <Tooltip title={`Delete Test ${testNumber}`} id={"deleteTestTooltip" + testNumber}>
                   <DeleteForeverRoundedIcon htmlColor={secondary} sx={icons.small} />
                 </Tooltip>
               </IconButton>
@@ -468,8 +418,11 @@ function SfrTest(props) {
               selectionOptions={props.dependencyMenuOptions}
               selections={selected}
               title={"Dependencies"}
+              tooltip={props.dependencyDisabled ? "Test dependency - disabled due to Test List dependency" : "Test dependency"}
               index={TestIndex}
               handleSelections={handleSelect}
+              allowEmptySelection
+              disabled={props.dependencyDisabled}
               style={"primary"}
             />
           </div>

@@ -2,6 +2,7 @@
 import { createSlice } from "@reduxjs/toolkit";
 import { deepCopy } from "../../utils/deepCopy.js";
 import { getComponentXmlID, getElementId, handleSnackBarError } from "../../utils/securityComponents.jsx";
+import { UI_REGEX } from "../../utils/regexUtils.js";
 
 const initialState = {
   openSfrWorksheet: false,
@@ -30,7 +31,11 @@ const initialState = {
       noTest: "",
       introduction: "",
       tss: "",
+      tssDependencies: [],
+      tssDependencySections: [],
       guidance: "",
+      guidanceDependencies: [],
+      guidanceDependencySections: [],
       testIntroduction: "",
       testClosing: "",
       testLists: {},
@@ -134,9 +139,21 @@ const initialState = {
       selections: {},
       useCases: {},
     },
+    selectionDependencyMap: {
+      byLabel: {},
+      byValue: {},
+    },
     useCaseUUID: null,
     elementSelections: {},
   },
+};
+
+const areEquivalentStateValues = (currentValue, updatedValue) => {
+  try {
+    return JSON.stringify(currentValue) === JSON.stringify(updatedValue);
+  } catch {
+    return currentValue === updatedValue;
+  }
 };
 
 export const sfrWorksheetUI = createSlice({
@@ -167,6 +184,11 @@ export const sfrWorksheetUI = createSlice({
         }
       }
 
+      // If evaluation activities were updated, refresh the selected and new activity dropdowns
+      if (Object.prototype.hasOwnProperty.call(itemMap, "activities")) {
+        initializeEvaluationActivityDropdowns(state.elementMaps, state.activities, state);
+      }
+
       // Update sfr worksheet validation
       sfrWorksheetValidation(state, itemMap);
     },
@@ -183,24 +205,24 @@ export const sfrWorksheetUI = createSlice({
           const newElementMaps = getElementMaps(componentUUID, newComponent);
 
           // Update the component
-          if (JSON.stringify(component) !== JSON.stringify(newComponent)) {
+          if (!areEquivalentStateValues(component, newComponent)) {
             state.component = newComponent;
 
             // Generate evaluation activities
             const newEvaluationActivities = newComponent.hasOwnProperty("evaluationActivities") ? newComponent.evaluationActivities : {};
-            const isNewEvaluationActivities = JSON.stringify(activities) !== JSON.stringify(newEvaluationActivities);
+            const isNewEvaluationActivities = !areEquivalentStateValues(activities, newEvaluationActivities);
             if (isNewEvaluationActivities) {
               state.activities = newEvaluationActivities;
             }
 
             // Generate element maps
-            const isNewElementMaps = JSON.stringify(elementMaps) !== JSON.stringify(newElementMaps);
+            const isNewElementMaps = !areEquivalentStateValues(elementMaps, newElementMaps);
             if (isNewElementMaps) {
               state.elementMaps = newElementMaps;
             }
 
             // Update all sfr options map
-            if (JSON.stringify(allSfrOptionsMap) !== JSON.stringify(newSfrOptions)) {
+            if (!areEquivalentStateValues(allSfrOptionsMap, newSfrOptions)) {
               state.allSfrOptionsMap = newSfrOptions;
             }
 
@@ -324,7 +346,11 @@ export const sfrWorksheetUI = createSlice({
     },
     RESET_TABULARIZE_UI: (state) => {
       const { tabularizeUI } = initialState;
-      state.tabularizeUI = deepCopy(tabularizeUI);
+      const tabularizeUUIDs = deepCopy(state.tabularizeUI.tabularizeUUIDs);
+      state.tabularizeUI = {
+        ...deepCopy(tabularizeUI),
+        tabularizeUUIDs,
+      };
     },
     RESET_EVALUATION_ACTIVITY_UI: (state) => {
       resetEvaluationActivitiesUI(state);
@@ -373,14 +399,14 @@ const initializeElements = (newComponent, newSfrOptions, elementMaps, state) => 
     const newElements = deepCopy(newComponent.elements);
 
     // Update the current elements
-    if (JSON.stringify(currentElements) !== JSON.stringify(newElements)) {
+    if (!areEquivalentStateValues(currentElements, newElements)) {
       state.currentElements = newElements;
     }
 
     // Update the element in the state
     if (elementUUID && newElements.hasOwnProperty(elementUUID)) {
       const newElement = deepCopy(newComponent.elements[elementUUID]);
-      const isNewElement = JSON.stringify(element) !== JSON.stringify(newElement);
+      const isNewElement = !areEquivalentStateValues(element, newElement);
 
       // Update the selected sfr element
       if (
@@ -389,7 +415,7 @@ const initializeElements = (newComponent, newSfrOptions, elementMaps, state) => 
         newSfrOptions.uuidMap.elements.hasOwnProperty(elementUUID)
       ) {
         const newSelectedSfrElement = newSfrOptions.uuidMap.elements[elementUUID].toUpperCase();
-        const isNewSelectedSfr = JSON.stringify(selectedSfrElement) !== JSON.stringify(newSelectedSfrElement);
+        const isNewSelectedSfr = !areEquivalentStateValues(selectedSfrElement, newSelectedSfrElement);
         const selected = isNewSelectedSfr ? newSelectedSfrElement : selectedSfrElement;
 
         // Update selected sfr element
@@ -497,7 +523,11 @@ const initializeManagementFunctions = (newElement, state) => {
           noTest: "",
           introduction: "",
           tss: "",
+          tssDependencies: [],
+          tssDependencySections: [],
           guidance: "",
+          guidanceDependencies: [],
+          guidanceDependencySections: [],
           testIntroduction: "",
           testClosing: "",
           testLists: {},
@@ -517,17 +547,17 @@ const initializeManagementFunctions = (newElement, state) => {
       }
 
       // Update management function activity
-      if (JSON.stringify(activity) !== JSON.stringify(row.evaluationActivity)) {
+      if (!areEquivalentStateValues(activity, row.evaluationActivity)) {
         state.managementFunctionUI.activity = deepCopy(row.evaluationActivity);
       }
 
       // Update management function note
-      if (JSON.stringify(note) !== JSON.stringify(row.note)) {
+      if (!areEquivalentStateValues(note, row.note)) {
         state.managementFunctionUI.note = deepCopy(row.note);
       }
 
       // Update management function text array
-      if (JSON.stringify(textArray) !== JSON.stringify(row.textArray)) {
+      if (!areEquivalentStateValues(textArray, row.textArray)) {
         state.managementFunctionUI.textArray = deepCopy(row.textArray);
       }
     }
@@ -540,7 +570,7 @@ const initializeManagementFunctions = (newElement, state) => {
     const { refIdOptions } = state;
     const newRefIdOptions = generateRefIdOptions(deepCopy(currentManagementFunctions.rows));
 
-    if (JSON.stringify(refIdOptions) !== JSON.stringify(newRefIdOptions)) {
+    if (!areEquivalentStateValues(refIdOptions, newRefIdOptions)) {
       state.refIdOptions = newRefIdOptions;
     }
   } else {
@@ -769,7 +799,7 @@ const validateDefinition = (currentDefinition) => {
     );
 
     // Validate
-    const { error, helperText } = getValidation(value, valueExists);
+    const { error, helperText } = getValidation(value, valueExists, type === "reqtext");
     def.error = error;
     def.helperText = helperText;
 
@@ -811,14 +841,15 @@ const validateId = (state, id) => {
  * Gets the tabularize validation
  * @param value the value
  * @param valueExists the boolean if value exists
+ * @param allowBlank true when an empty value is valid
  * @returns {{error: boolean, helperText: string}}
  */
-const getValidation = (value, valueExists) => {
+const getValidation = (value, valueExists, allowBlank = false) => {
   let error = false;
   let helperText = "";
 
   // Check for input values
-  if (value === null || value === undefined || value === "") {
+  if (!allowBlank && (value === null || value === undefined || value === "")) {
     error = true;
     helperText = "Field required";
   }
@@ -869,16 +900,19 @@ const updateEvaluationActivitiesUiItems = (updateMap, state) => {
   });
 };
 /**
- * Initializes the evaluation activities ui
+ * Initializes the evaluation activity dropdowns.
  * @param elementMaps the element maps
  * @param activities the activities
- * @param sfrSections the sfr sections
  * @param state the state
  */
-const initializeEvaluationActivitiesUI = (elementMaps, activities, sfrSections, state) => {
+const initializeEvaluationActivityDropdowns = (elementMaps, activities, state) => {
+  if (!elementMaps?.componentUUID || !elementMaps?.componentName) {
+    return;
+  }
+
   let updateMap = {};
-  const { sfrUUID, componentUUID, evaluationActivitiesUI } = state;
-  const { selectedEvaluationActivity, selectedUUID, dependencyMap, evaluationActivityDropdown, newEvaluationActivityDropdown } = evaluationActivitiesUI;
+  const { evaluationActivitiesUI } = state;
+  const { selectedEvaluationActivity, selectedUUID, evaluationActivityDropdown, newEvaluationActivityDropdown } = evaluationActivitiesUI;
   let mainDropdown = {
     Component: [],
     Elements: [],
@@ -916,7 +950,7 @@ const initializeEvaluationActivitiesUI = (elementMaps, activities, sfrSections, 
   sfrElementSort(newDropdown.Elements);
 
   // Generate main dropdown
-  if (mainDropdown && JSON.stringify(evaluationActivityDropdown) !== JSON.stringify(mainDropdown)) {
+  if (mainDropdown && !areEquivalentStateValues(evaluationActivityDropdown, mainDropdown)) {
     updateMap.evaluationActivityDropdown = mainDropdown;
 
     // Get newly selected if the name was changed
@@ -941,14 +975,31 @@ const initializeEvaluationActivitiesUI = (elementMaps, activities, sfrSections, 
   }
 
   // Generate new dropdown
-  if (newDropdown && JSON.stringify(newEvaluationActivityDropdown) !== JSON.stringify(newDropdown)) {
+  if (newDropdown && !areEquivalentStateValues(newEvaluationActivityDropdown, newDropdown)) {
     updateMap.newEvaluationActivityDropdown = newDropdown;
     updateMap.newSelectedEvaluationActivity = [];
   }
 
+  updateEvaluationActivitiesUiItems(updateMap, state);
+};
+/**
+ * Initializes the evaluation activities ui
+ * @param elementMaps the element maps
+ * @param activities the activities
+ * @param sfrSections the sfr sections
+ * @param state the state
+ */
+const initializeEvaluationActivitiesUI = (elementMaps, activities, sfrSections, state) => {
+  let updateMap = {};
+  const { sfrUUID, componentUUID, evaluationActivitiesUI } = state;
+  const { dependencyMap } = evaluationActivitiesUI;
+
+  // Generate evaluation activity dropdowns
+  initializeEvaluationActivityDropdowns(elementMaps, activities, state);
+
   // Generate dependency map
   const newDependencyMap = getDependencyMap(sfrUUID, componentUUID, sfrSections, elementMaps);
-  if (newDependencyMap && JSON.stringify(dependencyMap) !== JSON.stringify(newDependencyMap)) {
+  if (newDependencyMap && !areEquivalentStateValues(dependencyMap, newDependencyMap)) {
     updateMap.dependencyMap = newDependencyMap;
   }
 
@@ -1005,7 +1056,11 @@ const getElementMaps = (componentUUID, component) => {
       }
     });
   }
-  elementMap.elementNames.sort();
+
+  // Apply a natural + numeric sort
+  elementMap.elementNames.sort((a, b) => {
+    return a.localeCompare(b, undefined, { numeric: true, sensitivity: "base" });
+  });
   return elementMap;
 };
 /**
@@ -1095,8 +1150,8 @@ const getSelectablesMaps = (componentUUID, component, element) => {
  */
 const sortDropdown = (dropdown) => {
   return dropdown.sort((a, b) => {
-    const aMatch = a.match(/group-(\d+)/);
-    const bMatch = b.match(/group-(\d+)/);
+    const aMatch = a.match(UI_REGEX.groupNumber);
+    const bMatch = b.match(UI_REGEX.groupNumber);
 
     // If both strings have a numeric part, compare them numerically
     if (aMatch && bMatch) {
@@ -1197,7 +1252,7 @@ const updateSelectablesMap = (componentUUID, component, element, selectedSfrElem
   const { selectablesMap } = state;
 
   // Update selectables map
-  if (JSON.stringify(selectablesMap) !== JSON.stringify(newSelectableOptions)) {
+  if (!areEquivalentStateValues(selectablesMap, newSelectableOptions)) {
     state.selectablesMap = newSelectableOptions;
   }
 };

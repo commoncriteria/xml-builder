@@ -61,14 +61,8 @@
             ]
           },
           {
-            "uuid": "d68577d1-5737-4074-a700-764ca6a9189f",
-            "contentType": "editor",
-            "formItems": [
-              {
-                "uuid": "4fe05e05-3d61-47a6-b4c0-ccc1fcd29391",
-                "contentType": "terms"
-              }
-            ]
+            "uuid": "4fe05e05-3d61-47a6-b4c0-ccc1fcd29391",
+            "contentType": "useCases"
           }
         ]
       },
@@ -251,6 +245,7 @@
     },
     "4fe05e05-3d61-47a6-b4c0-ccc1fcd29391": {
       "title": "Use Cases",
+      "useCaseIntro": "",
       "open": false
     }
   },
@@ -277,15 +272,6 @@
           "title": "Compliant Targets of Evaluation",
           "id": "TOEdescription"
         }
-      },
-      "text": "",
-      "open": false
-    },
-    "d68577d1-5737-4074-a700-764ca6a9189f": {
-      "title": "TOE Usage",
-      "xmlTagMeta": {
-        "tagName": "sec:Use_Cases",
-        "attributes": {}
       },
       "text": "",
       "open": false

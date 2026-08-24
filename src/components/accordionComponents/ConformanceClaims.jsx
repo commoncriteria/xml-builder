@@ -52,6 +52,11 @@ function ConformanceClaims() {
   const packageClaimOptions = ["augmented", "conformant", "tailored"];
   const statusOptions = ["Configuration", "Conformance"];
   const ccErrataOptions = ["N/A", "v1.0", "v1.1"];
+  const packageClaimTitles = [
+    "Functional Package for Secure Shell Version 2.0",
+    "Functional Package for Transport Layer Security Version 2.1",
+    "Functional Package for X.509 Version 1.0",
+  ];
 
   // Methods
   /**
@@ -72,7 +77,7 @@ function ConformanceClaims() {
   const handleNewPackageClaimRow = () => {
     dispatch(
       CREATE_NEW_PACKAGE_CLAIM({
-        isFunctional: false,
+        isFunctional: null,
         conf: "conformant",
         text: "",
       })
@@ -238,6 +243,10 @@ function ConformanceClaims() {
         updatePackageClaim(index, value, type);
         break;
       }
+      case "text": {
+        updatePackageClaim(index, value, "text");
+        break;
+      }
       case "cc_errata": {
         dispatch(UPDATE_CC_ERRATA({ cc_errata: value }));
         break;
@@ -291,7 +300,7 @@ function ConformanceClaims() {
     return claims.map((claim, index) => {
       const { functionalPackage, conf, text } = claim;
       return {
-        functional: functionalPackage,
+        functional: text.includes("Functional"),
         assurance: functionalPackage === false ? true : false,
         conf: conf,
         text: text,
@@ -468,7 +477,6 @@ function ConformanceClaims() {
             handleMultiSelectDropdown={isClaimsTable ? handleMultiSelectDropdown : undefined}
             styling={requirementsStyling.title}
             tableInstructions={tableInstructions}
-            dropdownMenuOptions={isClaimsTable ? packageClaimOptions : undefined}
             multiSelectMenuOptions={isClaimsTable ? statusOptions : undefined}
           />
         </div>
@@ -566,9 +574,10 @@ function ConformanceClaims() {
         field: "text",
         editable: true,
         resizable: true,
-        type: "Editor",
+        type: "Select",
         flex: 2.5,
         headerTooltip: "The document title with an element that indicates the type of document listed",
+        dropdownMenuOptions: packageClaimTitles,
       },
       {
         headerName: "Package Conformance",
@@ -578,9 +587,28 @@ function ConformanceClaims() {
         type: "Select",
         flex: 1.0,
         headerTooltip: `Used to specify that the type of Package conformance: "augmented", "conformant", or "tailored."`,
+        dropdownMenuOptions: packageClaimOptions,
       },
-      { headerName: "Functional Package", field: "functional", editable: true, resizable: true, type: "Checkbox", flex: 0.75, headerTooltip: "" },
-      { headerName: "Assurance Package", field: "assurance", editable: true, resizable: true, type: "Checkbox", flex: 0.75, headerTooltip: "" },
+      {
+        headerName: "Functional Package",
+        field: "functional",
+        editable: true,
+        resizable: true,
+        type: "Checkbox",
+        flex: 0.75,
+        headerTooltip: "",
+        disabled: true,
+      },
+      {
+        headerName: "Assurance Package",
+        field: "assurance",
+        editable: true,
+        resizable: true,
+        type: "Checkbox",
+        flex: 0.75,
+        headerTooltip: "",
+        disabled: true,
+      },
     ];
     const tableInstructions = `This section lists the Functional and Assurance Packages that the document may
         conform to. Specify that the type of Package conformance: "augmented", "conformant", or "tailored."`;

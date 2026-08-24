@@ -66,6 +66,10 @@
     text-indent: -1.3em;
 }
 
+.preview ol[type="a"] > li {
+    list-style-type: lower-alpha;
+}
+
 /* Nested ordered lists */
 .preview ol ol li {
     list-style-type: lower-alpha; /* Use lowercase letters for second-level nested lists */
@@ -112,6 +116,41 @@
     --ag-row-height: 50px;
     --ag-row-border-width: 1px;
     --ag-row-border-color: #dedede;
+    --ag-selected-row-background-color: transparent;
+    --ag-row-hover-color: rgba(32, 178, 170, 0.08);
+}
+
+.ag-theme-quartz.ag-row-selection-highlight {
+    --ag-selected-row-background-color: rgba(217, 38, 169, 0.1);
+}
+
+.ag-theme-quartz .ag-row:not(.ag-row-selected) .ag-cell {
+    background-color: #ffffff;
+}
+
+.ag-theme-quartz.ag-row-selection-highlight .ag-row-selected .ag-cell {
+    background-color: rgba(217, 38, 169, 0.1) !important;
+    box-shadow: none;
+}
+
+.ag-theme-quartz.ag-row-selection-highlight .ag-row-selected {
+    box-shadow: none;
+}
+
+.ag-theme-quartz.ag-row-selection-highlight .ag-row-selected::before {
+    background-color: rgba(217, 38, 169, 0.1) !important;
+}
+
+.ag-theme-quartz.ag-no-row-selection-highlight .ag-row-selected .ag-cell {
+    box-shadow: none;
+}
+
+.ag-theme-quartz.ag-no-row-selection-highlight .ag-row-selected::before {
+    background-color: transparent !important;
+}
+
+.ag-theme-quartz.ag-no-row-selection-highlight .ag-cell-focus {
+    border-color: transparent !important;
 }
 
 .ag-center-cols-viewport {
@@ -171,6 +210,10 @@
     list-style-type: decimal;
     margin-left: 20px;
     padding-left: 0;
+}
+
+.tiptap ol[type="a"] > li {
+    list-style-type: lower-alpha;
 }
 
 .tiptap ul {
@@ -286,6 +329,21 @@
 
 .tiptap strong {
     font-weight: bold;
+}
+
+.tiptap .ctr-tag-chip {
+    display: inline-block;
+    background-color: #e8f4f8;
+    border: 1px solid #9ecfdf;
+    border-radius: 4px;
+    padding: 0 5px;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.82em;
+    color: #2a7fa5;
+    white-space: nowrap;
+    vertical-align: middle;
+    line-height: 1.6;
+    cursor: text;
 }
 
 .tiptap pre {

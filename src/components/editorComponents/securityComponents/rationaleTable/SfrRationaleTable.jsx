@@ -42,6 +42,7 @@ function SfrRationaleTable({ termUUID, index, uuid, title, sfrs, open, sfrMaps }
   const [selectedSfrs, setSelectedSfrs] = useState([]);
   const [sfrMenuOptions, setSfrMenuOptions] = useState([]);
   const [selectedSfr, setSelectedSfr] = useState("");
+  const [selectedPP, setSelectedPP] = useState("current"); // "current" = loaded PP
   const { secondary, icons } = useSelector((state) => state.styling);
   const [disabled, setDisabled] = useState(true);
   const [openDeleteDialog, setDeleteDialog] = useState(false);
@@ -79,6 +80,7 @@ function SfrRationaleTable({ termUUID, index, uuid, title, sfrs, open, sfrMaps }
       handleSnackBarError(e);
     }
   }, [termUUID, index, uuid, title, sfrs, open, sfrMaps]);
+
   useEffect(() => {
     if (selectedSfr && selectedSfr !== "" && sfrMenuOptions.includes(selectedSfr)) {
       setDisabled(false);
@@ -86,6 +88,11 @@ function SfrRationaleTable({ termUUID, index, uuid, title, sfrs, open, sfrMaps }
       setDisabled(true);
     }
   }, [selectedSfr]);
+
+  useEffect(() => {
+    // Reset SFR selection when PP changes
+    setSelectedSfr("");
+  }, [selectedPP]);
 
   // Methods
   /**
@@ -96,13 +103,18 @@ function SfrRationaleTable({ termUUID, index, uuid, title, sfrs, open, sfrMaps }
     let selected = event.target.value;
     setSelectedSfr(selected);
   };
+
   /**
    * Handles a new selection
    * @returns {Promise<void>}
    */
   const handleNewSelection = async () => {
     try {
-      const sfrUUID = sfrMaps.sfrNameMap[selectedSfr];
+      let sfrUUID;
+      let sfrName;
+
+      sfrUUID = sfrMaps.sfrNameMap[selectedSfr];
+      sfrName = selectedSfr;
 
       if (sfrUUID) {
         await dispatch(
@@ -113,7 +125,7 @@ function SfrRationaleTable({ termUUID, index, uuid, title, sfrs, open, sfrMaps }
             rationale: "",
             sfrUUID,
             sfrUUIDMap: sfrMaps.sfrUUIDMap,
-            sfrName: selectedSfr,
+            sfrName,
           })
         );
 
@@ -175,11 +187,16 @@ function SfrRationaleTable({ termUUID, index, uuid, title, sfrs, open, sfrMaps }
    * @returns {*}
    */
   const getSelectedSfrs = () => {
-    let sfrNames = sfrs?.map((sfr) => {
-      if (sfrMaps && sfrMaps.sfrUUIDMap && sfrMaps.sfrUUIDMap[sfr.uuid]) {
-        return sfrMaps.sfrUUIDMap[sfr.uuid];
-      }
-    });
+    let sfrNames = sfrs
+      ?.map((sfr) => {
+        if (sfr.uuid?.includes("::")) {
+          return sfr.name; // base PP SFR
+        }
+        if (sfrMaps?.sfrUUIDMap?.[sfr.uuid]) {
+          return sfrMaps.sfrUUIDMap[sfr.uuid];
+        }
+      })
+      .filter(Boolean);
 
     return sfrNames.sort();
   };
@@ -191,7 +208,8 @@ function SfrRationaleTable({ termUUID, index, uuid, title, sfrs, open, sfrMaps }
   const getAvailableSfrs = (selected) => {
     let availableSelections = [];
 
-    sfrMaps.sfrNames?.map((sfr) => {
+    // Use the loaded PP's SFR map
+    sfrMaps.sfrNames?.forEach((sfr) => {
       if (!availableSelections.includes(sfr) && !selected.includes(sfr)) {
         availableSelections.push(sfr);
       }
@@ -203,6 +221,7 @@ function SfrRationaleTable({ termUUID, index, uuid, title, sfrs, open, sfrMaps }
   };
 
   // Return Method
+
   return (
     <div className='border-2 rounded-lg'>
       <div className='mb-3 mx-4 mt-6'>
@@ -221,17 +240,16 @@ function SfrRationaleTable({ termUUID, index, uuid, title, sfrs, open, sfrMaps }
               </th>
               <th className='text-right px-4 py-2 w-[40%]'>
                 {open && (
-                  <div>
-                    <FormControl style={{ minWidth: "85%" }} required key={uuid + "-NewSfrTypeItem"}>
+                  <div className='flex items-center justify-end gap-2'>
+                    {/* SFR Selector */}
+                    <FormControl style={{ minWidth: "45%" }} required key={uuid + "-NewSfrTypeItem"}>
                       <InputLabel id='new-sfr-label'>Add SFR</InputLabel>
                       <Select value={selectedSfr} label='SFR Name' onChange={handleMenuSelections} sx={{ textAlign: "left" }}>
-                        {sfrMenuOptions.map((value) => {
-                          return (
-                            <MenuItem key={value} value={value}>
-                              {value}
-                            </MenuItem>
-                          );
-                        })}
+                        {sfrMenuOptions.map((value) => (
+                          <MenuItem key={value} value={value}>
+                            {value}
+                          </MenuItem>
+                        ))}
                       </Select>
                     </FormControl>
                     <span />
@@ -260,11 +278,12 @@ function SfrRationaleTable({ termUUID, index, uuid, title, sfrs, open, sfrMaps }
             <tbody>
               {sfrs?.map((sfr) => {
                 const currentUUID = sfr.uuid;
-                const isSfrMapValid = sfrMaps && sfrMaps.sfrUUIDMap && sfrMaps.sfrUUIDMap[currentUUID];
+                const isCurrentPP = sfrMaps?.sfrUUIDMap?.[currentUUID];
+                const isExternalPP = currentUUID?.includes("::");
 
-                if (isSfrMapValid) {
-                  const title = sfrMaps.sfrUUIDMap[currentUUID];
-                  const rationale = sfr.rationale ? sfr.rationale : "";
+                if (isCurrentPP || isExternalPP) {
+                  const title = isCurrentPP ? sfrMaps.sfrUUIDMap[currentUUID] : sfr.name; // base PP SFRs store their display name in sfr.name
+                  const rationale = sfr.rationale || "";
 
                   return (
                     <RationaleItem

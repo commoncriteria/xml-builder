@@ -7,9 +7,15 @@ export const termsSlice = createSlice({
   name: "terms",
   initialState,
   reducers: {
+    UPDATE_USE_CASE_INTRO: (state, action) => {
+      const { uuid, newIntro } = action.payload;
+      if (state.hasOwnProperty(uuid)) {
+        state[uuid].useCaseIntro = newIntro;
+      }
+    },
     CREATE_TERMS_LIST: (state, action) => {
-      let newId = uuidv4();
-      let title = action.payload.title;
+      const newId = uuidv4();
+      const title = action.payload.title;
       if (!state.hasOwnProperty(newId)) {
         state[newId] = {
           title: title,
@@ -23,9 +29,9 @@ export const termsSlice = createSlice({
       }
     },
     UPDATE_TERMS_LIST_TITLE: (state, action) => {
-      let title = action.payload.title;
-      let uuid = action.payload.uuid;
-      let newTitle = action.payload.newTitle;
+      const title = action.payload.title;
+      const uuid = action.payload.uuid;
+      const newTitle = action.payload.newTitle;
       if (state.hasOwnProperty(uuid)) {
         if (state[uuid].title === title) {
           state[uuid].title = newTitle;
@@ -33,8 +39,8 @@ export const termsSlice = createSlice({
       }
     },
     DELETE_TERMS_LIST: (state, action) => {
-      let title = action.payload.title;
-      let uuid = action.payload.uuid;
+      const title = action.payload.title;
+      const uuid = action.payload.uuid;
       if (state.hasOwnProperty(uuid)) {
         if (state[uuid].title === title) {
           delete state[uuid];
@@ -42,16 +48,24 @@ export const termsSlice = createSlice({
       }
     },
     COLLAPSE_TERMS_LIST: (state, action) => {
-      let uuid = action.payload.uuid;
-      let title = action.payload.title;
-      let open = action.payload.open;
+      const uuid = action.payload.uuid;
+      const title = action.payload.title;
+      const open = action.payload.open;
       if (state.hasOwnProperty(uuid)) {
         if (state[uuid].title === title) {
           state[uuid].open = open && typeof open === "boolean" ? open : !state[uuid].open;
           Object.keys(state[uuid]).map((key) => {
-            if (key !== "title" && key !== "open" && key !== "custom" && key !== "xmlTagMeta") {
-              let value = state[uuid][key];
-              let input = {
+            if (
+              key !== "title" &&
+              key !== "open" &&
+              key !== "custom" &&
+              key !== "xmlTagMeta" &&
+              key !== "useCaseIntro" &&
+              typeof value === "object" &&
+              value !== null
+            ) {
+              const value = state[uuid][key];
+              const input = {
                 payload: {
                   termUUID: uuid,
                   uuid: key,
@@ -66,64 +80,89 @@ export const termsSlice = createSlice({
       }
     },
     CREATE_TERM_ITEM: (state, action) => {
-      const { termUUID, tagMeta, name, definition } = action.payload;
+      const { termUUID, tagMeta, name, abbr, definition, useCaseConfig } = action.payload;
       const uuid = uuidv4();
 
       if (state.hasOwnProperty(termUUID)) {
-        let currentTermList = state[termUUID];
+        const currentTermList = state[termUUID];
 
         if (!currentTermList.hasOwnProperty(uuid)) {
           currentTermList[uuid] = {
             title: name ? name : "",
+            abbr: abbr ? abbr : "",
             definition: definition ? definition : "",
             open: true,
             ...(tagMeta ? { xmlTagMeta: tagMeta } : {}),
+            ...(useCaseConfig ? { useCaseConfig } : {}),
           };
         }
       }
       action.payload.uuid = uuid;
     },
     UPDATE_TERM_TITLE: (state, action) => {
-      let termUUID = action.payload.termUUID;
-      let uuid = action.payload.uuid;
-      let originalTitle = action.payload.title;
-      let newTitle = action.payload.newTitle;
+      const termUUID = action.payload.termUUID;
+      const uuid = action.payload.uuid;
+      const originalTitle = action.payload.title;
+      const newTitle = action.payload.newTitle;
       if (state.hasOwnProperty(termUUID)) {
-        let currentTermList = state[termUUID];
+        const currentTermList = state[termUUID];
         if (currentTermList.hasOwnProperty(uuid) && currentTermList[uuid].title === originalTitle) {
           currentTermList[uuid].title = newTitle;
         }
       }
     },
-    UPDATE_TERM_DEFINITION: (state, action) => {
-      let termUUID = action.payload.termUUID;
-      let uuid = action.payload.uuid;
-      let newDefinition = action.payload.newDefinition;
+    UPDATE_TERM_ABBR: (state, action) => {
+      const termUUID = action.payload.termUUID;
+      const uuid = action.payload.uuid;
+      const originalTitle = action.payload.title;
+      const newAbbr = action.payload.newAbbr;
       if (state.hasOwnProperty(termUUID)) {
-        let currentTermList = state[termUUID];
+        const currentTermList = state[termUUID];
+        if (currentTermList.hasOwnProperty(uuid) && currentTermList[uuid].title === originalTitle) {
+          currentTermList[uuid].abbr = newAbbr;
+          currentTermList[uuid].xmlTagMeta.attributes.abbr = newAbbr;
+        }
+      }
+    },
+    UPDATE_TERM_DEFINITION: (state, action) => {
+      const termUUID = action.payload.termUUID;
+      const uuid = action.payload.uuid;
+      const newDefinition = action.payload.newDefinition;
+      if (state.hasOwnProperty(termUUID)) {
+        const currentTermList = state[termUUID];
         if (currentTermList.hasOwnProperty(uuid)) {
           currentTermList[uuid].definition = newDefinition;
         }
       }
     },
-    DELETE_TERM_ITEM: (state, action) => {
-      let termUUID = action.payload.termUUID;
-      let title = action.payload.title;
-      let uuid = action.payload.uuid;
+    UPDATE_USE_CASE_CONFIG: (state, action) => {
+      const termUUID = action.payload.termUUID;
+      const uuid = action.payload.uuid;
       if (state.hasOwnProperty(termUUID)) {
-        let currentTermList = state[termUUID];
+        const currentTermList = state[termUUID];
+        if (currentTermList.hasOwnProperty(uuid)) {
+          currentTermList[uuid].useCaseConfig = action.payload.newUseCaseConfig;
+        }
+      }
+    },
+    DELETE_TERM_ITEM: (state, action) => {
+      const termUUID = action.payload.termUUID;
+      const title = action.payload.title;
+      const uuid = action.payload.uuid;
+      if (state.hasOwnProperty(termUUID)) {
+        const currentTermList = state[termUUID];
         if (currentTermList.hasOwnProperty(uuid) && currentTermList[uuid].title === title) {
           delete currentTermList[uuid];
         }
       }
     },
     DELETE_ALL_SECTION_TERMS: (state, action) => {
-      let termUUID = action.payload.termUUID;
-      let title = action.payload.title;
+      const termUUID = action.payload.termUUID;
+      const title = action.payload.title;
       if (state.hasOwnProperty(termUUID) && state[termUUID].title === title) {
         Object.entries(state[termUUID]).map(([key, value]) => {
           if (key !== "open" && key !== "title") {
-            let input = {
+            const input = {
               payload: {
                 title: value.title,
                 termUUID: termUUID,
@@ -136,12 +175,12 @@ export const termsSlice = createSlice({
       }
     },
     COLLAPSE_TERM_ITEM: (state, action) => {
-      let termUUID = action.payload.termUUID;
-      let uuid = action.payload.uuid;
-      let title = action.payload.title;
-      let open = action.payload.open;
+      const termUUID = action.payload.termUUID;
+      const uuid = action.payload.uuid;
+      const title = action.payload.title;
+      const open = action.payload.open;
       if (state.hasOwnProperty(termUUID) && state[termUUID].hasOwnProperty(uuid)) {
-        let term = state[termUUID][uuid];
+        const term = state[termUUID][uuid];
         if (term.title === title) {
           term.open = open !== null && typeof open === "boolean" ? open : !term.open;
         }
@@ -162,12 +201,15 @@ export const termsSlice = createSlice({
 
 // Action creators are generated for each case reducer function
 export const {
+  UPDATE_USE_CASE_INTRO,
+  UPDATE_USE_CASE_CONFIG,
   CREATE_TERMS_LIST,
   UPDATE_TERMS_LIST_TITLE,
   DELETE_TERMS_LIST,
   COLLAPSE_TERMS_LIST,
   CREATE_TERM_ITEM,
   UPDATE_TERM_TITLE,
+  UPDATE_TERM_ABBR,
   UPDATE_TERM_DEFINITION,
   DELETE_ALL_SECTION_TERMS,
   DELETE_TERM_ITEM,

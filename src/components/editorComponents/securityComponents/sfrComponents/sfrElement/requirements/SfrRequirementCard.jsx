@@ -11,6 +11,7 @@ import { removeTagEqualities } from "../../../../../../utils/fileParser.js";
 import {
   getElementValuesByType,
   getTabularizeDefinitionString,
+  getUsedSelectables,
   handleCryptoUpdate,
   handleSnackBarError,
   handleSnackBarSuccess,
@@ -482,7 +483,12 @@ function SfrRequirementCard(props) {
         case "selections": {
           let selectable = currentSection[index].selections ? currentSection[index].selections : "";
           let selectables = deepCopy(selectablesMap.dropdownOptions);
-          let selectionOptions = [...new Set([...selectables.groups, ...selectables.complexSelectables])];
+          const exclusion =
+            props.requirementType === "managementFunctions"
+              ? { excludeMgmtFnRowIndex: rowIndex, excludeMgmtFnItemIndex: index }
+              : { excludeTitleIndex: index };
+          const { usedIDs } = getUsedSelectables(element, exclusion);
+          let selectionOptions = [...new Set([...selectables.groups, ...selectables.complexSelectables])].filter((opt) => !usedIDs.has(opt));
 
           return (
             <div style={style} key={`element-title-section-${uuid}-${index}-${type}`}>

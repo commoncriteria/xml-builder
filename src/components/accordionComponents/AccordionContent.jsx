@@ -394,7 +394,7 @@ function AccordionContent({ title, uuid, index, open, metadata, handleMetaDataCo
                 )}
               </Tooltip>
             )}
-            <Tooltip title={`${!open ? `Open ` : `Close `} Section`} id={(!open ? `open` : `close`) + "SectionTooltip" + uuid}>
+            <Tooltip key={open ? "open" : "closed"} title={`${!open ? `Open ` : `Close `} Section`} id={(!open ? `open` : `close`) + "SectionTooltip" + uuid}>
               {open ? (
                 <ExpandCircleDownIcon
                   htmlColor={secondary}

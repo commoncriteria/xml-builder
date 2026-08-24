@@ -1,21 +1,487 @@
 // Imports
 import PropTypes from "prop-types";
 import { v4 as uuidv4 } from "uuid";
-import { useEffect, useState } from "react";
+import { memo, useCallback, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Card, CardBody } from "@material-tailwind/react";
 import { FormControl, IconButton, InputLabel, MenuItem, Select, TextField, Tooltip } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
 import RemoveIcon from "@mui/icons-material/Remove";
-import { UPDATE_SFR_SECTION_ELEMENT_SELECTABLE } from "../../../../../../reducers/SFRs/sfrSectionSlice.js";
+import { updateSnackBar } from "../../../../../../reducers/accordionPaneSlice.js";
+import { UPDATE_SFR_SECTION_ELEMENT, UPDATE_SFR_SECTION_ELEMENT_SELECTABLE } from "../../../../../../reducers/SFRs/sfrSectionSlice.js";
 import { deepCopy } from "../../../../../../utils/deepCopy.js";
 import { removeTagEqualities } from "../../../../../../utils/fileParser.js";
-import { handleSnackBarError, handleSnackBarSuccess, handleSnackbarTextUpdates, updateSfrSectionElement } from "../../../../../../utils/securityComponents.jsx";
+import { handleSnackBarError, handleSnackBarSuccess, updateSfrSectionElement } from "../../../../../../utils/securityComponents.jsx";
+import {
+  getSfrSectionsEvaluationActivityDependencyUsage,
+  removeEvaluationActivityDependenciesFromSfrSections,
+} from "../../../../../../utils/evaluationActivityDependencyRemoval.js";
+import { COMMON_REGEX, UI_REGEX } from "../../../../../../utils/regexUtils.js";
+import { applySelectionFormatting, getSelectionFormatting } from "../../../../../../utils/selectionFormatting.js";
 import CardTemplate from "../../../CardTemplate.jsx";
 import EditableTable from "../../../../EditableTable.jsx";
+import TipTapEditor from "../../../../TipTapEditor.jsx";
+import Modal from "../../../../../modalComponents/Modal.jsx";
+import DependencyDeleteWarning from "../../../../../modalComponents/DependencyDeleteWarning.jsx";
 import SfrComplexSelectableCard from "./SfrComplexSelectableCard.jsx";
 import SfrSelectionGroupCard from "./SfrSelectionGroupCard.jsx";
+
+/**
+ * Gets the default selectable/assignment ID base from the current element name.
+ * @param selectedSfrElement the selected SFR element name
+ * @param element the current element
+ * @param ppShortName the PP/package short name
+ * @returns {string}
+ */
+const getSelectableIDBase = (selectedSfrElement, element, ppShortName = "") => {
+  const elementName = selectedSfrElement && selectedSfrElement !== "" ? selectedSfrElement : element?.elementXMLID;
+  const formattedShortName = String(ppShortName || "").trim().replace(UI_REGEX.shortNameSeparator, "_").toLowerCase();
+  if (!elementName || elementName.trim() === "") {
+    return formattedShortName ? `${formattedShortName}_selection` : "selection";
+  }
+
+  const [base, ...iterations] = elementName.trim().replace(COMMON_REGEX.allWhitespace, "_").split("/");
+  const formattedBase = base.toLowerCase();
+  const formattedIterations = iterations.map((iteration) => iteration.toUpperCase());
+
+  return [formattedShortName, formattedBase, ...formattedIterations].filter(Boolean).join("_");
+};
+/**
+ * Gets existing selectable IDs across the full SFR state.
+ * @param sfrSections the SFR sections state
+ * @param currentSelectables the local selectables to include
+ * @returns {Set<string>}
+ */
+const getExistingSelectableIDs = (sfrSections, currentSelectables = {}) => {
+  const ids = new Set();
+  const addID = (id) => {
+    if (id && typeof id === "string") {
+      ids.add(id);
+    }
+  };
+
+  Object.values(sfrSections || {}).forEach((sfrSection) => {
+    Object.values(sfrSection || {}).forEach((component) => {
+      Object.values(component.elements || {}).forEach((elem) => {
+        Object.values(elem.selectables || {}).forEach((selectable) => addID(selectable.id));
+        Object.keys(elem.selectableGroups || {}).forEach(addID);
+      });
+    });
+  });
+
+  Object.values(currentSelectables || {}).forEach((selectable) => addID(selectable.id));
+
+  return ids;
+};
+/**
+ * Gets the next default selectable/assignment ID for the current element.
+ * @param selectedSfrElement the selected SFR element name
+ * @param element the current element
+ * @param sfrSections the SFR sections state
+ * @param currentSelectables the local selectables to include
+ * @param ppShortName the PP/package short name
+ * @returns {string}
+ */
+const getNextSelectableID = ({ selectedSfrElement, element, sfrSections, currentSelectables = element?.selectables || {}, ppShortName = "" }) => {
+  const baseID = getSelectableIDBase(selectedSfrElement, element, ppShortName);
+  const existingIDs = getExistingSelectableIDs(sfrSections, currentSelectables);
+  let counter = 1;
+  let nextID = `${baseID}_${counter}`;
+
+  while (existingIDs.has(nextID)) {
+    counter += 1;
+    nextID = `${baseID}_${counter}`;
+  }
+
+  return nextID;
+};
+/**
+ * Gets the component ID that already uses a selectable ID.
+ * @param sfrSections the SFR sections state
+ * @param selectableID the selectable ID to check
+ * @param ignoredSelectableUUID the selectable UUID to ignore
+ * @returns {string|null}
+ */
+const getDuplicateSelectableComponentCCID = (sfrSections, selectableID, ignoredSelectableUUID = null) => {
+  if (!selectableID || selectableID === "") {
+    return null;
+  }
+
+  let duplicateComponentCCID = null;
+
+  Object.values(sfrSections || {}).forEach((sfrSection) => {
+    Object.values(sfrSection || {}).forEach((component) => {
+      if (!component.elements) return;
+
+      Object.values(component.elements).forEach((elem) => {
+        Object.entries(elem.selectables || {}).forEach(([selKey, sel]) => {
+          if (selKey !== ignoredSelectableUUID && sel.id === selectableID) {
+            duplicateComponentCCID = component.cc_id || "unknown";
+          }
+        });
+
+        Object.keys(elem.selectableGroups || {}).forEach((key) => {
+          if (key === selectableID) {
+            duplicateComponentCCID = component.cc_id || "unknown";
+          }
+        });
+      });
+    });
+  });
+
+  return duplicateComponentCCID;
+};
+/**
+ * Checks the current element for a duplicate selectable/group ID.
+ * @param element the current element
+ * @param selectionID the selectable/group ID to check
+ * @param ignoredSelectableUUID the selectable UUID to ignore
+ * @param ignoredSelectableGroupID the selectable group ID to ignore
+ * @returns {boolean}
+ */
+const hasDuplicateSelectionIDInElement = (element, selectionID, ignoredSelectableUUID = null, ignoredSelectableGroupID = null) => {
+  if (!element || !selectionID || selectionID === "") {
+    return false;
+  }
+
+  const selectableDuplicate = Object.entries(element.selectables || {}).some(
+    ([uuid, selectable]) => uuid !== ignoredSelectableUUID && selectable.id === selectionID
+  );
+  const selectableGroupDuplicate = Object.keys(element.selectableGroups || {}).some((key) => key !== ignoredSelectableGroupID && key === selectionID);
+
+  return selectableDuplicate || selectableGroupDuplicate;
+};
+/**
+ * Gets the component ID that already uses a selectable group ID.
+ * @param sfrSections the SFR sections state
+ * @param selectableGroupID the selectable group ID to check
+ * @param ignoredElementUUID the element UUID that owns the current group
+ * @param ignoredSelectableGroupID the current selectable group ID to ignore
+ * @returns {string|null}
+ */
+const getDuplicateSelectableGroupComponentCCID = (sfrSections, selectableGroupID, ignoredElementUUID = null, ignoredSelectableGroupID = null) => {
+  if (!selectableGroupID || selectableGroupID === "") {
+    return null;
+  }
+
+  let duplicateComponentCCID = null;
+
+  Object.values(sfrSections || {}).forEach((sfrSection) => {
+    Object.values(sfrSection || {}).forEach((component) => {
+      if (!component.elements) return;
+
+      Object.entries(component.elements).forEach(([elemUUID, elem]) => {
+        Object.values(elem.selectables || {}).forEach((sel) => {
+          if (sel.id === selectableGroupID) {
+            duplicateComponentCCID = component.cc_id || "unknown";
+          }
+        });
+
+        Object.keys(elem.selectableGroups || {}).forEach((key) => {
+          const isIgnoredGroup = elemUUID === ignoredElementUUID && key === ignoredSelectableGroupID;
+          if (!isIgnoredGroup && key === selectableGroupID) {
+            duplicateComponentCCID = component.cc_id || "unknown";
+          }
+        });
+      });
+    });
+  });
+
+  return duplicateComponentCCID;
+};
+/**
+ * Gets the duplicate selectable/group ID error message.
+ * @param selectionID the duplicate selection ID
+ * @returns {string}
+ */
+const getDuplicateSelectionIDMessage = (selectionID) => `There is already an existing group/selectable with that name: "${selectionID}".`;
+/**
+ * Gets the SFR/component location for an element.
+ * @param sfrSections the SFR sections state
+ * @param elementUUID the element UUID to locate
+ * @param fallbackSfrUUID the current selected SFR UUID
+ * @param fallbackComponentUUID the current selected component UUID
+ * @returns {{sfrUUID: string|null, componentUUID: string|null}}
+ */
+const getElementLocation = (sfrSections, elementUUID, fallbackSfrUUID = null, fallbackComponentUUID = null) => {
+  if (fallbackSfrUUID && fallbackComponentUUID && sfrSections?.[fallbackSfrUUID]?.[fallbackComponentUUID]?.elements?.[elementUUID]) {
+    return {
+      sfrUUID: fallbackSfrUUID,
+      componentUUID: fallbackComponentUUID,
+    };
+  }
+
+  for (const [sectionUUID, sfrSection] of Object.entries(sfrSections || {})) {
+    for (const [componentID, component] of Object.entries(sfrSection || {})) {
+      if (component?.elements?.[elementUUID]) {
+        return {
+          sfrUUID: sectionUUID,
+          componentUUID: componentID,
+        };
+      }
+    }
+  }
+
+  return {
+    sfrUUID: fallbackSfrUUID,
+    componentUUID: fallbackComponentUUID,
+  };
+};
+/**
+ * Replaces selectable group references in a text array.
+ * @param textArray the text array
+ * @param oldID the original selectable group ID
+ * @param newID the new selectable group ID
+ * @returns {Array}
+ */
+const renameSelectableGroupIDInTextArray = (textArray, oldID, newID) => {
+  if (!Array.isArray(textArray)) {
+    return textArray;
+  }
+
+  return textArray.map((section) => {
+    if (!section || typeof section !== "object") {
+      return section;
+    }
+
+    const updatedSection = deepCopy(section);
+    if (updatedSection.selections === oldID) {
+      updatedSection.selections = newID;
+    }
+
+    return updatedSection;
+  });
+};
+/**
+ * Replaces selectable group references in selectable group content.
+ * @param group the selectable group content
+ * @param oldID the original selectable group ID
+ * @param newID the new selectable group ID
+ * @returns {Object}
+ */
+const renameSelectableGroupIDInGroupContent = (group, oldID, newID) => {
+  const updatedGroup = deepCopy(group);
+
+  if (Array.isArray(updatedGroup.groups)) {
+    updatedGroup.groups = updatedGroup.groups.map((item) => (item === oldID ? newID : item));
+  }
+
+  if (Array.isArray(updatedGroup.description)) {
+    updatedGroup.description = updatedGroup.description.map((item) => {
+      const updatedItem = deepCopy(item);
+      if (Array.isArray(updatedItem.groups)) {
+        updatedItem.groups = updatedItem.groups.map((selection) => (selection === oldID ? newID : selection));
+      }
+      return updatedItem;
+    });
+  }
+
+  return updatedGroup;
+};
+/**
+ * Renames a selectable group key and updates selectable group references.
+ * @param selectableGroups the selectable groups object
+ * @param oldID the original selectable group ID
+ * @param newID the new selectable group ID
+ * @returns {Object}
+ */
+const renameSelectableGroupIDInSelectableGroups = (selectableGroups, oldID, newID) => {
+  return Object.entries(selectableGroups || {}).reduce((updatedGroups, [key, group]) => {
+    const updatedKey = key === oldID ? newID : key;
+    updatedGroups[updatedKey] = renameSelectableGroupIDInGroupContent(group, oldID, newID);
+    return updatedGroups;
+  }, {});
+};
+/**
+ * Replaces selectable group references in management functions.
+ * @param managementFunctions the management functions object
+ * @param oldID the original selectable group ID
+ * @param newID the new selectable group ID
+ * @returns {Object}
+ */
+const renameSelectableGroupIDInManagementFunctions = (managementFunctions, oldID, newID) => {
+  const updatedManagementFunctions = deepCopy(managementFunctions);
+
+  if (Array.isArray(updatedManagementFunctions.rows)) {
+    updatedManagementFunctions.rows = updatedManagementFunctions.rows.map((row) => ({
+      ...row,
+      textArray: renameSelectableGroupIDInTextArray(row.textArray, oldID, newID),
+    }));
+  }
+
+  return updatedManagementFunctions;
+};
+/**
+ * Replaces selectable group references in tabularize table rows.
+ * @param tabularize the tabularize object
+ * @param oldID the original selectable group ID
+ * @param newID the new selectable group ID
+ * @returns {Object}
+ */
+const renameSelectableGroupIDInTabularize = (tabularize, oldID, newID) => {
+  const updatedTabularize = deepCopy(tabularize);
+
+  Object.values(updatedTabularize || {}).forEach((tabularizeItem) => {
+    if (Array.isArray(tabularizeItem.rows)) {
+      tabularizeItem.rows = tabularizeItem.rows.map((row) => {
+        const updatedRow = deepCopy(row);
+        Object.entries(updatedRow).forEach(([field, value]) => {
+          if (Array.isArray(value)) {
+            updatedRow[field] = renameSelectableGroupIDInTextArray(value, oldID, newID);
+          }
+        });
+        return updatedRow;
+      });
+    }
+  });
+
+  return updatedTabularize;
+};
+/**
+ * The add selectable/assignment form.
+ */
+const SelectableItemAddForm = memo(function SelectableItemAddForm({ element, selectedSfrElement, sfrSections, ppShortName, styling, icons, lightGray, onSubmit }) {
+  const [selectableType, setSelectableType] = useState("Selectable");
+  const [selectableID, setSelectableID] = useState("");
+  const [assignmentDescription, setAssignmentDescription] = useState("");
+  const [selectableDescription, setSelectableDescription] = useState("");
+  const currentDescription = selectableType === "Assignment" ? assignmentDescription : selectableDescription;
+  const selectableDisabled = currentDescription === "";
+
+  useEffect(() => {
+    setSelectableID(getNextSelectableID({ selectedSfrElement, element, sfrSections, ppShortName }));
+  }, [element, selectedSfrElement, sfrSections, ppShortName]);
+
+  const handleSubmit = () => {
+    const result = onSubmit({
+      selectableType,
+      selectableID,
+      description: currentDescription,
+    });
+
+    if (result?.success) {
+      setSelectableID(result.nextSelectableID || getNextSelectableID({ selectedSfrElement, element, sfrSections, ppShortName }));
+      setAssignmentDescription("");
+      setSelectableDescription("");
+      setSelectableType("Selectable");
+    } else if (result?.nextSelectableID !== undefined) {
+      setSelectableID(result.nextSelectableID);
+    }
+  };
+
+  return (
+    <span className='min-w-full inline-flex items-baseline'>
+      <div className='w-[17%]'>
+        <FormControl fullWidth color={styling.secondaryTextField}>
+          <InputLabel key='element-select-label'>Selectable Type</InputLabel>
+          <Select
+            value={selectableType}
+            label='Selectable Type'
+            autoWidth
+            onChange={(event) => setSelectableType(event.target.value)}
+            sx={{ textAlign: "left" }}>
+            <MenuItem sx={styling.primaryMenu} key={"Assignment"} value={"Assignment"}>
+              Assignment
+            </MenuItem>
+            <MenuItem sx={styling.primaryMenu} key={"Selectable"} value={"Selectable"}>
+              Selectable
+            </MenuItem>
+          </Select>
+        </FormControl>
+      </div>
+      <div className='w-[16%] pl-2'>
+        <FormControl fullWidth>
+          <TextField label='ID' color={styling.secondaryTextField} value={selectableID} onChange={(event) => setSelectableID(event.target.value)} />
+        </FormControl>
+      </div>
+      {selectableType === "Assignment" ? (
+        <div className='w-[61%] pl-2'>
+          <FormControl fullWidth>
+            <TextField
+              required
+              color={styling.secondaryTextField}
+              label='Assignment'
+              value={assignmentDescription}
+              onChange={(event) => setAssignmentDescription(event.target.value)}
+            />
+          </FormControl>
+        </div>
+      ) : (
+        <div className='w-[61%] pl-2'>
+          <FormControl fullWidth>
+            <TextField
+              required
+              color={styling.secondaryTextField}
+              label='Description'
+              value={selectableDescription}
+              onChange={(event) => setSelectableDescription(event.target.value)}
+            />
+          </FormControl>
+        </div>
+      )}
+      <div className='w-[6%]'>
+        <Tooltip title={`Add ${selectableType}`} id={"addSelectableTooltip"}>
+          <span>
+            <IconButton sx={{ marginBottom: "-36px" }} disabled={selectableDisabled} onClick={handleSubmit} variant='contained'>
+              <AddCircleIcon htmlColor={selectableDisabled ? lightGray : styling.secondaryColor} sx={icons.medium} />
+            </IconButton>
+          </span>
+        </Tooltip>
+      </div>
+    </span>
+  );
+});
+SelectableItemAddForm.propTypes = {
+  element: PropTypes.object.isRequired,
+  selectedSfrElement: PropTypes.string.isRequired,
+  sfrSections: PropTypes.object.isRequired,
+  ppShortName: PropTypes.string,
+  styling: PropTypes.object.isRequired,
+  icons: PropTypes.object.isRequired,
+  lightGray: PropTypes.string.isRequired,
+  onSubmit: PropTypes.func.isRequired,
+};
+
+const EDITABLE_CONFIG = { addColumn: false, addRow: false, removeColumn: false, removeRow: true };
+const COLUMN_DATA = [
+  {
+    headerName: "ID",
+    field: "id",
+    editable: true,
+    resizable: true,
+    type: "Editor",
+    flex: 1.5,
+    headerTooltip: "The ID of the selectable or assignment. New items default to the element name plus a counter and can be edited.",
+  },
+  {
+    headerName: "Text",
+    field: "text",
+    editable: true,
+    resizable: true,
+    type: "Editor",
+    flex: 2,
+    headerTooltip: "The value of the selectable or assignment.",
+  },
+  {
+    headerName: "Not Selectable",
+    field: "notSelectable",
+    editable: true,
+    resizable: true,
+    type: "Checkbox",
+    flex: 0.75,
+    headerTooltip: "Selections that must be viewable, but not selectable.",
+  },
+  {
+    headerName: "Exclusive",
+    field: "exclusive",
+    editable: true,
+    resizable: true,
+    type: "Checkbox",
+    flex: 0.75,
+    headerTooltip: "Selections that when selected, exclude all other selections.",
+  },
+];
 
 /**
  * The SfrSelectionGroups class that displays the selection groups per f-element
@@ -32,104 +498,32 @@ function SfrSelectionGroups(props) {
   // Constants
   const dispatch = useDispatch();
   const { icons, lightGray } = useSelector((state) => state.styling);
-  const { sfrSections } = useSelector((state) => state);
-  const { sfrUUID, componentUUID, elementUUID, element } = useSelector((state) => state.sfrWorksheetUI);
+  const sfrSections = useSelector((state) => state.sfrSections);
+  const ppShortName = useSelector((state) => state.accordionPane.metadata.xmlTagMeta?.attributes?.short || "");
+  const { sfrUUID, componentUUID, elementUUID, element, selectedSfrElement } = useSelector((state) => state.sfrWorksheetUI);
   const [collapse, setCollapse] = useState(true);
-  const [selectableType, setSelectableType] = useState("Selectable");
-  const [selectableID, setSelectableID] = useState("");
-  const [assignmentDescription, setAssignmentDescription] = useState("");
-  const [selectableDescription, setSelectableDescription] = useState("");
-  const [selectableDisabled, setSelectableDisabled] = useState(true);
   const [selectableGroupType, setSelectableGroupType] = useState("Selectable Group");
   const [selectableGroupID, setSelectableGroupID] = useState("");
   const [complexSelectableID, setComplexSelectableID] = useState("");
   const [selectableGroupDisabled, setSelectableGroupDisabled] = useState(true);
   const [rowData, setRowData] = useState([]);
   const [collapseInnerTableSection, setCollapseInnerTableSection] = useState(false);
-  const editable = { addColumn: false, addRow: false, removeColumn: false, removeRow: true };
-  const columnData = [
-    {
-      headerName: "ID",
-      field: "id",
-      editable: true,
-      resizable: true,
-      type: "Editor",
-      flex: 1.5,
-      headerTooltip: "The ID of the selectable or assignment. Selectables or assignments without IDs have one autogenerated upon export.",
-    },
-    {
-      headerName: "Text",
-      field: "text",
-      editable: false,
-      resizable: true,
-      type: "Editor",
-      flex: 2.5,
-      headerTooltip: "The value of the selectable or assignment.",
-    },
-    {
-      headerName: "Not Selectable",
-      field: "notSelectable",
-      editable: true,
-      resizable: true,
-      type: "Checkbox",
-      flex: 0.75,
-      headerTooltip: "Selections that must be viewable, but not selectable.",
-    },
-    {
-      headerName: "Exclusive",
-      field: "exclusive",
-      editable: true,
-      resizable: true,
-      type: "Checkbox",
-      flex: 0.75,
-      headerTooltip: "Selections that when selected, exclude all other selections.",
-    },
-  ];
+  const [dependencyDeleteWarning, setDependencyDeleteWarning] = useState(null);
+  const [selectableTextEditor, setSelectableTextEditor] = useState(null);
   const { styling } = props;
 
   // Use Effects
   useEffect(() => {
-    try {
-      generateRowData();
-    } catch (e) {
-      console.log(e);
-      handleSnackBarError(e);
-    }
-  }, [sfrSections, props]);
+    generateRowData();
+  }, [element, sfrSections, props]);
 
   // Methods
   /**
-   * Handles the selectable id
-   * @param event the event
-   */
-  const handleSelectableID = (event) => {
-    let trimmed = event.target.value.trim();
-    setSelectableID(trimmed);
-  };
-  /**
-   * Handles the assignment description
-   * @param event the event
-   */
-  const handleAssignmentDescription = (event) => {
-    let description = event.target.value;
-    setAssignmentDescription(description);
-    setSelectableDisabled(description !== "" ? false : true);
-  };
-  /**
-   * Handles the selectable description
-   * @param event the event
-   */
-  const handleSelectableDescription = (event) => {
-    let description = event.target.value;
-    setSelectableDescription(description);
-    setSelectableDisabled(description !== "" ? false : true);
-  };
-  /**
    * Handles deleting the selectable
-   * @param newData the new data
+   * @param _newData the new data (not needed for this function, but needed to conform for positional args )
    * @param selectedData the selected data
    */
-  const handleDeleteSelectable = (newData, selectedData) => {
+  const deleteSelectableRows = (selectedData) => {
     let selectables = element.selectables ? deepCopy(element.selectables) : {};
     let selectableGroups = element.selectableGroups ? deepCopy(element.selectableGroups) : {};
     let title = element.title ? deepCopy(element.title) : [];
@@ -143,22 +537,14 @@ function SfrSelectionGroups(props) {
       delete selectables[uuid];
 
       // Delete selection groups index that contain the selection uuid key
-      Object.values(selectableGroups).map((group) => {
-        let groups = group.groups;
-        if (groups && groups.includes(uuid)) {
-          let index = groups.findIndex((value) => uuid === value);
-          if (index !== -1) {
-            groups.splice(index, 1);
-          }
+      Object.values(selectableGroups).forEach((group) => {
+        if (group.groups && group.groups.includes(uuid)) {
+          group.groups = group.groups.filter((value) => value !== uuid);
         }
       });
 
       // Delete title assignment sections that contain the selection uuid key
-      title.map((section, index) => {
-        if (section.hasOwnProperty("assignment") && section.assignment === uuid) {
-          title.splice(index, 1);
-        }
-      });
+      title = title.filter((section) => !(section.hasOwnProperty("assignment") && section.assignment === uuid));
 
       // Delete management function sections that contain the selection uuid key
       if (
@@ -167,13 +553,8 @@ function SfrSelectionGroups(props) {
         element.hasOwnProperty("managementFunctions") &&
         element.managementFunctions.hasOwnProperty("rows")
       ) {
-        managementFunctions.rows.map((row) => {
-          let { textArray } = row;
-          textArray.map((section, index) => {
-            if (section.hasOwnProperty("assignment") && section.assignment === uuid) {
-              textArray.splice(index, 1);
-            }
-          });
+        managementFunctions.rows.forEach((row) => {
+          row.textArray = row.textArray.filter((section) => !(section.hasOwnProperty("assignment") && section.assignment === uuid));
         });
       }
     });
@@ -194,6 +575,45 @@ function SfrSelectionGroups(props) {
     updateSfrSectionElement(itemMap);
   };
   /**
+   * Handles deleting the selectable
+   * @param _newData the new data (not needed for this function, but needed to conform for positional args )
+   * @param selectedData the selected data
+   */
+  const handleDeleteSelectable = (_newData, selectedData = []) => {
+    const dependencyValues = selectedData.flatMap((row) => [row?.uuid, row?.id]).filter(Boolean);
+    const usage = getSfrSectionsEvaluationActivityDependencyUsage(sfrSections, dependencyValues);
+
+    if (usage.total > 0) {
+      setDependencyDeleteWarning({
+        selectedData,
+        dependencyValues,
+        usage,
+        selectedCount: selectedData.length,
+        itemLabel: selectedData.length > 1 ? `${selectedData.length} selectables` : `selectable "${selectedData[0]?.id || selectedData[0]?.uuid || ""}"`,
+      });
+      return false;
+    }
+
+    deleteSelectableRows(selectedData);
+  };
+  /**
+   * Closes the dependency delete warning.
+   */
+  const handleCloseDependencyDeleteWarning = () => {
+    setDependencyDeleteWarning(null);
+  };
+  /**
+   * Deletes pending selectable rows and removes any dependent evaluation activity relationships.
+   */
+  const handleSubmitDependencyDeleteWarning = () => {
+    if (!dependencyDeleteWarning) return;
+
+    deleteSelectableRows(dependencyDeleteWarning.selectedData);
+    removeEvaluationActivityDependenciesFromSfrSections(dependencyDeleteWarning.dependencyValues);
+    handleSnackBarSuccess(dependencyDeleteWarning.selectedCount > 1 ? "Selected Rows were Successfully Removed" : "Selected Row Successfully Removed");
+    handleCloseDependencyDeleteWarning();
+  };
+  /**
    * Handles the selectable checkbox selection
    * @param event the event
    * @param type the type
@@ -209,74 +629,81 @@ function SfrSelectionGroups(props) {
     }
   };
   /**
+   * Shows an immediate duplicate selectable/group ID snackbar error.
+   * @param selectionID the duplicate selection ID
+   */
+  const showDuplicateSelectionIDError = useCallback(
+    (selectionID) => {
+      dispatch(
+        updateSnackBar({
+          open: true,
+          message: getDuplicateSelectionIDMessage(selectionID),
+          severity: "error",
+          vertical: "bottom",
+          horizontal: "left",
+          autoHideDuration: 6000,
+        })
+      );
+    },
+    [dispatch]
+  );
+  /**
    * Handles the new selectable submit
+   * @param formData the add form data
    * @returns {Promise<void>}
    */
-  const handleNewSelectableSubmit = async () => {
-    if (selectableType === "Assignment" || selectableType === "Selectable") {
-      let selectables = element.selectables ? deepCopy(element.selectables) : {};
-      let idExists = false;
-      let descriptionExists = false;
-      Object.values(selectables).map((value) => {
-        let id = value.id;
-        let description = value.description;
-        if (selectableID !== "" && selectableID === id) {
-          idExists = true;
+  const handleNewSelectableSubmit = useCallback(
+    (formData) => {
+      const { selectableType, selectableID, description } = formData;
+
+      if (selectableType === "Assignment" || selectableType === "Selectable") {
+        let selectables = element.selectables ? deepCopy(element.selectables) : {};
+        const trimmedSelectableID = selectableID.trim();
+        const newSelectableID =
+          trimmedSelectableID !== ""
+            ? trimmedSelectableID
+            : getNextSelectableID({ selectedSfrElement, element, sfrSections, currentSelectables: selectables, ppShortName });
+        const duplicateIDExists =
+          hasDuplicateSelectionIDInElement(element, newSelectableID) || getDuplicateSelectableComponentCCID(sfrSections, newSelectableID);
+
+        if (duplicateIDExists) {
+          showDuplicateSelectionIDError(newSelectableID);
+          return { success: false };
         }
-        if (selectableType === "Selectable" && selectableDescription !== "" && selectableDescription === description) {
-          descriptionExists = true;
-        }
-        if (selectableType === "Assignment" && assignmentDescription !== "" && assignmentDescription === description) {
-          descriptionExists = true;
-        }
-      });
-      if (!idExists && !descriptionExists) {
+
         let uuid = uuidv4();
-        if (selectableType === "Selectable") {
-          selectables[uuid] = {
-            id: selectableID,
-            description: selectableDescription,
-            assignment: false,
-          };
-        } else if (selectableType === "Assignment") {
-          selectables[uuid] = {
-            id: selectableID,
-            description: assignmentDescription,
-            assignment: true,
-          };
-        }
+        selectables[uuid] = {
+          id: newSelectableID,
+          description,
+          assignment: selectableType === "Assignment",
+        };
 
         // Update sfr section element
         updateSfrSectionElement({
           selectables,
         });
 
-        // Reset Item Values
-        setSelectableID("");
-        setAssignmentDescription("");
-        setSelectableDescription("");
-        setSelectableType("Selectable");
-        setSelectableDisabled(true);
-
         // Update snackbar
         handleSnackBarSuccess(`${selectableType} Successfully Added`);
-      } else {
-        if (idExists) {
-          setSelectableID("");
-        }
-        if (descriptionExists) {
-          setSelectableDescription("");
-          setAssignmentDescription("");
-        }
+
+        return {
+          success: true,
+          nextSelectableID: getNextSelectableID({ selectedSfrElement, element, sfrSections, currentSelectables: selectables, ppShortName }),
+        };
       }
-    }
-  };
+
+      return { success: false, nextSelectableID: "" };
+    },
+    [element, selectedSfrElement, sfrSections, ppShortName, showDuplicateSelectionIDError]
+  );
   /**
    * Handles setting the selectable group type
    * @param event the event
    */
   const handleSetSelectableGroupType = (event) => {
-    setSelectableGroupType(event.target.value);
+    const newType = event.target.value;
+    setSelectableGroupType(newType);
+    setSelectableGroupDisabled(newType === "Complex Selectable" ? complexSelectableID.trim() === "" : selectableGroupID.trim() === "");
   };
   /**
    * Handles the complex selectable ID
@@ -301,81 +728,185 @@ function SfrSelectionGroups(props) {
    */
   const handleNewSelectableGroupSubmit = () => {
     let selectableGroups = element.selectableGroups ? deepCopy(element.selectableGroups) : {};
-    let idExists = false;
+    let newID = "";
 
     if (selectableGroupType && selectableGroupType === "Selectable Group") {
-      if (selectableGroups.hasOwnProperty(selectableGroupID)) {
-        idExists = true;
+      newID = selectableGroupID;
+      if (newID === "") {
+        handleSnackBarError(`${selectableGroupType} ID cannot be blank.`);
+        return;
       }
-      if (!idExists) {
-        selectableGroups[selectableGroupID] = {
-          onlyOne: false,
-          groups: [],
-        };
-
-        // Update sfr section element
-        updateSfrSectionElement({
-          selectableGroups,
-        });
-        setSelectableGroupDisabled(true);
-
-        // Update snackbar
-        handleSnackBarSuccess(`${selectableGroupType} Successfully Added`);
+      const duplicateIDExists = hasDuplicateSelectionIDInElement(element, newID) || getDuplicateSelectableGroupComponentCCID(sfrSections, newID);
+      if (duplicateIDExists) {
+        showDuplicateSelectionIDError(newID);
+        return;
       }
+
+      selectableGroups[newID] = {
+        onlyOne: false,
+        ...getSelectionFormatting(),
+        groups: [],
+      };
     } else if (selectableGroupType && selectableGroupType === "Complex Selectable") {
-      if (selectableGroups.hasOwnProperty(complexSelectableID)) {
-        idExists = true;
+      newID = complexSelectableID;
+      if (newID === "") {
+        handleSnackBarError(`${selectableGroupType} ID cannot be blank.`);
+        return;
       }
-      if (!idExists) {
-        selectableGroups[complexSelectableID] = {
-          exclusive: false,
-          notSelectable: false,
-          description: [],
-        };
+      const duplicateIDExists = hasDuplicateSelectionIDInElement(element, newID) || getDuplicateSelectableGroupComponentCCID(sfrSections, newID);
+      if (duplicateIDExists) {
+        showDuplicateSelectionIDError(newID);
+        return;
+      }
 
-        // Update sfr section element
-        updateSfrSectionElement({
-          selectableGroups,
-        });
-        setSelectableGroupDisabled(true);
-      }
+      selectableGroups[newID] = {
+        exclusive: false,
+        notSelectable: false,
+        description: [],
+      };
     }
+
+    updateSfrSectionElement({
+      selectableGroups,
+    });
+    setSelectableGroupDisabled(true);
     setSelectableGroupID("");
     setComplexSelectableID("");
 
     // Update snackbar
-    if (selectableGroupType && (selectableGroupType === "Selectable Group" || selectableGroupType === "Complex Selectable")) {
-      if (!idExists) {
-        handleSnackBarSuccess(`${selectableGroupType} Successfully Added`);
-      } else {
-        handleSnackBarError(`${selectableGroupType} Already Exists`);
-      }
-    }
+    handleSnackBarSuccess(`${selectableGroupType} Successfully Added`);
   };
   /**
-   * Handles the set selectable type
-   * @param event the event
+   * Handles updating a selectable group or complex selectable ID.
+   * @param oldID the current selectable group ID
+   * @param newID the updated selectable group ID
+   * @returns {{success: boolean, id: string}}
    */
-  const handleSetSelectableType = (event) => {
-    setSelectableType(event.target.value);
-  };
+  const handleSelectableGroupIDUpdate = useCallback(
+    (oldID, newID) => {
+      const selectableGroups = element.selectableGroups ? deepCopy(element.selectableGroups) : {};
+      const trimmedNewID = newID.trim();
+      const currentGroup = selectableGroups[oldID];
+      const groupType = currentGroup?.hasOwnProperty("groups") ? "Selectable Group" : "Complex Selectable";
+
+      if (!currentGroup) {
+        handleSnackBarError(`${groupType} "${oldID}" could not be found.`);
+        return { success: false, id: oldID };
+      }
+
+      if (trimmedNewID === oldID) {
+        return { success: false, id: oldID };
+      }
+
+      if (trimmedNewID === "") {
+        handleSnackBarError(`${groupType} ID cannot be blank.`);
+        return { success: false, id: oldID };
+      }
+
+      const duplicateIDExists =
+        hasDuplicateSelectionIDInElement(element, trimmedNewID, null, oldID) ||
+        getDuplicateSelectableGroupComponentCCID(sfrSections, trimmedNewID, elementUUID, oldID);
+      if (duplicateIDExists) {
+        showDuplicateSelectionIDError(trimmedNewID);
+        return { success: false, id: oldID };
+      }
+
+      const itemMap = {
+        selectableGroups: renameSelectableGroupIDInSelectableGroups(selectableGroups, oldID, trimmedNewID),
+        title: renameSelectableGroupIDInTextArray(element.title ? deepCopy(element.title) : [], oldID, trimmedNewID),
+      };
+
+      if (element.managementFunctions) {
+        itemMap.managementFunctions = renameSelectableGroupIDInManagementFunctions(element.managementFunctions, oldID, trimmedNewID);
+      }
+
+      if (element.tabularize) {
+        itemMap.tabularize = renameSelectableGroupIDInTabularize(element.tabularize, oldID, trimmedNewID);
+      }
+
+      const elementLocation = getElementLocation(sfrSections, elementUUID, sfrUUID, componentUUID);
+      if (!elementLocation.sfrUUID || !elementLocation.componentUUID || !elementUUID) {
+        handleSnackBarError("Unable to update selectable group ID because the current SFR element could not be located.");
+        return { success: false, id: oldID };
+      }
+
+      dispatch(
+        UPDATE_SFR_SECTION_ELEMENT({
+          sfrUUID: elementLocation.sfrUUID,
+          sectionUUID: elementLocation.componentUUID,
+          elementUUID,
+          itemMap,
+        })
+      );
+      handleSnackBarSuccess(`${groupType} ID Successfully Updated`);
+
+      return { success: true, id: trimmedNewID };
+    },
+    [componentUUID, dispatch, element, elementUUID, sfrSections, sfrUUID, showDuplicateSelectionIDError]
+  );
   /**
    * Handles the id text update
    * @param event the event
    */
   const handleIdTextUpdate = (event) => {
-    const { data, value } = event;
+    const { data, value, colDef } = event;
     const { uuid } = data;
     let selectables = element.selectables ? deepCopy(element.selectables) : {};
 
     if (selectables.hasOwnProperty(uuid)) {
-      selectables[uuid].id = value;
+      if (colDef.field === "text") {
+        // Strip the assignment prefix if present before storing
+        const rawValue = value.replace(UI_REGEX.assignmentStrongPrefix, "");
+        selectables[uuid].description = rawValue;
+      } else {
+        // Check that no other selectable across the full state uses this ID (regular and complex selectables)
+        const duplicateIDExists = hasDuplicateSelectionIDInElement(element, value, uuid) || getDuplicateSelectableComponentCCID(sfrSections, value, uuid);
+        if (duplicateIDExists) {
+          showDuplicateSelectionIDError(value);
+          throw getDuplicateSelectionIDMessage(value);
+        }
+        selectables[uuid].id = value;
+      }
 
       // Update selectables for the selected element
       updateSfrSectionElement({
         selectables,
       });
     }
+  };
+  /**
+   * Opens the rich text editor for selectable text cells.
+   * @param event the ag-grid cell double-click event
+   * @returns {boolean} false when the grid should not start inline editing
+   */
+  const handleSelectableTextCellDoubleClick = (event) => {
+    if (event.colDef?.field !== "text" || event.data?.assignment) {
+      return true;
+    }
+
+    setSelectableTextEditor({
+      uuid: event.data.uuid,
+      id: event.data.id,
+      text: applySelectionFormatting(element.selectables?.[event.data.uuid]?.description || "", element.selectables?.[event.data.uuid]),
+    });
+
+    return false;
+  };
+  /**
+   * Closes the selectable rich text editor modal.
+   */
+  const handleCloseSelectableTextEditor = () => {
+    setSelectableTextEditor(null);
+  };
+  /**
+   * Updates selectable text from the rich text editor.
+   * @param htmlContent the RTE html content
+   */
+  const handleSelectableRichTextUpdate = (htmlContent) => {
+    if (!selectableTextEditor?.uuid) return;
+
+    updateSelectable(selectableTextEditor.uuid, { description: htmlContent, ...getSelectionFormatting() });
+    setSelectableTextEditor((current) => (current ? { ...current, text: htmlContent } : current));
   };
   /**
    * Handles the collapse inner table section
@@ -394,10 +925,12 @@ function SfrSelectionGroups(props) {
         let updatedRows = [];
         Object.entries(element.selectables).forEach(([key, value]) => {
           const { id, notSelectable, exclusive } = value;
+          const description = value.assignment ? value.description : applySelectionFormatting(value.description, value);
           let row = {
             uuid: key,
             id: id ? id : "",
-            text: getTableText(value),
+            text: getTableText({ ...value, description }),
+            assignment: value.assignment || false,
             notSelectable: notSelectable || false,
             exclusive: exclusive || false,
           };
@@ -461,9 +994,13 @@ function SfrSelectionGroups(props) {
           return (
             <div key={`${key}-selectables-card`} className='mb-2 mx-[-16px]'>
               {value.hasOwnProperty("groups") ? (
-                <SfrSelectionGroupCard id={key} styling={props.styling} />
+                <SfrSelectionGroupCard id={key} styling={props.styling} handleUpdateID={handleSelectableGroupIDUpdate} />
               ) : (
-                <div>{value.hasOwnProperty("description") && <SfrComplexSelectableCard id={key} styling={props.styling} />}</div>
+                <div>
+                  {value.hasOwnProperty("description") && (
+                    <SfrComplexSelectableCard id={key} styling={props.styling} handleUpdateID={handleSelectableGroupIDUpdate} />
+                  )}
+                </div>
               )}
             </div>
           );
@@ -479,26 +1016,26 @@ function SfrSelectionGroups(props) {
           <div className='w-full border-b-2 border-b-gray-200 p-4 pb-2'>
             <span className='min-w-full inline-flex items-baseline'>
               <div className='w-[1%]'>
-                <IconButton
-                  sx={{ marginTop: "-12px" }}
-                  onClick={() => {
-                    setCollapse(!collapse);
-                    if (!collapse) {
-                      setCollapseInnerTableSection(false);
-                    }
-                  }}
-                  key={"SelectionGroupsToolTip"}
-                  variant='contained'>
-                  <Tooltip
-                    title={`${(!collapse ? "Collapse " : "Expand ") + "Selection Groups"}`}
-                    id={(collapse ? "collapse" : "expand") + "SelectionGroupsTooltip"}>
+                <Tooltip
+                  title={`${(!collapse ? "Collapse " : "Expand ") + "Selection Groups"}`}
+                  id={(collapse ? "collapse" : "expand") + "SelectionGroupsTooltip"}>
+                  <IconButton
+                    sx={{ marginTop: "-12px" }}
+                    onClick={() => {
+                      setCollapse(!collapse);
+                      if (!collapse) {
+                        setCollapseInnerTableSection(false);
+                      }
+                    }}
+                    key={"SelectionGroupsToolTip"}
+                    variant='contained'>
                     {!collapse ? (
                       <RemoveIcon htmlColor={styling.primaryColor} sx={icons.large} />
                     ) : (
                       <AddIcon htmlColor={styling.primaryColor} sx={icons.large} />
                     )}
-                  </Tooltip>
-                </IconButton>
+                  </IconButton>
+                </Tooltip>
               </div>
               <div className='w-[95%] justify-items-center'>
                 <label style={{ color: styling.primaryColor }} className={`resize-none font-bold text-[14px] p-0 mt-1`}>
@@ -517,11 +1054,12 @@ function SfrSelectionGroups(props) {
                         <label style={{ color: styling.secondaryColor }}>Item List</label>
                       </Tooltip>
                     }
-                    editable={editable}
-                    columnData={columnData}
+                    editable={EDITABLE_CONFIG}
+                    columnData={COLUMN_DATA}
                     rowData={rowData}
                     handleCheckboxClick={handleSelectableCheckboxSelection}
                     handleUpdateTableRow={handleIdTextUpdate}
+                    handleCellDoubleClick={handleSelectableTextCellDoubleClick}
                     handleDeleteTableRows={handleDeleteSelectable}
                     handleCollapseInnerTableSection={handleCollapseInnerTableSection}
                     bottomBorderCss={collapseInnerTableSection ? "rounded-b-[0px] shadow-none" : ""}
@@ -534,66 +1072,16 @@ function SfrSelectionGroups(props) {
                 {collapseInnerTableSection && (
                   <div className='relative border-2 border-t-0 rounded-b-md border-[#d0d5db] m-0 pt-6 pb-2' style={{ top: "-20px" }}>
                     <div className='p-2 px-4'>
-                      <span className='min-w-full inline-flex items-baseline'>
-                        <div className='w-[17%]'>
-                          <FormControl fullWidth color={styling.secondaryTextField}>
-                            <InputLabel key='element-select-label'>Selectable Type</InputLabel>
-                            <Select value={selectableType} label='Selectable Type' autoWidth onChange={handleSetSelectableType} sx={{ textAlign: "left" }}>
-                              <MenuItem sx={styling.primaryMenu} key={"Assignment"} value={"Assignment"}>
-                                Assignment
-                              </MenuItem>
-                              <MenuItem sx={styling.primaryMenu} key={"Selectable"} value={"Selectable"}>
-                                Selectable
-                              </MenuItem>
-                            </Select>
-                          </FormControl>
-                        </div>
-                        <div className='w-[16%] pl-2'>
-                          <FormControl fullWidth>
-                            <TextField
-                              key={selectableID}
-                              label='ID'
-                              color={styling.secondaryTextField}
-                              defaultValue={selectableID}
-                              onBlur={(event) => handleSnackbarTextUpdates(handleSelectableID, event)}
-                            />
-                          </FormControl>
-                        </div>
-                        {selectableType === "Assignment" ? (
-                          <div className='w-[61%] pl-2'>
-                            <FormControl fullWidth>
-                              <TextField
-                                required
-                                key={assignmentDescription}
-                                color={styling.secondaryTextField}
-                                label='Assignment'
-                                defaultValue={assignmentDescription}
-                                onBlur={(event) => handleSnackbarTextUpdates(handleAssignmentDescription, event)}
-                              />
-                            </FormControl>
-                          </div>
-                        ) : (
-                          <div className='w-[61%] pl-2'>
-                            <FormControl fullWidth>
-                              <TextField
-                                required
-                                key={selectableDescription}
-                                color={styling.secondaryTextField}
-                                label='Description'
-                                defaultValue={selectableDescription}
-                                onBlur={(event) => handleSnackbarTextUpdates(handleSelectableDescription, event)}
-                              />
-                            </FormControl>
-                          </div>
-                        )}
-                        <div className='w-[6%]'>
-                          <IconButton sx={{ marginBottom: "-36px" }} disabled={selectableDisabled} onClick={handleNewSelectableSubmit} variant='contained'>
-                            <Tooltip title={`Add ${selectableType}`} id={"addSelectableTooltip"}>
-                              <AddCircleIcon htmlColor={selectableDisabled ? lightGray : styling.secondaryColor} sx={icons.medium} />
-                            </Tooltip>
-                          </IconButton>
-                        </div>
-                      </span>
+                      <SelectableItemAddForm
+                        element={element}
+                        selectedSfrElement={selectedSfrElement}
+                        sfrSections={sfrSections}
+                        ppShortName={ppShortName}
+                        styling={styling}
+                        icons={icons}
+                        lightGray={lightGray}
+                        onSubmit={handleNewSelectableSubmit}
+                      />
                     </div>
                   </div>
                 )}
@@ -643,11 +1131,10 @@ function SfrSelectionGroups(props) {
                                   <Tooltip id={complexSelectableID + "UserDefinedIDTooltip"} title={"User-defined ID for the new complex selectable."} arrow>
                                     <TextField
                                       required
-                                      key={complexSelectableID}
                                       color={styling.secondaryTextField}
                                       label='Complex Selectable ID'
-                                      defaultValue={complexSelectableID}
-                                      onBlur={(event) => handleSnackbarTextUpdates(handleComplexSelectableID, event)}
+                                      value={complexSelectableID}
+                                      onChange={handleComplexSelectableID}
                                     />
                                   </Tooltip>
                                 </FormControl>
@@ -658,11 +1145,10 @@ function SfrSelectionGroups(props) {
                                   <Tooltip id={selectableGroupID + "SfrGroupIDTooltip"} title={"User-defined ID for the new group."} arrow>
                                     <TextField
                                       required
-                                      key={selectableGroupID}
                                       color={styling.secondaryTextField}
                                       label='SFR Group ID'
-                                      defaultValue={selectableGroupID}
-                                      onBlur={(event) => handleSnackbarTextUpdates(handleSelectableGroupID, event)}
+                                      value={selectableGroupID}
+                                      onChange={handleSelectableGroupID}
                                     />
                                   </Tooltip>
                                 </FormControl>
@@ -670,15 +1156,17 @@ function SfrSelectionGroups(props) {
                             )}
                           </div>
                           <div className='w-[6%]'>
-                            <IconButton
-                              sx={{ marginBottom: "-36px" }}
-                              disabled={selectableGroupDisabled}
-                              onClick={handleNewSelectableGroupSubmit}
-                              variant='contained'>
-                              <Tooltip title={"Add Selectable Group"} id={"addSelectableGroupTooltip"}>
-                                <AddCircleIcon htmlColor={selectableGroupDisabled ? lightGray : styling.secondaryColor} sx={icons.medium} />
-                              </Tooltip>
-                            </IconButton>
+                            <Tooltip title={"Add Selectable Group"} id={"addSelectableGroupTooltip"}>
+                              <span>
+                                <IconButton
+                                  sx={{ marginBottom: "-36px" }}
+                                  disabled={selectableGroupDisabled}
+                                  onClick={handleNewSelectableGroupSubmit}
+                                  variant='contained'>
+                                  <AddCircleIcon htmlColor={selectableGroupDisabled ? lightGray : styling.secondaryColor} sx={icons.medium} />
+                                </IconButton>
+                              </span>
+                            </Tooltip>
                           </div>
                         </span>
                       </div>
@@ -690,6 +1178,35 @@ function SfrSelectionGroups(props) {
           )}
         </CardBody>
       </Card>
+      <DependencyDeleteWarning
+        itemLabel={dependencyDeleteWarning?.itemLabel || "selectable"}
+        open={Boolean(dependencyDeleteWarning)}
+        handleOpen={handleCloseDependencyDeleteWarning}
+        handleSubmit={handleSubmitDependencyDeleteWarning}
+        usage={dependencyDeleteWarning?.usage}
+      />
+      <Modal
+        title={`Edit Selectable Text${selectableTextEditor?.id ? ` (${selectableTextEditor.id})` : ""}`}
+        content={
+          selectableTextEditor ? (
+            <div className='w-screen sm:max-w-screen-sm md:max-w-screen-sm lg:max-w-screen-lg'>
+              <TipTapEditor
+                key={selectableTextEditor.uuid}
+                className='w-full'
+                text={selectableTextEditor.text || ""}
+                contentType={"editor"}
+                handleTextUpdate={handleSelectableRichTextUpdate}
+              />
+            </div>
+          ) : (
+            <div></div>
+          )
+        }
+        hideSubmit={true}
+        closeButtonText={"Done"}
+        open={Boolean(selectableTextEditor)}
+        handleOpen={handleCloseSelectableTextEditor}
+      />
     </div>
   );
 }

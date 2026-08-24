@@ -8,9 +8,15 @@ import AddIcon from "@mui/icons-material/Add";
 import AutoFixHighIcon from "@mui/icons-material/AutoFixHigh";
 import DeleteForeverRoundedIcon from "@mui/icons-material/DeleteForeverRounded";
 import RemoveIcon from "@mui/icons-material/Remove";
+import { updateMetaDataItem } from "../../../../reducers/accordionPaneSlice.js";
 import { DELETE_SFR_COMPONENT, UPDATE_SFR_COMPONENT_ITEMS } from "../../../../reducers/SFRs/sfrSectionSlice.js";
 import { DELETE_SFR_FROM_THREAT_USING_UUID } from "../../../../reducers/threatsSlice.js";
 import { deepCopy } from "../../../../utils/deepCopy.js";
+import {
+  areTechnicalDecisionHistoriesEqual,
+  getTechnicalDecisionComponentRefIds,
+  removeTechnicalDecisionAffectsReferences,
+} from "../../../../utils/technicalDecisionHistory.js";
 import {
   getObjectiveMaps,
   getSfrMaps,
@@ -49,7 +55,7 @@ function SfrSections({ sfrUUID, uuid, index, value }) {
   const threats = useSelector((state) => state.threats);
   const { primary, icons } = useSelector((state) => state.styling);
   const metadataSection = useSelector((state) => state.accordionPane.metadata);
-  const { ppTemplateVersion } = metadataSection;
+  const { ppTemplateVersion, technicalDecisionHistory } = metadataSection;
   const { openSfrWorksheet } = useSelector((state) => state.sfrWorksheetUI);
   const [openDeleteDialog, setDeleteDialog] = useState(false);
 
@@ -65,6 +71,7 @@ function SfrSections({ sfrUUID, uuid, index, value }) {
           sfrUUID: uuid,
         })
       );
+      removeTechnicalDecisionReference(getTechnicalDecisionComponentRefIds(value));
       dispatch(
         DELETE_SFR_COMPONENT({
           sfrUUID,
@@ -82,6 +89,22 @@ function SfrSections({ sfrUUID, uuid, index, value }) {
       mapObjectivesToSFRs();
       getThreatMaps();
       getSfrMaps();
+    }
+  };
+  /**
+   * Removes the deleted SFR Component references from technical decision affects metadata.
+   * @param refIds the SFR Component ref ids
+   */
+  const removeTechnicalDecisionReference = (refIds) => {
+    const updatedHistory = removeTechnicalDecisionAffectsReferences(technicalDecisionHistory, refIds);
+
+    if (!areTechnicalDecisionHistoriesEqual(technicalDecisionHistory, updatedHistory)) {
+      dispatch(
+        updateMetaDataItem({
+          type: "technicalDecisionHistory",
+          item: updatedHistory,
+        })
+      );
     }
   };
   /**

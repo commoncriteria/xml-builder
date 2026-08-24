@@ -70,6 +70,7 @@ function TabularizeTableSection() {
                     setCollapse(!collapse);
                   }}>
                   <Tooltip
+                    key={collapse ? "collapse" : "open"}
                     title={`${(collapse ? "Collapse " : "Expand ") + "Crypto Selection Tables"}`}
                     id={(collapse ? "collapse" : "expand") + "TabularizeTooltip"}>
                     {!collapse ? <RemoveIcon htmlColor={secondary} sx={icons.large} /> : <AddIcon htmlColor={secondary} sx={icons.large} />}

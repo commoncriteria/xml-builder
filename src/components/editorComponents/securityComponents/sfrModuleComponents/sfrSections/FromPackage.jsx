@@ -26,7 +26,7 @@ function FromPackage() {
     },
     secondaryToggleSwitch: primaryToggleSwitch,
   };
-  const { sfrWorksheetUI } = useSelector((state) => state);
+  const sfrWorksheetUI = useSelector((state) => state.sfrWorksheetUI);
   const { component } = sfrWorksheetUI;
   const { fromPkgData } = component || modifiedSfrComponent;
   const {

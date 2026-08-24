@@ -16,7 +16,7 @@ export const editorSlice = createSlice({
         state[newId] = {
           title: title,
           text: text,
-          open: false,
+          open: action.payload?.open || false,
           custom: action.payload.custom,
           xmlTagMeta: action.payload?.xmlTagMeta,
         };

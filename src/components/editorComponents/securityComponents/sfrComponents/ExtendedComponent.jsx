@@ -93,7 +93,7 @@ function ExtendedComponent({ uuid, sfrUUID, isAdditionalSfr, additionalSfrOpen, 
         body={
           <div className='mt-2 w-full'>
             {(isAdditionalSfr ? additionalSfrDefinition : extendedComponentDefinition)?.map((def, index) => {
-              const { title, famId, famBehavior } = def;
+              const { title, famId, famBehavior, modDef } = def;
 
               return (
                 <ExtendedComponentItem
@@ -101,6 +101,7 @@ function ExtendedComponent({ uuid, sfrUUID, isAdditionalSfr, additionalSfrOpen, 
                   title={title}
                   famId={famId}
                   famBehavior={famBehavior}
+                  modDef={modDef}
                   uuid={uuid}
                   index={index}
                   sfrUUID={sfrUUID}
@@ -112,14 +113,8 @@ function ExtendedComponent({ uuid, sfrUUID, isAdditionalSfr, additionalSfrOpen, 
           </div>
         }
         footer={
-          <div
-            className='min-w-full flex justify-center p-3 px-2 rounded-b-lg border-t-2 border-gray-200 bg-white'
-            key={"ExtendedComponentFooter"}>
-            <IconButton
-              sx={{ marginBottom: "-4px" }}
-              key={"NewExtendedComponentButton"}
-              onClick={handleNewExtendedComponent}
-              variant='contained'>
+          <div className='min-w-full flex justify-center p-3 px-2 rounded-b-lg border-t-2 border-gray-200 bg-white' key={"ExtendedComponentFooter"}>
+            <IconButton sx={{ marginBottom: "-4px" }} key={"NewExtendedComponentButton"} onClick={handleNewExtendedComponent} variant='contained'>
               <Tooltip title={"Add New Extended Component Definition"} id={"addNewExtendedComponentTooltip"}>
                 <AddCircleRoundedIcon htmlColor={primary} sx={icons.medium} />
               </Tooltip>

@@ -6,12 +6,14 @@ import DeleteForeverRoundedIcon from "@mui/icons-material/DeleteForeverRounded";
 import { DELETE_ECD_ITEM, UPDATE_ECD_ITEM } from "../../../../reducers/SFRs/sfrSlice.js";
 import { handleSnackBarError, handleSnackBarSuccess, handleSnackbarTextUpdates } from "../../../../utils/securityComponents.jsx";
 import CardTemplate from "../CardTemplate.jsx";
+import TipTapEditor from "../../TipTapEditor.jsx";
 
 /**
  * The extended component definition item
  * @param famId the fam id
  * @param title the title
  * @param famBehavior the fam behavior
+ * @param modDef the mod definition
  * @param uuid the uuid
  * @param index the index
  * @param isAdditionalSfr the is additional sfr value
@@ -20,12 +22,13 @@ import CardTemplate from "../CardTemplate.jsx";
  * @returns {JSX.Element}
  * @constructor
  */
-function ExtendedComponentItem({ famId, title, famBehavior, uuid, index, isAdditionalSfr, sfrUUID, handleUpdateAdditionalSfr }) {
+function ExtendedComponentItem({ famId, title, famBehavior, modDef, uuid, index, isAdditionalSfr, sfrUUID, handleUpdateAdditionalSfr }) {
   // Prop Validation
   ExtendedComponentItem.propTypes = {
     famId: PropTypes.string.isRequired,
     title: PropTypes.string.isRequired,
-    famBehavior: PropTypes.string.isRequired,
+    famBehavior: PropTypes.string,
+    modDef: PropTypes.string,
     uuid: PropTypes.string.isRequired,
     index: PropTypes.number.isRequired,
     isAdditionalSfr: PropTypes.bool,
@@ -82,10 +85,17 @@ function ExtendedComponentItem({ famId, title, famBehavior, uuid, index, isAddit
   };
   /**
    * Handles updating the family behavior
-   * @param event the event
+   * @param value the value
    */
-  const handleUpdateFamilyBehavior = (event) => {
-    updateEcdItem("famBehavior", event.target.value);
+  const handleUpdateFamilyBehavior = (value) => {
+    updateEcdItem("famBehavior", value);
+  };
+  /**
+   * Handles updating the mod definition
+   * @param value the value
+   */
+  const handleUpdateModDefinition = (value) => {
+    updateEcdItem("modDef", value);
   };
 
   // Helper Methods
@@ -138,11 +148,7 @@ function ExtendedComponentItem({ famId, title, famBehavior, uuid, index, isAddit
                 />
               </div>
               <div className='flex justify-end pr-4 w-[4%]'>
-                <IconButton
-                  variant='contained'
-                  sx={{ marginTop: "-8px", margin: 0, padding: 0 }}
-                  onClick={handleDeleteExtendedComponentItem}
-                >
+                <IconButton variant='contained' sx={{ marginTop: "-8px", margin: 0, padding: 0 }} onClick={handleDeleteExtendedComponentItem}>
                   <Tooltip title={`Delete Extended Component Definition Item`} id={"deleteExtendedDefinitionItemTooltip" + index}>
                     <DeleteForeverRoundedIcon htmlColor={secondary} sx={icons.medium} />
                   </Tooltip>
@@ -166,16 +172,30 @@ function ExtendedComponentItem({ famId, title, famBehavior, uuid, index, isAddit
               </Tooltip>
             </FormControl>
             <FormControl fullWidth sx={{ marginTop: 2 }}>
-              <Tooltip arrow id={"familyBehaviorTooltip" + index} title={"The family behavior for the extended component definition."}>
-                <TextField
-                  color='secondary'
-                  key={"familyBehavior" + index}
-                  label='Family Behavior'
-                  onBlur={(event) => handleSnackbarTextUpdates(handleUpdateFamilyBehavior, event)}
-                  defaultValue={famBehavior}
-                  required={true}
+              <div className='mx-[-16px]'>
+                <CardTemplate
+                  type={"section"}
+                  header={
+                    <Tooltip arrow id={"familyBehaviorTooltip" + index} title={"The family behavior for the extended component definition."}>
+                      <label className='resize-none font-bold text-[14px] pl-4 pr-4 text-secondary'>Family Behavior</label>
+                    </Tooltip>
+                  }
+                  body={<TipTapEditor text={famBehavior || ""} contentType={"editor"} handleTextUpdate={handleUpdateFamilyBehavior} />}
                 />
-              </Tooltip>
+              </div>
+            </FormControl>
+            <FormControl fullWidth sx={{ marginTop: 2 }}>
+              <div className='mx-[-16px]'>
+                <CardTemplate
+                  type={"section"}
+                  header={
+                    <Tooltip arrow id={"modDefinitionTooltip" + index} title={"The modification definition for the extended component definition."}>
+                      <label className='resize-none font-bold text-[14px] pl-4 pr-4 text-secondary'>Mod Definition</label>
+                    </Tooltip>
+                  }
+                  body={<TipTapEditor text={modDef || ""} contentType={"editor"} handleTextUpdate={handleUpdateModDefinition} />}
+                />
+              </div>
             </FormControl>
           </div>
         }

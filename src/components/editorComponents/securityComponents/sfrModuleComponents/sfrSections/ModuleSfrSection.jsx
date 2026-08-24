@@ -107,7 +107,9 @@ function ModuleSfrSection({ sfrUUID, uuid, isAdditionalSfr }) {
           extendedComponentDefinition.push({
             famId: "",
             title: "New ECD Title",
+            definitionType: "fam-behavior",
             famBehavior: "",
+            modDef: "",
           });
           break;
         }
@@ -121,7 +123,7 @@ function ModuleSfrSection({ sfrUUID, uuid, isAdditionalSfr }) {
           if (extendedComponentDefinition[index]) {
             let currentEcdItem = extendedComponentDefinition[index];
 
-            if (currentEcdItem.hasOwnProperty(key)) {
+            if (Object.prototype.hasOwnProperty.call(currentEcdItem, key) || ["definitionType", "famBehavior", "modDef"].includes(key)) {
               currentEcdItem[key] = value;
             }
           }

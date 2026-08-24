@@ -43,6 +43,7 @@ function TabularizeTable(props) {
   const editable = {
     addColumn: false,
     addRow: true,
+    moveRow: true,
     removeColumn: false,
     removeRow: true,
   };
@@ -216,6 +217,30 @@ function TabularizeTable(props) {
     handleSnackBarSuccess("Selected Row(s) Successfully Removed");
   };
   /**
+   * Handles moving table rows
+   * @param updatedRows the reordered table rows
+   * @returns {boolean} false if the rows could not be updated
+   */
+  const handleMoveTableRows = (updatedRows) => {
+    const { tabularizeUUID } = props;
+    let updatedTabularize = deepCopy(getElementValuesByType(element, "tabularize"));
+
+    if (!updatedTabularize || !tabularizeUUID || !updatedTabularize.hasOwnProperty(tabularizeUUID)) {
+      return false;
+    }
+
+    updatedTabularize[tabularizeUUID] = {
+      ...updatedTabularize[tabularizeUUID],
+      rows: updatedRows ? deepCopy(updatedRows) : [],
+    };
+
+    updateSfrSectionElement({
+      tabularize: updatedTabularize,
+    });
+
+    return true;
+  };
+  /**
    * Handles the new table row
    */
   const handleNewTableRow = () => {
@@ -296,12 +321,14 @@ function TabularizeTable(props) {
               rowData={tabularize && tabularize.hasOwnProperty("rows") ? deepCopy(tabularize.rows) : []}
               isTitleEditable={false}
               isTabularizeTable={true}
+              disableColumnSorting={true}
               editFullRow={true}
               handleEditFullRow={handleOpenEditRowModal}
               handleNewTableRow={handleNewTableRow}
               handleDeleteTableRows={handleDeleteRowsModalOpen}
+              handleMoveTableRows={handleMoveTableRows}
               showPreview={showTabularizeTablePreview}
-              tableInstructions={`To edit a row, double-click on it and select the required column from the dropdown to edit further.`}
+              tableInstructions={`To edit a row, double-click on it and select the required column from the dropdown to edit further. To reorder rows, select one or more rows, open the table menu, and choose Move Selected Row(s) Up or Move Selected Row(s) Down.`}
             />
             <EditTabularizeRowModal requirementType={"crypto"} handleOpen={handleOpenEditRowModal} />
           </div>

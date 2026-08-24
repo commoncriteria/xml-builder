@@ -14,6 +14,7 @@ function ResetDataConfirmation(props) {
     title: PropTypes.string.isRequired,
     text: PropTypes.oneOfType([PropTypes.string.isRequired, PropTypes.object.isRequired]),
     open: PropTypes.bool.isRequired,
+    closeButtonText: PropTypes.string,
     handleOpen: PropTypes.func.isRequired,
     handleSubmit: PropTypes.func.isRequired,
   };
@@ -29,6 +30,7 @@ function ResetDataConfirmation(props) {
           props.handleOpen();
         }}
         handleSubmit={props.handleSubmit}
+        closeButtonText={props.closeButtonText}
       />
     </div>
   );

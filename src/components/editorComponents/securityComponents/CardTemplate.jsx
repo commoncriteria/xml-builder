@@ -6,6 +6,7 @@ import { Card, CardBody, CardFooter } from "@material-tailwind/react";
 import { IconButton, Tooltip } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import RemoveIcon from "@mui/icons-material/Remove";
+import { COMMON_REGEX } from "../../../utils/regexUtils.js";
 
 /**
  * The CardTemplate class that displays the generic card component
@@ -46,7 +47,7 @@ function CardTemplate(props) {
 
   // Return Method
   return (
-    <div data-testid={props.title ? `CardTemplate_${props.title.replace(/\s+/g, "_")}` : undefined}>
+    <div data-testid={props.title ? `CardTemplate_${props.title.replace(COMMON_REGEX.allWhitespace, "_")}` : undefined}>
       {props.type === "parent" ? (
         <Card
           className={`w-full rounded-lg border-2 ${props.borderColor ? props.borderColor : "border-gray-300"} mb-4 ${props.bottomBorderCss ? props.bottomBorderCss : ""}`}>
@@ -54,13 +55,13 @@ function CardTemplate(props) {
             <div className={`w-full border-b-2 ${props.borderColor ? props.borderColor : "border-gray-300"} p-2 pt-4`}>
               <span className='flex justify-stretch min-w-full mt-1'>
                 <div className='justify-items-start pr-2'>
-                  <IconButton sx={{ marginTop: "-8px" }} onClick={props.collapseHandler} key={props.tooltip + "ToolTip"} variant='contained'>
-                    <Tooltip
-                      id={(props.collapse ? "collapse" : "expand") + props.tooltip + "Tooltip"}
-                      title={`${(props.collapse ? "Collapse " : "Expand ") + props.tooltip}`}>
+                  <Tooltip
+                    id={(props.collapse ? "collapse" : "expand") + props.tooltip + "Tooltip"}
+                    title={`${(props.collapse ? "Collapse " : "Expand ") + props.tooltip}`}>
+                    <IconButton sx={{ marginTop: "-8px" }} onClick={props.collapseHandler} key={props.tooltip + "ToolTip"} variant='contained'>
                       {props.collapse ? <RemoveIcon htmlColor={iconColor} sx={icons.small} /> : <AddIcon htmlColor={iconColor} sx={icons.small} />}
-                    </Tooltip>
-                  </IconButton>
+                    </IconButton>
+                  </Tooltip>
                 </div>
                 <div className='w-full p-0 m-0'>
                   {props.title && !props.header ? (

@@ -2,6 +2,7 @@
 import { createSlice } from "@reduxjs/toolkit";
 import { v4 as uuidv4 } from "uuid";
 import { deepCopy } from "../../utils/deepCopy.js";
+import validator from "validator";
 
 // Constants
 const sfrComponentDefault = {
@@ -12,6 +13,8 @@ const sfrComponentDefault = {
   definition: "",
   optional: false,
   objective: false,
+  dependsComments: {},
+  dependsExternalDocs: {},
   selectionBased: false,
   selections: {},
   useCaseBased: false,
@@ -22,10 +25,10 @@ const sfrComponentDefault = {
   objectives: [],
   extendedComponentDefinition: {
     toggle: false,
-    audit: "",
-    managementFunction: "",
-    componentLeveling: "",
-    dependencies: "",
+    audit: null,
+    managementFunction: null,
+    componentLeveling: null,
+    dependencies: null,
   },
   auditEvents: {},
   open: false,
@@ -34,7 +37,8 @@ const sfrComponentDefault = {
   evaluationActivities: {},
   modifiedSfr: false,
   additionalSfr: false,
-  consistencyRationale: "",
+  noChange: false,
+  consistencyRationale: null,
   xPathDetails: {},
   sfrType: "",
 };
@@ -51,6 +55,58 @@ export const defaultModifiedSfrComponent = {
     toggle: false,
     open: false,
   },
+};
+
+const getSelectableIDByUUID = (state, selectionUUID) => {
+  for (const sfrClass of Object.values(state)) {
+    for (const component of Object.values(sfrClass)) {
+      for (const element of Object.values(component.elements || {})) {
+        const selectable = element.selectables?.[selectionUUID];
+
+        if (selectable?.id) {
+          return selectable.id;
+        }
+      }
+    }
+  }
+
+  return null;
+};
+
+const normalizeSelectionDependencies = (selections, state) => {
+  if (!selections || typeof selections !== "object" || !Array.isArray(selections.selections)) {
+    return selections;
+  }
+
+  return {
+    ...selections,
+    selections: selections.selections.reduce((normalized, selection) => {
+      if (selection == null) {
+        return normalized;
+      }
+
+      if (typeof selection === "string" && validator.isUUID(selection)) {
+        const selectableID = getSelectableIDByUUID(state, selection);
+
+        if (selectableID) {
+          normalized.push(selectableID);
+        }
+
+        return normalized;
+      }
+
+      normalized.push(selection);
+      return normalized;
+    }, []),
+  };
+};
+
+const areEquivalentStateValues = (currentValue, updatedValue) => {
+  try {
+    return JSON.stringify(currentValue) === JSON.stringify(updatedValue);
+  } catch {
+    return currentValue === updatedValue;
+  }
 };
 
 // Initial State
@@ -76,12 +132,13 @@ export const sfrSectionSlice = createSlice({
       const { sfrUUID: familyUUID, component } = action.payload;
       const defaultSfr = deepCopy(sfrComponentDefault);
       const defaultModifiedSfr = deepCopy(defaultModifiedSfrComponent);
+      const isFamilyUUIDValid = typeof familyUUID === "string" && familyUUID.trim() !== "";
 
       // Generate a unique ID for the component if not provided
       const sfrCompUUID = component?.sfrCompUUID || uuidv4();
 
       // Check that the family ID is valid and generate new component
-      if (familyUUID) {
+      if (isFamilyUUIDValid) {
         if (!state.hasOwnProperty(familyUUID)) {
           state[familyUUID] = {};
         }
@@ -95,6 +152,8 @@ export const sfrSectionSlice = createSlice({
           definition: component?.definition || defaultSfr.definition,
           optional: component?.optional || defaultSfr.optional,
           objective: component?.objective || defaultSfr.objective,
+          dependsComments: component?.dependsComments || defaultSfr.dependsComments,
+          dependsExternalDocs: component?.dependsExternalDocs || {},
           selectionBased: component?.selectionBased || defaultSfr.selectionBased,
           selections: component?.selections || defaultSfr.selections,
           useCaseBased: component?.useCaseBased || defaultSfr.useCaseBased,
@@ -111,7 +170,8 @@ export const sfrSectionSlice = createSlice({
           evaluationActivities: component?.evaluationActivities || defaultSfr.evaluationActivities,
           modifiedSfr: component?.modifiedSfr || defaultSfr.modifiedSfr,
           additionalSfr: component?.additionalSfr || defaultSfr.additionalSfr,
-          consistencyRationale: component?.consistencyRationale || defaultSfr.consistencyRationale,
+          noChange: component?.noChange ?? defaultSfr.noChange,
+          consistencyRationale: component?.consistencyRationale ?? defaultSfr.consistencyRationale,
           notNew: component?.notNew,
           xPathDetails: component?.xPathDetails || defaultSfr.xPathDetails,
           classDescription: component?.classDescription,
@@ -127,20 +187,24 @@ export const sfrSectionSlice = createSlice({
           delete newComponent.extendedComponentDefinition;
         }
 
+        newComponent.selections = normalizeSelectionDependencies(newComponent.selections, state);
+
         // Add the new component to the state
         state[familyUUID][sfrCompUUID] = newComponent;
       }
 
       // Attach the generated UUID to the action payload
-      action.payload.id = sfrCompUUID;
+      action.payload.id = isFamilyUUIDValid ? sfrCompUUID : null;
     },
     UPDATE_SFR_COMPONENT_ITEMS: (state, action) => {
       const { sfrUUID, uuid, itemMap } = action.payload;
       let sfrSection = state[sfrUUID][uuid];
       if (sfrSection && Object.entries(itemMap).length > 0) {
         Object.entries(itemMap).map(([key, updatedValue]) => {
-          if (key !== "element" && JSON.stringify(sfrSection[key]) !== JSON.stringify(updatedValue)) {
-            sfrSection[key] = updatedValue;
+          const normalizedValue = key === "selections" ? normalizeSelectionDependencies(updatedValue, state) : updatedValue;
+
+          if (key !== "element" && !areEquivalentStateValues(sfrSection[key], normalizedValue)) {
+            sfrSection[key] = normalizedValue;
           }
         });
       }
@@ -148,12 +212,36 @@ export const sfrSectionSlice = createSlice({
     UPDATE_SFR_COMPONENT_TEST_DEPENDENCIES: (state, action) => {
       const { sfrUUID, uuid, eAUUID, selectionMap } = action.payload;
       const sfrSection = state[sfrUUID][uuid];
-      const tests = sfrSection.evaluationActivities[eAUUID].tests;
+      const evaluationActivity = sfrSection.evaluationActivities[eAUUID];
+      const testLists = evaluationActivity.testLists;
+      const tests = evaluationActivity.tests;
+      ["tssDependencies", "guidanceDependencies"].forEach((field) => {
+        if (Array.isArray(evaluationActivity[field])) {
+          evaluationActivity[field] = evaluationActivity[field].map((dep) => selectionMap[dep] || dep);
+        }
+      });
+      ["tssDependencySections", "guidanceDependencySections"].forEach((field) => {
+        if (Array.isArray(evaluationActivity[field])) {
+          evaluationActivity[field].forEach((dependencySection) => {
+            if (Array.isArray(dependencySection?.dependencies)) {
+              dependencySection.dependencies = dependencySection.dependencies.map((dep) => selectionMap[dep] || dep);
+            }
+          });
+        }
+      });
 
       Object.values(tests).forEach((test) => {
         if (Array.isArray(test.dependencies)) {
           // Convert each dependency to UUID using the selectionMap
           test.dependencies = test.dependencies.map((dep) => {
+            return selectionMap[dep] || dep; // fall back to original if no mapping exists
+          });
+        }
+      });
+      Object.values(testLists || {}).forEach((testList) => {
+        if (Array.isArray(testList.dependencies)) {
+          // Convert each dependency to UUID using the selectionMap
+          testList.dependencies = testList.dependencies.map((dep) => {
             return selectionMap[dep] || dep; // fall back to original if no mapping exists
           });
         }
@@ -186,11 +274,11 @@ export const sfrSectionSlice = createSlice({
     },
     UPDATE_SFR_SECTION_ELEMENT: (state, action) => {
       const { sfrUUID, sectionUUID, elementUUID, itemMap } = action.payload;
-      const sfrSection = state[sfrUUID][sectionUUID];
-      let elementSection = sfrSection.elements[elementUUID];
-      if (sfrSection && elementSection && Object.entries(itemMap).length > 0) {
+      const sfrSection = state[sfrUUID]?.[sectionUUID];
+      let elementSection = sfrSection?.elements?.[elementUUID];
+      if (sfrSection && elementSection && itemMap && Object.entries(itemMap).length > 0) {
         Object.entries(itemMap).map(([key, updatedValue]) => {
-          if (JSON.stringify(elementSection[key]) !== JSON.stringify(updatedValue)) {
+          if (!areEquivalentStateValues(elementSection[key], updatedValue)) {
             elementSection[key] = updatedValue;
           }
         });
@@ -289,6 +377,7 @@ export const sfrSectionSlice = createSlice({
         dropdownOptions: { components: [], elements: [], selections: [], useCases: [] },
         nameMap: { components: {}, elements: {}, selections: {}, useCases: {} },
         uuidMap: { components: {}, elements: {}, selections: {}, useCases: {} },
+        selectionDependencyMap: { byLabel: {}, byValue: {} },
         useCaseUUID: null,
         elementSelections: {},
       };
@@ -323,13 +412,16 @@ export const sfrSectionSlice = createSlice({
                     let assignment = selection.assignment;
                     let description = selection.description;
                     let selectable = id ? `${description} (${id})` : description;
-                    if (!sfrOptionsMap.dropdownOptions.selections.includes(selectable) && !assignment) {
+                    if (id && !sfrOptionsMap.dropdownOptions.selections.includes(selectable) && !assignment) {
                       sfrOptionsMap.dropdownOptions.selections.push(selectable);
                       sfrOptionsMap.nameMap.selections[selectable] = selectionUUID;
                       sfrOptionsMap.uuidMap.selections[selectionUUID] = selectable;
-                      if (!elementSelections.includes(selectionUUID)) {
-                        elementSelections.push(selectionUUID);
-                      }
+                      sfrOptionsMap.selectionDependencyMap.byLabel[selectable] = id;
+                      sfrOptionsMap.selectionDependencyMap.byValue[id] = selectable;
+                      sfrOptionsMap.selectionDependencyMap.byValue[selectionUUID] = selectable;
+                    }
+                    if (!assignment && id && !elementSelections.includes(id)) {
+                      elementSelections.push(id);
                     }
                   });
                 }
@@ -374,6 +466,28 @@ export const sfrSectionSlice = createSlice({
       }
       action.payload = sfrOptionsMap;
     },
+    GET_ALL_XML_IDS: (state, action) => {
+      const source =
+        action && action.payload && action.payload.sfrSections && typeof action.payload.sfrSections === "object" ? action.payload.sfrSections : state;
+
+      let xmlIds = [];
+      try {
+        Object.values(source).map((sfrClass) => {
+          if (!sfrClass || typeof sfrClass !== "object") return;
+          Object.values(sfrClass).map((sfrComponent) => {
+            const id = sfrComponent && typeof sfrComponent.xml_id === "string" ? sfrComponent.xml_id : "";
+            if (id !== "") {
+              xmlIds.push(id);
+            }
+          });
+        });
+      } catch (e) {
+        console.log(e);
+      }
+
+      // Ensure unique xml_id values
+      action.payload = Array.from(new Set(xmlIds));
+    },
     SORT_OBJECTIVES_FROM_SFRS_HELPER: (state, action) => {
       const { sfrUUID, uuid, uuidMap } = action.payload;
       let objectives = state[sfrUUID][uuid].objectives;
@@ -405,7 +519,7 @@ export const sfrSectionSlice = createSlice({
           return 0;
         });
         let result = Object.fromEntries(sorted);
-        if (JSON.stringify(state[key]) !== JSON.stringify(result)) {
+        if (!areEquivalentStateValues(state[key], result)) {
           state[key] = result;
         }
       });
@@ -440,6 +554,7 @@ export const {
   DELETE_OBJECTIVE_FROM_SFR_USING_UUID,
   RESET_ALL_SFR_OBJECTIVES,
   GET_ALL_SFR_OPTIONS_MAP,
+  GET_ALL_XML_IDS,
   SORT_OBJECTIVES_FROM_SFRS_HELPER,
   SORT_SFR_SECTIONS_HELPER,
   DELETE_ALL_SFR_SECTION_ELEMENTS,

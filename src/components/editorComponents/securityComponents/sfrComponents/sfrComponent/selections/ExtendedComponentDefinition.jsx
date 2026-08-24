@@ -17,10 +17,10 @@ function ExtendedComponentDefinition() {
   const { componentLeveling, managementFunction, audit, dependencies, toggle: isToggled } = extendedComponentDefinition;
   const defaultValues = {
     toggle: false,
-    audit: "",
-    managementFunction: "",
-    componentLeveling: "",
-    dependencies: "",
+    audit: null,
+    managementFunction: null,
+    componentLeveling: null,
+    dependencies: null,
   };
 
   // Methods

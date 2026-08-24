@@ -27,6 +27,7 @@ function Modal(props) {
     hideSubmit: PropTypes.bool,
     fullscreen: PropTypes.bool,
     closeButtonId: PropTypes.string,
+    closeButtonText: PropTypes.string,
     handleOpen: PropTypes.func.isRequired,
     handleSubmit: PropTypes.func,
     handleDialogActions: PropTypes.node,
@@ -52,7 +53,7 @@ function Modal(props) {
     return () => scrollContainer.removeEventListener("scroll", handleScroll);
   }, []);
   useEffect(() => {
-    if (props.hasOwnProperty("handleIsScrolling")) {
+    if (Object.prototype.hasOwnProperty.call(props, "handleIsScrolling")) {
       props.handleIsScrolling(isScrolling);
     }
   }, [isScrolling]);
@@ -124,7 +125,7 @@ function Modal(props) {
               variant={`${props.hideSubmit ? "contained" : "outlined"}`}
               color={"primary"}
               sx={{ fontSize: "12px", color: props.hideSubmit ? "white" : "primary" }}>
-              <span>Close</span>
+              <span>{props.closeButtonText || "Close"}</span>
             </Button>
             {props.hideSubmit ? null : (
               <Button

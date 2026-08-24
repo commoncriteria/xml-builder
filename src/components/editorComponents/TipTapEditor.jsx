@@ -2,9 +2,10 @@
 import { useEffect, useState } from "react";
 import PropTypes from "prop-types";
 import { useSelector } from "react-redux";
+import { Node, mergeAttributes } from "@tiptap/core";
 import Link from "@tiptap/extension-link";
 import { Tooltip } from "@mui/material";
-import { BubbleMenu, EditorContent, useEditor } from "@tiptap/react";
+import { BubbleMenu, EditorContent, NodeViewWrapper, ReactNodeViewRenderer, useEditor } from "@tiptap/react";
 import {
   FaBold,
   FaItalic,
@@ -19,13 +20,16 @@ import {
   FaAlignJustify,
   FaAlignLeft,
   FaListOl,
+  FaSortAlphaDown,
   FaCode,
+  FaTag,
 } from "react-icons/fa";
 import { LuHeading1, LuHeading2 } from "react-icons/lu";
 import { RiDeleteColumn, RiDeleteRow, RiInsertColumnLeft, RiInsertColumnRight } from "react-icons/ri";
 import { GrTableAdd } from "react-icons/gr";
 import { TbTableMinus } from "react-icons/tb";
 import { StarterKit } from "@tiptap/starter-kit";
+import OrderedList from "@tiptap/extension-ordered-list";
 import { Table } from "@tiptap/extension-table";
 import { TableRow } from "@tiptap/extension-table-row";
 import { TableCell } from "@tiptap/extension-table-cell";
@@ -48,6 +52,165 @@ import xml from "highlight.js/lib/languages/xml";
 import "tw-elements-react/dist/css/tw-elements-react.min.css";
 import "../../../index.css";
 import "highlight.js/styles/a11y-dark.css";
+
+// React view for CtrTagNode — shows a chip, opens prompts on double-click to edit id and ctr-type
+const CtrTagView = ({ node, updateAttributes }) => {
+  const handleDoubleClick = () => {
+    const newId = window.prompt("CTR id:", node.attrs.id || "");
+    if (newId === null) return;
+    const newCtrType = window.prompt("CTR type (e.g. mgmt, Table, Figure — leave blank to omit):", node.attrs.ctrType || "");
+    if (newCtrType === null) return;
+    const newPre = window.prompt("CTR pre (prefix label — leave blank for none, cancel to keep current):", node.attrs.pre ?? "");
+    if (newPre === null) return;
+    updateAttributes({ id: newId.trim(), ctrType: newCtrType.trim() || null, pre: newPre });
+  };
+
+  return (
+    <NodeViewWrapper as='span' style={{ display: "inline" }}>
+      <span className='ctr-tag-chip' title='Double-click to edit' onDoubleClick={handleDoubleClick}>
+        {node.attrs.id}
+      </span>
+    </NodeViewWrapper>
+  );
+};
+
+// CtrTagNode — inline atom node that renders escaped <ctr .../> tags as editable chips
+const CtrTagNode = Node.create({
+  name: "ctrTag",
+  group: "inline",
+  inline: true,
+  atom: true,
+
+  addAttributes() {
+    return {
+      id: {
+        default: null,
+        parseHTML: (el) => el.getAttribute("data-id"),
+        renderHTML: (attrs) => ({ "data-id": attrs.id }),
+      },
+      ctrType: {
+        default: null,
+        parseHTML: (el) => el.getAttribute("data-ctr-type"),
+        renderHTML: (attrs) => (attrs.ctrType !== null ? { "data-ctr-type": attrs.ctrType } : {}),
+      },
+      pre: {
+        default: null,
+        parseHTML: (el) => el.getAttribute("data-pre"),
+        renderHTML: (attrs) => (attrs.pre !== null ? { "data-pre": attrs.pre } : {}),
+      },
+    };
+  },
+
+  parseHTML() {
+    return [{ tag: 'span[data-type="ctr-tag"]' }];
+  },
+
+  renderHTML({ HTMLAttributes }) {
+    return ["span", mergeAttributes(HTMLAttributes, { "data-type": "ctr-tag" })];
+  },
+
+  addNodeView() {
+    return ReactNodeViewRenderer(CtrTagView);
+  },
+});
+
+const XML_TEXT_LESS_THAN_MARKER = "\u200C";
+const RAW_XML_TAG_NAMES = ["xref", "rule", "figure", "ctr", "snip", "if-opt-app", "also", "_", "no-link", "comment"];
+const RAW_XML_TAG_PATTERN = RAW_XML_TAG_NAMES.join("|");
+const RAW_XML_TAG_PLACEHOLDER = "__PP_XML_BUILDER_RAW_XML_TAG_";
+const ESCAPED_RAW_XML_TAG_REGEX = new RegExp(`&lt;(\\/?)(${RAW_XML_TAG_PATTERN})(?=\\s|\\/|&gt;)([\\s\\S]*?)&gt;`, "gi");
+const HTML_TAG_REGEX = /^<\/?[A-Za-z][A-Za-z0-9:-]*(?:\s[^<>]*)?\/?>/;
+
+const replaceEditorTextSegments = (html, replaceText) => {
+  let result = "";
+  let index = 0;
+
+  while (index < html.length) {
+    const tagStart = html.indexOf("<", index);
+
+    if (tagStart === -1) {
+      result += replaceText(html.slice(index));
+      break;
+    }
+
+    const tagMatch = html.slice(tagStart).match(HTML_TAG_REGEX);
+
+    if (tagMatch) {
+      result += replaceText(html.slice(index, tagStart));
+      result += tagMatch[0];
+      index = tagStart + tagMatch[0].length;
+    } else {
+      result += replaceText(html.slice(index, tagStart + 1));
+      index = tagStart + 1;
+    }
+  }
+
+  return result;
+};
+
+const preprocessXmlTextMarkers = (html) => {
+  return replaceEditorTextSegments(html, (text) => text.replaceAll(`${XML_TEXT_LESS_THAN_MARKER}<`, `${XML_TEXT_LESS_THAN_MARKER}&lt;`));
+};
+
+const normalizeTextSegmentLessThanSigns = (text) => {
+  const rawXmlTags = [];
+
+  return text
+    .replace(ESCAPED_RAW_XML_TAG_REGEX, (match) => {
+      const token = `${RAW_XML_TAG_PLACEHOLDER}${rawXmlTags.length}__`;
+      rawXmlTags.push(match);
+      return token;
+    })
+    .replaceAll(`${XML_TEXT_LESS_THAN_MARKER}&lt;`, `${XML_TEXT_LESS_THAN_MARKER}<`)
+    .replace(/&lt;/g, `${XML_TEXT_LESS_THAN_MARKER}<`)
+    .replace(/(^|[^\u200C])</g, `$1${XML_TEXT_LESS_THAN_MARKER}<`)
+    .replace(new RegExp(`${RAW_XML_TAG_PLACEHOLDER}(\\d+)__`, "g"), (_match, index) => rawXmlTags[Number(index)]);
+};
+
+const normalizeTextLessThanSigns = (html) => replaceEditorTextSegments(html, normalizeTextSegmentLessThanSigns);
+
+// Converts escaped &lt;ctr .../&gt; text → <span data-type="ctr-tag"> for TipTap
+const preprocessCtrTags = (html) => {
+  return html.replace(/&lt;ctr\s+([^&]*?)\/&gt;/g, (_, attrs) => {
+    const idMatch = attrs.match(/\bid="([^"]+)"/);
+    const ctrTypeMatch = attrs.match(/\bctr-type="([^"]*)"/);
+    const preMatch = attrs.match(/\bpre="([^"]*)"/);
+    const id = idMatch?.[1] ?? "";
+    const dataAttrs = [`data-type="ctr-tag"`, `data-id="${id}"`];
+    if (ctrTypeMatch) dataAttrs.push(`data-ctr-type="${ctrTypeMatch[1]}"`);
+    if (preMatch) dataAttrs.push(`data-pre="${preMatch[1]}"`);
+    return `<span ${dataAttrs.join(" ")}></span>`;
+  });
+};
+
+// Converts <span data-type="ctr-tag"> back to escaped &lt;ctr .../&gt; for storage
+const postprocessCtrTags = (html) => {
+  return html.replace(/<span\s[^>]*data-type="ctr-tag"[^>]*>[^<]*<\/span>/g, (match) => {
+    const idMatch = match.match(/data-id="([^"]*)"/);
+    const ctrTypeMatch = match.match(/data-ctr-type="([^"]*)"/);
+    const preMatch = match.match(/data-pre="([^"]*)"/);
+    const id = idMatch?.[1] ?? "";
+    const parts = [`id="${id}"`];
+    if (ctrTypeMatch) parts.push(`ctr-type="${ctrTypeMatch[1]}"`);
+    if (preMatch) parts.push(`pre="${preMatch[1]}"`);
+    return `&lt;ctr ${parts.join(" ")}/&gt;`;
+  });
+};
+
+const getStoredEditorHtml = (editor) => normalizeTextLessThanSigns(postprocessCtrTags(editor.getHTML().trim()));
+
+const OrderedListWithType = OrderedList.extend({
+  addAttributes() {
+    return {
+      ...this.parent?.(),
+      type: {
+        default: null,
+        parseHTML: (element) => element.getAttribute("type"),
+        renderHTML: (attributes) => (attributes.type ? { type: attributes.type } : {}),
+      },
+    };
+  },
+});
 
 /**
  * The TipTapEditor rich text editor
@@ -82,6 +245,7 @@ const TipTapEditor = (props) => {
     extensions: [
       StarterKit.configure({
         codeBlock: false,
+        orderedList: false,
         paragraph: {
           renderHTML({ node }) {
             // Return plain text without wrapping it in <p> tags
@@ -90,6 +254,7 @@ const TipTapEditor = (props) => {
         },
       }),
       Text,
+      OrderedListWithType,
       Table.configure({
         resizable: true,
       }),
@@ -119,8 +284,9 @@ const TipTapEditor = (props) => {
       CodeBlockLowlight.configure({
         lowlight,
       }),
+      CtrTagNode,
     ],
-    content: props.text || "",
+    content: preprocessCtrTags(preprocessXmlTextMarkers(props.text || "")),
     onUpdate({ editor }) {
       setIsNewContent(getIsNewContent(editor, props.text));
     },
@@ -148,11 +314,11 @@ const TipTapEditor = (props) => {
     // Normalize incoming prop to string
     const incoming = (typeof props.text === "string" ? props.text : "") || "";
 
-    const current = editor.getHTML();
+    const current = getStoredEditorHtml(editor);
 
     // If the editor isn't focused (user is not actively typing) and the content differs, update it
     if (!editor.isFocused && current !== incoming) {
-      editor.commands.setContent(incoming, false); // false = no undo step
+      editor.commands.setContent(preprocessCtrTags(preprocessXmlTextMarkers(incoming)), false); // false = no undo step
     }
   }, [props.text, editor]);
 
@@ -169,7 +335,7 @@ const TipTapEditor = (props) => {
 
       // Check if the text has changed
       if (newContent) {
-        const htmlContent = deepCopy(editor.getHTML().trim());
+        const htmlContent = deepCopy(getStoredEditorHtml(editor));
 
         // Update the content based on type
         if (contentType === "editor") {
@@ -200,7 +366,7 @@ const TipTapEditor = (props) => {
    * @returns {boolean}
    */
   const getIsNewContent = (editor, text) => {
-    const currentContent = editor.getHTML().trim();
+    const currentContent = getStoredEditorHtml(editor);
     const trimmedText = text ? text.trim() : "";
     const formattedText = `<p>${trimmedText}</p>`;
     const isTrimmedText = JSON.stringify(currentContent) !== JSON.stringify(trimmedText);
@@ -289,6 +455,28 @@ const MenuBar = ({ editor, icons }) => {
         // Wrap the selected text in a code block
         commands.insertContentAt({ from, to }, `<pre><code>${selectedText}</code></pre>`);
       }
+    }
+  };
+  /**
+   * Toggles an ordered list with the requested numbering type.
+   * @param type the ordered list type attribute
+   */
+  const toggleOrderedListByType = (type) => {
+    if (editor.isActive("orderedList", { type })) {
+      // The cursor is already inside the same ordered-list type the user clicked.
+      // Example: user clicks Lettered List while already in <ol type="a">.
+      //  Result: toggle the ordered list off.
+      editor.chain().focus().toggleOrderedList().run();
+    } else if (editor.isActive("orderedList")) {
+      // The cursor is inside an ordered list, but not the same type.
+      // Example: user is in a numeric <ol> and clicks Lettered List.
+      // Result: keep the ordered list, just change its type attribute.
+      editor.chain().focus().updateAttributes("orderedList", { type }).run();
+    } else {
+      // The cursor is not inside any ordered list.
+      // Example: user is in a paragraph and clicks Lettered List.
+      // Result: create an ordered list, then apply the requested type.
+      editor.chain().focus().toggleOrderedList().updateAttributes("orderedList", { type }).run();
     }
   };
 
@@ -383,9 +571,17 @@ const MenuBar = ({ editor, icons }) => {
       <Tooltip title={"Ordered List"}>
         <button
           onMouseDown={handleMouseDown}
-          onClick={() => editor.chain().focus().toggleOrderedList().run()}
-          className={editor.isActive("orderedList") ? "is-active" : ""}>
+          onClick={() => toggleOrderedListByType(null)}
+          className={editor.isActive("orderedList") && !editor.isActive("orderedList", { type: "a" }) ? "is-active" : ""}>
           <FaListOl style={textEditor} />
+        </button>
+      </Tooltip>
+      <Tooltip title={"Lettered List"}>
+        <button
+          onMouseDown={handleMouseDown}
+          onClick={() => toggleOrderedListByType("a")}
+          className={editor.isActive("orderedList", { type: "a" }) ? "is-active" : ""}>
+          <FaSortAlphaDown style={textEditor} />
         </button>
       </Tooltip>
       <Tooltip title={"Heading 1"}>
@@ -443,6 +639,28 @@ const MenuBar = ({ editor, icons }) => {
           }}
           className={editor.isActive("codeBlock") ? "is-active" : ""}>
           <FaCode style={textEditor} />
+        </button>
+      </Tooltip>
+      <Tooltip title={"Insert CTR Tag"}>
+        <button
+          onMouseDown={handleMouseDown}
+          onClick={() => {
+            const id = window.prompt("CTR id:");
+            if (!id) return;
+            const ctrType = window.prompt("CTR type (e.g. mgmt, Table, Figure — leave blank to omit):");
+            if (ctrType === null) return;
+            const pre = window.prompt("CTR pre (prefix label — leave blank for none):");
+            if (pre === null) return;
+            editor
+              .chain()
+              .focus()
+              .insertContent({
+                type: "ctrTag",
+                attrs: { id: id.trim(), ctrType: ctrType.trim() || null, pre },
+              })
+              .run();
+          }}>
+          <FaTag style={textEditor} />
         </button>
       </Tooltip>
     </div>

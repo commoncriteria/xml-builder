@@ -91,6 +91,7 @@ function Terms(props) {
             {props.showAddButton && (
               <IconButton sx={{ marginTop: "-8px" }} onClick={collapseHandler} variant='contained'>
                 <Tooltip
+                  key={props.open ? "open" : "closed"}
                   title={`${props.open ? "Collapse " : "Expand "} Terms List`}
                   id={(props.open ? "collapse" : "expand") + props.uuid + "TermsListTooltip"}>
                   {props.open ? <RemoveIcon htmlColor={primary} sx={icons.large} /> : <AddIcon htmlColor={primary} sx={icons.large} />}
@@ -114,6 +115,7 @@ function Terms(props) {
                           termUUID={props.uuid}
                           uuid={key}
                           title={value.title}
+                          abbr={value.abbr}
                           open={value.open}
                           definition={value.definition}
                         />

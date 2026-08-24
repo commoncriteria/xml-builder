@@ -50,13 +50,8 @@ import { removeTagEqualities } from "./fileParser.js";
 import { getSfrPreviewTextString } from "./sfrPreview.jsx";
 import CardTemplate from "../components/editorComponents/securityComponents/CardTemplate.jsx";
 import ToggleSwitch from "../components/ToggleSwitch.jsx";
-import app from "../../public/data/sfr_components/app_cc2022.json";
-import mdm from "../../public/data/sfr_components/mdm.json";
-import gpcp from "../../public/data/sfr_components/gpcp_cc2022.json";
-import gpos from "../../public/data/sfr_components/gpos_cc2022.json";
-import mdf from "../../public/data/sfr_components/mdf.json";
-import tls from "../../public/data/sfr_components/tls_cc2022.json";
-import virtualization from "../../public/data/sfr_components/virtualization_cc2022.json";
+import { dataMap } from "../utils/ppData.js";
+import { COMMON_REGEX } from "./regexUtils.js";
 
 // Constants
 export const noTestTooltip = (
@@ -171,15 +166,59 @@ export const handleEvaluationActivityTextUpdate = (event, type, index, uuid) => 
     } else {
       let activitiesCopy = activities ? deepCopy(activities) : {};
       const isTypeValid =
-        type === "introduction" || type === "tss" || type === "guidance" || type === "testIntroduction" || type === "testClosing" || type === "noTest";
+        type === "introduction" ||
+        type === "tss" ||
+        type === "guidance" ||
+        type === "testIntroduction" ||
+        type === "testClosing" ||
+        type === "noTest" ||
+        type === "customea";
 
       if (uuid && uuid !== "" && activitiesCopy && activitiesCopy.hasOwnProperty(uuid) && isTypeValid) {
-        activitiesCopy[uuid][type] = event;
+        if (type === "customea") {
+          activitiesCopy[uuid][type].text = event;
+        } else {
+          activitiesCopy[uuid][type] = event;
+        }
 
         // Update evaluation activities
         updateEvaluationActivities(activitiesCopy);
       }
     }
+  } catch (e) {
+    console.log(e);
+    handleSnackBarError(e);
+  }
+};
+/**
+ * Handles the text update
+ * @param event updated text from custom EA name field
+ * @param uuid the uuid
+ */
+export const handleCustomEANameChange = (event, uuid) => {
+  try {
+    const state = store.getState();
+    const { activities } = state.sfrWorksheetUI;
+
+    let activitiesCopy = activities ? deepCopy(activities) : {};
+
+    // Ensure uuid object exists
+    if (!activitiesCopy[uuid]) {
+      activitiesCopy[uuid] = {};
+    }
+
+    // Ensure customea object exists and is correct shape
+    if (!activitiesCopy[uuid].customea || typeof activitiesCopy[uuid].customea !== "object") {
+      activitiesCopy[uuid].customea = {
+        nameAttribute: "",
+        text: "",
+      };
+    }
+
+    // Now safe to assign
+    activitiesCopy[uuid].customea.nameAttribute = event.target.value;
+
+    updateEvaluationActivities(activitiesCopy);
   } catch (e) {
     console.log(e);
     handleSnackBarError(e);
@@ -319,6 +358,9 @@ export const fetchTemplateData = async ({ version, type, base }) => {
     // Dispatch actions to update different slices
     if (version !== "Version 3.1") {
       accordionPane.metadata.ppTemplateVersion = version;
+    }
+    if (type) {
+      accordionPane.metadata.ppType = type;
     }
 
     // Set initial states
@@ -617,8 +659,6 @@ export const getObjectiveMaps = () => {
  * @returns Object containing various relationships for name, UUID, and objectives
  */
 export const getSfrMaps = () => {
-  const dataMap = { app, gpcp, gpos, mdf, mdm, tls, virtualization };
-
   let sfrMap = {
     sfrNames: [],
     sfrNameMap: {},
@@ -879,11 +919,11 @@ export const getElementValuesByType = (element, type, key = null) => {
  */
 export const getComponentXmlID = (ccID, iterationID, isRequirementsFormat, getSplitValues) => {
   let formattedIterationId = "";
-  let formattedCcId = ccID ? (isRequirementsFormat ? ccID.valueOf().toUpperCase() : ccID.valueOf().toLowerCase()).replace(/\s+/g, "") : "";
+  let formattedCcId = ccID ? (isRequirementsFormat ? ccID.valueOf().toUpperCase() : ccID.valueOf().toLowerCase()).replace(COMMON_REGEX.allWhitespace, "") : "";
 
   // Get the iteration value
   if (iterationID && typeof iterationID === "string" && iterationID !== "") {
-    formattedIterationId = (isRequirementsFormat ? "/" + iterationID.toUpperCase() : "-" + iterationID.toLowerCase()).replace(/\s+/g, "");
+    formattedIterationId = (isRequirementsFormat ? "/" + iterationID.toUpperCase() : "-" + iterationID.toLowerCase()).replace(COMMON_REGEX.allWhitespace, "");
   }
 
   // Get formatted values
@@ -911,7 +951,7 @@ export const getElementId = (ccID, iterationID, index, isElementXMLID) => {
  */
 export const getFormattedXmlID = (xmlId) => {
   if (xmlId) {
-    return xmlId.replace(/\s+/g, "-").replace(/_/g, "-").replace(/\./g, "-").toLowerCase();
+    return xmlId.replace(COMMON_REGEX.allWhitespace, "-").replace(COMMON_REGEX.underscore, "-").replace(COMMON_REGEX.dot, "-").toLowerCase();
   } else {
     return "";
   }
@@ -940,7 +980,13 @@ export const getSelectionBasedArrayByType = (allSfrOptions, selections, selectio
           break;
         }
         case "selections": {
-          selection = returnType === "uuid" ? allSfrOptions.nameMap.selections[value] : allSfrOptions.uuidMap.selections[value];
+          if (returnType === "id") {
+            selection = allSfrOptions.selectionDependencyMap?.byLabel?.[value];
+          } else if (returnType === "uuid") {
+            selection = allSfrOptions.nameMap.selections[value];
+          } else {
+            selection = allSfrOptions.selectionDependencyMap?.byValue?.[value] || allSfrOptions.uuidMap.selections[value];
+          }
           break;
         }
         case "Use Cases": {
@@ -1097,6 +1143,79 @@ export const getSFRSelectables = (element, id, type, index = -1) => {
   }
 
   return selectables;
+};
+
+/**
+ * Returns the sets of identifiers already used across all groups, complex selectables,
+ * title selections, and management function row selections in the element.
+ *
+ * Selectables/assignments are tracked by UUID (the key in element.selectables) since their
+ * description and id fields can both change. Groups and complex selectables are tracked by
+ * their string key (kept in sync by the rename logic wherever it is referenced).
+ *
+ * @param element the current element
+ * @param excludeGroupId group ID whose groups array to skip (the currently-edited group)
+ * @param excludeComplexId complex selectable ID whose description to partially skip
+ * @param excludeComplexIndex index within excludeComplexId's description to skip
+ * @param excludeTitleIndex index within element.title whose `selections` field to skip
+ * @param excludeMgmtFnRowIndex management function row index to partially skip
+ * @param excludeMgmtFnItemIndex item index within that row's textArray to skip
+ * @returns {{ usedUUIDs: Set<string>, usedIDs: Set<string> }}
+ */
+export const getUsedSelectables = (
+  element,
+  {
+    excludeGroupId = null,
+    excludeComplexId = null,
+    excludeComplexIndex = -1,
+    excludeTitleIndex = -1,
+    excludeMgmtFnRowIndex = -1,
+    excludeMgmtFnItemIndex = -1,
+  } = {}
+) => {
+  const usedUUIDs = new Set(); // selectable/assignment UUIDs
+  const usedIDs = new Set(); // group/complex selectable string keys
+
+  const addRef = (ref) => {
+    if (element.selectables?.[ref]) {
+      usedUUIDs.add(ref);
+    } else {
+      usedIDs.add(ref);
+    }
+  };
+
+  Object.entries(element.selectableGroups || {}).forEach(([id, group]) => {
+    if (group.groups) {
+      if (id === excludeGroupId) return;
+      group.groups.forEach(addRef);
+    }
+    if (group.description) {
+      group.description.forEach((item, idx) => {
+        if (id === excludeComplexId && idx === excludeComplexIndex) return;
+        (item.groups || []).forEach(addRef);
+      });
+    }
+  });
+
+  // Title: selections reference group/complex IDs; assignment references a selectable UUID
+  (element.title || []).forEach((item, idx) => {
+    if (idx === excludeTitleIndex) return;
+    if (item.selections) usedIDs.add(item.selections);
+    if (item.assignment) usedUUIDs.add(item.assignment);
+  });
+
+  // Management function rows: scan all rows for both selections (group/complex IDs) and
+  // assignment (selectable/assignment UUIDs) across every management function, not just the
+  // one currently open in the modal
+  (element.managementFunctions?.rows || []).forEach((row, rowIdx) => {
+    (row.textArray || []).forEach((item, itemIdx) => {
+      if (rowIdx === excludeMgmtFnRowIndex && itemIdx === excludeMgmtFnItemIndex) return;
+      if (item.selections) usedIDs.add(item.selections);
+      if (item.assignment) usedUUIDs.add(item.assignment);
+    });
+  });
+
+  return { usedUUIDs, usedIDs };
 };
 
 // Internal Methods
@@ -1413,6 +1532,30 @@ export const updateManagementFunctionUI = (updateMap) => {
     handleSnackBarError(e);
   }
 };
+
+/**
+ * Keeps the open management function modal's cached row data in sync with the edited row.
+ * @param rowIndex the management function row index
+ * @param type the row field being updated
+ * @param value the updated row field value
+ */
+const syncManagementFunctionUIRowValue = ({ rowIndex, type, value }) => {
+  const state = store.getState();
+  const { managementFunctionUI } = state.sfrWorksheetUI;
+  const fieldMap = {
+    evaluationActivity: "activity",
+    note: "note",
+    textArray: "textArray",
+  };
+  const uiField = fieldMap[type];
+
+  if (uiField && managementFunctionUI?.rowIndex === rowIndex) {
+    updateManagementFunctionUI({
+      [uiField]: deepCopy(value),
+    });
+  }
+};
+
 /**
  * Update management function items
  * @param data the data
@@ -1438,6 +1581,10 @@ export const updateManagementFunctionItems = (data, managementFunctions, isRowIn
     updateSfrSectionElement({
       managementFunctions: currentManagementFunctions,
     });
+
+    if (isRowIndexUpdate) {
+      syncManagementFunctionUIRowValue(data);
+    }
   } catch (e) {
     console.log(e);
     handleSnackBarError(e);
@@ -1483,7 +1630,7 @@ export const resetSfrWorksheetUI = () => {
 export const updateComponentItems = (itemMap) => {
   try {
     const state = store.getState();
-    const { sfrUUID, componentUUID } = state.sfrWorksheetUI;
+    const { sfrUUID, componentUUID, component, elementUUID } = state.sfrWorksheetUI;
 
     // Updates the sfr component items
     store.dispatch(
@@ -1493,6 +1640,33 @@ export const updateComponentItems = (itemMap) => {
         itemMap: itemMap,
       })
     );
+
+    if (component && Object.keys(component).length > 0) {
+      const updatedComponent = {
+        ...deepCopy(component),
+        ...deepCopy(itemMap),
+      };
+      const worksheetUpdate = {
+        component: updatedComponent,
+      };
+
+      if (itemMap.elements) {
+        worksheetUpdate.currentElements = deepCopy(itemMap.elements);
+        if (elementUUID && itemMap.elements[elementUUID]) {
+          worksheetUpdate.element = deepCopy(itemMap.elements[elementUUID]);
+        }
+      }
+
+      if (itemMap.evaluationActivities) {
+        worksheetUpdate.activities = deepCopy(itemMap.evaluationActivities);
+      }
+
+      store.dispatch(
+        UPDATE_SFR_WORKSHEET_ITEMS({
+          itemMap: worksheetUpdate,
+        })
+      );
+    }
   } catch (e) {
     console.log(e);
     handleSnackBarError(e);
@@ -1505,7 +1679,7 @@ export const updateComponentItems = (itemMap) => {
 export const updateSfrSectionElement = (itemMap) => {
   try {
     const state = store.getState();
-    const { sfrUUID, componentUUID, elementUUID } = state.sfrWorksheetUI;
+    const { sfrUUID, componentUUID, elementUUID, component, element, currentElements, selectedSfrElement } = state.sfrWorksheetUI;
 
     // Update sfr section element
     store.dispatch(
@@ -1516,6 +1690,39 @@ export const updateSfrSectionElement = (itemMap) => {
         itemMap: itemMap,
       })
     );
+
+    if (elementUUID && element && Object.keys(element).length > 0) {
+      const updatedElement = {
+        ...deepCopy(element),
+        ...deepCopy(itemMap),
+      };
+      const updatedComponent = component && Object.keys(component).length > 0 ? deepCopy(component) : null;
+      const updatedElements = currentElements && Object.keys(currentElements).length > 0 ? deepCopy(currentElements) : null;
+      const worksheetUpdate = {
+        element: updatedElement,
+        selectedSfrElement,
+      };
+
+      if (updatedComponent?.elements?.[elementUUID]) {
+        updatedComponent.elements[elementUUID] = updatedElement;
+        worksheetUpdate.component = updatedComponent;
+      }
+
+      if (updatedElements?.[elementUUID]) {
+        updatedElements[elementUUID] = updatedElement;
+        worksheetUpdate.currentElements = updatedElements;
+      }
+
+      if (Object.prototype.hasOwnProperty.call(itemMap, "elementXMLID")) {
+        worksheetUpdate.elementXmlId = itemMap.elementXMLID;
+      }
+
+      store.dispatch(
+        UPDATE_SFR_WORKSHEET_ITEMS({
+          itemMap: worksheetUpdate,
+        })
+      );
+    }
   } catch (e) {
     console.log(e);
     handleSnackBarError(e);

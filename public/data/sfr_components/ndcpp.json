@@ -1,0 +1,6709 @@
+{
+  "FAU_GEN.1": {
+    "title": "Audit data generation",
+    "cc_id": "FAU_GEN.1",
+    "iteration_id": "",
+    "xml_id": "",
+    "definition": "",
+    "optional": false,
+    "objective": false,
+    "dependsComments": {},
+    "dependsExternalDocs": {},
+    "selectionBased": false,
+    "selections": {
+      "components": [],
+      "elements": [],
+      "selections": []
+    },
+    "useCaseBased": false,
+    "useCases": [],
+    "implementationDependent": false,
+    "reasons": [],
+    "tableOpen": false,
+    "objectives": [
+      {
+        "uuid": "2df468b3-9ca8-4c08-9edd-33f833a46187",
+        "rationale": "'cause FAU_GEN.1 is awesome"
+      }
+    ],
+    "extendedComponentDefinition": {
+      "audit": null,
+      "componentLeveling": null,
+      "dependencies": null,
+      "managementFunction": null,
+      "toggle": false
+    },
+    "auditEvents": {
+      "b5267a6a-8886-4fc4-979d-ff48c10a069b": {
+        "items": [],
+        "optional": false
+      }
+    },
+    "open": false,
+    "elements": {
+      "099a5f14-62b9-44de-bcb9-83d5f069f665": {
+        "elementXMLID": "fau-gen-1-1",
+        "selectableGroups": {
+          "group-1": {
+            "onlyOne": false,
+            "linebreak": false,
+            "groups": [
+              "e1bbf911-e98c-47ed-be94-92ca8eb8732a",
+              "71aa6143-89f5-4911-a63b-f9dcc1a1880d"
+            ]
+          }
+        },
+        "title": [
+          {
+            "text": " The TOE shall "
+          },
+          {
+            "selections": "group-1"
+          }
+        ],
+        "selectables": {
+          "e1bbf911-e98c-47ed-be94-92ca8eb8732a": {
+            "type": "selectable",
+            "uuid": "e1bbf911-e98c-47ed-be94-92ca8eb8732a",
+            "id": "dummy",
+            "description": "Dummy",
+            "exclusive": false,
+            "nestedGroups": []
+          },
+          "71aa6143-89f5-4911-a63b-f9dcc1a1880d": {
+            "type": "selectable",
+            "uuid": "71aa6143-89f5-4911-a63b-f9dcc1a1880d",
+            "id": "fau_gen.1.1_1",
+            "description": "Other",
+            "exclusive": false,
+            "nestedGroups": []
+          }
+        },
+        "isManagementFunction": false,
+        "managementFunctions": {
+          "tableName": "Management Functions",
+          "statusMarkers": "",
+          "rows": [],
+          "columns": [
+            {
+              "headerName": "#",
+              "field": "rowNum",
+              "editable": false,
+              "resizable": true,
+              "type": "Index",
+              "flex": 0.5
+            },
+            {
+              "headerName": "ID",
+              "field": "id",
+              "editable": true,
+              "resizable": true,
+              "type": "Editor",
+              "flex": 1
+            },
+            {
+              "headerName": "Management Function",
+              "field": "textArray",
+              "editable": false,
+              "resizable": true,
+              "type": "Button",
+              "flex": 2
+            }
+          ]
+        },
+        "note": ""
+      }
+    },
+    "invisible": false,
+    "evaluationActivities": {
+      "099a5f14-62b9-44de-bcb9-83d5f069f665": {
+        "hasLevelSet": false,
+        "tss": "ABC",
+        "introduction": "Something",
+        "guidance": "",
+        "testIntroduction": "",
+        "testClosing": "",
+        "testLists": {},
+        "tests": {},
+        "platformMap": null,
+        "isNoTest": false,
+        "noTest": ""
+      }
+    },
+    "modifiedSfr": false,
+    "additionalSfr": false,
+    "consistencyRationale": null,
+    "notNew": null,
+    "xPathDetails": {},
+    "classDescription": "",
+    "sfrType": "",
+    "compUUID": "4b8363d0-a437-4779-b47c-68e6ffac0254"
+  },
+  "FAU_GEN.2": {
+    "title": "User identity association",
+    "cc_id": "FAU_GEN.2",
+    "iteration_id": "",
+    "xml_id": "",
+    "definition": "",
+    "optional": false,
+    "objective": false,
+    "dependsComments": {},
+    "dependsExternalDocs": {},
+    "selectionBased": false,
+    "selections": {
+      "components": [],
+      "elements": [],
+      "selections": []
+    },
+    "useCaseBased": false,
+    "useCases": [],
+    "implementationDependent": false,
+    "reasons": [],
+    "tableOpen": false,
+    "objectives": [],
+    "extendedComponentDefinition": {
+      "audit": null,
+      "componentLeveling": null,
+      "dependencies": null,
+      "managementFunction": null,
+      "toggle": false
+    },
+    "auditEvents": {
+      "c056dd2b-bdb6-450e-b5a2-4e4094ea95e6": {
+        "items": [],
+        "optional": false
+      }
+    },
+    "open": false,
+    "elements": {
+      "68c14f3e-3bbf-4f9a-a3fd-3847f5fe02a7": {
+        "elementXMLID": "fau-gen-2-1",
+        "selectableGroups": {},
+        "title": [
+          {
+            "text": " The TOE shall \n            "
+          }
+        ],
+        "selectables": {},
+        "isManagementFunction": false,
+        "managementFunctions": {
+          "tableName": "Management Functions",
+          "statusMarkers": "",
+          "rows": [],
+          "columns": [
+            {
+              "headerName": "#",
+              "field": "rowNum",
+              "editable": false,
+              "resizable": true,
+              "type": "Index",
+              "flex": 0.5
+            },
+            {
+              "headerName": "ID",
+              "field": "id",
+              "editable": true,
+              "resizable": true,
+              "type": "Editor",
+              "flex": 1
+            },
+            {
+              "headerName": "Management Function",
+              "field": "textArray",
+              "editable": false,
+              "resizable": true,
+              "type": "Button",
+              "flex": 2
+            }
+          ]
+        },
+        "note": ""
+      }
+    },
+    "invisible": false,
+    "evaluationActivities": {
+      "68c14f3e-3bbf-4f9a-a3fd-3847f5fe02a7": {
+        "hasLevelSet": false,
+        "tss": "ABC",
+        "introduction": "Something",
+        "guidance": "",
+        "testIntroduction": "",
+        "testClosing": "",
+        "testLists": {},
+        "tests": {},
+        "platformMap": null,
+        "isNoTest": false,
+        "noTest": ""
+      }
+    },
+    "modifiedSfr": false,
+    "additionalSfr": false,
+    "consistencyRationale": null,
+    "notNew": null,
+    "xPathDetails": {},
+    "classDescription": "",
+    "sfrType": "",
+    "compUUID": "31b4f63b-f940-483b-ba49-f783f4f003ad"
+  },
+  "FAU_GEN_EXT.1": {
+    "title": "Security Audit Generation",
+    "cc_id": "FAU_GEN_EXT.1",
+    "iteration_id": "",
+    "xml_id": "",
+    "definition": "",
+    "optional": false,
+    "objective": false,
+    "dependsComments": {},
+    "dependsExternalDocs": {},
+    "selectionBased": true,
+    "selections": {
+      "components": [],
+      "elements": [
+        "099a5f14-62b9-44de-bcb9-83d5f069f665"
+      ],
+      "selections": [
+        "dummy"
+      ]
+    },
+    "useCaseBased": false,
+    "useCases": [],
+    "implementationDependent": false,
+    "reasons": [],
+    "tableOpen": false,
+    "objectives": [],
+    "extendedComponentDefinition": {
+      "audit": null,
+      "componentLeveling": null,
+      "dependencies": null,
+      "managementFunction": null,
+      "toggle": false
+    },
+    "auditEvents": {
+      "2ea70dce-4b06-4a85-a0d2-ad320f001880": {
+        "items": [],
+        "optional": false
+      }
+    },
+    "open": false,
+    "elements": {
+      "276ca51f-6ed4-42b9-868b-b0303234059d": {
+        "elementXMLID": "fau-gen-ext-1-1",
+        "selectableGroups": {},
+        "title": [
+          {
+            "text": " The TOE shall \n            "
+          }
+        ],
+        "selectables": {},
+        "isManagementFunction": false,
+        "managementFunctions": {
+          "tableName": "Management Functions",
+          "statusMarkers": "",
+          "rows": [],
+          "columns": [
+            {
+              "headerName": "#",
+              "field": "rowNum",
+              "editable": false,
+              "resizable": true,
+              "type": "Index",
+              "flex": 0.5
+            },
+            {
+              "headerName": "ID",
+              "field": "id",
+              "editable": true,
+              "resizable": true,
+              "type": "Editor",
+              "flex": 1
+            },
+            {
+              "headerName": "Management Function",
+              "field": "textArray",
+              "editable": false,
+              "resizable": true,
+              "type": "Button",
+              "flex": 2
+            }
+          ]
+        },
+        "note": ""
+      }
+    },
+    "invisible": false,
+    "evaluationActivities": {
+      "276ca51f-6ed4-42b9-868b-b0303234059d": {
+        "hasLevelSet": false,
+        "tss": "ABC",
+        "introduction": "Something",
+        "guidance": "",
+        "testIntroduction": "",
+        "testClosing": "",
+        "testLists": {},
+        "tests": {},
+        "platformMap": null,
+        "isNoTest": false,
+        "noTest": ""
+      }
+    },
+    "modifiedSfr": false,
+    "additionalSfr": false,
+    "consistencyRationale": null,
+    "notNew": null,
+    "xPathDetails": {},
+    "classDescription": "",
+    "sfrType": "",
+    "compUUID": "2ea6015c-586c-4dba-b933-cc57a31ef5b2"
+  },
+  "FAU_STG.1": {
+    "title": "Protected Audit Trail Storage",
+    "cc_id": "FAU_STG.1",
+    "iteration_id": "",
+    "xml_id": "",
+    "definition": "",
+    "optional": true,
+    "objective": false,
+    "dependsComments": {},
+    "dependsExternalDocs": {},
+    "selectionBased": false,
+    "selections": {
+      "components": [],
+      "elements": [],
+      "selections": []
+    },
+    "useCaseBased": false,
+    "useCases": [],
+    "implementationDependent": false,
+    "reasons": [],
+    "tableOpen": false,
+    "objectives": [],
+    "extendedComponentDefinition": {
+      "audit": null,
+      "componentLeveling": null,
+      "dependencies": null,
+      "managementFunction": null,
+      "toggle": false
+    },
+    "auditEvents": {
+      "0a4dada4-8779-4fff-a757-222297b9e91e": {
+        "items": [],
+        "optional": false
+      }
+    },
+    "open": false,
+    "elements": {
+      "4c9a9af3-a9bf-4edb-8c3f-b1bbec170ac0": {
+        "elementXMLID": "fau-stg-1-1",
+        "selectableGroups": {},
+        "title": [
+          {
+            "text": " The TOE shall \n            "
+          }
+        ],
+        "selectables": {},
+        "isManagementFunction": false,
+        "managementFunctions": {
+          "tableName": "Management Functions",
+          "statusMarkers": "",
+          "rows": [],
+          "columns": [
+            {
+              "headerName": "#",
+              "field": "rowNum",
+              "editable": false,
+              "resizable": true,
+              "type": "Index",
+              "flex": 0.5
+            },
+            {
+              "headerName": "ID",
+              "field": "id",
+              "editable": true,
+              "resizable": true,
+              "type": "Editor",
+              "flex": 1
+            },
+            {
+              "headerName": "Management Function",
+              "field": "textArray",
+              "editable": false,
+              "resizable": true,
+              "type": "Button",
+              "flex": 2
+            }
+          ]
+        },
+        "note": ""
+      }
+    },
+    "invisible": false,
+    "evaluationActivities": {
+      "4c9a9af3-a9bf-4edb-8c3f-b1bbec170ac0": {
+        "hasLevelSet": false,
+        "tss": "ABC",
+        "introduction": "Something",
+        "guidance": "",
+        "testIntroduction": "",
+        "testClosing": "",
+        "testLists": {},
+        "tests": {},
+        "platformMap": null,
+        "isNoTest": false,
+        "noTest": ""
+      }
+    },
+    "modifiedSfr": false,
+    "additionalSfr": false,
+    "consistencyRationale": null,
+    "notNew": null,
+    "xPathDetails": {},
+    "classDescription": "",
+    "sfrType": "",
+    "compUUID": "22e55535-4d71-4c72-93a4-44313adcbace"
+  },
+  "FAU_STG_EXT.1": {
+    "title": "Protected Audit Event Storage",
+    "cc_id": "FAU_STG_EXT.1",
+    "iteration_id": "",
+    "xml_id": "",
+    "definition": "",
+    "optional": false,
+    "objective": false,
+    "dependsComments": {},
+    "dependsExternalDocs": {},
+    "selectionBased": false,
+    "selections": {
+      "components": [],
+      "elements": [],
+      "selections": []
+    },
+    "useCaseBased": false,
+    "useCases": [],
+    "implementationDependent": false,
+    "reasons": [],
+    "tableOpen": false,
+    "objectives": [],
+    "extendedComponentDefinition": {
+      "audit": null,
+      "componentLeveling": null,
+      "dependencies": null,
+      "managementFunction": null,
+      "toggle": false
+    },
+    "auditEvents": {
+      "af0005cf-1436-4ff0-9253-b90e627a85b0": {
+        "items": [],
+        "optional": false
+      }
+    },
+    "open": false,
+    "elements": {
+      "d8585650-3683-49af-b3b5-cbd367dd27ec": {
+        "elementXMLID": "fau-stg-ext-1-1",
+        "selectableGroups": {},
+        "title": [
+          {
+            "text": " The TOE shall \n            "
+          }
+        ],
+        "selectables": {},
+        "isManagementFunction": false,
+        "managementFunctions": {
+          "tableName": "Management Functions",
+          "statusMarkers": "",
+          "rows": [],
+          "columns": [
+            {
+              "headerName": "#",
+              "field": "rowNum",
+              "editable": false,
+              "resizable": true,
+              "type": "Index",
+              "flex": 0.5
+            },
+            {
+              "headerName": "ID",
+              "field": "id",
+              "editable": true,
+              "resizable": true,
+              "type": "Editor",
+              "flex": 1
+            },
+            {
+              "headerName": "Management Function",
+              "field": "textArray",
+              "editable": false,
+              "resizable": true,
+              "type": "Button",
+              "flex": 2
+            }
+          ]
+        },
+        "note": ""
+      }
+    },
+    "invisible": false,
+    "evaluationActivities": {
+      "d8585650-3683-49af-b3b5-cbd367dd27ec": {
+        "hasLevelSet": false,
+        "tss": "ABC",
+        "introduction": "Something",
+        "guidance": "",
+        "testIntroduction": "",
+        "testClosing": "",
+        "testLists": {},
+        "tests": {},
+        "platformMap": null,
+        "isNoTest": false,
+        "noTest": ""
+      }
+    },
+    "modifiedSfr": false,
+    "additionalSfr": false,
+    "consistencyRationale": null,
+    "notNew": null,
+    "xPathDetails": {},
+    "classDescription": "",
+    "sfrType": "",
+    "compUUID": "88afdf96-0658-4afe-96e9-0a13fc927d7c"
+  },
+  "FAU_STG_EXT.2/LocSpace": {
+    "title": "Protected Audit Event Storage",
+    "cc_id": "FAU_STG_EXT.2",
+    "iteration_id": "LocSpace",
+    "xml_id": "",
+    "definition": "",
+    "optional": true,
+    "objective": false,
+    "dependsComments": {},
+    "dependsExternalDocs": {},
+    "selectionBased": false,
+    "selections": {
+      "components": [],
+      "elements": [],
+      "selections": []
+    },
+    "useCaseBased": false,
+    "useCases": [],
+    "implementationDependent": false,
+    "reasons": [],
+    "tableOpen": false,
+    "objectives": [],
+    "extendedComponentDefinition": {
+      "audit": null,
+      "componentLeveling": null,
+      "dependencies": null,
+      "managementFunction": null,
+      "toggle": false
+    },
+    "auditEvents": {
+      "c5ded5df-b0d1-4180-8b22-d8cc421d94b9": {
+        "items": [],
+        "optional": false
+      }
+    },
+    "open": false,
+    "elements": {
+      "73de5cb4-496c-4ff0-9bb1-aa987c393ca3": {
+        "elementXMLID": "fau-stg-ext-2-ls-1",
+        "selectableGroups": {},
+        "title": [
+          {
+            "text": " The TOE shall \n            "
+          }
+        ],
+        "selectables": {},
+        "isManagementFunction": false,
+        "managementFunctions": {
+          "tableName": "Management Functions",
+          "statusMarkers": "",
+          "rows": [],
+          "columns": [
+            {
+              "headerName": "#",
+              "field": "rowNum",
+              "editable": false,
+              "resizable": true,
+              "type": "Index",
+              "flex": 0.5
+            },
+            {
+              "headerName": "ID",
+              "field": "id",
+              "editable": true,
+              "resizable": true,
+              "type": "Editor",
+              "flex": 1
+            },
+            {
+              "headerName": "Management Function",
+              "field": "textArray",
+              "editable": false,
+              "resizable": true,
+              "type": "Button",
+              "flex": 2
+            }
+          ]
+        },
+        "note": ""
+      }
+    },
+    "invisible": false,
+    "evaluationActivities": {
+      "73de5cb4-496c-4ff0-9bb1-aa987c393ca3": {
+        "hasLevelSet": false,
+        "tss": "ABC",
+        "introduction": "Something",
+        "guidance": "",
+        "testIntroduction": "",
+        "testClosing": "",
+        "testLists": {},
+        "tests": {},
+        "platformMap": null,
+        "isNoTest": false,
+        "noTest": ""
+      }
+    },
+    "modifiedSfr": false,
+    "additionalSfr": false,
+    "consistencyRationale": null,
+    "notNew": null,
+    "xPathDetails": {},
+    "classDescription": "",
+    "sfrType": "",
+    "compUUID": "53091384-6821-4768-b82e-19f613c9bd58"
+  },
+  "FAU_STG_EXT.3/LocSpace": {
+    "title": "Action in Case of Possible Audit Data Loss",
+    "cc_id": "FAU_STG_EXT.3",
+    "iteration_id": "LocSpace",
+    "xml_id": "",
+    "definition": "",
+    "optional": true,
+    "objective": false,
+    "dependsComments": {},
+    "dependsExternalDocs": {},
+    "selectionBased": false,
+    "selections": {
+      "components": [],
+      "elements": [],
+      "selections": []
+    },
+    "useCaseBased": false,
+    "useCases": [],
+    "implementationDependent": false,
+    "reasons": [],
+    "tableOpen": false,
+    "objectives": [],
+    "extendedComponentDefinition": {
+      "audit": null,
+      "componentLeveling": null,
+      "dependencies": null,
+      "managementFunction": null,
+      "toggle": false
+    },
+    "auditEvents": {
+      "42c4cacf-6104-44bc-ae76-cc643f0f8ef2": {
+        "items": [],
+        "optional": false
+      }
+    },
+    "open": false,
+    "elements": {
+      "04d1abf4-09e7-4f26-b3fa-5e69e000421a": {
+        "elementXMLID": "fau-stg-ext-3-ls-1",
+        "selectableGroups": {},
+        "title": [
+          {
+            "text": " The TOE shall \n            "
+          }
+        ],
+        "selectables": {},
+        "isManagementFunction": false,
+        "managementFunctions": {
+          "tableName": "Management Functions",
+          "statusMarkers": "",
+          "rows": [],
+          "columns": [
+            {
+              "headerName": "#",
+              "field": "rowNum",
+              "editable": false,
+              "resizable": true,
+              "type": "Index",
+              "flex": 0.5
+            },
+            {
+              "headerName": "ID",
+              "field": "id",
+              "editable": true,
+              "resizable": true,
+              "type": "Editor",
+              "flex": 1
+            },
+            {
+              "headerName": "Management Function",
+              "field": "textArray",
+              "editable": false,
+              "resizable": true,
+              "type": "Button",
+              "flex": 2
+            }
+          ]
+        },
+        "note": ""
+      }
+    },
+    "invisible": false,
+    "evaluationActivities": {
+      "04d1abf4-09e7-4f26-b3fa-5e69e000421a": {
+        "hasLevelSet": false,
+        "tss": "ABC",
+        "introduction": "Something",
+        "guidance": "",
+        "testIntroduction": "",
+        "testClosing": "",
+        "testLists": {},
+        "tests": {},
+        "platformMap": null,
+        "isNoTest": false,
+        "noTest": ""
+      }
+    },
+    "modifiedSfr": false,
+    "additionalSfr": false,
+    "consistencyRationale": null,
+    "notNew": null,
+    "xPathDetails": {},
+    "classDescription": "",
+    "sfrType": "",
+    "compUUID": "0f358828-03de-418c-8739-344d6f14f4c1"
+  },
+  "FAU_STG_EXT.4": {
+    "title": "Protected Local Audit Event Storage for Distributed TOEs",
+    "cc_id": "FAU_STG_EXT.4",
+    "iteration_id": "",
+    "xml_id": "",
+    "definition": "",
+    "optional": false,
+    "objective": false,
+    "dependsComments": {},
+    "dependsExternalDocs": {},
+    "selectionBased": true,
+    "selections": {
+      "components": [],
+      "elements": [
+        "099a5f14-62b9-44de-bcb9-83d5f069f665"
+      ],
+      "selections": [
+        "dummy"
+      ]
+    },
+    "useCaseBased": false,
+    "useCases": [],
+    "implementationDependent": false,
+    "reasons": [],
+    "tableOpen": false,
+    "objectives": [],
+    "extendedComponentDefinition": {
+      "audit": null,
+      "componentLeveling": null,
+      "dependencies": null,
+      "managementFunction": null,
+      "toggle": false
+    },
+    "auditEvents": {
+      "bc315607-9f82-4b72-a26c-b1f6490224df": {
+        "items": [],
+        "optional": false
+      }
+    },
+    "open": false,
+    "elements": {
+      "89b2f01e-5f89-488b-8905-a24e140e9d2b": {
+        "elementXMLID": "fau-stg-ext-4-1",
+        "selectableGroups": {},
+        "title": [
+          {
+            "text": " The TOE shall \n            "
+          }
+        ],
+        "selectables": {},
+        "isManagementFunction": false,
+        "managementFunctions": {
+          "tableName": "Management Functions",
+          "statusMarkers": "",
+          "rows": [],
+          "columns": [
+            {
+              "headerName": "#",
+              "field": "rowNum",
+              "editable": false,
+              "resizable": true,
+              "type": "Index",
+              "flex": 0.5
+            },
+            {
+              "headerName": "ID",
+              "field": "id",
+              "editable": true,
+              "resizable": true,
+              "type": "Editor",
+              "flex": 1
+            },
+            {
+              "headerName": "Management Function",
+              "field": "textArray",
+              "editable": false,
+              "resizable": true,
+              "type": "Button",
+              "flex": 2
+            }
+          ]
+        },
+        "note": ""
+      }
+    },
+    "invisible": false,
+    "evaluationActivities": {
+      "89b2f01e-5f89-488b-8905-a24e140e9d2b": {
+        "hasLevelSet": false,
+        "tss": "ABC",
+        "introduction": "Something",
+        "guidance": "",
+        "testIntroduction": "",
+        "testClosing": "",
+        "testLists": {},
+        "tests": {},
+        "platformMap": null,
+        "isNoTest": false,
+        "noTest": ""
+      }
+    },
+    "modifiedSfr": false,
+    "additionalSfr": false,
+    "consistencyRationale": null,
+    "notNew": null,
+    "xPathDetails": {},
+    "classDescription": "",
+    "sfrType": "",
+    "compUUID": "524902c1-6672-4a0d-82ad-f1777ecd7615"
+  },
+  "FAU_STG_EXT.5": {
+    "title": "Protected Remote Audit Event Storage for Distributed TOEs",
+    "cc_id": "FAU_STG_EXT.5",
+    "iteration_id": "",
+    "xml_id": "",
+    "definition": "",
+    "optional": false,
+    "objective": false,
+    "dependsComments": {},
+    "dependsExternalDocs": {},
+    "selectionBased": true,
+    "selections": {
+      "components": [],
+      "elements": [
+        "099a5f14-62b9-44de-bcb9-83d5f069f665"
+      ],
+      "selections": [
+        "dummy"
+      ]
+    },
+    "useCaseBased": false,
+    "useCases": [],
+    "implementationDependent": false,
+    "reasons": [],
+    "tableOpen": false,
+    "objectives": [],
+    "extendedComponentDefinition": {
+      "audit": null,
+      "componentLeveling": null,
+      "dependencies": null,
+      "managementFunction": null,
+      "toggle": false
+    },
+    "auditEvents": {
+      "fbb9a053-ed87-4c9c-a4fb-858c11461882": {
+        "items": [],
+        "optional": false
+      }
+    },
+    "open": false,
+    "elements": {
+      "82a826ff-3a13-4204-b060-721ceae7ce62": {
+        "elementXMLID": "fau-stg-ext-5-1",
+        "selectableGroups": {},
+        "title": [
+          {
+            "text": " The TOE shall \n            "
+          }
+        ],
+        "selectables": {},
+        "isManagementFunction": false,
+        "managementFunctions": {
+          "tableName": "Management Functions",
+          "statusMarkers": "",
+          "rows": [],
+          "columns": [
+            {
+              "headerName": "#",
+              "field": "rowNum",
+              "editable": false,
+              "resizable": true,
+              "type": "Index",
+              "flex": 0.5
+            },
+            {
+              "headerName": "ID",
+              "field": "id",
+              "editable": true,
+              "resizable": true,
+              "type": "Editor",
+              "flex": 1
+            },
+            {
+              "headerName": "Management Function",
+              "field": "textArray",
+              "editable": false,
+              "resizable": true,
+              "type": "Button",
+              "flex": 2
+            }
+          ]
+        },
+        "note": ""
+      }
+    },
+    "invisible": false,
+    "evaluationActivities": {
+      "82a826ff-3a13-4204-b060-721ceae7ce62": {
+        "hasLevelSet": false,
+        "tss": "ABC",
+        "introduction": "Something",
+        "guidance": "",
+        "testIntroduction": "",
+        "testClosing": "",
+        "testLists": {},
+        "tests": {},
+        "platformMap": null,
+        "isNoTest": false,
+        "noTest": ""
+      }
+    },
+    "modifiedSfr": false,
+    "additionalSfr": false,
+    "consistencyRationale": null,
+    "notNew": null,
+    "xPathDetails": {},
+    "classDescription": "",
+    "sfrType": "",
+    "compUUID": "c8a0c8f8-91bf-49a5-8ffe-822a3244ad91"
+  },
+  "FCO_CPC_EXT.1": {
+    "title": "Component Registration Channel Definition",
+    "cc_id": "FCO_CPC_EXT.1",
+    "iteration_id": "",
+    "xml_id": "",
+    "definition": "",
+    "optional": true,
+    "objective": false,
+    "dependsComments": {},
+    "dependsExternalDocs": {},
+    "selectionBased": false,
+    "selections": {
+      "components": [],
+      "elements": [],
+      "selections": []
+    },
+    "useCaseBased": false,
+    "useCases": [],
+    "implementationDependent": false,
+    "reasons": [],
+    "tableOpen": false,
+    "objectives": [],
+    "extendedComponentDefinition": {
+      "audit": null,
+      "componentLeveling": null,
+      "dependencies": null,
+      "managementFunction": null,
+      "toggle": false
+    },
+    "auditEvents": {
+      "740121a3-53c5-419c-9870-7e1e15e4e7fa": {
+        "items": [],
+        "optional": false
+      }
+    },
+    "open": false,
+    "elements": {
+      "81acbdb9-9053-4807-b02b-1e4b6547f2ad": {
+        "elementXMLID": "fco-cpc-ext-1-1",
+        "selectableGroups": {},
+        "title": [
+          {
+            "text": " The TOE shall \n            "
+          }
+        ],
+        "selectables": {},
+        "isManagementFunction": false,
+        "managementFunctions": {
+          "tableName": "Management Functions",
+          "statusMarkers": "",
+          "rows": [],
+          "columns": [
+            {
+              "headerName": "#",
+              "field": "rowNum",
+              "editable": false,
+              "resizable": true,
+              "type": "Index",
+              "flex": 0.5
+            },
+            {
+              "headerName": "ID",
+              "field": "id",
+              "editable": true,
+              "resizable": true,
+              "type": "Editor",
+              "flex": 1
+            },
+            {
+              "headerName": "Management Function",
+              "field": "textArray",
+              "editable": false,
+              "resizable": true,
+              "type": "Button",
+              "flex": 2
+            }
+          ]
+        },
+        "note": ""
+      }
+    },
+    "invisible": false,
+    "evaluationActivities": {
+      "81acbdb9-9053-4807-b02b-1e4b6547f2ad": {
+        "hasLevelSet": false,
+        "tss": "ABC",
+        "introduction": "Something",
+        "guidance": "",
+        "testIntroduction": "",
+        "testClosing": "",
+        "testLists": {},
+        "tests": {},
+        "platformMap": null,
+        "isNoTest": false,
+        "noTest": ""
+      }
+    },
+    "modifiedSfr": false,
+    "additionalSfr": false,
+    "consistencyRationale": null,
+    "notNew": null,
+    "xPathDetails": {},
+    "classDescription": "",
+    "sfrType": "",
+    "compUUID": "fcd66cd4-7207-4c7c-bd2c-772b5784a005"
+  },
+  "FCS_CKM.1": {
+    "title": "Cryptographic Key Generation (Refinement)",
+    "cc_id": "FCS_CKM.1",
+    "iteration_id": "",
+    "xml_id": "",
+    "definition": "",
+    "optional": false,
+    "objective": false,
+    "dependsComments": {},
+    "dependsExternalDocs": {},
+    "selectionBased": false,
+    "selections": {
+      "components": [],
+      "elements": [],
+      "selections": []
+    },
+    "useCaseBased": false,
+    "useCases": [],
+    "implementationDependent": false,
+    "reasons": [],
+    "tableOpen": false,
+    "objectives": [],
+    "extendedComponentDefinition": {
+      "audit": null,
+      "componentLeveling": null,
+      "dependencies": null,
+      "managementFunction": null,
+      "toggle": false
+    },
+    "auditEvents": {
+      "2761f82b-a3d4-41bf-854e-ddba5a725ea7": {
+        "items": [],
+        "optional": false
+      }
+    },
+    "open": false,
+    "elements": {
+      "18c312a3-9462-412d-87fc-369748b3df96": {
+        "elementXMLID": "fcs-ckm-1-1",
+        "selectableGroups": {},
+        "title": [
+          {
+            "text": " The TOE shall \n            "
+          }
+        ],
+        "selectables": {},
+        "isManagementFunction": false,
+        "managementFunctions": {
+          "tableName": "Management Functions",
+          "statusMarkers": "",
+          "rows": [],
+          "columns": [
+            {
+              "headerName": "#",
+              "field": "rowNum",
+              "editable": false,
+              "resizable": true,
+              "type": "Index",
+              "flex": 0.5
+            },
+            {
+              "headerName": "ID",
+              "field": "id",
+              "editable": true,
+              "resizable": true,
+              "type": "Editor",
+              "flex": 1
+            },
+            {
+              "headerName": "Management Function",
+              "field": "textArray",
+              "editable": false,
+              "resizable": true,
+              "type": "Button",
+              "flex": 2
+            }
+          ]
+        },
+        "note": ""
+      }
+    },
+    "invisible": false,
+    "evaluationActivities": {
+      "18c312a3-9462-412d-87fc-369748b3df96": {
+        "hasLevelSet": false,
+        "tss": "ABC",
+        "introduction": "Something",
+        "guidance": "",
+        "testIntroduction": "",
+        "testClosing": "",
+        "testLists": {},
+        "tests": {},
+        "platformMap": null,
+        "isNoTest": false,
+        "noTest": ""
+      }
+    },
+    "modifiedSfr": false,
+    "additionalSfr": false,
+    "consistencyRationale": null,
+    "notNew": null,
+    "xPathDetails": {},
+    "classDescription": "",
+    "sfrType": "",
+    "compUUID": "64d3744b-2a3a-4ee0-8ddf-d290ab813bf9"
+  },
+  "FCS_CKM.2": {
+    "title": "Cryptographic Key Establishment (Refinement)",
+    "cc_id": "FCS_CKM.2",
+    "iteration_id": "",
+    "xml_id": "",
+    "definition": "",
+    "optional": false,
+    "objective": false,
+    "dependsComments": {},
+    "dependsExternalDocs": {},
+    "selectionBased": false,
+    "selections": {
+      "components": [],
+      "elements": [],
+      "selections": []
+    },
+    "useCaseBased": false,
+    "useCases": [],
+    "implementationDependent": false,
+    "reasons": [],
+    "tableOpen": false,
+    "objectives": [],
+    "extendedComponentDefinition": {
+      "audit": null,
+      "componentLeveling": null,
+      "dependencies": null,
+      "managementFunction": null,
+      "toggle": false
+    },
+    "auditEvents": {
+      "e0f58829-5999-4892-b055-bd1b8021c878": {
+        "items": [],
+        "optional": false
+      }
+    },
+    "open": false,
+    "elements": {
+      "2797f2df-5059-424d-98a2-66aa3d6bab70": {
+        "elementXMLID": "fcs-ckm-2-1",
+        "selectableGroups": {},
+        "title": [
+          {
+            "text": " The TOE shall \n            "
+          }
+        ],
+        "selectables": {},
+        "isManagementFunction": false,
+        "managementFunctions": {
+          "tableName": "Management Functions",
+          "statusMarkers": "",
+          "rows": [],
+          "columns": [
+            {
+              "headerName": "#",
+              "field": "rowNum",
+              "editable": false,
+              "resizable": true,
+              "type": "Index",
+              "flex": 0.5
+            },
+            {
+              "headerName": "ID",
+              "field": "id",
+              "editable": true,
+              "resizable": true,
+              "type": "Editor",
+              "flex": 1
+            },
+            {
+              "headerName": "Management Function",
+              "field": "textArray",
+              "editable": false,
+              "resizable": true,
+              "type": "Button",
+              "flex": 2
+            }
+          ]
+        },
+        "note": ""
+      }
+    },
+    "invisible": false,
+    "evaluationActivities": {
+      "2797f2df-5059-424d-98a2-66aa3d6bab70": {
+        "hasLevelSet": false,
+        "tss": "ABC",
+        "introduction": "Something",
+        "guidance": "",
+        "testIntroduction": "",
+        "testClosing": "",
+        "testLists": {},
+        "tests": {},
+        "platformMap": null,
+        "isNoTest": false,
+        "noTest": ""
+      }
+    },
+    "modifiedSfr": false,
+    "additionalSfr": false,
+    "consistencyRationale": null,
+    "notNew": null,
+    "xPathDetails": {},
+    "classDescription": "",
+    "sfrType": "",
+    "compUUID": "5a89e905-26d1-4fbd-a2c4-74bbce6ea1ea"
+  },
+  "FCS_CKM.4": {
+    "title": "Cryptographic Key Destruction",
+    "cc_id": "FCS_CKM.4",
+    "iteration_id": "",
+    "xml_id": "",
+    "definition": "",
+    "optional": false,
+    "objective": false,
+    "dependsComments": {},
+    "dependsExternalDocs": {},
+    "selectionBased": false,
+    "selections": {
+      "components": [],
+      "elements": [],
+      "selections": []
+    },
+    "useCaseBased": false,
+    "useCases": [],
+    "implementationDependent": false,
+    "reasons": [],
+    "tableOpen": false,
+    "objectives": [],
+    "extendedComponentDefinition": {
+      "audit": null,
+      "componentLeveling": null,
+      "dependencies": null,
+      "managementFunction": null,
+      "toggle": false
+    },
+    "auditEvents": {
+      "0848884c-70ba-40c3-a51c-72087c8e8e4e": {
+        "items": [],
+        "optional": false
+      }
+    },
+    "open": false,
+    "elements": {
+      "a936a840-f4db-4b5c-a09c-d6429a317b07": {
+        "elementXMLID": "fcs-ckm-4-1",
+        "selectableGroups": {},
+        "title": [
+          {
+            "text": " The TOE shall \n            "
+          }
+        ],
+        "selectables": {},
+        "isManagementFunction": false,
+        "managementFunctions": {
+          "tableName": "Management Functions",
+          "statusMarkers": "",
+          "rows": [],
+          "columns": [
+            {
+              "headerName": "#",
+              "field": "rowNum",
+              "editable": false,
+              "resizable": true,
+              "type": "Index",
+              "flex": 0.5
+            },
+            {
+              "headerName": "ID",
+              "field": "id",
+              "editable": true,
+              "resizable": true,
+              "type": "Editor",
+              "flex": 1
+            },
+            {
+              "headerName": "Management Function",
+              "field": "textArray",
+              "editable": false,
+              "resizable": true,
+              "type": "Button",
+              "flex": 2
+            }
+          ]
+        },
+        "note": ""
+      }
+    },
+    "invisible": false,
+    "evaluationActivities": {
+      "a936a840-f4db-4b5c-a09c-d6429a317b07": {
+        "hasLevelSet": false,
+        "tss": "ABC",
+        "introduction": "Something",
+        "guidance": "",
+        "testIntroduction": "",
+        "testClosing": "",
+        "testLists": {},
+        "tests": {},
+        "platformMap": null,
+        "isNoTest": false,
+        "noTest": ""
+      }
+    },
+    "modifiedSfr": false,
+    "additionalSfr": false,
+    "consistencyRationale": null,
+    "notNew": null,
+    "xPathDetails": {},
+    "classDescription": "",
+    "sfrType": "",
+    "compUUID": "6d9b1c9c-0542-4263-8d4b-49d3d631e7d1"
+  },
+  "FCS_COP.1/DataEncryption": {
+    "title": "Cryptographic Operation (AES Data Encryption/Decryption)",
+    "cc_id": "FCS_COP.1",
+    "iteration_id": "DataEncryption",
+    "xml_id": "",
+    "definition": "",
+    "optional": false,
+    "objective": false,
+    "dependsComments": {},
+    "dependsExternalDocs": {},
+    "selectionBased": false,
+    "selections": {
+      "components": [],
+      "elements": [],
+      "selections": []
+    },
+    "useCaseBased": false,
+    "useCases": [],
+    "implementationDependent": false,
+    "reasons": [],
+    "tableOpen": false,
+    "objectives": [],
+    "extendedComponentDefinition": {
+      "audit": null,
+      "componentLeveling": null,
+      "dependencies": null,
+      "managementFunction": null,
+      "toggle": false
+    },
+    "auditEvents": {
+      "e3f71acc-38e0-4c70-a6b2-0e630a47a233": {
+        "items": [],
+        "optional": false
+      }
+    },
+    "open": false,
+    "elements": {
+      "7314d35c-2a44-44a0-a475-502d94db83a1": {
+        "elementXMLID": "fcs-cop-de-1",
+        "selectableGroups": {},
+        "title": [
+          {
+            "text": " The TOE shall \n            "
+          }
+        ],
+        "selectables": {},
+        "isManagementFunction": false,
+        "managementFunctions": {
+          "tableName": "Management Functions",
+          "statusMarkers": "",
+          "rows": [],
+          "columns": [
+            {
+              "headerName": "#",
+              "field": "rowNum",
+              "editable": false,
+              "resizable": true,
+              "type": "Index",
+              "flex": 0.5
+            },
+            {
+              "headerName": "ID",
+              "field": "id",
+              "editable": true,
+              "resizable": true,
+              "type": "Editor",
+              "flex": 1
+            },
+            {
+              "headerName": "Management Function",
+              "field": "textArray",
+              "editable": false,
+              "resizable": true,
+              "type": "Button",
+              "flex": 2
+            }
+          ]
+        },
+        "note": ""
+      }
+    },
+    "invisible": false,
+    "evaluationActivities": {
+      "7314d35c-2a44-44a0-a475-502d94db83a1": {
+        "hasLevelSet": false,
+        "tss": "ABC",
+        "introduction": "Something",
+        "guidance": "",
+        "testIntroduction": "",
+        "testClosing": "",
+        "testLists": {},
+        "tests": {},
+        "platformMap": null,
+        "isNoTest": false,
+        "noTest": ""
+      }
+    },
+    "modifiedSfr": false,
+    "additionalSfr": false,
+    "consistencyRationale": null,
+    "notNew": null,
+    "xPathDetails": {},
+    "classDescription": "",
+    "sfrType": "",
+    "compUUID": "23f84440-bdd7-4113-8d36-19feac7f6036"
+  },
+  "FCS_COP.1/Hash": {
+    "title": "Cryptographic Operation (Hash Algorithm)",
+    "cc_id": "FCS_COP.1",
+    "iteration_id": "Hash",
+    "xml_id": "",
+    "definition": "",
+    "optional": false,
+    "objective": false,
+    "dependsComments": {},
+    "dependsExternalDocs": {},
+    "selectionBased": false,
+    "selections": {
+      "components": [],
+      "elements": [],
+      "selections": []
+    },
+    "useCaseBased": false,
+    "useCases": [],
+    "implementationDependent": false,
+    "reasons": [],
+    "tableOpen": false,
+    "objectives": [],
+    "extendedComponentDefinition": {
+      "audit": null,
+      "componentLeveling": null,
+      "dependencies": null,
+      "managementFunction": null,
+      "toggle": false
+    },
+    "auditEvents": {
+      "ac931218-32de-41dc-9e8f-c5ceef4a9505": {
+        "items": [],
+        "optional": false
+      }
+    },
+    "open": false,
+    "elements": {
+      "3c221a0c-6069-417e-b0fc-e715bba5f59b": {
+        "elementXMLID": "fcs-cop-ha-1",
+        "selectableGroups": {},
+        "title": [
+          {
+            "text": " The TOE shall \n            "
+          }
+        ],
+        "selectables": {},
+        "isManagementFunction": false,
+        "managementFunctions": {
+          "tableName": "Management Functions",
+          "statusMarkers": "",
+          "rows": [],
+          "columns": [
+            {
+              "headerName": "#",
+              "field": "rowNum",
+              "editable": false,
+              "resizable": true,
+              "type": "Index",
+              "flex": 0.5
+            },
+            {
+              "headerName": "ID",
+              "field": "id",
+              "editable": true,
+              "resizable": true,
+              "type": "Editor",
+              "flex": 1
+            },
+            {
+              "headerName": "Management Function",
+              "field": "textArray",
+              "editable": false,
+              "resizable": true,
+              "type": "Button",
+              "flex": 2
+            }
+          ]
+        },
+        "note": ""
+      }
+    },
+    "invisible": false,
+    "evaluationActivities": {
+      "3c221a0c-6069-417e-b0fc-e715bba5f59b": {
+        "hasLevelSet": false,
+        "tss": "ABC",
+        "introduction": "Something",
+        "guidance": "",
+        "testIntroduction": "",
+        "testClosing": "",
+        "testLists": {},
+        "tests": {},
+        "platformMap": null,
+        "isNoTest": false,
+        "noTest": ""
+      }
+    },
+    "modifiedSfr": false,
+    "additionalSfr": false,
+    "consistencyRationale": null,
+    "notNew": null,
+    "xPathDetails": {},
+    "classDescription": "",
+    "sfrType": "",
+    "compUUID": "ac54ff81-452e-48ef-a59e-29f25b48ebbf"
+  },
+  "FCS_COP.1/KeyedHash": {
+    "title": "Cryptographic Operation (Keyed Hash Algorithm)",
+    "cc_id": "FCS_COP.1",
+    "iteration_id": "KeyedHash",
+    "xml_id": "",
+    "definition": "",
+    "optional": false,
+    "objective": false,
+    "dependsComments": {},
+    "dependsExternalDocs": {},
+    "selectionBased": false,
+    "selections": {
+      "components": [],
+      "elements": [],
+      "selections": []
+    },
+    "useCaseBased": false,
+    "useCases": [],
+    "implementationDependent": false,
+    "reasons": [],
+    "tableOpen": false,
+    "objectives": [],
+    "extendedComponentDefinition": {
+      "audit": null,
+      "componentLeveling": null,
+      "dependencies": null,
+      "managementFunction": null,
+      "toggle": false
+    },
+    "auditEvents": {
+      "1319ce47-5732-4d9b-874c-3701889f2d2d": {
+        "items": [],
+        "optional": false
+      }
+    },
+    "open": false,
+    "elements": {
+      "37ac93c8-9b3e-4da9-b232-1208a2dc7e2d": {
+        "elementXMLID": "fcs-cop-kh-1",
+        "selectableGroups": {},
+        "title": [
+          {
+            "text": " The TOE shall \n            "
+          }
+        ],
+        "selectables": {},
+        "isManagementFunction": false,
+        "managementFunctions": {
+          "tableName": "Management Functions",
+          "statusMarkers": "",
+          "rows": [],
+          "columns": [
+            {
+              "headerName": "#",
+              "field": "rowNum",
+              "editable": false,
+              "resizable": true,
+              "type": "Index",
+              "flex": 0.5
+            },
+            {
+              "headerName": "ID",
+              "field": "id",
+              "editable": true,
+              "resizable": true,
+              "type": "Editor",
+              "flex": 1
+            },
+            {
+              "headerName": "Management Function",
+              "field": "textArray",
+              "editable": false,
+              "resizable": true,
+              "type": "Button",
+              "flex": 2
+            }
+          ]
+        },
+        "note": ""
+      }
+    },
+    "invisible": false,
+    "evaluationActivities": {
+      "37ac93c8-9b3e-4da9-b232-1208a2dc7e2d": {
+        "hasLevelSet": false,
+        "tss": "ABC",
+        "introduction": "Something",
+        "guidance": "",
+        "testIntroduction": "",
+        "testClosing": "",
+        "testLists": {},
+        "tests": {},
+        "platformMap": null,
+        "isNoTest": false,
+        "noTest": ""
+      }
+    },
+    "modifiedSfr": false,
+    "additionalSfr": false,
+    "consistencyRationale": null,
+    "notNew": null,
+    "xPathDetails": {},
+    "classDescription": "",
+    "sfrType": "",
+    "compUUID": "653b3f2f-05bc-48f1-935c-2875bdf52f74"
+  },
+  "FCS_COP.1/SigGen": {
+    "title": "Cryptographic Operation (Signature Generation and Verification)",
+    "cc_id": "FCS_COP.1",
+    "iteration_id": "SigGen",
+    "xml_id": "",
+    "definition": "",
+    "optional": false,
+    "objective": false,
+    "dependsComments": {},
+    "dependsExternalDocs": {},
+    "selectionBased": false,
+    "selections": {
+      "components": [],
+      "elements": [],
+      "selections": []
+    },
+    "useCaseBased": false,
+    "useCases": [],
+    "implementationDependent": false,
+    "reasons": [],
+    "tableOpen": false,
+    "objectives": [],
+    "extendedComponentDefinition": {
+      "audit": null,
+      "componentLeveling": null,
+      "dependencies": null,
+      "managementFunction": null,
+      "toggle": false
+    },
+    "auditEvents": {
+      "e5af8bc5-24d8-4b4d-bb55-d80512bf2c84": {
+        "items": [],
+        "optional": false
+      }
+    },
+    "open": false,
+    "elements": {
+      "0eba0997-b262-4e3a-97fe-cecbd492eeae": {
+        "elementXMLID": "fcs-cop-sg-1",
+        "selectableGroups": {},
+        "title": [
+          {
+            "text": " The TOE shall \n            "
+          }
+        ],
+        "selectables": {},
+        "isManagementFunction": false,
+        "managementFunctions": {
+          "tableName": "Management Functions",
+          "statusMarkers": "",
+          "rows": [],
+          "columns": [
+            {
+              "headerName": "#",
+              "field": "rowNum",
+              "editable": false,
+              "resizable": true,
+              "type": "Index",
+              "flex": 0.5
+            },
+            {
+              "headerName": "ID",
+              "field": "id",
+              "editable": true,
+              "resizable": true,
+              "type": "Editor",
+              "flex": 1
+            },
+            {
+              "headerName": "Management Function",
+              "field": "textArray",
+              "editable": false,
+              "resizable": true,
+              "type": "Button",
+              "flex": 2
+            }
+          ]
+        },
+        "note": ""
+      }
+    },
+    "invisible": false,
+    "evaluationActivities": {
+      "0eba0997-b262-4e3a-97fe-cecbd492eeae": {
+        "hasLevelSet": false,
+        "tss": "ABC",
+        "introduction": "Something",
+        "guidance": "",
+        "testIntroduction": "",
+        "testClosing": "",
+        "testLists": {},
+        "tests": {},
+        "platformMap": null,
+        "isNoTest": false,
+        "noTest": ""
+      }
+    },
+    "modifiedSfr": false,
+    "additionalSfr": false,
+    "consistencyRationale": null,
+    "notNew": null,
+    "xPathDetails": {},
+    "classDescription": "",
+    "sfrType": "",
+    "compUUID": "d653073b-6ef5-41bf-9c91-5e8fee0152cc"
+  },
+  "FCS_DTLSC_EXT.1": {
+    "title": "DTLS Client Support without Authentication",
+    "cc_id": "FCS_DTLSC_EXT.1",
+    "iteration_id": "",
+    "xml_id": "",
+    "definition": "",
+    "optional": false,
+    "objective": false,
+    "dependsComments": {},
+    "dependsExternalDocs": {},
+    "selectionBased": true,
+    "selections": {
+      "components": [],
+      "elements": [
+        "099a5f14-62b9-44de-bcb9-83d5f069f665"
+      ],
+      "selections": [
+        "dummy"
+      ]
+    },
+    "useCaseBased": false,
+    "useCases": [],
+    "implementationDependent": false,
+    "reasons": [],
+    "tableOpen": false,
+    "objectives": [],
+    "extendedComponentDefinition": {
+      "audit": null,
+      "componentLeveling": null,
+      "dependencies": null,
+      "managementFunction": null,
+      "toggle": false
+    },
+    "auditEvents": {
+      "5f7db104-fac0-4996-8885-29dd62f0e509": {
+        "items": [],
+        "optional": false
+      }
+    },
+    "open": false,
+    "elements": {
+      "afaedd0c-589f-41ff-9634-d5cfb3fb358d": {
+        "elementXMLID": "fcs-dtlsc-ext-1-1",
+        "selectableGroups": {},
+        "title": [
+          {
+            "text": " The TOE shall \n            "
+          }
+        ],
+        "selectables": {},
+        "isManagementFunction": false,
+        "managementFunctions": {
+          "tableName": "Management Functions",
+          "statusMarkers": "",
+          "rows": [],
+          "columns": [
+            {
+              "headerName": "#",
+              "field": "rowNum",
+              "editable": false,
+              "resizable": true,
+              "type": "Index",
+              "flex": 0.5
+            },
+            {
+              "headerName": "ID",
+              "field": "id",
+              "editable": true,
+              "resizable": true,
+              "type": "Editor",
+              "flex": 1
+            },
+            {
+              "headerName": "Management Function",
+              "field": "textArray",
+              "editable": false,
+              "resizable": true,
+              "type": "Button",
+              "flex": 2
+            }
+          ]
+        },
+        "note": ""
+      }
+    },
+    "invisible": false,
+    "evaluationActivities": {
+      "afaedd0c-589f-41ff-9634-d5cfb3fb358d": {
+        "hasLevelSet": false,
+        "tss": "ABC",
+        "introduction": "Something",
+        "guidance": "",
+        "testIntroduction": "",
+        "testClosing": "",
+        "testLists": {},
+        "tests": {},
+        "platformMap": null,
+        "isNoTest": false,
+        "noTest": ""
+      }
+    },
+    "modifiedSfr": false,
+    "additionalSfr": false,
+    "consistencyRationale": null,
+    "notNew": null,
+    "xPathDetails": {},
+    "classDescription": "",
+    "sfrType": "",
+    "compUUID": "ce7c12ab-1fa3-439f-a98b-e14a1e5a5fa5"
+  },
+  "FCS_DTLSC_EXT.2": {
+    "title": "DTLS Client Support for Mutual Authentication",
+    "cc_id": "FCS_DTLSC_EXT.2",
+    "iteration_id": "",
+    "xml_id": "",
+    "definition": "",
+    "optional": true,
+    "objective": false,
+    "dependsComments": {},
+    "dependsExternalDocs": {},
+    "selectionBased": false,
+    "selections": {
+      "components": [],
+      "elements": [],
+      "selections": []
+    },
+    "useCaseBased": false,
+    "useCases": [],
+    "implementationDependent": false,
+    "reasons": [],
+    "tableOpen": false,
+    "objectives": [],
+    "extendedComponentDefinition": {
+      "audit": null,
+      "componentLeveling": null,
+      "dependencies": null,
+      "managementFunction": null,
+      "toggle": false
+    },
+    "auditEvents": {
+      "1f9ea534-f867-4637-b1e8-e092bd800b06": {
+        "items": [],
+        "optional": false
+      }
+    },
+    "open": false,
+    "elements": {
+      "8c7e703e-68c1-459c-bd6e-ba2f21e781bd": {
+        "elementXMLID": "fcs-dtlsc-ext-2-1",
+        "selectableGroups": {},
+        "title": [
+          {
+            "text": " The TOE shall \n            "
+          }
+        ],
+        "selectables": {},
+        "isManagementFunction": false,
+        "managementFunctions": {
+          "tableName": "Management Functions",
+          "statusMarkers": "",
+          "rows": [],
+          "columns": [
+            {
+              "headerName": "#",
+              "field": "rowNum",
+              "editable": false,
+              "resizable": true,
+              "type": "Index",
+              "flex": 0.5
+            },
+            {
+              "headerName": "ID",
+              "field": "id",
+              "editable": true,
+              "resizable": true,
+              "type": "Editor",
+              "flex": 1
+            },
+            {
+              "headerName": "Management Function",
+              "field": "textArray",
+              "editable": false,
+              "resizable": true,
+              "type": "Button",
+              "flex": 2
+            }
+          ]
+        },
+        "note": ""
+      }
+    },
+    "invisible": false,
+    "evaluationActivities": {
+      "8c7e703e-68c1-459c-bd6e-ba2f21e781bd": {
+        "hasLevelSet": false,
+        "tss": "ABC",
+        "introduction": "Something",
+        "guidance": "",
+        "testIntroduction": "",
+        "testClosing": "",
+        "testLists": {},
+        "tests": {},
+        "platformMap": null,
+        "isNoTest": false,
+        "noTest": ""
+      }
+    },
+    "modifiedSfr": false,
+    "additionalSfr": false,
+    "consistencyRationale": null,
+    "notNew": null,
+    "xPathDetails": {},
+    "classDescription": "",
+    "sfrType": "",
+    "compUUID": "2f668688-ef0b-4418-866b-aed1fff9d2f9"
+  },
+  "FCS_DTLSS_EXT.1": {
+    "title": "DTLS Server Support without Authentication",
+    "cc_id": "FCS_DTLSS_EXT.1",
+    "iteration_id": "",
+    "xml_id": "",
+    "definition": "",
+    "optional": false,
+    "objective": false,
+    "dependsComments": {},
+    "dependsExternalDocs": {},
+    "selectionBased": true,
+    "selections": {
+      "components": [],
+      "elements": [
+        "099a5f14-62b9-44de-bcb9-83d5f069f665"
+      ],
+      "selections": [
+        "dummy"
+      ]
+    },
+    "useCaseBased": false,
+    "useCases": [],
+    "implementationDependent": false,
+    "reasons": [],
+    "tableOpen": false,
+    "objectives": [],
+    "extendedComponentDefinition": {
+      "audit": null,
+      "componentLeveling": null,
+      "dependencies": null,
+      "managementFunction": null,
+      "toggle": false
+    },
+    "auditEvents": {
+      "e392c236-29a0-4c44-97dd-a992f2d4cc39": {
+        "items": [],
+        "optional": false
+      }
+    },
+    "open": false,
+    "elements": {
+      "afcb8ec7-2e8c-45be-ace3-20bbfe3ccd16": {
+        "elementXMLID": "fcs-dtlss-ext-1-1",
+        "selectableGroups": {},
+        "title": [
+          {
+            "text": " The TOE shall \n            "
+          }
+        ],
+        "selectables": {},
+        "isManagementFunction": false,
+        "managementFunctions": {
+          "tableName": "Management Functions",
+          "statusMarkers": "",
+          "rows": [],
+          "columns": [
+            {
+              "headerName": "#",
+              "field": "rowNum",
+              "editable": false,
+              "resizable": true,
+              "type": "Index",
+              "flex": 0.5
+            },
+            {
+              "headerName": "ID",
+              "field": "id",
+              "editable": true,
+              "resizable": true,
+              "type": "Editor",
+              "flex": 1
+            },
+            {
+              "headerName": "Management Function",
+              "field": "textArray",
+              "editable": false,
+              "resizable": true,
+              "type": "Button",
+              "flex": 2
+            }
+          ]
+        },
+        "note": ""
+      }
+    },
+    "invisible": false,
+    "evaluationActivities": {
+      "afcb8ec7-2e8c-45be-ace3-20bbfe3ccd16": {
+        "hasLevelSet": false,
+        "tss": "ABC",
+        "introduction": "Something",
+        "guidance": "",
+        "testIntroduction": "",
+        "testClosing": "",
+        "testLists": {},
+        "tests": {},
+        "platformMap": null,
+        "isNoTest": false,
+        "noTest": ""
+      }
+    },
+    "modifiedSfr": false,
+    "additionalSfr": false,
+    "consistencyRationale": null,
+    "notNew": null,
+    "xPathDetails": {},
+    "classDescription": "",
+    "sfrType": "",
+    "compUUID": "9cca5964-5805-4ea1-be96-a21920fae5d3"
+  },
+  "FCS_DTLSS_EXT.2": {
+    "title": "DTLS Server Support for Mutual Authentication",
+    "cc_id": "FCS_DTLSS_EXT.2",
+    "iteration_id": "",
+    "xml_id": "",
+    "definition": "",
+    "optional": true,
+    "objective": false,
+    "dependsComments": {},
+    "dependsExternalDocs": {},
+    "selectionBased": false,
+    "selections": {
+      "components": [],
+      "elements": [],
+      "selections": []
+    },
+    "useCaseBased": false,
+    "useCases": [],
+    "implementationDependent": false,
+    "reasons": [],
+    "tableOpen": false,
+    "objectives": [],
+    "extendedComponentDefinition": {
+      "audit": null,
+      "componentLeveling": null,
+      "dependencies": null,
+      "managementFunction": null,
+      "toggle": false
+    },
+    "auditEvents": {
+      "ed36d4ea-cf64-4606-9509-6c1212491f56": {
+        "items": [],
+        "optional": false
+      }
+    },
+    "open": false,
+    "elements": {
+      "5fbf414a-dd8b-49a4-abf9-cde7fd7e0a6a": {
+        "elementXMLID": "fcs-dtlss-ext-2-1",
+        "selectableGroups": {},
+        "title": [
+          {
+            "text": " The TOE shall \n            "
+          }
+        ],
+        "selectables": {},
+        "isManagementFunction": false,
+        "managementFunctions": {
+          "tableName": "Management Functions",
+          "statusMarkers": "",
+          "rows": [],
+          "columns": [
+            {
+              "headerName": "#",
+              "field": "rowNum",
+              "editable": false,
+              "resizable": true,
+              "type": "Index",
+              "flex": 0.5
+            },
+            {
+              "headerName": "ID",
+              "field": "id",
+              "editable": true,
+              "resizable": true,
+              "type": "Editor",
+              "flex": 1
+            },
+            {
+              "headerName": "Management Function",
+              "field": "textArray",
+              "editable": false,
+              "resizable": true,
+              "type": "Button",
+              "flex": 2
+            }
+          ]
+        },
+        "note": ""
+      }
+    },
+    "invisible": false,
+    "evaluationActivities": {
+      "5fbf414a-dd8b-49a4-abf9-cde7fd7e0a6a": {
+        "hasLevelSet": false,
+        "tss": "ABC",
+        "introduction": "Something",
+        "guidance": "",
+        "testIntroduction": "",
+        "testClosing": "",
+        "testLists": {},
+        "tests": {},
+        "platformMap": null,
+        "isNoTest": false,
+        "noTest": ""
+      }
+    },
+    "modifiedSfr": false,
+    "additionalSfr": false,
+    "consistencyRationale": null,
+    "notNew": null,
+    "xPathDetails": {},
+    "classDescription": "",
+    "sfrType": "",
+    "compUUID": "b8fe83fe-2b6b-456f-b924-df6706912ab7"
+  },
+  "FCS_HTTPS_EXT.1": {
+    "title": "HTTPS Protocol",
+    "cc_id": "FCS_HTTPS_EXT.1",
+    "iteration_id": "",
+    "xml_id": "",
+    "definition": "",
+    "optional": false,
+    "objective": false,
+    "dependsComments": {},
+    "dependsExternalDocs": {},
+    "selectionBased": true,
+    "selections": {
+      "components": [],
+      "elements": [
+        "099a5f14-62b9-44de-bcb9-83d5f069f665"
+      ],
+      "selections": [
+        "dummy"
+      ]
+    },
+    "useCaseBased": false,
+    "useCases": [],
+    "implementationDependent": false,
+    "reasons": [],
+    "tableOpen": false,
+    "objectives": [],
+    "extendedComponentDefinition": {
+      "audit": null,
+      "componentLeveling": null,
+      "dependencies": null,
+      "managementFunction": null,
+      "toggle": false
+    },
+    "auditEvents": {
+      "0df8ad10-4755-472a-b268-14177ad11668": {
+        "items": [],
+        "optional": false
+      }
+    },
+    "open": false,
+    "elements": {
+      "29a91ac7-e6c5-452c-ba86-4e8950833b7b": {
+        "elementXMLID": "fcs-https-ext-1-1",
+        "selectableGroups": {},
+        "title": [
+          {
+            "text": " The TOE shall \n            "
+          }
+        ],
+        "selectables": {},
+        "isManagementFunction": false,
+        "managementFunctions": {
+          "tableName": "Management Functions",
+          "statusMarkers": "",
+          "rows": [],
+          "columns": [
+            {
+              "headerName": "#",
+              "field": "rowNum",
+              "editable": false,
+              "resizable": true,
+              "type": "Index",
+              "flex": 0.5
+            },
+            {
+              "headerName": "ID",
+              "field": "id",
+              "editable": true,
+              "resizable": true,
+              "type": "Editor",
+              "flex": 1
+            },
+            {
+              "headerName": "Management Function",
+              "field": "textArray",
+              "editable": false,
+              "resizable": true,
+              "type": "Button",
+              "flex": 2
+            }
+          ]
+        },
+        "note": ""
+      }
+    },
+    "invisible": false,
+    "evaluationActivities": {
+      "29a91ac7-e6c5-452c-ba86-4e8950833b7b": {
+        "hasLevelSet": false,
+        "tss": "ABC",
+        "introduction": "Something",
+        "guidance": "",
+        "testIntroduction": "",
+        "testClosing": "",
+        "testLists": {},
+        "tests": {},
+        "platformMap": null,
+        "isNoTest": false,
+        "noTest": ""
+      }
+    },
+    "modifiedSfr": false,
+    "additionalSfr": false,
+    "consistencyRationale": null,
+    "notNew": null,
+    "xPathDetails": {},
+    "classDescription": "",
+    "sfrType": "",
+    "compUUID": "121c6193-b3ef-4d6c-a406-92592ff232a7"
+  },
+  "FCS_IPSEC_EXT.1": {
+    "title": "IPsec Protocol",
+    "cc_id": "FCS_IPSEC_EXT.1",
+    "iteration_id": "",
+    "xml_id": "",
+    "definition": "",
+    "optional": false,
+    "objective": false,
+    "dependsComments": {},
+    "dependsExternalDocs": {},
+    "selectionBased": true,
+    "selections": {
+      "components": [],
+      "elements": [
+        "099a5f14-62b9-44de-bcb9-83d5f069f665"
+      ],
+      "selections": [
+        "dummy"
+      ]
+    },
+    "useCaseBased": false,
+    "useCases": [],
+    "implementationDependent": false,
+    "reasons": [],
+    "tableOpen": false,
+    "objectives": [],
+    "extendedComponentDefinition": {
+      "audit": null,
+      "componentLeveling": null,
+      "dependencies": null,
+      "managementFunction": null,
+      "toggle": false
+    },
+    "auditEvents": {
+      "bff6861d-0ba1-478b-a28e-90f3dee02ecb": {
+        "items": [],
+        "optional": false
+      }
+    },
+    "open": false,
+    "elements": {
+      "d6da06fe-051f-45c9-a1c1-96d48c26970c": {
+        "elementXMLID": "fcs-ipsec-ext-1-1",
+        "selectableGroups": {},
+        "title": [
+          {
+            "text": " The TOE shall \n            "
+          }
+        ],
+        "selectables": {},
+        "isManagementFunction": false,
+        "managementFunctions": {
+          "tableName": "Management Functions",
+          "statusMarkers": "",
+          "rows": [],
+          "columns": [
+            {
+              "headerName": "#",
+              "field": "rowNum",
+              "editable": false,
+              "resizable": true,
+              "type": "Index",
+              "flex": 0.5
+            },
+            {
+              "headerName": "ID",
+              "field": "id",
+              "editable": true,
+              "resizable": true,
+              "type": "Editor",
+              "flex": 1
+            },
+            {
+              "headerName": "Management Function",
+              "field": "textArray",
+              "editable": false,
+              "resizable": true,
+              "type": "Button",
+              "flex": 2
+            }
+          ]
+        },
+        "note": ""
+      }
+    },
+    "invisible": false,
+    "evaluationActivities": {
+      "d6da06fe-051f-45c9-a1c1-96d48c26970c": {
+        "hasLevelSet": false,
+        "tss": "ABC",
+        "introduction": "Something",
+        "guidance": "",
+        "testIntroduction": "",
+        "testClosing": "",
+        "testLists": {},
+        "tests": {},
+        "platformMap": null,
+        "isNoTest": false,
+        "noTest": ""
+      }
+    },
+    "modifiedSfr": false,
+    "additionalSfr": false,
+    "consistencyRationale": null,
+    "notNew": null,
+    "xPathDetails": {},
+    "classDescription": "",
+    "sfrType": "",
+    "compUUID": "02e271e7-96ee-46de-a6e0-18680fb3dabe"
+  },
+  "FCS_NTP_EXT.1": {
+    "title": "NTP Protocol",
+    "cc_id": "FCS_NTP_EXT.1",
+    "iteration_id": "",
+    "xml_id": "",
+    "definition": "",
+    "optional": false,
+    "objective": false,
+    "dependsComments": {},
+    "dependsExternalDocs": {},
+    "selectionBased": true,
+    "selections": {
+      "components": [],
+      "elements": [
+        "099a5f14-62b9-44de-bcb9-83d5f069f665"
+      ],
+      "selections": [
+        "dummy"
+      ]
+    },
+    "useCaseBased": false,
+    "useCases": [],
+    "implementationDependent": false,
+    "reasons": [],
+    "tableOpen": false,
+    "objectives": [],
+    "extendedComponentDefinition": {
+      "audit": null,
+      "componentLeveling": null,
+      "dependencies": null,
+      "managementFunction": null,
+      "toggle": false
+    },
+    "auditEvents": {
+      "74bc9ccf-86b9-4c16-a972-deb772d037a0": {
+        "items": [],
+        "optional": false
+      }
+    },
+    "open": false,
+    "elements": {
+      "7b2a2a3b-2048-4bb6-8e70-a14edc64591c": {
+        "elementXMLID": "fcs-ntp-ext-1-1",
+        "selectableGroups": {},
+        "title": [
+          {
+            "text": " The TOE shall \n            "
+          }
+        ],
+        "selectables": {},
+        "isManagementFunction": false,
+        "managementFunctions": {
+          "tableName": "Management Functions",
+          "statusMarkers": "",
+          "rows": [],
+          "columns": [
+            {
+              "headerName": "#",
+              "field": "rowNum",
+              "editable": false,
+              "resizable": true,
+              "type": "Index",
+              "flex": 0.5
+            },
+            {
+              "headerName": "ID",
+              "field": "id",
+              "editable": true,
+              "resizable": true,
+              "type": "Editor",
+              "flex": 1
+            },
+            {
+              "headerName": "Management Function",
+              "field": "textArray",
+              "editable": false,
+              "resizable": true,
+              "type": "Button",
+              "flex": 2
+            }
+          ]
+        },
+        "note": ""
+      }
+    },
+    "invisible": false,
+    "evaluationActivities": {
+      "7b2a2a3b-2048-4bb6-8e70-a14edc64591c": {
+        "hasLevelSet": false,
+        "tss": "ABC",
+        "introduction": "Something",
+        "guidance": "",
+        "testIntroduction": "",
+        "testClosing": "",
+        "testLists": {},
+        "tests": {},
+        "platformMap": null,
+        "isNoTest": false,
+        "noTest": ""
+      }
+    },
+    "modifiedSfr": false,
+    "additionalSfr": false,
+    "consistencyRationale": null,
+    "notNew": null,
+    "xPathDetails": {},
+    "classDescription": "",
+    "sfrType": "",
+    "compUUID": "be030261-6dbe-44a6-99ed-d7098443d45f"
+  },
+  "FCS_RBG_EXT.1": {
+    "title": "Random Bit Generation",
+    "cc_id": "FCS_RBG_EXT.1",
+    "iteration_id": "",
+    "xml_id": "",
+    "definition": "",
+    "optional": false,
+    "objective": false,
+    "dependsComments": {},
+    "dependsExternalDocs": {},
+    "selectionBased": false,
+    "selections": {
+      "components": [],
+      "elements": [],
+      "selections": []
+    },
+    "useCaseBased": false,
+    "useCases": [],
+    "implementationDependent": false,
+    "reasons": [],
+    "tableOpen": false,
+    "objectives": [],
+    "extendedComponentDefinition": {
+      "audit": null,
+      "componentLeveling": null,
+      "dependencies": null,
+      "managementFunction": null,
+      "toggle": false
+    },
+    "auditEvents": {
+      "660cfff5-6199-4ed4-b9b6-c9af4b70e42d": {
+        "items": [],
+        "optional": false
+      }
+    },
+    "open": false,
+    "elements": {
+      "d9e4d0bf-e6b5-42a1-bc61-46223356ccca": {
+        "elementXMLID": "fcs-rbg-ext-1-1",
+        "selectableGroups": {},
+        "title": [
+          {
+            "text": " The TOE shall \n            "
+          }
+        ],
+        "selectables": {},
+        "isManagementFunction": false,
+        "managementFunctions": {
+          "tableName": "Management Functions",
+          "statusMarkers": "",
+          "rows": [],
+          "columns": [
+            {
+              "headerName": "#",
+              "field": "rowNum",
+              "editable": false,
+              "resizable": true,
+              "type": "Index",
+              "flex": 0.5
+            },
+            {
+              "headerName": "ID",
+              "field": "id",
+              "editable": true,
+              "resizable": true,
+              "type": "Editor",
+              "flex": 1
+            },
+            {
+              "headerName": "Management Function",
+              "field": "textArray",
+              "editable": false,
+              "resizable": true,
+              "type": "Button",
+              "flex": 2
+            }
+          ]
+        },
+        "note": ""
+      }
+    },
+    "invisible": false,
+    "evaluationActivities": {
+      "d9e4d0bf-e6b5-42a1-bc61-46223356ccca": {
+        "hasLevelSet": false,
+        "tss": "ABC",
+        "introduction": "Something",
+        "guidance": "",
+        "testIntroduction": "",
+        "testClosing": "",
+        "testLists": {},
+        "tests": {},
+        "platformMap": null,
+        "isNoTest": false,
+        "noTest": ""
+      }
+    },
+    "modifiedSfr": false,
+    "additionalSfr": false,
+    "consistencyRationale": null,
+    "notNew": null,
+    "xPathDetails": {},
+    "classDescription": "",
+    "sfrType": "",
+    "compUUID": "8e14c923-0ec9-4098-924d-73d1015bb875"
+  },
+  "FCS_SSHC_EXT.1": {
+    "title": "SSH Client Protocol",
+    "cc_id": "FCS_SSHC_EXT.1",
+    "iteration_id": "",
+    "xml_id": "",
+    "definition": "",
+    "optional": false,
+    "objective": false,
+    "dependsComments": {},
+    "dependsExternalDocs": {},
+    "selectionBased": true,
+    "selections": {
+      "components": [],
+      "elements": [
+        "099a5f14-62b9-44de-bcb9-83d5f069f665"
+      ],
+      "selections": [
+        "dummy"
+      ]
+    },
+    "useCaseBased": false,
+    "useCases": [],
+    "implementationDependent": false,
+    "reasons": [],
+    "tableOpen": false,
+    "objectives": [],
+    "extendedComponentDefinition": {
+      "audit": null,
+      "componentLeveling": null,
+      "dependencies": null,
+      "managementFunction": null,
+      "toggle": false
+    },
+    "auditEvents": {
+      "5b86e6ac-943b-4452-abbe-88cd8ee63e06": {
+        "items": [],
+        "optional": false
+      }
+    },
+    "open": false,
+    "elements": {
+      "9c3c5199-0428-413e-94f2-650b4e1bfd57": {
+        "elementXMLID": "fcs-sshc-ext-1-1",
+        "selectableGroups": {},
+        "title": [
+          {
+            "text": " The TOE shall \n            "
+          }
+        ],
+        "selectables": {},
+        "isManagementFunction": false,
+        "managementFunctions": {
+          "tableName": "Management Functions",
+          "statusMarkers": "",
+          "rows": [],
+          "columns": [
+            {
+              "headerName": "#",
+              "field": "rowNum",
+              "editable": false,
+              "resizable": true,
+              "type": "Index",
+              "flex": 0.5
+            },
+            {
+              "headerName": "ID",
+              "field": "id",
+              "editable": true,
+              "resizable": true,
+              "type": "Editor",
+              "flex": 1
+            },
+            {
+              "headerName": "Management Function",
+              "field": "textArray",
+              "editable": false,
+              "resizable": true,
+              "type": "Button",
+              "flex": 2
+            }
+          ]
+        },
+        "note": ""
+      }
+    },
+    "invisible": false,
+    "evaluationActivities": {
+      "9c3c5199-0428-413e-94f2-650b4e1bfd57": {
+        "hasLevelSet": false,
+        "tss": "ABC",
+        "introduction": "Something",
+        "guidance": "",
+        "testIntroduction": "",
+        "testClosing": "",
+        "testLists": {},
+        "tests": {},
+        "platformMap": null,
+        "isNoTest": false,
+        "noTest": ""
+      }
+    },
+    "modifiedSfr": false,
+    "additionalSfr": false,
+    "consistencyRationale": null,
+    "notNew": null,
+    "xPathDetails": {},
+    "classDescription": "",
+    "sfrType": "",
+    "compUUID": "838e1bdc-ed49-418b-9147-6128a8e9184e"
+  },
+  "FCS_SSHS_EXT.1": {
+    "title": "SSH Server Protocol",
+    "cc_id": "FCS_SSHS_EXT.1",
+    "iteration_id": "",
+    "xml_id": "",
+    "definition": "",
+    "optional": false,
+    "objective": false,
+    "dependsComments": {},
+    "dependsExternalDocs": {},
+    "selectionBased": true,
+    "selections": {
+      "components": [],
+      "elements": [
+        "099a5f14-62b9-44de-bcb9-83d5f069f665"
+      ],
+      "selections": [
+        "dummy"
+      ]
+    },
+    "useCaseBased": false,
+    "useCases": [],
+    "implementationDependent": false,
+    "reasons": [],
+    "tableOpen": false,
+    "objectives": [],
+    "extendedComponentDefinition": {
+      "audit": null,
+      "componentLeveling": null,
+      "dependencies": null,
+      "managementFunction": null,
+      "toggle": false
+    },
+    "auditEvents": {
+      "d52af259-8dad-4560-a128-f4e167b67225": {
+        "items": [],
+        "optional": false
+      }
+    },
+    "open": false,
+    "elements": {
+      "cfaf89e0-03e8-4d9f-8014-15aa932f8fa4": {
+        "elementXMLID": "fcs-sshs-ext-1-1",
+        "selectableGroups": {},
+        "title": [
+          {
+            "text": " The TOE shall \n            "
+          }
+        ],
+        "selectables": {},
+        "isManagementFunction": false,
+        "managementFunctions": {
+          "tableName": "Management Functions",
+          "statusMarkers": "",
+          "rows": [],
+          "columns": [
+            {
+              "headerName": "#",
+              "field": "rowNum",
+              "editable": false,
+              "resizable": true,
+              "type": "Index",
+              "flex": 0.5
+            },
+            {
+              "headerName": "ID",
+              "field": "id",
+              "editable": true,
+              "resizable": true,
+              "type": "Editor",
+              "flex": 1
+            },
+            {
+              "headerName": "Management Function",
+              "field": "textArray",
+              "editable": false,
+              "resizable": true,
+              "type": "Button",
+              "flex": 2
+            }
+          ]
+        },
+        "note": ""
+      }
+    },
+    "invisible": false,
+    "evaluationActivities": {
+      "cfaf89e0-03e8-4d9f-8014-15aa932f8fa4": {
+        "hasLevelSet": false,
+        "tss": "ABC",
+        "introduction": "Something",
+        "guidance": "",
+        "testIntroduction": "",
+        "testClosing": "",
+        "testLists": {},
+        "tests": {},
+        "platformMap": null,
+        "isNoTest": false,
+        "noTest": ""
+      }
+    },
+    "modifiedSfr": false,
+    "additionalSfr": false,
+    "consistencyRationale": null,
+    "notNew": null,
+    "xPathDetails": {},
+    "classDescription": "",
+    "sfrType": "",
+    "compUUID": "596b6ba4-8f34-423e-812e-a08b221ff7cf"
+  },
+  "FCS_TLSC_EXT.1": {
+    "title": "TLS Client Protocol",
+    "cc_id": "FCS_TLSC_EXT.1",
+    "iteration_id": "",
+    "xml_id": "",
+    "definition": "",
+    "optional": false,
+    "objective": false,
+    "dependsComments": {},
+    "dependsExternalDocs": {},
+    "selectionBased": true,
+    "selections": {
+      "components": [],
+      "elements": [
+        "099a5f14-62b9-44de-bcb9-83d5f069f665"
+      ],
+      "selections": [
+        "dummy"
+      ]
+    },
+    "useCaseBased": false,
+    "useCases": [],
+    "implementationDependent": false,
+    "reasons": [],
+    "tableOpen": false,
+    "objectives": [],
+    "extendedComponentDefinition": {
+      "audit": null,
+      "componentLeveling": null,
+      "dependencies": null,
+      "managementFunction": null,
+      "toggle": false
+    },
+    "auditEvents": {
+      "7d3f87ee-fe9c-4ab6-b877-9e52f609f757": {
+        "items": [],
+        "optional": false
+      }
+    },
+    "open": false,
+    "elements": {
+      "75af9f80-5ff9-4d59-a3da-259e2402c5fe": {
+        "elementXMLID": "fcs-tlsc-ext-1-1",
+        "selectableGroups": {},
+        "title": [
+          {
+            "text": " The TOE shall \n            "
+          }
+        ],
+        "selectables": {},
+        "isManagementFunction": false,
+        "managementFunctions": {
+          "tableName": "Management Functions",
+          "statusMarkers": "",
+          "rows": [],
+          "columns": [
+            {
+              "headerName": "#",
+              "field": "rowNum",
+              "editable": false,
+              "resizable": true,
+              "type": "Index",
+              "flex": 0.5
+            },
+            {
+              "headerName": "ID",
+              "field": "id",
+              "editable": true,
+              "resizable": true,
+              "type": "Editor",
+              "flex": 1
+            },
+            {
+              "headerName": "Management Function",
+              "field": "textArray",
+              "editable": false,
+              "resizable": true,
+              "type": "Button",
+              "flex": 2
+            }
+          ]
+        },
+        "note": ""
+      }
+    },
+    "invisible": false,
+    "evaluationActivities": {
+      "75af9f80-5ff9-4d59-a3da-259e2402c5fe": {
+        "hasLevelSet": false,
+        "tss": "ABC",
+        "introduction": "Something",
+        "guidance": "",
+        "testIntroduction": "",
+        "testClosing": "",
+        "testLists": {},
+        "tests": {},
+        "platformMap": null,
+        "isNoTest": false,
+        "noTest": ""
+      }
+    },
+    "modifiedSfr": false,
+    "additionalSfr": false,
+    "consistencyRationale": null,
+    "notNew": null,
+    "xPathDetails": {},
+    "classDescription": "",
+    "sfrType": "",
+    "compUUID": "f52ef5a9-d47a-4a8d-a069-04733f522c3e"
+  },
+  "FCS_TLSC_EXT.2": {
+    "title": "TLS Client Support for Mutual Authentication",
+    "cc_id": "FCS_TLSC_EXT.2",
+    "iteration_id": "",
+    "xml_id": "",
+    "definition": "",
+    "optional": true,
+    "objective": false,
+    "dependsComments": {},
+    "dependsExternalDocs": {},
+    "selectionBased": false,
+    "selections": {
+      "components": [],
+      "elements": [],
+      "selections": []
+    },
+    "useCaseBased": false,
+    "useCases": [],
+    "implementationDependent": false,
+    "reasons": [],
+    "tableOpen": false,
+    "objectives": [],
+    "extendedComponentDefinition": {
+      "audit": null,
+      "componentLeveling": null,
+      "dependencies": null,
+      "managementFunction": null,
+      "toggle": false
+    },
+    "auditEvents": {
+      "dd92dbd1-2f61-421d-94ab-d6e1aaca933c": {
+        "items": [],
+        "optional": false
+      }
+    },
+    "open": false,
+    "elements": {
+      "00f57085-af88-48dc-9294-b0420118359e": {
+        "elementXMLID": "fcs-tlsc-ext-2-1",
+        "selectableGroups": {},
+        "title": [
+          {
+            "text": " The TOE shall \n            "
+          }
+        ],
+        "selectables": {},
+        "isManagementFunction": false,
+        "managementFunctions": {
+          "tableName": "Management Functions",
+          "statusMarkers": "",
+          "rows": [],
+          "columns": [
+            {
+              "headerName": "#",
+              "field": "rowNum",
+              "editable": false,
+              "resizable": true,
+              "type": "Index",
+              "flex": 0.5
+            },
+            {
+              "headerName": "ID",
+              "field": "id",
+              "editable": true,
+              "resizable": true,
+              "type": "Editor",
+              "flex": 1
+            },
+            {
+              "headerName": "Management Function",
+              "field": "textArray",
+              "editable": false,
+              "resizable": true,
+              "type": "Button",
+              "flex": 2
+            }
+          ]
+        },
+        "note": ""
+      }
+    },
+    "invisible": false,
+    "evaluationActivities": {
+      "00f57085-af88-48dc-9294-b0420118359e": {
+        "hasLevelSet": false,
+        "tss": "ABC",
+        "introduction": "Something",
+        "guidance": "",
+        "testIntroduction": "",
+        "testClosing": "",
+        "testLists": {},
+        "tests": {},
+        "platformMap": null,
+        "isNoTest": false,
+        "noTest": ""
+      }
+    },
+    "modifiedSfr": false,
+    "additionalSfr": false,
+    "consistencyRationale": null,
+    "notNew": null,
+    "xPathDetails": {},
+    "classDescription": "",
+    "sfrType": "",
+    "compUUID": "410cde18-9c61-49fe-bff5-46dc0b5d93d1"
+  },
+  "FCS_TLSS_EXT.1": {
+    "title": "TLS Server Protocol",
+    "cc_id": "FCS_TLSS_EXT.1",
+    "iteration_id": "",
+    "xml_id": "",
+    "definition": "",
+    "optional": false,
+    "objective": false,
+    "dependsComments": {},
+    "dependsExternalDocs": {},
+    "selectionBased": true,
+    "selections": {
+      "components": [],
+      "elements": [
+        "099a5f14-62b9-44de-bcb9-83d5f069f665"
+      ],
+      "selections": [
+        "dummy"
+      ]
+    },
+    "useCaseBased": false,
+    "useCases": [],
+    "implementationDependent": false,
+    "reasons": [],
+    "tableOpen": false,
+    "objectives": [],
+    "extendedComponentDefinition": {
+      "audit": null,
+      "componentLeveling": null,
+      "dependencies": null,
+      "managementFunction": null,
+      "toggle": false
+    },
+    "auditEvents": {
+      "26cd8bd1-e4d3-4e20-a55d-8d43df61d7d8": {
+        "items": [],
+        "optional": false
+      }
+    },
+    "open": false,
+    "elements": {
+      "23301295-63e9-462d-b625-fd5a445687f3": {
+        "elementXMLID": "fcs-tlss-ext-1-1",
+        "selectableGroups": {},
+        "title": [
+          {
+            "text": " The TOE shall \n            "
+          }
+        ],
+        "selectables": {},
+        "isManagementFunction": false,
+        "managementFunctions": {
+          "tableName": "Management Functions",
+          "statusMarkers": "",
+          "rows": [],
+          "columns": [
+            {
+              "headerName": "#",
+              "field": "rowNum",
+              "editable": false,
+              "resizable": true,
+              "type": "Index",
+              "flex": 0.5
+            },
+            {
+              "headerName": "ID",
+              "field": "id",
+              "editable": true,
+              "resizable": true,
+              "type": "Editor",
+              "flex": 1
+            },
+            {
+              "headerName": "Management Function",
+              "field": "textArray",
+              "editable": false,
+              "resizable": true,
+              "type": "Button",
+              "flex": 2
+            }
+          ]
+        },
+        "note": ""
+      }
+    },
+    "invisible": false,
+    "evaluationActivities": {
+      "23301295-63e9-462d-b625-fd5a445687f3": {
+        "hasLevelSet": false,
+        "tss": "ABC",
+        "introduction": "Something",
+        "guidance": "",
+        "testIntroduction": "",
+        "testClosing": "",
+        "testLists": {},
+        "tests": {},
+        "platformMap": null,
+        "isNoTest": false,
+        "noTest": ""
+      }
+    },
+    "modifiedSfr": false,
+    "additionalSfr": false,
+    "consistencyRationale": null,
+    "notNew": null,
+    "xPathDetails": {},
+    "classDescription": "",
+    "sfrType": "",
+    "compUUID": "841fad67-5fe3-45f5-b44b-2d1e0a009667"
+  },
+  "FCS_TLSS_EXT.2": {
+    "title": "TLS Server Support for Mutual Authentication",
+    "cc_id": "FCS_TLSS_EXT.2",
+    "iteration_id": "",
+    "xml_id": "",
+    "definition": "",
+    "optional": true,
+    "objective": false,
+    "dependsComments": {},
+    "dependsExternalDocs": {},
+    "selectionBased": false,
+    "selections": {
+      "components": [],
+      "elements": [],
+      "selections": []
+    },
+    "useCaseBased": false,
+    "useCases": [],
+    "implementationDependent": false,
+    "reasons": [],
+    "tableOpen": false,
+    "objectives": [],
+    "extendedComponentDefinition": {
+      "audit": null,
+      "componentLeveling": null,
+      "dependencies": null,
+      "managementFunction": null,
+      "toggle": false
+    },
+    "auditEvents": {
+      "e2000d35-fc05-4467-bbf1-56ee5ddafaaa": {
+        "items": [],
+        "optional": false
+      }
+    },
+    "open": false,
+    "elements": {
+      "dfd772ca-ce8b-4092-ab60-d4f3646aafda": {
+        "elementXMLID": "fcs-tlss-ext-2-1",
+        "selectableGroups": {},
+        "title": [
+          {
+            "text": " The TOE shall \n            "
+          }
+        ],
+        "selectables": {},
+        "isManagementFunction": false,
+        "managementFunctions": {
+          "tableName": "Management Functions",
+          "statusMarkers": "",
+          "rows": [],
+          "columns": [
+            {
+              "headerName": "#",
+              "field": "rowNum",
+              "editable": false,
+              "resizable": true,
+              "type": "Index",
+              "flex": 0.5
+            },
+            {
+              "headerName": "ID",
+              "field": "id",
+              "editable": true,
+              "resizable": true,
+              "type": "Editor",
+              "flex": 1
+            },
+            {
+              "headerName": "Management Function",
+              "field": "textArray",
+              "editable": false,
+              "resizable": true,
+              "type": "Button",
+              "flex": 2
+            }
+          ]
+        },
+        "note": ""
+      }
+    },
+    "invisible": false,
+    "evaluationActivities": {
+      "dfd772ca-ce8b-4092-ab60-d4f3646aafda": {
+        "hasLevelSet": false,
+        "tss": "ABC",
+        "introduction": "Something",
+        "guidance": "",
+        "testIntroduction": "",
+        "testClosing": "",
+        "testLists": {},
+        "tests": {},
+        "platformMap": null,
+        "isNoTest": false,
+        "noTest": ""
+      }
+    },
+    "modifiedSfr": false,
+    "additionalSfr": false,
+    "consistencyRationale": null,
+    "notNew": null,
+    "xPathDetails": {},
+    "classDescription": "",
+    "sfrType": "",
+    "compUUID": "2b5ed2d5-e75c-4427-8d48-fabd16e44218"
+  },
+  "FIA_AFL.1": {
+    "title": "Authentication Failure Management (Refinement)",
+    "cc_id": "FIA_AFL.1",
+    "iteration_id": "",
+    "xml_id": "",
+    "definition": "",
+    "optional": false,
+    "objective": false,
+    "dependsComments": {},
+    "dependsExternalDocs": {},
+    "selectionBased": false,
+    "selections": {
+      "components": [],
+      "elements": [],
+      "selections": []
+    },
+    "useCaseBased": false,
+    "useCases": [],
+    "implementationDependent": false,
+    "reasons": [],
+    "tableOpen": false,
+    "objectives": [
+      {
+        "uuid": "736db927-dfce-43d4-bbae-9c4576450803",
+        "rationale": "For reasons"
+      }
+    ],
+    "extendedComponentDefinition": {
+      "audit": null,
+      "componentLeveling": null,
+      "dependencies": null,
+      "managementFunction": null,
+      "toggle": false
+    },
+    "auditEvents": {
+      "4e400ffa-af08-4236-8312-c5be0c1063e9": {
+        "items": [],
+        "optional": false
+      }
+    },
+    "open": false,
+    "elements": {
+      "992272b5-7121-4d8e-aea3-9146e6692c22": {
+        "elementXMLID": "fia-afl-1-1",
+        "selectableGroups": {},
+        "title": [
+          {
+            "text": " The TOE shall \n            "
+          }
+        ],
+        "selectables": {},
+        "isManagementFunction": false,
+        "managementFunctions": {
+          "tableName": "Management Functions",
+          "statusMarkers": "",
+          "rows": [],
+          "columns": [
+            {
+              "headerName": "#",
+              "field": "rowNum",
+              "editable": false,
+              "resizable": true,
+              "type": "Index",
+              "flex": 0.5
+            },
+            {
+              "headerName": "ID",
+              "field": "id",
+              "editable": true,
+              "resizable": true,
+              "type": "Editor",
+              "flex": 1
+            },
+            {
+              "headerName": "Management Function",
+              "field": "textArray",
+              "editable": false,
+              "resizable": true,
+              "type": "Button",
+              "flex": 2
+            }
+          ]
+        },
+        "note": ""
+      }
+    },
+    "invisible": false,
+    "evaluationActivities": {
+      "992272b5-7121-4d8e-aea3-9146e6692c22": {
+        "hasLevelSet": false,
+        "tss": "ABC",
+        "introduction": "Something",
+        "guidance": "",
+        "testIntroduction": "",
+        "testClosing": "",
+        "testLists": {},
+        "tests": {},
+        "platformMap": null,
+        "isNoTest": false,
+        "noTest": ""
+      }
+    },
+    "modifiedSfr": false,
+    "additionalSfr": false,
+    "consistencyRationale": null,
+    "notNew": null,
+    "xPathDetails": {},
+    "classDescription": "",
+    "sfrType": "",
+    "compUUID": "9aeebb40-7eff-4a26-a5b2-18a8ab1f2031"
+  },
+  "FIA_PMG_EXT.1": {
+    "title": "Password Management",
+    "cc_id": "FIA_PMG_EXT.1",
+    "iteration_id": "",
+    "xml_id": "",
+    "definition": "",
+    "optional": false,
+    "objective": false,
+    "dependsComments": {},
+    "dependsExternalDocs": {},
+    "selectionBased": false,
+    "selections": {
+      "components": [],
+      "elements": [],
+      "selections": []
+    },
+    "useCaseBased": false,
+    "useCases": [],
+    "implementationDependent": false,
+    "reasons": [],
+    "tableOpen": false,
+    "objectives": [],
+    "extendedComponentDefinition": {
+      "audit": null,
+      "componentLeveling": null,
+      "dependencies": null,
+      "managementFunction": null,
+      "toggle": false
+    },
+    "auditEvents": {
+      "c3debd81-588c-4295-baaf-8217fe2cd68a": {
+        "items": [],
+        "optional": false
+      }
+    },
+    "open": false,
+    "elements": {
+      "fa441bbd-7d88-4097-a446-aae69f70cd5f": {
+        "elementXMLID": "fia-pmg-ext-1-1",
+        "selectableGroups": {},
+        "title": [
+          {
+            "text": " The TOE shall \n            "
+          }
+        ],
+        "selectables": {},
+        "isManagementFunction": false,
+        "managementFunctions": {
+          "tableName": "Management Functions",
+          "statusMarkers": "",
+          "rows": [],
+          "columns": [
+            {
+              "headerName": "#",
+              "field": "rowNum",
+              "editable": false,
+              "resizable": true,
+              "type": "Index",
+              "flex": 0.5
+            },
+            {
+              "headerName": "ID",
+              "field": "id",
+              "editable": true,
+              "resizable": true,
+              "type": "Editor",
+              "flex": 1
+            },
+            {
+              "headerName": "Management Function",
+              "field": "textArray",
+              "editable": false,
+              "resizable": true,
+              "type": "Button",
+              "flex": 2
+            }
+          ]
+        },
+        "note": ""
+      }
+    },
+    "invisible": false,
+    "evaluationActivities": {
+      "fa441bbd-7d88-4097-a446-aae69f70cd5f": {
+        "hasLevelSet": false,
+        "tss": "ABC",
+        "introduction": "Something",
+        "guidance": "",
+        "testIntroduction": "",
+        "testClosing": "",
+        "testLists": {},
+        "tests": {},
+        "platformMap": null,
+        "isNoTest": false,
+        "noTest": ""
+      }
+    },
+    "modifiedSfr": false,
+    "additionalSfr": false,
+    "consistencyRationale": null,
+    "notNew": null,
+    "xPathDetails": {},
+    "classDescription": "",
+    "sfrType": "",
+    "compUUID": "b6cf9406-8340-4421-84d3-36f983e14b37"
+  },
+  "FIA_UAU.7": {
+    "title": "Protected Authentication Feedback",
+    "cc_id": "FIA_UAU.7",
+    "iteration_id": "",
+    "xml_id": "",
+    "definition": "",
+    "optional": false,
+    "objective": false,
+    "dependsComments": {},
+    "dependsExternalDocs": {},
+    "selectionBased": false,
+    "selections": {
+      "components": [],
+      "elements": [],
+      "selections": []
+    },
+    "useCaseBased": false,
+    "useCases": [],
+    "implementationDependent": false,
+    "reasons": [],
+    "tableOpen": false,
+    "objectives": [],
+    "extendedComponentDefinition": {
+      "audit": null,
+      "componentLeveling": null,
+      "dependencies": null,
+      "managementFunction": null,
+      "toggle": false
+    },
+    "auditEvents": {
+      "00060299-95a8-41ac-8337-52e8121974d6": {
+        "items": [],
+        "optional": false
+      }
+    },
+    "open": false,
+    "elements": {
+      "53ee45e2-4fc3-401c-ba46-06587725b158": {
+        "elementXMLID": "fia_uau-7-1",
+        "selectableGroups": {},
+        "title": [
+          {
+            "text": " The TOE shall \n            "
+          }
+        ],
+        "selectables": {},
+        "isManagementFunction": false,
+        "managementFunctions": {
+          "tableName": "Management Functions",
+          "statusMarkers": "",
+          "rows": [],
+          "columns": [
+            {
+              "headerName": "#",
+              "field": "rowNum",
+              "editable": false,
+              "resizable": true,
+              "type": "Index",
+              "flex": 0.5
+            },
+            {
+              "headerName": "ID",
+              "field": "id",
+              "editable": true,
+              "resizable": true,
+              "type": "Editor",
+              "flex": 1
+            },
+            {
+              "headerName": "Management Function",
+              "field": "textArray",
+              "editable": false,
+              "resizable": true,
+              "type": "Button",
+              "flex": 2
+            }
+          ]
+        },
+        "note": ""
+      }
+    },
+    "invisible": false,
+    "evaluationActivities": {
+      "53ee45e2-4fc3-401c-ba46-06587725b158": {
+        "hasLevelSet": false,
+        "tss": "ABC",
+        "introduction": "Something",
+        "guidance": "",
+        "testIntroduction": "",
+        "testClosing": "",
+        "testLists": {},
+        "tests": {},
+        "platformMap": null,
+        "isNoTest": false,
+        "noTest": ""
+      }
+    },
+    "modifiedSfr": false,
+    "additionalSfr": false,
+    "consistencyRationale": null,
+    "notNew": null,
+    "xPathDetails": {},
+    "classDescription": "",
+    "sfrType": "",
+    "compUUID": "b1200f55-4da6-4d4d-8a14-83bc3e3d08c4"
+  },
+  "FIA_UAU_EXT.2": {
+    "title": "Password-based Authentication Mechanism",
+    "cc_id": "FIA_UAU_EXT.2",
+    "iteration_id": "",
+    "xml_id": "",
+    "definition": "",
+    "optional": false,
+    "objective": false,
+    "dependsComments": {},
+    "dependsExternalDocs": {},
+    "selectionBased": false,
+    "selections": {
+      "components": [],
+      "elements": [],
+      "selections": []
+    },
+    "useCaseBased": false,
+    "useCases": [],
+    "implementationDependent": false,
+    "reasons": [],
+    "tableOpen": false,
+    "objectives": [],
+    "extendedComponentDefinition": {
+      "audit": null,
+      "componentLeveling": null,
+      "dependencies": null,
+      "managementFunction": null,
+      "toggle": false
+    },
+    "auditEvents": {
+      "f2402899-905a-4ef8-9c41-bcf245154a9e": {
+        "items": [],
+        "optional": false
+      }
+    },
+    "open": false,
+    "elements": {
+      "6bbb23bc-7c2c-4dd5-a9b4-4b8f2c22c2c1": {
+        "elementXMLID": "fia-uau-ext-2-1",
+        "selectableGroups": {},
+        "title": [
+          {
+            "text": " The TOE shall \n            "
+          }
+        ],
+        "selectables": {},
+        "isManagementFunction": false,
+        "managementFunctions": {
+          "tableName": "Management Functions",
+          "statusMarkers": "",
+          "rows": [],
+          "columns": [
+            {
+              "headerName": "#",
+              "field": "rowNum",
+              "editable": false,
+              "resizable": true,
+              "type": "Index",
+              "flex": 0.5
+            },
+            {
+              "headerName": "ID",
+              "field": "id",
+              "editable": true,
+              "resizable": true,
+              "type": "Editor",
+              "flex": 1
+            },
+            {
+              "headerName": "Management Function",
+              "field": "textArray",
+              "editable": false,
+              "resizable": true,
+              "type": "Button",
+              "flex": 2
+            }
+          ]
+        },
+        "note": ""
+      }
+    },
+    "invisible": false,
+    "evaluationActivities": {
+      "6bbb23bc-7c2c-4dd5-a9b4-4b8f2c22c2c1": {
+        "hasLevelSet": false,
+        "tss": "ABC",
+        "introduction": "Something",
+        "guidance": "",
+        "testIntroduction": "",
+        "testClosing": "",
+        "testLists": {},
+        "tests": {},
+        "platformMap": null,
+        "isNoTest": false,
+        "noTest": ""
+      }
+    },
+    "modifiedSfr": false,
+    "additionalSfr": false,
+    "consistencyRationale": null,
+    "notNew": null,
+    "xPathDetails": {},
+    "classDescription": "",
+    "sfrType": "",
+    "compUUID": "0eeae296-a484-4f81-a09a-52ff99981fb3"
+  },
+  "FIA_UIA_EXT.1": {
+    "title": "User Identification and Authentication",
+    "cc_id": "FIA_UIA_EXT.1",
+    "iteration_id": "",
+    "xml_id": "",
+    "definition": "",
+    "optional": false,
+    "objective": false,
+    "dependsComments": {},
+    "dependsExternalDocs": {},
+    "selectionBased": false,
+    "selections": {
+      "components": [],
+      "elements": [],
+      "selections": []
+    },
+    "useCaseBased": false,
+    "useCases": [],
+    "implementationDependent": false,
+    "reasons": [],
+    "tableOpen": false,
+    "objectives": [],
+    "extendedComponentDefinition": {
+      "audit": null,
+      "componentLeveling": null,
+      "dependencies": null,
+      "managementFunction": null,
+      "toggle": false
+    },
+    "auditEvents": {
+      "611c7466-bb59-411f-9375-0709c065a8ab": {
+        "items": [],
+        "optional": false
+      }
+    },
+    "open": false,
+    "elements": {
+      "8195af7b-f3c9-452d-bcd4-f81907ac543c": {
+        "elementXMLID": "fia-uia-ext-1-1",
+        "selectableGroups": {},
+        "title": [
+          {
+            "text": " The TOE shall \n            "
+          }
+        ],
+        "selectables": {},
+        "isManagementFunction": false,
+        "managementFunctions": {
+          "tableName": "Management Functions",
+          "statusMarkers": "",
+          "rows": [],
+          "columns": [
+            {
+              "headerName": "#",
+              "field": "rowNum",
+              "editable": false,
+              "resizable": true,
+              "type": "Index",
+              "flex": 0.5
+            },
+            {
+              "headerName": "ID",
+              "field": "id",
+              "editable": true,
+              "resizable": true,
+              "type": "Editor",
+              "flex": 1
+            },
+            {
+              "headerName": "Management Function",
+              "field": "textArray",
+              "editable": false,
+              "resizable": true,
+              "type": "Button",
+              "flex": 2
+            }
+          ]
+        },
+        "note": ""
+      }
+    },
+    "invisible": false,
+    "evaluationActivities": {
+      "8195af7b-f3c9-452d-bcd4-f81907ac543c": {
+        "hasLevelSet": false,
+        "tss": "ABC",
+        "introduction": "Something",
+        "guidance": "",
+        "testIntroduction": "",
+        "testClosing": "",
+        "testLists": {},
+        "tests": {},
+        "platformMap": null,
+        "isNoTest": false,
+        "noTest": ""
+      }
+    },
+    "modifiedSfr": false,
+    "additionalSfr": false,
+    "consistencyRationale": null,
+    "notNew": null,
+    "xPathDetails": {},
+    "classDescription": "",
+    "sfrType": "",
+    "compUUID": "a8f932d8-8bab-4af9-8ab2-fae57ee5211e"
+  },
+  "FIA_X509_EXT.1/ITT": {
+    "title": "Certificate Validation",
+    "cc_id": "FIA_X509_EXT.1",
+    "iteration_id": "ITT",
+    "xml_id": "",
+    "definition": "",
+    "optional": true,
+    "objective": false,
+    "dependsComments": {},
+    "dependsExternalDocs": {},
+    "selectionBased": false,
+    "selections": {
+      "components": [],
+      "elements": [],
+      "selections": []
+    },
+    "useCaseBased": false,
+    "useCases": [],
+    "implementationDependent": false,
+    "reasons": [],
+    "tableOpen": false,
+    "objectives": [],
+    "extendedComponentDefinition": {
+      "audit": null,
+      "componentLeveling": null,
+      "dependencies": null,
+      "managementFunction": null,
+      "toggle": false
+    },
+    "auditEvents": {
+      "d507ef90-c9f3-46f9-b841-d4913eb2b782": {
+        "items": [],
+        "optional": false
+      }
+    },
+    "open": false,
+    "elements": {
+      "b780bf1e-2581-4be0-b506-36ca7fe80113": {
+        "elementXMLID": "fia_x509_ext-1-1_ITT",
+        "selectableGroups": {},
+        "title": [
+          {
+            "text": " The TOE shall \n            "
+          }
+        ],
+        "selectables": {},
+        "isManagementFunction": false,
+        "managementFunctions": {
+          "tableName": "Management Functions",
+          "statusMarkers": "",
+          "rows": [],
+          "columns": [
+            {
+              "headerName": "#",
+              "field": "rowNum",
+              "editable": false,
+              "resizable": true,
+              "type": "Index",
+              "flex": 0.5
+            },
+            {
+              "headerName": "ID",
+              "field": "id",
+              "editable": true,
+              "resizable": true,
+              "type": "Editor",
+              "flex": 1
+            },
+            {
+              "headerName": "Management Function",
+              "field": "textArray",
+              "editable": false,
+              "resizable": true,
+              "type": "Button",
+              "flex": 2
+            }
+          ]
+        },
+        "note": ""
+      }
+    },
+    "invisible": false,
+    "evaluationActivities": {
+      "b780bf1e-2581-4be0-b506-36ca7fe80113": {
+        "hasLevelSet": false,
+        "tss": "ABC",
+        "introduction": "Something",
+        "guidance": "",
+        "testIntroduction": "",
+        "testClosing": "",
+        "testLists": {},
+        "tests": {},
+        "platformMap": null,
+        "isNoTest": false,
+        "noTest": ""
+      }
+    },
+    "modifiedSfr": false,
+    "additionalSfr": false,
+    "consistencyRationale": null,
+    "notNew": null,
+    "xPathDetails": {},
+    "classDescription": "",
+    "sfrType": "",
+    "compUUID": "373884d9-9609-40f6-963c-3bde76e1af56"
+  },
+  "FIA_X509_EXT.1/Rev": {
+    "title": "X.509 Certificate Validation",
+    "cc_id": "FIA_X509_EXT.1",
+    "iteration_id": "Rev",
+    "xml_id": "",
+    "definition": "",
+    "optional": false,
+    "objective": false,
+    "dependsComments": {},
+    "dependsExternalDocs": {},
+    "selectionBased": true,
+    "selections": {
+      "components": [],
+      "elements": [
+        "099a5f14-62b9-44de-bcb9-83d5f069f665"
+      ],
+      "selections": [
+        "dummy"
+      ]
+    },
+    "useCaseBased": false,
+    "useCases": [],
+    "implementationDependent": false,
+    "reasons": [],
+    "tableOpen": false,
+    "objectives": [],
+    "extendedComponentDefinition": {
+      "audit": null,
+      "componentLeveling": null,
+      "dependencies": null,
+      "managementFunction": null,
+      "toggle": false
+    },
+    "auditEvents": {
+      "97f5e8b2-b637-4fb0-8b0a-b05d0f957056": {
+        "items": [],
+        "optional": false
+      }
+    },
+    "open": false,
+    "elements": {
+      "e60d4a7c-31d8-4ddd-8024-e6a463359c3e": {
+        "elementXMLID": "fia-x509-ext-1-1",
+        "selectableGroups": {},
+        "title": [
+          {
+            "text": " The TOE shall \n            "
+          }
+        ],
+        "selectables": {},
+        "isManagementFunction": false,
+        "managementFunctions": {
+          "tableName": "Management Functions",
+          "statusMarkers": "",
+          "rows": [],
+          "columns": [
+            {
+              "headerName": "#",
+              "field": "rowNum",
+              "editable": false,
+              "resizable": true,
+              "type": "Index",
+              "flex": 0.5
+            },
+            {
+              "headerName": "ID",
+              "field": "id",
+              "editable": true,
+              "resizable": true,
+              "type": "Editor",
+              "flex": 1
+            },
+            {
+              "headerName": "Management Function",
+              "field": "textArray",
+              "editable": false,
+              "resizable": true,
+              "type": "Button",
+              "flex": 2
+            }
+          ]
+        },
+        "note": ""
+      }
+    },
+    "invisible": false,
+    "evaluationActivities": {
+      "e60d4a7c-31d8-4ddd-8024-e6a463359c3e": {
+        "hasLevelSet": false,
+        "tss": "ABC",
+        "introduction": "Something",
+        "guidance": "",
+        "testIntroduction": "",
+        "testClosing": "",
+        "testLists": {},
+        "tests": {},
+        "platformMap": null,
+        "isNoTest": false,
+        "noTest": ""
+      }
+    },
+    "modifiedSfr": false,
+    "additionalSfr": false,
+    "consistencyRationale": null,
+    "notNew": null,
+    "xPathDetails": {},
+    "classDescription": "",
+    "sfrType": "",
+    "compUUID": "858961e9-81e1-4fef-91c3-76725064346b"
+  },
+  "FIA_X509_EXT.2": {
+    "title": "X.509 Certificate Authentication",
+    "cc_id": "FIA_X509_EXT.2",
+    "iteration_id": "",
+    "xml_id": "",
+    "definition": "",
+    "optional": false,
+    "objective": false,
+    "dependsComments": {},
+    "dependsExternalDocs": {},
+    "selectionBased": true,
+    "selections": {
+      "components": [],
+      "elements": [
+        "099a5f14-62b9-44de-bcb9-83d5f069f665"
+      ],
+      "selections": [
+        "dummy"
+      ]
+    },
+    "useCaseBased": false,
+    "useCases": [],
+    "implementationDependent": false,
+    "reasons": [],
+    "tableOpen": false,
+    "objectives": [],
+    "extendedComponentDefinition": {
+      "audit": null,
+      "componentLeveling": null,
+      "dependencies": null,
+      "managementFunction": null,
+      "toggle": false
+    },
+    "auditEvents": {
+      "d0c4fabe-44b7-40c1-abd7-7cedf1d70678": {
+        "items": [],
+        "optional": false
+      }
+    },
+    "open": false,
+    "elements": {
+      "2d27132c-81b2-4fc5-a657-90882ba8fb34": {
+        "elementXMLID": "fia-x509-ext-2-1",
+        "selectableGroups": {},
+        "title": [
+          {
+            "text": " The TOE shall \n            "
+          }
+        ],
+        "selectables": {},
+        "isManagementFunction": false,
+        "managementFunctions": {
+          "tableName": "Management Functions",
+          "statusMarkers": "",
+          "rows": [],
+          "columns": [
+            {
+              "headerName": "#",
+              "field": "rowNum",
+              "editable": false,
+              "resizable": true,
+              "type": "Index",
+              "flex": 0.5
+            },
+            {
+              "headerName": "ID",
+              "field": "id",
+              "editable": true,
+              "resizable": true,
+              "type": "Editor",
+              "flex": 1
+            },
+            {
+              "headerName": "Management Function",
+              "field": "textArray",
+              "editable": false,
+              "resizable": true,
+              "type": "Button",
+              "flex": 2
+            }
+          ]
+        },
+        "note": ""
+      }
+    },
+    "invisible": false,
+    "evaluationActivities": {
+      "2d27132c-81b2-4fc5-a657-90882ba8fb34": {
+        "hasLevelSet": false,
+        "tss": "ABC",
+        "introduction": "Something",
+        "guidance": "",
+        "testIntroduction": "",
+        "testClosing": "",
+        "testLists": {},
+        "tests": {},
+        "platformMap": null,
+        "isNoTest": false,
+        "noTest": ""
+      }
+    },
+    "modifiedSfr": false,
+    "additionalSfr": false,
+    "consistencyRationale": null,
+    "notNew": null,
+    "xPathDetails": {},
+    "classDescription": "",
+    "sfrType": "",
+    "compUUID": "a9017926-42c6-468d-a7e3-916b0c74a361"
+  },
+  "FIA_X509_EXT.3": {
+    "title": "X.509 Certificate Requests",
+    "cc_id": "FIA_X509_EXT.3",
+    "iteration_id": "",
+    "xml_id": "",
+    "definition": "",
+    "optional": false,
+    "objective": false,
+    "dependsComments": {},
+    "dependsExternalDocs": {},
+    "selectionBased": true,
+    "selections": {
+      "components": [],
+      "elements": [
+        "099a5f14-62b9-44de-bcb9-83d5f069f665"
+      ],
+      "selections": [
+        "dummy"
+      ]
+    },
+    "useCaseBased": false,
+    "useCases": [],
+    "implementationDependent": false,
+    "reasons": [],
+    "tableOpen": false,
+    "objectives": [],
+    "extendedComponentDefinition": {
+      "audit": null,
+      "componentLeveling": null,
+      "dependencies": null,
+      "managementFunction": null,
+      "toggle": false
+    },
+    "auditEvents": {
+      "da509bf3-a7c4-4edf-9b47-178ace181a82": {
+        "items": [],
+        "optional": false
+      }
+    },
+    "open": false,
+    "elements": {
+      "2d239125-f568-457f-9fde-055441724f37": {
+        "elementXMLID": "fia-x509-ext-3-1",
+        "selectableGroups": {},
+        "title": [
+          {
+            "text": " The TOE shall \n            "
+          }
+        ],
+        "selectables": {},
+        "isManagementFunction": false,
+        "managementFunctions": {
+          "tableName": "Management Functions",
+          "statusMarkers": "",
+          "rows": [],
+          "columns": [
+            {
+              "headerName": "#",
+              "field": "rowNum",
+              "editable": false,
+              "resizable": true,
+              "type": "Index",
+              "flex": 0.5
+            },
+            {
+              "headerName": "ID",
+              "field": "id",
+              "editable": true,
+              "resizable": true,
+              "type": "Editor",
+              "flex": 1
+            },
+            {
+              "headerName": "Management Function",
+              "field": "textArray",
+              "editable": false,
+              "resizable": true,
+              "type": "Button",
+              "flex": 2
+            }
+          ]
+        },
+        "note": ""
+      }
+    },
+    "invisible": false,
+    "evaluationActivities": {
+      "2d239125-f568-457f-9fde-055441724f37": {
+        "hasLevelSet": false,
+        "tss": "ABC",
+        "introduction": "Something",
+        "guidance": "",
+        "testIntroduction": "",
+        "testClosing": "",
+        "testLists": {},
+        "tests": {},
+        "platformMap": null,
+        "isNoTest": false,
+        "noTest": ""
+      }
+    },
+    "modifiedSfr": false,
+    "additionalSfr": false,
+    "consistencyRationale": null,
+    "notNew": null,
+    "xPathDetails": {},
+    "classDescription": "",
+    "sfrType": "",
+    "compUUID": "7bc5037a-ef51-4df7-ae5d-1607776dd139"
+  },
+  "FMT_MOF.1/AutoUpdate": {
+    "title": "Management of Security Functions Behaviour",
+    "cc_id": "FMT_MOF.1",
+    "iteration_id": "AutoUpdate",
+    "xml_id": "",
+    "definition": "",
+    "optional": false,
+    "objective": false,
+    "dependsComments": {},
+    "dependsExternalDocs": {},
+    "selectionBased": true,
+    "selections": {
+      "components": [],
+      "elements": [
+        "099a5f14-62b9-44de-bcb9-83d5f069f665"
+      ],
+      "selections": [
+        "dummy"
+      ]
+    },
+    "useCaseBased": false,
+    "useCases": [],
+    "implementationDependent": false,
+    "reasons": [],
+    "tableOpen": false,
+    "objectives": [],
+    "extendedComponentDefinition": {
+      "audit": null,
+      "componentLeveling": null,
+      "dependencies": null,
+      "managementFunction": null,
+      "toggle": false
+    },
+    "auditEvents": {
+      "b4736e67-5c0c-4507-a8ec-bb9ff59fd3c4": {
+        "items": [],
+        "optional": false
+      }
+    },
+    "open": false,
+    "elements": {
+      "404b4c44-de3e-4c4a-9e45-80c8d3c80814": {
+        "elementXMLID": "fmt-mof-au-1",
+        "selectableGroups": {},
+        "title": [
+          {
+            "text": " The TOE shall \n            "
+          }
+        ],
+        "selectables": {},
+        "isManagementFunction": false,
+        "managementFunctions": {
+          "tableName": "Management Functions",
+          "statusMarkers": "",
+          "rows": [],
+          "columns": [
+            {
+              "headerName": "#",
+              "field": "rowNum",
+              "editable": false,
+              "resizable": true,
+              "type": "Index",
+              "flex": 0.5
+            },
+            {
+              "headerName": "ID",
+              "field": "id",
+              "editable": true,
+              "resizable": true,
+              "type": "Editor",
+              "flex": 1
+            },
+            {
+              "headerName": "Management Function",
+              "field": "textArray",
+              "editable": false,
+              "resizable": true,
+              "type": "Button",
+              "flex": 2
+            }
+          ]
+        },
+        "note": ""
+      }
+    },
+    "invisible": false,
+    "evaluationActivities": {
+      "404b4c44-de3e-4c4a-9e45-80c8d3c80814": {
+        "hasLevelSet": false,
+        "tss": "ABC",
+        "introduction": "Something",
+        "guidance": "",
+        "testIntroduction": "",
+        "testClosing": "",
+        "testLists": {},
+        "tests": {},
+        "platformMap": null,
+        "isNoTest": false,
+        "noTest": ""
+      }
+    },
+    "modifiedSfr": false,
+    "additionalSfr": false,
+    "consistencyRationale": null,
+    "notNew": null,
+    "xPathDetails": {},
+    "classDescription": "",
+    "sfrType": "",
+    "compUUID": "ca9064f2-8955-4f30-a731-f40457b4c99b"
+  },
+  "FMT_MOF.1/Functions": {
+    "title": "Management of Security Functions Behaviour",
+    "cc_id": "FMT_MOF.1",
+    "iteration_id": "Functions",
+    "xml_id": "",
+    "definition": "",
+    "optional": false,
+    "objective": false,
+    "dependsComments": {},
+    "dependsExternalDocs": {},
+    "selectionBased": true,
+    "selections": {
+      "components": [],
+      "elements": [
+        "099a5f14-62b9-44de-bcb9-83d5f069f665"
+      ],
+      "selections": [
+        "dummy"
+      ]
+    },
+    "useCaseBased": false,
+    "useCases": [],
+    "implementationDependent": false,
+    "reasons": [],
+    "tableOpen": false,
+    "objectives": [],
+    "extendedComponentDefinition": {
+      "audit": null,
+      "componentLeveling": null,
+      "dependencies": null,
+      "managementFunction": null,
+      "toggle": false
+    },
+    "auditEvents": {
+      "b0e6608c-cf27-4a63-8cf2-a058e20ca4a9": {
+        "items": [],
+        "optional": false
+      }
+    },
+    "open": false,
+    "elements": {
+      "8ee2a842-4c9d-44ce-9686-f8278d7342f2": {
+        "elementXMLID": "fmt-mof-fn-1",
+        "selectableGroups": {},
+        "title": [
+          {
+            "text": " The TOE shall \n            "
+          }
+        ],
+        "selectables": {},
+        "isManagementFunction": false,
+        "managementFunctions": {
+          "tableName": "Management Functions",
+          "statusMarkers": "",
+          "rows": [],
+          "columns": [
+            {
+              "headerName": "#",
+              "field": "rowNum",
+              "editable": false,
+              "resizable": true,
+              "type": "Index",
+              "flex": 0.5
+            },
+            {
+              "headerName": "ID",
+              "field": "id",
+              "editable": true,
+              "resizable": true,
+              "type": "Editor",
+              "flex": 1
+            },
+            {
+              "headerName": "Management Function",
+              "field": "textArray",
+              "editable": false,
+              "resizable": true,
+              "type": "Button",
+              "flex": 2
+            }
+          ]
+        },
+        "note": ""
+      }
+    },
+    "invisible": false,
+    "evaluationActivities": {
+      "8ee2a842-4c9d-44ce-9686-f8278d7342f2": {
+        "hasLevelSet": false,
+        "tss": "ABC",
+        "introduction": "Something",
+        "guidance": "",
+        "testIntroduction": "",
+        "testClosing": "",
+        "testLists": {},
+        "tests": {},
+        "platformMap": null,
+        "isNoTest": false,
+        "noTest": ""
+      }
+    },
+    "modifiedSfr": false,
+    "additionalSfr": false,
+    "consistencyRationale": null,
+    "notNew": null,
+    "xPathDetails": {},
+    "classDescription": "",
+    "sfrType": "",
+    "compUUID": "cdea8639-4576-44c4-9861-91c28771de2d"
+  },
+  "FMT_MOF.1/ManualUpdate": {
+    "title": "Management of Security Functions Behaviour",
+    "cc_id": "FMT_MOF.1",
+    "iteration_id": "ManualUpdate",
+    "xml_id": "",
+    "definition": "",
+    "optional": false,
+    "objective": false,
+    "dependsComments": {},
+    "dependsExternalDocs": {},
+    "selectionBased": false,
+    "selections": {
+      "components": [],
+      "elements": [],
+      "selections": []
+    },
+    "useCaseBased": false,
+    "useCases": [],
+    "implementationDependent": false,
+    "reasons": [],
+    "tableOpen": false,
+    "objectives": [],
+    "extendedComponentDefinition": {
+      "audit": null,
+      "componentLeveling": null,
+      "dependencies": null,
+      "managementFunction": null,
+      "toggle": false
+    },
+    "auditEvents": {
+      "734eec93-49fa-491f-b96e-5697e74456a7": {
+        "items": [],
+        "optional": false
+      }
+    },
+    "open": false,
+    "elements": {
+      "636e6a1e-8522-4c73-b4f4-93ccb488bc75": {
+        "elementXMLID": "fmt-mof-mu-1",
+        "selectableGroups": {},
+        "title": [
+          {
+            "text": " The TOE shall \n            "
+          }
+        ],
+        "selectables": {},
+        "isManagementFunction": false,
+        "managementFunctions": {
+          "tableName": "Management Functions",
+          "statusMarkers": "",
+          "rows": [],
+          "columns": [
+            {
+              "headerName": "#",
+              "field": "rowNum",
+              "editable": false,
+              "resizable": true,
+              "type": "Index",
+              "flex": 0.5
+            },
+            {
+              "headerName": "ID",
+              "field": "id",
+              "editable": true,
+              "resizable": true,
+              "type": "Editor",
+              "flex": 1
+            },
+            {
+              "headerName": "Management Function",
+              "field": "textArray",
+              "editable": false,
+              "resizable": true,
+              "type": "Button",
+              "flex": 2
+            }
+          ]
+        },
+        "note": ""
+      }
+    },
+    "invisible": false,
+    "evaluationActivities": {
+      "636e6a1e-8522-4c73-b4f4-93ccb488bc75": {
+        "hasLevelSet": false,
+        "tss": "ABC",
+        "introduction": "Something",
+        "guidance": "",
+        "testIntroduction": "",
+        "testClosing": "",
+        "testLists": {},
+        "tests": {},
+        "platformMap": null,
+        "isNoTest": false,
+        "noTest": ""
+      }
+    },
+    "modifiedSfr": false,
+    "additionalSfr": false,
+    "consistencyRationale": null,
+    "notNew": null,
+    "xPathDetails": {},
+    "classDescription": "",
+    "sfrType": "",
+    "compUUID": "c864487f-6e7c-4aa3-a2d8-8b7d926eead5"
+  },
+  "FMT_MOF.1/Services": {
+    "title": "Management of Security Functions Behaviour",
+    "cc_id": "FMT_MOF.1",
+    "iteration_id": "Services",
+    "xml_id": "",
+    "definition": "",
+    "optional": false,
+    "objective": false,
+    "dependsComments": {},
+    "dependsExternalDocs": {},
+    "selectionBased": true,
+    "selections": {
+      "components": [],
+      "elements": [
+        "099a5f14-62b9-44de-bcb9-83d5f069f665"
+      ],
+      "selections": [
+        "dummy"
+      ]
+    },
+    "useCaseBased": false,
+    "useCases": [],
+    "implementationDependent": false,
+    "reasons": [],
+    "tableOpen": false,
+    "objectives": [],
+    "extendedComponentDefinition": {
+      "audit": null,
+      "componentLeveling": null,
+      "dependencies": null,
+      "managementFunction": null,
+      "toggle": false
+    },
+    "auditEvents": {
+      "77607599-9526-411f-b19a-a167ad5f6dc7": {
+        "items": [],
+        "optional": false
+      }
+    },
+    "open": false,
+    "elements": {
+      "57760c5d-efb1-44bc-9f8b-129adf803664": {
+        "elementXMLID": "fmt-mof-sv-1",
+        "selectableGroups": {},
+        "title": [
+          {
+            "text": " The TOE shall \n            "
+          }
+        ],
+        "selectables": {},
+        "isManagementFunction": false,
+        "managementFunctions": {
+          "tableName": "Management Functions",
+          "statusMarkers": "",
+          "rows": [],
+          "columns": [
+            {
+              "headerName": "#",
+              "field": "rowNum",
+              "editable": false,
+              "resizable": true,
+              "type": "Index",
+              "flex": 0.5
+            },
+            {
+              "headerName": "ID",
+              "field": "id",
+              "editable": true,
+              "resizable": true,
+              "type": "Editor",
+              "flex": 1
+            },
+            {
+              "headerName": "Management Function",
+              "field": "textArray",
+              "editable": false,
+              "resizable": true,
+              "type": "Button",
+              "flex": 2
+            }
+          ]
+        },
+        "note": ""
+      }
+    },
+    "invisible": false,
+    "evaluationActivities": {
+      "57760c5d-efb1-44bc-9f8b-129adf803664": {
+        "hasLevelSet": false,
+        "tss": "ABC",
+        "introduction": "Something",
+        "guidance": "",
+        "testIntroduction": "",
+        "testClosing": "",
+        "testLists": {},
+        "tests": {},
+        "platformMap": null,
+        "isNoTest": false,
+        "noTest": ""
+      }
+    },
+    "modifiedSfr": false,
+    "additionalSfr": false,
+    "consistencyRationale": null,
+    "notNew": null,
+    "xPathDetails": {},
+    "classDescription": "",
+    "sfrType": "",
+    "compUUID": "0a38b646-24cb-46be-8b4d-effa9bf3ce98"
+  },
+  "FMT_MTD.1/CoreData": {
+    "title": "Management of TSF Data",
+    "cc_id": "FMT_MTD.1",
+    "iteration_id": "CoreData",
+    "xml_id": "",
+    "definition": "",
+    "optional": false,
+    "objective": false,
+    "dependsComments": {},
+    "dependsExternalDocs": {},
+    "selectionBased": false,
+    "selections": {
+      "components": [],
+      "elements": [],
+      "selections": []
+    },
+    "useCaseBased": false,
+    "useCases": [],
+    "implementationDependent": false,
+    "reasons": [],
+    "tableOpen": false,
+    "objectives": [],
+    "extendedComponentDefinition": {
+      "audit": null,
+      "componentLeveling": null,
+      "dependencies": null,
+      "managementFunction": null,
+      "toggle": false
+    },
+    "auditEvents": {
+      "345e45e4-9bd0-422f-aee9-fdc5b0a1efac": {
+        "items": [],
+        "optional": false
+      }
+    },
+    "open": false,
+    "elements": {
+      "262afec4-0aee-4116-8599-bb3907ceac69": {
+        "elementXMLID": "fmt-mtd-cd-1",
+        "selectableGroups": {},
+        "title": [
+          {
+            "text": " The TOE shall \n            "
+          }
+        ],
+        "selectables": {},
+        "isManagementFunction": false,
+        "managementFunctions": {
+          "tableName": "Management Functions",
+          "statusMarkers": "",
+          "rows": [],
+          "columns": [
+            {
+              "headerName": "#",
+              "field": "rowNum",
+              "editable": false,
+              "resizable": true,
+              "type": "Index",
+              "flex": 0.5
+            },
+            {
+              "headerName": "ID",
+              "field": "id",
+              "editable": true,
+              "resizable": true,
+              "type": "Editor",
+              "flex": 1
+            },
+            {
+              "headerName": "Management Function",
+              "field": "textArray",
+              "editable": false,
+              "resizable": true,
+              "type": "Button",
+              "flex": 2
+            }
+          ]
+        },
+        "note": ""
+      }
+    },
+    "invisible": false,
+    "evaluationActivities": {
+      "262afec4-0aee-4116-8599-bb3907ceac69": {
+        "hasLevelSet": false,
+        "tss": "ABC",
+        "introduction": "Something",
+        "guidance": "",
+        "testIntroduction": "",
+        "testClosing": "",
+        "testLists": {},
+        "tests": {},
+        "platformMap": null,
+        "isNoTest": false,
+        "noTest": ""
+      }
+    },
+    "modifiedSfr": false,
+    "additionalSfr": false,
+    "consistencyRationale": null,
+    "notNew": null,
+    "xPathDetails": {},
+    "classDescription": "",
+    "sfrType": "",
+    "compUUID": "b4040b8d-7508-4cf0-87cf-bf27eaa9f5bb"
+  },
+  "FMT_MTD.1/CryptoKeys": {
+    "title": "Management of TSF Data",
+    "cc_id": "FMT_MTD.1",
+    "iteration_id": "CryptoKeys",
+    "xml_id": "",
+    "definition": "",
+    "optional": false,
+    "objective": false,
+    "dependsComments": {},
+    "dependsExternalDocs": {},
+    "selectionBased": true,
+    "selections": {
+      "components": [],
+      "elements": [],
+      "selections": []
+    },
+    "useCaseBased": false,
+    "useCases": [],
+    "implementationDependent": false,
+    "reasons": [],
+    "tableOpen": false,
+    "objectives": [],
+    "extendedComponentDefinition": {
+      "audit": null,
+      "componentLeveling": null,
+      "dependencies": null,
+      "managementFunction": null,
+      "toggle": false
+    },
+    "auditEvents": {
+      "fc84b857-8460-4583-80b0-f0861ec392c4": {
+        "items": [],
+        "optional": false
+      }
+    },
+    "open": false,
+    "elements": {
+      "1da0bb08-2642-4d2e-b35f-c215cbefee65": {
+        "elementXMLID": "fmt-mtd-ck-1",
+        "selectableGroups": {},
+        "title": [
+          {
+            "text": " The TOE shall \n            "
+          }
+        ],
+        "selectables": {},
+        "isManagementFunction": false,
+        "managementFunctions": {
+          "tableName": "Management Functions",
+          "statusMarkers": "",
+          "rows": [],
+          "columns": [
+            {
+              "headerName": "#",
+              "field": "rowNum",
+              "editable": false,
+              "resizable": true,
+              "type": "Index",
+              "flex": 0.5
+            },
+            {
+              "headerName": "ID",
+              "field": "id",
+              "editable": true,
+              "resizable": true,
+              "type": "Editor",
+              "flex": 1
+            },
+            {
+              "headerName": "Management Function",
+              "field": "textArray",
+              "editable": false,
+              "resizable": true,
+              "type": "Button",
+              "flex": 2
+            }
+          ]
+        },
+        "note": ""
+      }
+    },
+    "invisible": false,
+    "evaluationActivities": {
+      "1da0bb08-2642-4d2e-b35f-c215cbefee65": {
+        "hasLevelSet": false,
+        "tss": "ABC",
+        "introduction": "Something",
+        "guidance": "",
+        "testIntroduction": "",
+        "testClosing": "",
+        "testLists": {},
+        "tests": {},
+        "platformMap": null,
+        "isNoTest": false,
+        "noTest": ""
+      }
+    },
+    "modifiedSfr": false,
+    "additionalSfr": false,
+    "consistencyRationale": null,
+    "notNew": null,
+    "xPathDetails": {},
+    "classDescription": "",
+    "sfrType": "",
+    "compUUID": "7324e895-832c-4835-803e-37a29428ecfa"
+  },
+  "FMT_SMF.1": {
+    "title": "Specification of Management Functions",
+    "cc_id": "FMT_SMF.1",
+    "iteration_id": "",
+    "xml_id": "",
+    "definition": "",
+    "optional": false,
+    "objective": false,
+    "dependsComments": {},
+    "dependsExternalDocs": {},
+    "selectionBased": false,
+    "selections": {
+      "components": [],
+      "elements": [],
+      "selections": []
+    },
+    "useCaseBased": false,
+    "useCases": [],
+    "implementationDependent": false,
+    "reasons": [],
+    "tableOpen": false,
+    "objectives": [],
+    "extendedComponentDefinition": {
+      "audit": null,
+      "componentLeveling": null,
+      "dependencies": null,
+      "managementFunction": null,
+      "toggle": false
+    },
+    "auditEvents": {
+      "ffe518c5-00ce-48cc-b236-987614a38ffd": {
+        "items": [],
+        "optional": false
+      }
+    },
+    "open": false,
+    "elements": {
+      "8033bc86-bafd-4b40-b9df-d68a66569ff0": {
+        "elementXMLID": "fmt-smf-1-1",
+        "selectableGroups": {},
+        "title": [
+          {
+            "text": " The TOE shall \n            "
+          }
+        ],
+        "selectables": {},
+        "isManagementFunction": false,
+        "managementFunctions": {
+          "tableName": "Management Functions",
+          "statusMarkers": "",
+          "rows": [],
+          "columns": [
+            {
+              "headerName": "#",
+              "field": "rowNum",
+              "editable": false,
+              "resizable": true,
+              "type": "Index",
+              "flex": 0.5
+            },
+            {
+              "headerName": "ID",
+              "field": "id",
+              "editable": true,
+              "resizable": true,
+              "type": "Editor",
+              "flex": 1
+            },
+            {
+              "headerName": "Management Function",
+              "field": "textArray",
+              "editable": false,
+              "resizable": true,
+              "type": "Button",
+              "flex": 2
+            }
+          ]
+        },
+        "note": ""
+      }
+    },
+    "invisible": false,
+    "evaluationActivities": {
+      "8033bc86-bafd-4b40-b9df-d68a66569ff0": {
+        "hasLevelSet": false,
+        "tss": "ABC",
+        "introduction": "Something",
+        "guidance": "",
+        "testIntroduction": "",
+        "testClosing": "",
+        "testLists": {},
+        "tests": {},
+        "platformMap": null,
+        "isNoTest": false,
+        "noTest": ""
+      }
+    },
+    "modifiedSfr": false,
+    "additionalSfr": false,
+    "consistencyRationale": null,
+    "notNew": null,
+    "xPathDetails": {},
+    "classDescription": "",
+    "sfrType": "",
+    "compUUID": "58b21215-5abc-4a65-91c5-7bc654aae245"
+  },
+  "FMT_SMR.2": {
+    "title": "Restrictions on security roles",
+    "cc_id": "FMT_SMR.2",
+    "iteration_id": "",
+    "xml_id": "",
+    "definition": "",
+    "optional": false,
+    "objective": false,
+    "dependsComments": {},
+    "dependsExternalDocs": {},
+    "selectionBased": false,
+    "selections": {
+      "components": [],
+      "elements": [],
+      "selections": []
+    },
+    "useCaseBased": false,
+    "useCases": [],
+    "implementationDependent": false,
+    "reasons": [],
+    "tableOpen": false,
+    "objectives": [],
+    "extendedComponentDefinition": {
+      "audit": null,
+      "componentLeveling": null,
+      "dependencies": null,
+      "managementFunction": null,
+      "toggle": false
+    },
+    "auditEvents": {
+      "9be1a7e0-b4ed-4b28-af69-d10365fed230": {
+        "items": [],
+        "optional": false
+      }
+    },
+    "open": false,
+    "elements": {
+      "65e11ba4-209b-4f9d-bb88-c4d8dd2fbaa7": {
+        "elementXMLID": "fmt-smr-2-1",
+        "selectableGroups": {},
+        "title": [
+          {
+            "text": " The TOE shall \n            "
+          }
+        ],
+        "selectables": {},
+        "isManagementFunction": false,
+        "managementFunctions": {
+          "tableName": "Management Functions",
+          "statusMarkers": "",
+          "rows": [],
+          "columns": [
+            {
+              "headerName": "#",
+              "field": "rowNum",
+              "editable": false,
+              "resizable": true,
+              "type": "Index",
+              "flex": 0.5
+            },
+            {
+              "headerName": "ID",
+              "field": "id",
+              "editable": true,
+              "resizable": true,
+              "type": "Editor",
+              "flex": 1
+            },
+            {
+              "headerName": "Management Function",
+              "field": "textArray",
+              "editable": false,
+              "resizable": true,
+              "type": "Button",
+              "flex": 2
+            }
+          ]
+        },
+        "note": ""
+      }
+    },
+    "invisible": false,
+    "evaluationActivities": {
+      "65e11ba4-209b-4f9d-bb88-c4d8dd2fbaa7": {
+        "hasLevelSet": false,
+        "tss": "ABC",
+        "introduction": "Something",
+        "guidance": "",
+        "testIntroduction": "",
+        "testClosing": "",
+        "testLists": {},
+        "tests": {},
+        "platformMap": null,
+        "isNoTest": false,
+        "noTest": ""
+      }
+    },
+    "modifiedSfr": false,
+    "additionalSfr": false,
+    "consistencyRationale": null,
+    "notNew": null,
+    "xPathDetails": {},
+    "classDescription": "",
+    "sfrType": "",
+    "compUUID": "fecf11b8-177f-4152-ad65-1f66cc6b1600"
+  },
+  "FPT_APW_EXT.1": {
+    "title": "Protection of Administrator Passwords",
+    "cc_id": "FPT_APW_EXT.1",
+    "iteration_id": "",
+    "xml_id": "",
+    "definition": "",
+    "optional": false,
+    "objective": false,
+    "dependsComments": {},
+    "dependsExternalDocs": {},
+    "selectionBased": false,
+    "selections": {
+      "components": [],
+      "elements": [],
+      "selections": []
+    },
+    "useCaseBased": false,
+    "useCases": [],
+    "implementationDependent": false,
+    "reasons": [],
+    "tableOpen": false,
+    "objectives": [],
+    "extendedComponentDefinition": {
+      "audit": null,
+      "componentLeveling": null,
+      "dependencies": null,
+      "managementFunction": null,
+      "toggle": false
+    },
+    "auditEvents": {
+      "aab1da3b-94e8-4583-8ab2-14f065b36426": {
+        "items": [],
+        "optional": false
+      }
+    },
+    "open": false,
+    "elements": {
+      "3af331e2-744f-4ef3-9a79-66348e0455c9": {
+        "elementXMLID": "fpt-apw-ext-1-1",
+        "selectableGroups": {},
+        "title": [
+          {
+            "text": " The TOE shall \n            "
+          }
+        ],
+        "selectables": {},
+        "isManagementFunction": false,
+        "managementFunctions": {
+          "tableName": "Management Functions",
+          "statusMarkers": "",
+          "rows": [],
+          "columns": [
+            {
+              "headerName": "#",
+              "field": "rowNum",
+              "editable": false,
+              "resizable": true,
+              "type": "Index",
+              "flex": 0.5
+            },
+            {
+              "headerName": "ID",
+              "field": "id",
+              "editable": true,
+              "resizable": true,
+              "type": "Editor",
+              "flex": 1
+            },
+            {
+              "headerName": "Management Function",
+              "field": "textArray",
+              "editable": false,
+              "resizable": true,
+              "type": "Button",
+              "flex": 2
+            }
+          ]
+        },
+        "note": ""
+      }
+    },
+    "invisible": false,
+    "evaluationActivities": {
+      "3af331e2-744f-4ef3-9a79-66348e0455c9": {
+        "hasLevelSet": false,
+        "tss": "ABC",
+        "introduction": "Something",
+        "guidance": "",
+        "testIntroduction": "",
+        "testClosing": "",
+        "testLists": {},
+        "tests": {},
+        "platformMap": null,
+        "isNoTest": false,
+        "noTest": ""
+      }
+    },
+    "modifiedSfr": false,
+    "additionalSfr": false,
+    "consistencyRationale": null,
+    "notNew": null,
+    "xPathDetails": {},
+    "classDescription": "",
+    "sfrType": "",
+    "compUUID": "0a167e97-6d28-490e-a891-3812116e0aa6"
+  },
+  "FPT_ITT.1": {
+    "title": "Basic internal TSF data transfer protection (Refinement)",
+    "cc_id": "FPT_ITT.1",
+    "iteration_id": "",
+    "xml_id": "",
+    "definition": "",
+    "optional": true,
+    "objective": false,
+    "dependsComments": {},
+    "dependsExternalDocs": {},
+    "selectionBased": false,
+    "selections": {
+      "components": [],
+      "elements": [],
+      "selections": []
+    },
+    "useCaseBased": false,
+    "useCases": [],
+    "implementationDependent": false,
+    "reasons": [],
+    "tableOpen": false,
+    "objectives": [],
+    "extendedComponentDefinition": {
+      "audit": null,
+      "componentLeveling": null,
+      "dependencies": null,
+      "managementFunction": null,
+      "toggle": false
+    },
+    "auditEvents": {
+      "98e48d4a-122d-4206-b739-3e31ade5cf52": {
+        "items": [],
+        "optional": false
+      }
+    },
+    "open": false,
+    "elements": {
+      "c438b3ef-a464-4354-af7f-82f2d0084b75": {
+        "elementXMLID": "fpt-itt-1-1",
+        "selectableGroups": {},
+        "title": [
+          {
+            "text": " The TOE shall \n            "
+          }
+        ],
+        "selectables": {},
+        "isManagementFunction": false,
+        "managementFunctions": {
+          "tableName": "Management Functions",
+          "statusMarkers": "",
+          "rows": [],
+          "columns": [
+            {
+              "headerName": "#",
+              "field": "rowNum",
+              "editable": false,
+              "resizable": true,
+              "type": "Index",
+              "flex": 0.5
+            },
+            {
+              "headerName": "ID",
+              "field": "id",
+              "editable": true,
+              "resizable": true,
+              "type": "Editor",
+              "flex": 1
+            },
+            {
+              "headerName": "Management Function",
+              "field": "textArray",
+              "editable": false,
+              "resizable": true,
+              "type": "Button",
+              "flex": 2
+            }
+          ]
+        },
+        "note": ""
+      }
+    },
+    "invisible": false,
+    "evaluationActivities": {
+      "c438b3ef-a464-4354-af7f-82f2d0084b75": {
+        "hasLevelSet": false,
+        "tss": "ABC",
+        "introduction": "Something",
+        "guidance": "",
+        "testIntroduction": "",
+        "testClosing": "",
+        "testLists": {},
+        "tests": {},
+        "platformMap": null,
+        "isNoTest": false,
+        "noTest": ""
+      }
+    },
+    "modifiedSfr": false,
+    "additionalSfr": false,
+    "consistencyRationale": null,
+    "notNew": null,
+    "xPathDetails": {},
+    "classDescription": "",
+    "sfrType": "",
+    "compUUID": "2bda2b2a-8399-41a6-8ca5-3c07b5bb4583"
+  },
+  "FPT_SKP_EXT.1": {
+    "title": "Protection of TSF Data (for reading of all pre-shared, symmetric and private keys)",
+    "cc_id": "FPT_SKP_EXT.1",
+    "iteration_id": "",
+    "xml_id": "",
+    "definition": "",
+    "optional": false,
+    "objective": false,
+    "dependsComments": {},
+    "dependsExternalDocs": {},
+    "selectionBased": false,
+    "selections": {
+      "components": [],
+      "elements": [],
+      "selections": []
+    },
+    "useCaseBased": false,
+    "useCases": [],
+    "implementationDependent": false,
+    "reasons": [],
+    "tableOpen": false,
+    "objectives": [],
+    "extendedComponentDefinition": {
+      "audit": null,
+      "componentLeveling": null,
+      "dependencies": null,
+      "managementFunction": null,
+      "toggle": false
+    },
+    "auditEvents": {
+      "51cb25d5-3d6a-46ac-aa0a-fe8b65782e36": {
+        "items": [],
+        "optional": false
+      }
+    },
+    "open": false,
+    "elements": {
+      "15a3b386-5033-4ca9-a539-f1566280d693": {
+        "elementXMLID": "fpt-skp-ext-1-1",
+        "selectableGroups": {},
+        "title": [
+          {
+            "text": " The TOE shall \n            "
+          }
+        ],
+        "selectables": {},
+        "isManagementFunction": false,
+        "managementFunctions": {
+          "tableName": "Management Functions",
+          "statusMarkers": "",
+          "rows": [],
+          "columns": [
+            {
+              "headerName": "#",
+              "field": "rowNum",
+              "editable": false,
+              "resizable": true,
+              "type": "Index",
+              "flex": 0.5
+            },
+            {
+              "headerName": "ID",
+              "field": "id",
+              "editable": true,
+              "resizable": true,
+              "type": "Editor",
+              "flex": 1
+            },
+            {
+              "headerName": "Management Function",
+              "field": "textArray",
+              "editable": false,
+              "resizable": true,
+              "type": "Button",
+              "flex": 2
+            }
+          ]
+        },
+        "note": ""
+      }
+    },
+    "invisible": false,
+    "evaluationActivities": {
+      "15a3b386-5033-4ca9-a539-f1566280d693": {
+        "hasLevelSet": false,
+        "tss": "ABC",
+        "introduction": "Something",
+        "guidance": "",
+        "testIntroduction": "",
+        "testClosing": "",
+        "testLists": {},
+        "tests": {},
+        "platformMap": null,
+        "isNoTest": false,
+        "noTest": ""
+      }
+    },
+    "modifiedSfr": false,
+    "additionalSfr": false,
+    "consistencyRationale": null,
+    "notNew": null,
+    "xPathDetails": {},
+    "classDescription": "",
+    "sfrType": "",
+    "compUUID": "c89527eb-538f-4876-9e7d-21db6f90895d"
+  },
+  "FPT_STM_EXT.1": {
+    "title": "Reliable Time Stamps",
+    "cc_id": "FPT_STM_EXT.1",
+    "iteration_id": "",
+    "xml_id": "",
+    "definition": "",
+    "optional": false,
+    "objective": false,
+    "dependsComments": {},
+    "dependsExternalDocs": {},
+    "selectionBased": false,
+    "selections": {
+      "components": [],
+      "elements": [],
+      "selections": []
+    },
+    "useCaseBased": false,
+    "useCases": [],
+    "implementationDependent": false,
+    "reasons": [],
+    "tableOpen": false,
+    "objectives": [],
+    "extendedComponentDefinition": {
+      "audit": null,
+      "componentLeveling": null,
+      "dependencies": null,
+      "managementFunction": null,
+      "toggle": false
+    },
+    "auditEvents": {
+      "4c10ce3b-bc3f-4fd9-a299-1d2637a04c44": {
+        "items": [],
+        "optional": false
+      }
+    },
+    "open": false,
+    "elements": {
+      "a2f3cc04-60ab-448c-9669-3f2f2af3f658": {
+        "elementXMLID": "fpt-stm-ext-1-1",
+        "selectableGroups": {},
+        "title": [
+          {
+            "text": " The TOE shall \n            "
+          }
+        ],
+        "selectables": {},
+        "isManagementFunction": false,
+        "managementFunctions": {
+          "tableName": "Management Functions",
+          "statusMarkers": "",
+          "rows": [],
+          "columns": [
+            {
+              "headerName": "#",
+              "field": "rowNum",
+              "editable": false,
+              "resizable": true,
+              "type": "Index",
+              "flex": 0.5
+            },
+            {
+              "headerName": "ID",
+              "field": "id",
+              "editable": true,
+              "resizable": true,
+              "type": "Editor",
+              "flex": 1
+            },
+            {
+              "headerName": "Management Function",
+              "field": "textArray",
+              "editable": false,
+              "resizable": true,
+              "type": "Button",
+              "flex": 2
+            }
+          ]
+        },
+        "note": ""
+      }
+    },
+    "invisible": false,
+    "evaluationActivities": {
+      "a2f3cc04-60ab-448c-9669-3f2f2af3f658": {
+        "hasLevelSet": false,
+        "tss": "ABC",
+        "introduction": "Something",
+        "guidance": "",
+        "testIntroduction": "",
+        "testClosing": "",
+        "testLists": {},
+        "tests": {},
+        "platformMap": null,
+        "isNoTest": false,
+        "noTest": ""
+      }
+    },
+    "modifiedSfr": false,
+    "additionalSfr": false,
+    "consistencyRationale": null,
+    "notNew": null,
+    "xPathDetails": {},
+    "classDescription": "",
+    "sfrType": "",
+    "compUUID": "be12659e-dfbb-4cc3-8c6e-a02bc0637bab"
+  },
+  "FPT_TST_EXT.1": {
+    "title": "TSF Testing",
+    "cc_id": "FPT_TST_EXT.1",
+    "iteration_id": "",
+    "xml_id": "",
+    "definition": "",
+    "optional": false,
+    "objective": false,
+    "dependsComments": {},
+    "dependsExternalDocs": {},
+    "selectionBased": false,
+    "selections": {
+      "components": [],
+      "elements": [],
+      "selections": []
+    },
+    "useCaseBased": false,
+    "useCases": [],
+    "implementationDependent": false,
+    "reasons": [],
+    "tableOpen": false,
+    "objectives": [
+      {
+        "uuid": "736db927-dfce-43d4-bbae-9c4576450803",
+        "rationale": "For reasons"
+      }
+    ],
+    "extendedComponentDefinition": {
+      "audit": null,
+      "componentLeveling": null,
+      "dependencies": null,
+      "managementFunction": null,
+      "toggle": false
+    },
+    "auditEvents": {
+      "ea523f00-c55d-401c-b59f-68166f484afa": {
+        "items": [],
+        "optional": false
+      }
+    },
+    "open": false,
+    "elements": {
+      "0d780243-b182-4f22-9940-d820b437ef1a": {
+        "elementXMLID": "fpt-tst-ext-1-1",
+        "selectableGroups": {},
+        "title": [
+          {
+            "text": " The TOE shall \n            "
+          }
+        ],
+        "selectables": {},
+        "isManagementFunction": false,
+        "managementFunctions": {
+          "tableName": "Management Functions",
+          "statusMarkers": "",
+          "rows": [],
+          "columns": [
+            {
+              "headerName": "#",
+              "field": "rowNum",
+              "editable": false,
+              "resizable": true,
+              "type": "Index",
+              "flex": 0.5
+            },
+            {
+              "headerName": "ID",
+              "field": "id",
+              "editable": true,
+              "resizable": true,
+              "type": "Editor",
+              "flex": 1
+            },
+            {
+              "headerName": "Management Function",
+              "field": "textArray",
+              "editable": false,
+              "resizable": true,
+              "type": "Button",
+              "flex": 2
+            }
+          ]
+        },
+        "note": ""
+      }
+    },
+    "invisible": false,
+    "evaluationActivities": {
+      "0d780243-b182-4f22-9940-d820b437ef1a": {
+        "hasLevelSet": false,
+        "tss": "ABC",
+        "introduction": "Something",
+        "guidance": "",
+        "testIntroduction": "",
+        "testClosing": "",
+        "testLists": {},
+        "tests": {},
+        "platformMap": null,
+        "isNoTest": false,
+        "noTest": ""
+      }
+    },
+    "modifiedSfr": false,
+    "additionalSfr": false,
+    "consistencyRationale": null,
+    "notNew": null,
+    "xPathDetails": {},
+    "classDescription": "",
+    "sfrType": "",
+    "compUUID": "eafedcb8-fbaa-41b3-8945-26ee248df46a"
+  },
+  "FPT_TUD_EXT.1": {
+    "title": "Trusted Update",
+    "cc_id": "FPT_TUD_EXT.1",
+    "iteration_id": "",
+    "xml_id": "",
+    "definition": "",
+    "optional": false,
+    "objective": false,
+    "dependsComments": {},
+    "dependsExternalDocs": {},
+    "selectionBased": false,
+    "selections": {
+      "components": [],
+      "elements": [],
+      "selections": []
+    },
+    "useCaseBased": false,
+    "useCases": [],
+    "implementationDependent": false,
+    "reasons": [],
+    "tableOpen": false,
+    "objectives": [
+      {
+        "uuid": "736db927-dfce-43d4-bbae-9c4576450803",
+        "rationale": "For reasons"
+      }
+    ],
+    "extendedComponentDefinition": {
+      "audit": null,
+      "componentLeveling": null,
+      "dependencies": null,
+      "managementFunction": null,
+      "toggle": false
+    },
+    "auditEvents": {
+      "c87d2678-1027-405b-b90b-871f58a2e5d3": {
+        "items": [],
+        "optional": false
+      }
+    },
+    "open": false,
+    "elements": {
+      "e9bc5d1c-ca44-4796-a765-e4067df2ca49": {
+        "elementXMLID": "fpt-tud-ext-1-1",
+        "selectableGroups": {},
+        "title": [
+          {
+            "text": " The TOE shall \n            "
+          }
+        ],
+        "selectables": {},
+        "isManagementFunction": false,
+        "managementFunctions": {
+          "tableName": "Management Functions",
+          "statusMarkers": "",
+          "rows": [],
+          "columns": [
+            {
+              "headerName": "#",
+              "field": "rowNum",
+              "editable": false,
+              "resizable": true,
+              "type": "Index",
+              "flex": 0.5
+            },
+            {
+              "headerName": "ID",
+              "field": "id",
+              "editable": true,
+              "resizable": true,
+              "type": "Editor",
+              "flex": 1
+            },
+            {
+              "headerName": "Management Function",
+              "field": "textArray",
+              "editable": false,
+              "resizable": true,
+              "type": "Button",
+              "flex": 2
+            }
+          ]
+        },
+        "note": ""
+      }
+    },
+    "invisible": false,
+    "evaluationActivities": {
+      "e9bc5d1c-ca44-4796-a765-e4067df2ca49": {
+        "hasLevelSet": false,
+        "tss": "ABC",
+        "introduction": "Something",
+        "guidance": "",
+        "testIntroduction": "",
+        "testClosing": "",
+        "testLists": {},
+        "tests": {},
+        "platformMap": null,
+        "isNoTest": false,
+        "noTest": ""
+      }
+    },
+    "modifiedSfr": false,
+    "additionalSfr": false,
+    "consistencyRationale": null,
+    "notNew": null,
+    "xPathDetails": {},
+    "classDescription": "",
+    "sfrType": "",
+    "compUUID": "ba656166-aa2b-409d-8c24-b41ab520268b"
+  },
+  "FPT_TUD_EXT.2": {
+    "title": "Trusted Update Based on Certificates",
+    "cc_id": "FPT_TUD_EXT.2",
+    "iteration_id": "",
+    "xml_id": "",
+    "definition": "",
+    "optional": false,
+    "objective": false,
+    "dependsComments": {},
+    "dependsExternalDocs": {},
+    "selectionBased": true,
+    "selections": {
+      "components": [],
+      "elements": [
+        "099a5f14-62b9-44de-bcb9-83d5f069f665"
+      ],
+      "selections": [
+        "dummy"
+      ]
+    },
+    "useCaseBased": false,
+    "useCases": [],
+    "implementationDependent": false,
+    "reasons": [],
+    "tableOpen": false,
+    "objectives": [
+      {
+        "uuid": "736db927-dfce-43d4-bbae-9c4576450803",
+        "rationale": "For reasons"
+      }
+    ],
+    "extendedComponentDefinition": {
+      "audit": null,
+      "componentLeveling": null,
+      "dependencies": null,
+      "managementFunction": null,
+      "toggle": false
+    },
+    "auditEvents": {
+      "f0be463b-04f5-4a58-a567-8e2db5f3d8ec": {
+        "items": [],
+        "optional": false
+      }
+    },
+    "open": false,
+    "elements": {
+      "bfd1a6ad-9602-4f99-8595-3468420c5f98": {
+        "elementXMLID": "fpt-tud-ext-2-1",
+        "selectableGroups": {},
+        "title": [
+          {
+            "text": " The TOE shall \n            "
+          }
+        ],
+        "selectables": {},
+        "isManagementFunction": false,
+        "managementFunctions": {
+          "tableName": "Management Functions",
+          "statusMarkers": "",
+          "rows": [],
+          "columns": [
+            {
+              "headerName": "#",
+              "field": "rowNum",
+              "editable": false,
+              "resizable": true,
+              "type": "Index",
+              "flex": 0.5
+            },
+            {
+              "headerName": "ID",
+              "field": "id",
+              "editable": true,
+              "resizable": true,
+              "type": "Editor",
+              "flex": 1
+            },
+            {
+              "headerName": "Management Function",
+              "field": "textArray",
+              "editable": false,
+              "resizable": true,
+              "type": "Button",
+              "flex": 2
+            }
+          ]
+        },
+        "note": ""
+      }
+    },
+    "invisible": false,
+    "evaluationActivities": {
+      "bfd1a6ad-9602-4f99-8595-3468420c5f98": {
+        "hasLevelSet": false,
+        "tss": "ABC",
+        "introduction": "Something",
+        "guidance": "",
+        "testIntroduction": "",
+        "testClosing": "",
+        "testLists": {},
+        "tests": {},
+        "platformMap": null,
+        "isNoTest": false,
+        "noTest": ""
+      }
+    },
+    "modifiedSfr": false,
+    "additionalSfr": false,
+    "consistencyRationale": null,
+    "notNew": null,
+    "xPathDetails": {},
+    "classDescription": "",
+    "sfrType": "",
+    "compUUID": "ce2affff-9fd2-4053-8ba0-aca54e37e79f"
+  },
+  "FTA_SSL.3": {
+    "title": "TSF-initiated Termination (Refinement)",
+    "cc_id": "FTA_SSL.3",
+    "iteration_id": "",
+    "xml_id": "",
+    "definition": "",
+    "optional": false,
+    "objective": false,
+    "dependsComments": {},
+    "dependsExternalDocs": {},
+    "selectionBased": false,
+    "selections": {
+      "components": [],
+      "elements": [],
+      "selections": []
+    },
+    "useCaseBased": false,
+    "useCases": [],
+    "implementationDependent": false,
+    "reasons": [],
+    "tableOpen": false,
+    "objectives": [],
+    "extendedComponentDefinition": {
+      "audit": null,
+      "componentLeveling": null,
+      "dependencies": null,
+      "managementFunction": null,
+      "toggle": false
+    },
+    "auditEvents": {
+      "bd219080-5659-4999-9acb-0f5e319db6da": {
+        "items": [],
+        "optional": false
+      }
+    },
+    "open": false,
+    "elements": {
+      "9d00c8b3-a0b0-42ea-98b6-13bc1bfcf369": {
+        "elementXMLID": "fta-ssl-3-1",
+        "selectableGroups": {},
+        "title": [
+          {
+            "text": " The TOE shall \n            "
+          }
+        ],
+        "selectables": {},
+        "isManagementFunction": false,
+        "managementFunctions": {
+          "tableName": "Management Functions",
+          "statusMarkers": "",
+          "rows": [],
+          "columns": [
+            {
+              "headerName": "#",
+              "field": "rowNum",
+              "editable": false,
+              "resizable": true,
+              "type": "Index",
+              "flex": 0.5
+            },
+            {
+              "headerName": "ID",
+              "field": "id",
+              "editable": true,
+              "resizable": true,
+              "type": "Editor",
+              "flex": 1
+            },
+            {
+              "headerName": "Management Function",
+              "field": "textArray",
+              "editable": false,
+              "resizable": true,
+              "type": "Button",
+              "flex": 2
+            }
+          ]
+        },
+        "note": ""
+      }
+    },
+    "invisible": false,
+    "evaluationActivities": {
+      "9d00c8b3-a0b0-42ea-98b6-13bc1bfcf369": {
+        "hasLevelSet": false,
+        "tss": "ABC",
+        "introduction": "Something",
+        "guidance": "",
+        "testIntroduction": "",
+        "testClosing": "",
+        "testLists": {},
+        "tests": {},
+        "platformMap": null,
+        "isNoTest": false,
+        "noTest": ""
+      }
+    },
+    "modifiedSfr": false,
+    "additionalSfr": false,
+    "consistencyRationale": null,
+    "notNew": null,
+    "xPathDetails": {},
+    "classDescription": "",
+    "sfrType": "",
+    "compUUID": "a114cc13-e098-42ce-bc7e-985e5d63c3b9"
+  },
+  "FTA_SSL.4": {
+    "title": "User-initiated Termination (Refinement)",
+    "cc_id": "FTA_SSL.4",
+    "iteration_id": "",
+    "xml_id": "",
+    "definition": "",
+    "optional": false,
+    "objective": false,
+    "dependsComments": {},
+    "dependsExternalDocs": {},
+    "selectionBased": false,
+    "selections": {
+      "components": [],
+      "elements": [],
+      "selections": []
+    },
+    "useCaseBased": false,
+    "useCases": [],
+    "implementationDependent": false,
+    "reasons": [],
+    "tableOpen": false,
+    "objectives": [],
+    "extendedComponentDefinition": {
+      "audit": null,
+      "componentLeveling": null,
+      "dependencies": null,
+      "managementFunction": null,
+      "toggle": false
+    },
+    "auditEvents": {
+      "31b94b7b-45aa-49b7-a0a8-c2427ed8d6e9": {
+        "items": [],
+        "optional": false
+      }
+    },
+    "open": false,
+    "elements": {
+      "eb7769aa-5f07-42c8-b40a-a6953ddfeeea": {
+        "elementXMLID": "fta-ssl-4-1",
+        "selectableGroups": {},
+        "title": [
+          {
+            "text": " The TOE shall \n            "
+          }
+        ],
+        "selectables": {},
+        "isManagementFunction": false,
+        "managementFunctions": {
+          "tableName": "Management Functions",
+          "statusMarkers": "",
+          "rows": [],
+          "columns": [
+            {
+              "headerName": "#",
+              "field": "rowNum",
+              "editable": false,
+              "resizable": true,
+              "type": "Index",
+              "flex": 0.5
+            },
+            {
+              "headerName": "ID",
+              "field": "id",
+              "editable": true,
+              "resizable": true,
+              "type": "Editor",
+              "flex": 1
+            },
+            {
+              "headerName": "Management Function",
+              "field": "textArray",
+              "editable": false,
+              "resizable": true,
+              "type": "Button",
+              "flex": 2
+            }
+          ]
+        },
+        "note": ""
+      }
+    },
+    "invisible": false,
+    "evaluationActivities": {
+      "eb7769aa-5f07-42c8-b40a-a6953ddfeeea": {
+        "hasLevelSet": false,
+        "tss": "ABC",
+        "introduction": "Something",
+        "guidance": "",
+        "testIntroduction": "",
+        "testClosing": "",
+        "testLists": {},
+        "tests": {},
+        "platformMap": null,
+        "isNoTest": false,
+        "noTest": ""
+      }
+    },
+    "modifiedSfr": false,
+    "additionalSfr": false,
+    "consistencyRationale": null,
+    "notNew": null,
+    "xPathDetails": {},
+    "classDescription": "",
+    "sfrType": "",
+    "compUUID": "3cba2c6f-8eb3-4ffd-bacb-9f921c01c622"
+  },
+  "FTA_SSL_EXT.1": {
+    "title": "TSF-initiated Session Locking",
+    "cc_id": "FTA_SSL_EXT.1",
+    "iteration_id": "",
+    "xml_id": "",
+    "definition": "",
+    "optional": false,
+    "objective": false,
+    "dependsComments": {},
+    "dependsExternalDocs": {},
+    "selectionBased": false,
+    "selections": {
+      "components": [],
+      "elements": [],
+      "selections": []
+    },
+    "useCaseBased": false,
+    "useCases": [],
+    "implementationDependent": false,
+    "reasons": [],
+    "tableOpen": false,
+    "objectives": [],
+    "extendedComponentDefinition": {
+      "audit": null,
+      "componentLeveling": null,
+      "dependencies": null,
+      "managementFunction": null,
+      "toggle": false
+    },
+    "auditEvents": {
+      "92b11c67-8ecc-438b-aa5e-0de3536b76f5": {
+        "items": [],
+        "optional": false
+      }
+    },
+    "open": false,
+    "elements": {
+      "53242b49-817a-444a-9dd7-45176bfb8f43": {
+        "elementXMLID": "fta-ssl-ext-1-1",
+        "selectableGroups": {},
+        "title": [
+          {
+            "text": " The TOE shall \n            "
+          }
+        ],
+        "selectables": {},
+        "isManagementFunction": false,
+        "managementFunctions": {
+          "tableName": "Management Functions",
+          "statusMarkers": "",
+          "rows": [],
+          "columns": [
+            {
+              "headerName": "#",
+              "field": "rowNum",
+              "editable": false,
+              "resizable": true,
+              "type": "Index",
+              "flex": 0.5
+            },
+            {
+              "headerName": "ID",
+              "field": "id",
+              "editable": true,
+              "resizable": true,
+              "type": "Editor",
+              "flex": 1
+            },
+            {
+              "headerName": "Management Function",
+              "field": "textArray",
+              "editable": false,
+              "resizable": true,
+              "type": "Button",
+              "flex": 2
+            }
+          ]
+        },
+        "note": ""
+      }
+    },
+    "invisible": false,
+    "evaluationActivities": {
+      "53242b49-817a-444a-9dd7-45176bfb8f43": {
+        "hasLevelSet": false,
+        "tss": "ABC",
+        "introduction": "Something",
+        "guidance": "",
+        "testIntroduction": "",
+        "testClosing": "",
+        "testLists": {},
+        "tests": {},
+        "platformMap": null,
+        "isNoTest": false,
+        "noTest": ""
+      }
+    },
+    "modifiedSfr": false,
+    "additionalSfr": false,
+    "consistencyRationale": null,
+    "notNew": null,
+    "xPathDetails": {},
+    "classDescription": "",
+    "sfrType": "",
+    "compUUID": "5b6b9476-a4e3-4b09-b4f9-349bc64fe230"
+  },
+  "FTA_TAB.1": {
+    "title": "Default TOE Access Banners (Refinement)",
+    "cc_id": "FTA_TAB.1",
+    "iteration_id": "",
+    "xml_id": "",
+    "definition": "",
+    "optional": false,
+    "objective": false,
+    "dependsComments": {},
+    "dependsExternalDocs": {},
+    "selectionBased": false,
+    "selections": {
+      "components": [],
+      "elements": [],
+      "selections": []
+    },
+    "useCaseBased": false,
+    "useCases": [],
+    "implementationDependent": false,
+    "reasons": [],
+    "tableOpen": false,
+    "objectives": [
+      {
+        "uuid": "5740fd96-e568-4d6d-b5d0-3f46fc2bf13e",
+        "rationale": "For reasons"
+      }
+    ],
+    "extendedComponentDefinition": {
+      "audit": null,
+      "componentLeveling": null,
+      "dependencies": null,
+      "managementFunction": null,
+      "toggle": false
+    },
+    "auditEvents": {
+      "2ba8df36-275e-429b-88e1-7123c5617f63": {
+        "items": [],
+        "optional": false
+      }
+    },
+    "open": false,
+    "elements": {
+      "e0de2e63-5997-4dd5-baf3-a9d83ad0d5ea": {
+        "elementXMLID": "fta-tab-1-1",
+        "selectableGroups": {},
+        "title": [
+          {
+            "text": " The TOE shall \n            "
+          }
+        ],
+        "selectables": {},
+        "isManagementFunction": false,
+        "managementFunctions": {
+          "tableName": "Management Functions",
+          "statusMarkers": "",
+          "rows": [],
+          "columns": [
+            {
+              "headerName": "#",
+              "field": "rowNum",
+              "editable": false,
+              "resizable": true,
+              "type": "Index",
+              "flex": 0.5
+            },
+            {
+              "headerName": "ID",
+              "field": "id",
+              "editable": true,
+              "resizable": true,
+              "type": "Editor",
+              "flex": 1
+            },
+            {
+              "headerName": "Management Function",
+              "field": "textArray",
+              "editable": false,
+              "resizable": true,
+              "type": "Button",
+              "flex": 2
+            }
+          ]
+        },
+        "note": ""
+      }
+    },
+    "invisible": false,
+    "evaluationActivities": {
+      "e0de2e63-5997-4dd5-baf3-a9d83ad0d5ea": {
+        "hasLevelSet": false,
+        "tss": "ABC",
+        "introduction": "Something",
+        "guidance": "",
+        "testIntroduction": "",
+        "testClosing": "",
+        "testLists": {},
+        "tests": {},
+        "platformMap": null,
+        "isNoTest": false,
+        "noTest": ""
+      }
+    },
+    "modifiedSfr": false,
+    "additionalSfr": false,
+    "consistencyRationale": null,
+    "notNew": null,
+    "xPathDetails": {},
+    "classDescription": "",
+    "sfrType": "",
+    "compUUID": "9c8497b5-b2c1-4b41-a174-85d996f299c7"
+  },
+  "FTP_ITC.1": {
+    "title": "Inter-TSF Trusted Channel (Refinement)",
+    "cc_id": "FTP_ITC.1",
+    "iteration_id": "",
+    "xml_id": "",
+    "definition": "",
+    "optional": false,
+    "objective": false,
+    "dependsComments": {},
+    "dependsExternalDocs": {},
+    "selectionBased": false,
+    "selections": {
+      "components": [],
+      "elements": [],
+      "selections": []
+    },
+    "useCaseBased": false,
+    "useCases": [],
+    "implementationDependent": false,
+    "reasons": [],
+    "tableOpen": false,
+    "objectives": [],
+    "extendedComponentDefinition": {
+      "audit": null,
+      "componentLeveling": null,
+      "dependencies": null,
+      "managementFunction": null,
+      "toggle": false
+    },
+    "auditEvents": {
+      "1061d0fa-19e3-4146-980d-887b3898a2af": {
+        "items": [],
+        "optional": false
+      }
+    },
+    "open": false,
+    "elements": {
+      "24323527-c026-41e5-aa81-26e91a5025cd": {
+        "elementXMLID": "ftp-itc-1-1",
+        "selectableGroups": {},
+        "title": [
+          {
+            "text": " The TOE shall \n            "
+          }
+        ],
+        "selectables": {},
+        "isManagementFunction": false,
+        "managementFunctions": {
+          "tableName": "Management Functions",
+          "statusMarkers": "",
+          "rows": [],
+          "columns": [
+            {
+              "headerName": "#",
+              "field": "rowNum",
+              "editable": false,
+              "resizable": true,
+              "type": "Index",
+              "flex": 0.5
+            },
+            {
+              "headerName": "ID",
+              "field": "id",
+              "editable": true,
+              "resizable": true,
+              "type": "Editor",
+              "flex": 1
+            },
+            {
+              "headerName": "Management Function",
+              "field": "textArray",
+              "editable": false,
+              "resizable": true,
+              "type": "Button",
+              "flex": 2
+            }
+          ]
+        },
+        "note": ""
+      }
+    },
+    "invisible": false,
+    "evaluationActivities": {
+      "24323527-c026-41e5-aa81-26e91a5025cd": {
+        "hasLevelSet": false,
+        "tss": "ABC",
+        "introduction": "Something",
+        "guidance": "",
+        "testIntroduction": "",
+        "testClosing": "",
+        "testLists": {},
+        "tests": {},
+        "platformMap": null,
+        "isNoTest": false,
+        "noTest": ""
+      }
+    },
+    "modifiedSfr": false,
+    "additionalSfr": false,
+    "consistencyRationale": null,
+    "notNew": null,
+    "xPathDetails": {},
+    "classDescription": "",
+    "sfrType": "",
+    "compUUID": "36d0ff7f-a957-4b47-b3c0-601739a6db79"
+  },
+  "FTP_TRP.1/Admin": {
+    "title": "Trusted Path (Refinement)",
+    "cc_id": "FTP_TRP.1",
+    "iteration_id": "Admin",
+    "xml_id": "",
+    "definition": "",
+    "optional": false,
+    "objective": false,
+    "dependsComments": {},
+    "dependsExternalDocs": {},
+    "selectionBased": false,
+    "selections": {
+      "components": [],
+      "elements": [],
+      "selections": []
+    },
+    "useCaseBased": false,
+    "useCases": [],
+    "implementationDependent": false,
+    "reasons": [],
+    "tableOpen": false,
+    "objectives": [],
+    "extendedComponentDefinition": {
+      "audit": null,
+      "componentLeveling": null,
+      "dependencies": null,
+      "managementFunction": null,
+      "toggle": false
+    },
+    "auditEvents": {
+      "42dbfdc3-b6a8-4fed-b2c9-2f02d16b5368": {
+        "items": [],
+        "optional": false
+      }
+    },
+    "open": false,
+    "elements": {
+      "5d9ca41b-4905-4cf2-98c8-a2eb497acfdf": {
+        "elementXMLID": "ftp-trp-ad-1-1",
+        "selectableGroups": {},
+        "title": [
+          {
+            "text": " The TOE shall \n            "
+          }
+        ],
+        "selectables": {},
+        "isManagementFunction": false,
+        "managementFunctions": {
+          "tableName": "Management Functions",
+          "statusMarkers": "",
+          "rows": [],
+          "columns": [
+            {
+              "headerName": "#",
+              "field": "rowNum",
+              "editable": false,
+              "resizable": true,
+              "type": "Index",
+              "flex": 0.5
+            },
+            {
+              "headerName": "ID",
+              "field": "id",
+              "editable": true,
+              "resizable": true,
+              "type": "Editor",
+              "flex": 1
+            },
+            {
+              "headerName": "Management Function",
+              "field": "textArray",
+              "editable": false,
+              "resizable": true,
+              "type": "Button",
+              "flex": 2
+            }
+          ]
+        },
+        "note": ""
+      }
+    },
+    "invisible": false,
+    "evaluationActivities": {
+      "5d9ca41b-4905-4cf2-98c8-a2eb497acfdf": {
+        "hasLevelSet": false,
+        "tss": "ABC",
+        "introduction": "Something",
+        "guidance": "",
+        "testIntroduction": "",
+        "testClosing": "",
+        "testLists": {},
+        "tests": {},
+        "platformMap": null,
+        "isNoTest": false,
+        "noTest": ""
+      }
+    },
+    "modifiedSfr": false,
+    "additionalSfr": false,
+    "consistencyRationale": null,
+    "notNew": null,
+    "xPathDetails": {},
+    "classDescription": "",
+    "sfrType": "",
+    "compUUID": "972bcfb3-5136-48d3-8fb9-cb8eaa2c3184"
+  },
+  "FTP_TRP.1/Join": {
+    "title": "Trusted Path (Refinement)",
+    "cc_id": "FTP_TRP.1",
+    "iteration_id": "Join",
+    "xml_id": "",
+    "definition": "",
+    "optional": true,
+    "objective": false,
+    "dependsComments": {},
+    "dependsExternalDocs": {},
+    "selectionBased": false,
+    "selections": {
+      "components": [],
+      "elements": [],
+      "selections": []
+    },
+    "useCaseBased": false,
+    "useCases": [],
+    "implementationDependent": false,
+    "reasons": [],
+    "tableOpen": false,
+    "objectives": [],
+    "extendedComponentDefinition": {
+      "audit": null,
+      "componentLeveling": null,
+      "dependencies": null,
+      "managementFunction": null,
+      "toggle": false
+    },
+    "auditEvents": {
+      "09aa996d-3f04-4aa5-b055-cd807a64201a": {
+        "items": [],
+        "optional": false
+      }
+    },
+    "open": false,
+    "elements": {
+      "243aa22a-319c-43d7-9c21-d20e6775f143": {
+        "elementXMLID": "ftp-trp-jo-1-1",
+        "selectableGroups": {},
+        "title": [
+          {
+            "text": " The TOE shall \n            "
+          }
+        ],
+        "selectables": {},
+        "isManagementFunction": false,
+        "managementFunctions": {
+          "tableName": "Management Functions",
+          "statusMarkers": "",
+          "rows": [],
+          "columns": [
+            {
+              "headerName": "#",
+              "field": "rowNum",
+              "editable": false,
+              "resizable": true,
+              "type": "Index",
+              "flex": 0.5
+            },
+            {
+              "headerName": "ID",
+              "field": "id",
+              "editable": true,
+              "resizable": true,
+              "type": "Editor",
+              "flex": 1
+            },
+            {
+              "headerName": "Management Function",
+              "field": "textArray",
+              "editable": false,
+              "resizable": true,
+              "type": "Button",
+              "flex": 2
+            }
+          ]
+        },
+        "note": ""
+      }
+    },
+    "invisible": false,
+    "evaluationActivities": {
+      "243aa22a-319c-43d7-9c21-d20e6775f143": {
+        "hasLevelSet": false,
+        "tss": "ABC",
+        "introduction": "Something",
+        "guidance": "",
+        "testIntroduction": "",
+        "testClosing": "",
+        "testLists": {},
+        "tests": {},
+        "platformMap": null,
+        "isNoTest": false,
+        "noTest": ""
+      }
+    },
+    "modifiedSfr": false,
+    "additionalSfr": false,
+    "consistencyRationale": null,
+    "notNew": null,
+    "xPathDetails": {},
+    "classDescription": "",
+    "sfrType": "",
+    "compUUID": "5cae2b33-c104-4258-8540-8c166ac15472"
+  }
+}

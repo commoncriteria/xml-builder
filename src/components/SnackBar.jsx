@@ -28,12 +28,13 @@ const SnackBar = () => {
     <Snackbar
       autoHideDuration={autoHideDuration}
       onClose={handleClose}
-      key={vertical + horizontal}
+      key={`${severity}-${message}-${vertical}-${horizontal}`}
       TransitionComponent={SlideTransition}
       anchorOrigin={{
         vertical,
         horizontal,
       }}
+      sx={{ zIndex: 20000 }}
       open={open}>
       <Alert onClose={handleClose} severity={severity} variant='filled' sx={{ width: "100%" }}>
         {message}

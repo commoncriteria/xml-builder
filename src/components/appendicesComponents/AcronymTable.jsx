@@ -1,4 +1,5 @@
 import { useSelector } from "react-redux";
+import { UI_REGEX } from "../../utils/regexUtils.js";
 
 function AcronymTable() {
   const terms = useSelector((state) => state.terms);
@@ -10,7 +11,7 @@ function AcronymTable() {
     Object.values(termsObj).forEach((item) => {
       Object.values(item).forEach((term) => {
         if (term.title && term.title.includes("(") && term.title.includes(")")) {
-          const abbr = term.title.match(/(.*)\s\((.*)\)/);
+          const abbr = term.title.match(UI_REGEX.acronymWithExpansion);
 
           if (abbr && abbr.length >= 3) {
             const fullName = abbr[1].trim();

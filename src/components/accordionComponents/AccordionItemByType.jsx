@@ -9,13 +9,15 @@ import { getSfrMaps } from "../../utils/securityComponents.jsx";
 import CompliantTargetsOfEvaluation from "./CompliantTargetsOfEvaluation.jsx";
 import ConformanceClaims from "./ConformanceClaims.jsx";
 import EditorSection from "./EditorSection.jsx";
+import ImplementationDependentRequirements from "./ImplementationDependentRequirements.jsx";
 import SecurityContent from "./SecurityContent.jsx";
 import Terms from "../editorComponents/Terms.jsx";
+import UseCases from "../editorComponents/UseCases.jsx";
 
 /**
  * The AccordionItemByType content
  * @param type the accordion type
- *        values: transformsAppendix, compliantTargetsOfEvaluation, conformanceClaims, editor, terms, threats, objectives, sfrs, sars, sfrBasePPs
+ *        values: transformsAppendix, compliantTargetsOfEvaluation, conformanceClaims, editor, implementations, terms, threats, objectives, sfrs, sars, sfrBasePPs
  * @param uuid the uuid of the accordion item
  * @param section the section number used for the accordion item header
  * @param accordionUUID the parent accordion uuid
@@ -142,6 +144,14 @@ function AccordionItemByType({ type, uuid, section, accordionUUID }) {
     }
   }, [accordionUUID, uuid, section, type, terms]);
   /**
+   * The UseCaseSection content
+   */
+  const UseCasesSection = useMemo(() => {
+    if (type === "useCases") {
+      return <UseCases uuid={uuid} accordionUUID={accordionUUID} section={section} />;
+    }
+  }, [accordionUUID, uuid, section, type, terms]);
+  /**
    * The ThreatsSection content
    */
   const ThreatsSection = useMemo(() => {
@@ -209,8 +219,10 @@ function AccordionItemByType({ type, uuid, section, accordionUUID }) {
         <CompliantTargetsOfEvaluation section={section} accordionUUID={accordionUUID} uuid={uuid} sfrMaps={getSfrMaps()} />
       )}
       {type === "conformanceClaims" && <ConformanceClaims />}
+      {type === "implementations" && <ImplementationDependentRequirements section={section} accordionUUID={accordionUUID} uuid={uuid} />}
       {TextEditorSection}
       {TermsSection}
+      {UseCasesSection}
       {ThreatsSection}
       {ObjectivesSection}
       {SfrsSection}

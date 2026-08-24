@@ -27,7 +27,7 @@ function SfrWorksheet(props) {
   };
 
   // Constants
-  const { sfrWorksheetUI } = useSelector((state) => state);
+  const sfrWorksheetUI = useSelector((state) => state.sfrWorksheetUI);
   const { isSfrWorksheetValid, openSfrWorksheet, component, managementFunctionUI } = sfrWorksheetUI;
   const { openManagementFunctionModal } = managementFunctionUI;
 

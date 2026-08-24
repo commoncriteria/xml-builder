@@ -1,12 +1,15 @@
 // Imports
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import { useSelector } from "react-redux";
-import { Tooltip } from "@mui/material";
+import { Tooltip, TextField } from "@mui/material";
 import { deepCopy } from "../../../../../utils/deepCopy.js";
-import { handleEvaluationActivityTextUpdate } from "../../../../../utils/securityComponents.jsx";
+import { EA_SECTION_DEPENDENCY_FIELDS, EA_SECTION_DEPENDENCY_SECTION_FIELDS } from "../../../../../utils/evaluationActivityDependencies.js";
+import { handleEvaluationActivityTextUpdate, handleCustomEANameChange } from "../../../../../utils/securityComponents.jsx";
 import CardTemplate from "../../CardTemplate.jsx";
 import TipTapEditor from "../../../TipTapEditor.jsx";
+import SfrEvaluationActivityDependencyDropdown from "./SfrEvaluationActivityDependencyDropdown.jsx";
+import SfrEvaluationActivityDependencySections from "./SfrEvaluationActivityDependencySections.jsx";
 
 /**
  * The SfrEvaluationActivityCard class that displays a specific sfr evaluation activity card
@@ -17,13 +20,14 @@ import TipTapEditor from "../../../TipTapEditor.jsx";
  * @returns {JSX.Element} the content
  * @constructor passes in props to the class
  */
-function SfrEvaluationActivityCard({ isManagementFunction, sectionType, cardTitle, tooltip }) {
+function SfrEvaluationActivityCard({ isManagementFunction, sectionType, cardTitle, tooltip, dependencyMenuOptions = null }) {
   // Prop Validation
   SfrEvaluationActivityCard.propTypes = {
     isManagementFunction: PropTypes.bool.isRequired,
     sectionType: PropTypes.string.isRequired,
     cardTitle: PropTypes.string.isRequired,
     tooltip: PropTypes.string,
+    dependencyMenuOptions: PropTypes.object,
   };
 
   // Constants
@@ -38,30 +42,73 @@ function SfrEvaluationActivityCard({ isManagementFunction, sectionType, cardTitl
    * @returns {*|string|null}
    */
   const getEvaluationActivityItem = () => {
+    return getEvaluationActivityFieldValue(sectionType);
+  };
+
+  const getEvaluationActivityFieldValue = (field) => {
     const activities = isManagementFunction ? deepCopy(activity) : deepCopy(evaluationActivities);
 
     if (isManagementFunction) {
-      if (!activities.hasOwnProperty(sectionType)) {
-        activities[sectionType] = "";
+      if (!activities.hasOwnProperty(field)) {
+        activities[field] = "";
       }
 
-      return activities[sectionType];
+      return activities[field];
     } else {
       const { selectedUUID, selectedEvaluationActivity } = evaluationActivitiesUI;
       const isSelectedUUID = selectedUUID;
       const isSelectedEvaluationActivity = selectedEvaluationActivity && selectedEvaluationActivity.length > 0;
 
       if (isSelectedEvaluationActivity && isSelectedUUID && activities && activities.hasOwnProperty(selectedUUID)) {
-        if (!activities[selectedUUID].hasOwnProperty(sectionType)) {
-          activities[selectedUUID][sectionType] = "";
+        if (!activities[selectedUUID].hasOwnProperty(field)) {
+          activities[selectedUUID][field] = "";
         }
 
-        return activities[selectedUUID][sectionType];
+        if (field === "customea") {
+          return activities[selectedUUID][field].text;
+        }
+        return activities[selectedUUID][field];
       }
     }
 
     return "";
   };
+  const hasLegacySectionDependencies = () => {
+    if (!["tss", "guidance"].includes(sectionType)) return false;
+
+    const dependencyField = EA_SECTION_DEPENDENCY_FIELDS[sectionType];
+    const dependencySectionsField = EA_SECTION_DEPENDENCY_SECTION_FIELDS[sectionType];
+    const dependencies = getEvaluationActivityFieldValue(dependencyField);
+    const dependencySections = getEvaluationActivityFieldValue(dependencySectionsField);
+
+    return Array.isArray(dependencies) && dependencies.length > 0 && (!Array.isArray(dependencySections) || dependencySections.length === 0);
+  };
+
+  // Methods
+  /**
+   * Gets the evaluation activity text item
+   * @returns {*|string|null}
+   */
+  const getCustomEAName = () => {
+    const activities = deepCopy(evaluationActivities);
+
+    const { selectedUUID, selectedEvaluationActivity } = evaluationActivitiesUI;
+    const isSelectedUUID = selectedUUID;
+    const isSelectedEvaluationActivity = selectedEvaluationActivity && selectedEvaluationActivity.length > 0;
+
+    if (isSelectedEvaluationActivity && isSelectedUUID && activities && activities.hasOwnProperty(selectedUUID)) {
+      if (!activities[selectedUUID].hasOwnProperty(sectionType)) {
+        activities[selectedUUID][sectionType] = "";
+      }
+
+      return activities[selectedUUID][sectionType].nameAttribute;
+    }
+  };
+
+  const [customEAName, setCustomEAName] = useState(getCustomEAName() ?? "");
+  useEffect(() => {
+    setCustomEAName(getCustomEAName() ?? "");
+  }, [selectedUUID, evaluationActivities]);
 
   // Use Memos
   /**
@@ -69,17 +116,43 @@ function SfrEvaluationActivityCard({ isManagementFunction, sectionType, cardTitl
    */
   const EvaluationActivitySectionEditor = useMemo(() => {
     return (
-      <TipTapEditor
-        className='w-full'
-        contentType={"term"}
-        title={sectionType}
-        handleTextUpdate={handleEvaluationActivityTextUpdate}
-        index={rowIndex !== undefined && rowIndex !== null ? rowIndex : null}
-        text={getEvaluationActivityItem()}
-        uuid={isManagementFunction ? "isManagementFunction" : selectedUUID}
-      />
+      <div className='w-full'>
+        {sectionType === "customea" && (
+          <TextField
+            fullWidth
+            size='small'
+            label='Custom EA Name'
+            value={customEAName}
+            onChange={(e) => setCustomEAName(e.target.value)}
+            onBlur={() => handleCustomEANameChange({ target: { value: customEAName } }, selectedUUID)}
+            sx={{ mb: 1 }}
+          />
+        )}
+        {["tss", "guidance"].includes(sectionType) && dependencyMenuOptions && hasLegacySectionDependencies() && (
+          <SfrEvaluationActivityDependencyDropdown
+            isManagementFunction={isManagementFunction}
+            sectionType={sectionType}
+            dependencyMenuOptions={dependencyMenuOptions}
+          />
+        )}
+        <TipTapEditor
+          contentType={"term"}
+          title={sectionType}
+          handleTextUpdate={handleEvaluationActivityTextUpdate}
+          index={rowIndex !== undefined && rowIndex !== null ? rowIndex : null}
+          text={getEvaluationActivityItem()}
+          uuid={isManagementFunction ? "isManagementFunction" : selectedUUID}
+        />
+        {["tss", "guidance"].includes(sectionType) && dependencyMenuOptions && (
+          <SfrEvaluationActivityDependencySections
+            isManagementFunction={isManagementFunction}
+            sectionType={sectionType}
+            dependencyMenuOptions={dependencyMenuOptions}
+          />
+        )}
+      </div>
     );
-  }, [evaluationActivities, evaluationActivitiesUI, managementFunctionUI]);
+  }, [evaluationActivities, evaluationActivitiesUI, managementFunctionUI, customEAName]);
 
   // Return Method
   return (

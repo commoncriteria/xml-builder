@@ -4,9 +4,16 @@ import { useDispatch, useSelector } from "react-redux";
 import { FormControl, IconButton, InputLabel, MenuItem, Select, TextField, Tooltip } from "@mui/material";
 import AddCircleRoundedIcon from "@mui/icons-material/AddCircleRounded";
 import DeleteForeverRoundedIcon from "@mui/icons-material/DeleteForeverRounded";
+import { updateMetaDataItem } from "../../../../../reducers/accordionPaneSlice.js";
 import { CREATE_SFR_SECTION_ELEMENT, DELETE_SFR_SECTION_ELEMENT } from "../../../../../reducers/SFRs/sfrSectionSlice.js";
 import { RESET_SFR_ELEMENT_UI } from "../../../../../reducers/SFRs/sfrWorksheetUI.js";
 import { deepCopy } from "../../../../../utils/deepCopy.js";
+import {
+  areTechnicalDecisionHistoriesEqual,
+  getTechnicalDecisionElementRefId,
+  moveTechnicalDecisionAffectsReference,
+  removeTechnicalDecisionAffectsReferences,
+} from "../../../../../utils/technicalDecisionHistory.js";
 import {
   getFormattedXmlID,
   handleSnackBarError,
@@ -20,6 +27,7 @@ import CardTemplate from "../../CardTemplate.jsx";
 import ManagementFunctionTable from "./managementFunctionTable/ManagementFunctionTable.jsx";
 import SfrCheckBox from "../SfrCheckBox.jsx";
 import SfrRequirements from "./requirements/SfrRequirements.jsx";
+import TechnicalDecisionAffectsDropdown from "../TechnicalDecisionAffectsDropdown.jsx";
 
 /**
  * The SfrElement class that displays the data for the sfr element
@@ -28,7 +36,8 @@ import SfrRequirements from "./requirements/SfrRequirements.jsx";
 function SfrElement() {
   // Constants
   const dispatch = useDispatch();
-  const { sfrWorksheetUI } = useSelector((state) => state);
+  const sfrWorksheetUI = useSelector((state) => state.sfrWorksheetUI);
+  const technicalDecisionHistory = useSelector((state) => state.accordionPane.metadata.technicalDecisionHistory);
   const {
     sfrUUID,
     componentUUID,
@@ -44,11 +53,13 @@ function SfrElement() {
   } = sfrWorksheetUI;
   const { isManagementFunction } = element;
   const { secondary, primary, icons } = useSelector((state) => state.styling);
+  const technicalDecisionElementRefId = getTechnicalDecisionElementRefId(component, elementUUID);
+  const technicalDecisionElementAlternateRefIds = selectedSfrElement ? [selectedSfrElement] : [];
 
   // Use Effects
   useEffect(() => {
     // Update element dropdown value to use the newly created element
-    if (newElementUUID && newElementUUID !== "" && elementMaps.elementUUIDMap.hasOwnProperty(newElementUUID)) {
+    if (newElementUUID && newElementUUID !== "" && Object.prototype.hasOwnProperty.call(elementMaps.elementUUIDMap, newElementUUID)) {
       updatedSelectedSfrDropdownValue(newElementUUID);
     }
 
@@ -110,6 +121,8 @@ function SfrElement() {
    */
   const handleDeleteElement = (currentElement) => {
     if (currentElement && currentElement !== "" && elementUUID) {
+      const refId = getTechnicalDecisionElementRefId(component, elementUUID);
+
       dispatch(
         DELETE_SFR_SECTION_ELEMENT({
           sfrUUID: sfrUUID,
@@ -117,6 +130,8 @@ function SfrElement() {
           elementUUID: elementUUID,
         })
       );
+
+      removeTechnicalDecisionReference([refId, currentElement]);
 
       // Set new element uuid for sfr worksheet
       setSfrWorksheetUIItems({
@@ -128,6 +143,22 @@ function SfrElement() {
     }
   };
   /**
+   * Removes the deleted SFR Element ref from technical decision affects metadata.
+   * @param refIds the SFR Element ref ids
+   */
+  const removeTechnicalDecisionReference = (refIds) => {
+    const updatedHistory = removeTechnicalDecisionAffectsReferences(technicalDecisionHistory, refIds);
+
+    if (!areTechnicalDecisionHistoriesEqual(technicalDecisionHistory, updatedHistory)) {
+      dispatch(
+        updateMetaDataItem({
+          type: "technicalDecisionHistory",
+          item: updatedHistory,
+        })
+      );
+    }
+  };
+  /**
    * Handles updating the element xml id
    * @param event the event
    */
@@ -136,6 +167,8 @@ function SfrElement() {
 
     // Replace spaces with hyphens and convert to lowercase
     const formattedValue = getFormattedXmlID(xmlId);
+    const oldRefId = getTechnicalDecisionElementRefId(component, elementUUID);
+    const newRefId = getTechnicalDecisionElementRefId(component, elementUUID, formattedValue);
 
     // Update sfr section element
     updateSfrSectionElement({
@@ -147,6 +180,26 @@ function SfrElement() {
       setSfrWorksheetUIItems({
         elementXmlId: formattedValue,
       });
+    }
+
+    moveTechnicalDecisionReference(oldRefId, newRefId, technicalDecisionElementAlternateRefIds);
+  };
+  /**
+   * Moves the SFR Element XML ID in technical decision affects metadata.
+   * @param oldRefId the previous SFR Element XML ID
+   * @param newRefId the updated SFR Element XML ID
+   * @param alternateOldRefIds alternate SFR Element refs to move
+   */
+  const moveTechnicalDecisionReference = (oldRefId, newRefId, alternateOldRefIds = []) => {
+    const updatedHistory = moveTechnicalDecisionAffectsReference(technicalDecisionHistory, oldRefId, newRefId, alternateOldRefIds);
+
+    if (!areTechnicalDecisionHistoriesEqual(technicalDecisionHistory, updatedHistory)) {
+      dispatch(
+        updateMetaDataItem({
+          type: "technicalDecisionHistory",
+          item: updatedHistory,
+        })
+      );
     }
   };
 
@@ -162,7 +215,7 @@ function SfrElement() {
 
       // Check if the element maps are valid
       if (notEmpty) {
-        const isElementUUID = elementUUID && elementUUID !== "" && elementUUIDMap.hasOwnProperty(elementUUID);
+        const isElementUUID = elementUUID && elementUUID !== "" && Object.prototype.hasOwnProperty.call(elementUUIDMap, elementUUID);
         const newSelected = isElementUUID ? elementUUIDMap[elementUUID] : elementNames[0];
 
         // Update selected element
@@ -196,7 +249,10 @@ function SfrElement() {
     let element = {};
     const { elements } = component;
     const isElementMapValid =
-      elementMaps && elementMaps.hasOwnProperty("elementNames") && elementMaps.elementNames.length > 0 && elementMaps.elementNames.includes(selectedElement);
+      elementMaps &&
+      Object.prototype.hasOwnProperty.call(elementMaps, "elementNames") &&
+      elementMaps.elementNames.length > 0 &&
+      elementMaps.elementNames.includes(selectedElement);
 
     // Get the requested value by type
     if (selectedElement && isElementMapValid) {
@@ -204,7 +260,7 @@ function SfrElement() {
       elementUUID = elementMaps.elementNameMap[selectedElement];
 
       // Get the current element
-      if (elements && elements.hasOwnProperty(elementUUID)) {
+      if (elements && Object.prototype.hasOwnProperty.call(elements, elementUUID)) {
         element = deepCopy(elements[elementUUID]);
       }
     }
@@ -314,6 +370,13 @@ function SfrElement() {
           </div>
           {selectedSfrElement && selectedSfrElement !== "" && (
             <div className='w-screen sm:max-w-screen-sm md:max-w-screen-sm lg:max-w-screen-lg'>
+              <div className='p-2 px-4'>
+                <TechnicalDecisionAffectsDropdown
+                  refId={technicalDecisionElementRefId}
+                  alternateRefIds={technicalDecisionElementAlternateRefIds}
+                  selectId={`${elementUUID || "sfr-element"}-technical-decision`}
+                />
+              </div>
               <SfrRequirements requirementType={"title"} />
               {isManagementFunction && <ManagementFunctionTable />}
               <ApplicationNote isManagementFunction={false} />

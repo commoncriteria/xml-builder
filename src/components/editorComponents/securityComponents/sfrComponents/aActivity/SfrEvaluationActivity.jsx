@@ -110,7 +110,11 @@ function SfrEvaluationActivity({ isManagementFunction }) {
               noTest: "",
               introduction: "",
               tss: "",
+              tssDependencies: [],
+              tssDependencySections: [],
               guidance: "",
+              guidanceDependencies: [],
+              guidanceDependencySections: [],
               testIntroduction: "",
               testClosing: "",
               testLists: {},
@@ -286,7 +290,7 @@ function SfrEvaluationActivity({ isManagementFunction }) {
                       selectId='new_eval_act_select'
                       selectionOptions={newEvaluationActivityDropdown}
                       selections={newSelectedEvaluationActivity}
-                      title={"Evaluation Activities"}
+                      title={"Add New Evaluation Activity"}
                       handleSelections={handleNewSelectedEvaluationActivity}
                       style={"primary"}
                     />
